@@ -1,0 +1,7 @@
+{
+  "001_casual_spring_01": { "live2dKey": "001_casual_spring_01", "characterKey": "001", "label": "casual_spring_01", "mode": "adv", "quality": null, "subCharacter": false, "characterName": ["a", "Tomori", "b", "高松灯", "c"] },
+  "001_casual_spring_01_low": { "live2dKey": "001_casual_spring_01_low", "characterKey": "001", "label": "casual_spring_01_low", "mode": "adv", "quality": "low", "subCharacter": false },
+  "001_live-mode_live_01": { "live2dKey": "001_live-mode_live_01", "characterKey": "001", "label": "live_01", "mode": "live", "quality": null, "subCharacter": false },
+  "006_school_winter_hs": { "live2dKey": "006_school_winter_hs", "characterKey": "006", "label": "school_winter_hs", "mode": "adv", "quality": null, "subCharacter": false },
+  "sub_fake_casual_spring_01": { "live2dKey": "sub_fake_casual_spring_01", "characterKey": "sub_fake", "label": "casual_spring_01", "mode": "adv", "quality": null, "subCharacter": true, "characterName": ["", "Fake NPC", "", "假人物", ""] }
+}

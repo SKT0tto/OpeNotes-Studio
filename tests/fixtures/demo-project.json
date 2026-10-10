@@ -1,0 +1,1060 @@
+{
+  "schemaVersion": 1,
+  "id": "demo",
+  "title": "示例：RiNG 咖啡厅与练习室（原创短剧，原作镜头语言）",
+  "createdAt": 0,
+  "updatedAt": 0,
+  "catalogVersion": "",
+  "settings": {
+    "aspect": "16:9",
+    "fps": 30,
+    "textSpeedCps": 10,
+    "defaultLineGap": 0
+  },
+  "source": {
+    "text": "",
+    "format": "script"
+  },
+  "cast": [
+    {
+      "id": "c_001",
+      "characterKey": "001",
+      "displayName": "高松灯"
+    },
+    {
+      "id": "c_002",
+      "characterKey": "002",
+      "displayName": "千早爱音"
+    },
+    {
+      "id": "c_003",
+      "characterKey": "003",
+      "displayName": "要乐奈"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "RiNG 咖啡厅",
+      "background": {
+        "assetId": "adv_bkg_stage_000153"
+      },
+      "wardrobe": {
+        "c_001": {
+          "modelId": "001_casual_spring_01"
+        },
+        "c_002": {
+          "modelId": "002_casual_spring_01"
+        }
+      },
+      "blocking": {
+        "c_001": {
+          "slot": -0.15,
+          "depth": 0.08,
+          "enter": {
+            "beatId": "s1b3",
+            "side": "left"
+          }
+        },
+        "c_002": {
+          "slot": 0.15,
+          "depth": 0.1,
+          "enter": {
+            "beatId": "s1b1",
+            "side": "right"
+          }
+        }
+      },
+      "transitionIn": {
+        "kind": "dip_black",
+        "duration": 0
+      },
+      "location": {
+        "text": "RiNG 咖啡厅",
+        "show": true
+      },
+      "audio": {
+        "bgm": {
+          "assetId": "media/millsage-blessing.wav",
+          "volume": 0.5
+        }
+      },
+      "beats": [
+        {
+          "id": "s1b1",
+          "kind": "dialogue",
+          "speakerId": "c_002",
+          "text": "好早呀，我还以为店里没有人，你已经到了。",
+          "emotion": "happy",
+          "shot": {
+            "type": "mcu",
+            "focus": [
+              "c_002"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s1b2",
+          "kind": "silent",
+          "shot": {
+            "type": "mcu",
+            "focus": [
+              "c_002"
+            ],
+            "move": "static"
+          },
+          "emotion": "thinking"
+        },
+        {
+          "id": "s1b3",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "早、早上好……我想把昨晚写的歌词再改一改。",
+          "emotion": "shy",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_001",
+              "c_002"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s1b4",
+          "kind": "dialogue",
+          "speakerId": "c_002",
+          "text": "写好了就念给我听呀，我最喜欢第一个听新歌了！",
+          "emotion": "happy",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_002",
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s1b5",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "可是最后一句怎么也写不好，总觉得差了一点什么。",
+          "emotion": "sad",
+          "shot": {
+            "type": "mcu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s1b7",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "要是把真心话唱出来，她会不会觉得我很奇怪呢……",
+          "emotion": "shy",
+          "shot": {
+            "type": "cu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          },
+          "variant": "monologue",
+          "cutIn": "dip_black"
+        }
+      ],
+      "tracks": [
+        {
+          "id": "t1",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "gaze",
+          "keys": [
+            {
+              "id": "t1k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b5",
+                "offset": 0.3
+              },
+              "value": {
+                "target": "down"
+              }
+            },
+            {
+              "id": "t1k2",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b7",
+                "offset": 0.2
+              },
+              "value": {
+                "target": "down"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "target": {
+            "kind": "actor",
+            "castId": "c_002"
+          },
+          "channel": "gaze",
+          "keys": [
+            {
+              "id": "t2k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b3",
+                "offset": 0.4
+              },
+              "value": {
+                "target": "c_001"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t3k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b3",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_002"
+              }
+            },
+            {
+              "id": "t3k2",
+              "duration": 0.5,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b7",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "camera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "target": {
+            "kind": "actor",
+            "castId": "c_002"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t4k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b1",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_001"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "motion",
+          "keys": [
+            {
+              "id": "t5k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b4",
+                "offset": 0.6
+              },
+              "value": {
+                "name": "nod01"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t6",
+          "target": {
+            "kind": "actor",
+            "castId": "c_002"
+          },
+          "channel": "motion",
+          "keys": [
+            {
+              "id": "t6k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s1b5",
+                "offset": 1.2
+              },
+              "value": {
+                "name": "smile01"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "title": "车库练习室",
+      "background": {
+        "assetId": "adv_bkg_stage_000001"
+      },
+      "wardrobe": {
+        "c_001": {
+          "modelId": "001_casual_spring_01"
+        },
+        "c_002": {
+          "modelId": "002_casual_spring_01"
+        },
+        "c_003": {
+          "modelId": "003_casual_spring_01"
+        }
+      },
+      "blocking": {
+        "c_001": {
+          "slot": -0.16,
+          "depth": 0.08,
+          "enter": {
+            "beatId": "s2b2",
+            "side": "left"
+          }
+        },
+        "c_003": {
+          "slot": 0.03,
+          "depth": 0.58,
+          "enter": {
+            "beatId": "s2b1",
+            "side": "none"
+          }
+        },
+        "c_002": {
+          "slot": 0.2,
+          "depth": 0.1,
+          "enter": {
+            "beatId": "s2b4",
+            "side": "right"
+          }
+        }
+      },
+      "transitionIn": {
+        "kind": "scene_black",
+        "duration": 0
+      },
+      "location": {
+        "text": "车库练习室",
+        "show": true
+      },
+      "audio": {
+        "bgm": {
+          "assetId": "media/millsage-blessing.wav",
+          "volume": 0.35
+        }
+      },
+      "beats": [
+        {
+          "id": "s2b1",
+          "kind": "dialogue",
+          "speakerId": "c_003",
+          "text": "今天的空气和平时不太一样，好像有什么就要开始了。",
+          "emotion": "thinking",
+          "shot": {
+            "type": "mcu",
+            "focus": [
+              "c_003"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s2b2",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "乐奈，早安。我带来了新写的歌词，可以让大家看一看吗？",
+          "emotion": "shy",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_001",
+              "c_003"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s2b3",
+          "kind": "dialogue",
+          "speakerId": "c_003",
+          "text": "嗯。写好了就唱出来，我想听你的声音。",
+          "emotion": "happy",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_003",
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s2b4",
+          "kind": "dialogue",
+          "speakerId": "c_002",
+          "text": "我也来啦！一路上都在想，今天要把整首歌合一遍！",
+          "emotion": "happy",
+          "shot": {
+            "type": "group",
+            "focus": [
+              "c_001",
+              "c_003",
+              "c_002"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s2b6",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "万一大家听了觉得不对劲呢？这样的我，真的可以站在这里吗？",
+          "emotion": "sad",
+          "shot": {
+            "type": "cu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          },
+          "variant": "monologue",
+          "cutIn": "dip_black",
+          "cutInKeepDialog": true
+        },
+        {
+          "id": "s2b7",
+          "kind": "dialogue",
+          "speakerId": "c_002",
+          "text": "那天她说过，能听到你写的歌，是她最开心的事。",
+          "emotion": "happy",
+          "shot": {
+            "type": "ecu",
+            "focus": [
+              "c_002"
+            ],
+            "move": "static"
+          },
+          "variant": "monologue"
+        },
+        {
+          "id": "s2b8",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "原来我写下的每一个字，都有人在认真地听着。",
+          "emotion": "surprised",
+          "shot": {
+            "type": "ecu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          },
+          "variant": "monologue"
+        },
+        {
+          "id": "s2b9",
+          "kind": "silent",
+          "shot": {
+            "type": "group",
+            "focus": [
+              "c_001",
+              "c_003",
+              "c_002"
+            ],
+            "move": "static"
+          },
+          "emotion": "thinking"
+        }
+      ],
+      "tracks": [
+        {
+          "id": "t1",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t1k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b2",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_003"
+              }
+            },
+            {
+              "id": "t1k2",
+              "duration": 0.4,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b6",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "camera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "target": {
+            "kind": "actor",
+            "castId": "c_003"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t2k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b1",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_001"
+              }
+            },
+            {
+              "id": "t2k2",
+              "duration": 0.4,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b4",
+                "offset": 0.2
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_002"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "target": {
+            "kind": "actor",
+            "castId": "c_002"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t3k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b4",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_001"
+              }
+            },
+            {
+              "id": "t3k2",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b7",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "camera"
+              }
+            },
+            {
+              "id": "t3k3",
+              "duration": 0.4,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b9",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_001"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "gaze",
+          "keys": [
+            {
+              "id": "t4k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b6",
+                "offset": 0.2
+              },
+              "value": {
+                "target": "down"
+              }
+            },
+            {
+              "id": "t4k2",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b8",
+                "offset": 0
+              },
+              "value": {
+                "target": "camera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "target": {
+            "kind": "screen"
+          },
+          "channel": "fx",
+          "keys": [
+            {
+              "id": "t5k1",
+              "duration": 0.6,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b6",
+                "offset": 0
+              },
+              "value": {
+                "fx": "vignette_anxiety",
+                "strength": 1,
+                "roll": 0
+              }
+            },
+            {
+              "id": "t5k2",
+              "duration": 0.3,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b7",
+                "offset": 0
+              },
+              "value": {
+                "fx": "vignette_anxiety",
+                "strength": 0,
+                "roll": 0
+              }
+            },
+            {
+              "id": "t5k3",
+              "duration": 0.3,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b7",
+                "offset": 0
+              },
+              "value": {
+                "fx": "memory_glow",
+                "strength": 1,
+                "roll": 0
+              }
+            },
+            {
+              "id": "t5k4",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b7",
+                "offset": 0
+              },
+              "value": {
+                "fx": "dutch",
+                "strength": 1,
+                "roll": 10
+              }
+            },
+            {
+              "id": "t5k5",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b8",
+                "offset": 0
+              },
+              "value": {
+                "fx": "dutch",
+                "strength": 1,
+                "roll": -10
+              }
+            },
+            {
+              "id": "t5k6",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b9",
+                "offset": 0
+              },
+              "value": {
+                "fx": "dutch",
+                "strength": 1,
+                "roll": 0
+              }
+            },
+            {
+              "id": "t5k7",
+              "duration": 0.4,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s2b9",
+                "offset": 0
+              },
+              "value": {
+                "fx": "memory_glow",
+                "strength": 0,
+                "roll": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "title": "傍晚的练习室",
+      "background": {
+        "assetId": "adv_bkg_stage_000002"
+      },
+      "wardrobe": {
+        "c_001": {
+          "modelId": "001_casual_spring_01"
+        },
+        "c_002": {
+          "modelId": "002_casual_spring_01"
+        }
+      },
+      "blocking": {
+        "c_001": {
+          "slot": -0.15,
+          "depth": 0.08
+        },
+        "c_002": {
+          "slot": 0.15,
+          "depth": 0.1
+        }
+      },
+      "transitionIn": {
+        "kind": "dip_black",
+        "duration": 0
+      },
+      "location": {
+        "text": "傍晚的练习室",
+        "show": true
+      },
+      "audio": {},
+      "beats": [
+        {
+          "id": "s3b1",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "我想好最后一句了，不是漂亮的话，只想说给你们听。",
+          "emotion": "thinking",
+          "shot": {
+            "type": "mcu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s3b2",
+          "kind": "dialogue",
+          "speakerId": "c_002",
+          "text": "这才是你的歌呀！那我们一起把它唱完吧。",
+          "emotion": "happy",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_002",
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s3b4",
+          "kind": "empty",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_001",
+              "c_002"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s3b5",
+          "kind": "dialogue",
+          "speakerId": "c_002",
+          "text": "换好衣服啦？这样看起来，像是要登台一样！",
+          "emotion": "surprised",
+          "shot": {
+            "type": "two_shot",
+            "focus": [
+              "c_002",
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s3b6",
+          "kind": "dialogue",
+          "speakerId": "c_001",
+          "text": "嗯。因为这是我们第一次，一起把它唱给别人听。",
+          "emotion": "happy",
+          "shot": {
+            "type": "cu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          }
+        },
+        {
+          "id": "s3b7",
+          "kind": "pause",
+          "shot": {
+            "type": "cu",
+            "focus": [
+              "c_001"
+            ],
+            "move": "static"
+          },
+          "duration": {
+            "mode": "fixed",
+            "seconds": 2
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "id": "t1",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "costume",
+          "keys": [
+            {
+              "id": "t1k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b4",
+                "offset": 0.2
+              },
+              "value": {
+                "modelId": "001_school_winter_hs_1st"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t2",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t2k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b1",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_002"
+              }
+            },
+            {
+              "id": "t2k2",
+              "duration": 0.5,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b6",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "camera"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t3",
+          "target": {
+            "kind": "actor",
+            "castId": "c_002"
+          },
+          "channel": "head",
+          "keys": [
+            {
+              "id": "t3k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b1",
+                "offset": 0
+              },
+              "value": {
+                "mode": "target",
+                "target": "c_001"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t4",
+          "target": {
+            "kind": "actor",
+            "castId": "c_001"
+          },
+          "channel": "gaze",
+          "keys": [
+            {
+              "id": "t4k1",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b1",
+                "offset": 0.3
+              },
+              "value": {
+                "target": "down"
+              }
+            },
+            {
+              "id": "t4k2",
+              "duration": 0,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b2",
+                "offset": 0.2
+              },
+              "value": {
+                "target": "c_002"
+              }
+            }
+          ]
+        },
+        {
+          "id": "t5",
+          "target": {
+            "kind": "audio"
+          },
+          "channel": "bgm",
+          "keys": [
+            {
+              "id": "t5k1",
+              "duration": 1.5,
+              "ease": "inOutQuad",
+              "at": {
+                "beatId": "s3b6",
+                "offset": 0.4
+              },
+              "value": {
+                "assetId": null,
+                "volume": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": "t6",
+          "target": {
+            "kind": "screen"
+          },
+          "channel": "fade",
+          "keys": [
+            {
+              "id": "t6k1",
+              "duration": 1.5,
+              "ease": "inOutSine",
+              "at": {
+                "beatId": "s3b7",
+                "offset": 0.2
+              },
+              "value": {
+                "color": "black",
+                "alpha": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

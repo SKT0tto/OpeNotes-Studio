@@ -1,0 +1,66 @@
+{
+  "name": "openotes-studio",
+  "version": "0.1.0",
+  "description": "AI-assisted editor and player that turns a novel into a BanG Dream! Our Notes-style Live2D staged performance (unofficial fan project).",
+  "license": "GPL-3.0-or-later",
+  "author": {
+    "name": "羽丘魅魔高松灯 (bilibili)",
+    "url": "https://space.bilibili.com/358479834"
+  },
+  "homepage": "https://skt0tto.github.io/OpeNotes-Studio/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SKT0tto/OpeNotes-Studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SKT0tto/OpeNotes-Studio/issues"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c blue,green \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:server": "tsx watch server/index.ts",
+    "dev:web": "vite",
+    "build": "vite build",
+    "start": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "pack-assets": "tsx scripts/pack-assets.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "express": "5.3.0",
+    "immer": "11.1.21",
+    "pixi.js": "8.22.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "untitled-pixi-live2d-engine": "1.4.0",
+    "yauzl": "3.4.0",
+    "yazl": "3.3.1",
+    "zod": "4.6.5",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/yauzl": "3.4.0",
+    "@types/yazl": "3.3.1",
+    "@vitejs/plugin-react": "4.7.0",
+    "concurrently": "10.0.6",
+    "eslint": "10.12.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vite": "6.4.2",
+    "vitest": "5.0.3"
+  }
+}

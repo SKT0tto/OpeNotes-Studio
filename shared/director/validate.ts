@@ -1,0 +1,337 @@
+/**
+ * Semantic validation + deterministic repair of the two AI passes (after the zod parse succeeded).
+ * Nothing here trusts the model: every id must exist in the catalog / scene, otherwise it is repaired or dropped with a
+ * warning. `errors` are what could not be repaired (the caller may spend one LLM repair call on them).
+ */
+import type { Breakdown, DirectedBeat, SceneDirection } from '../schema/ai';
+import type { ModelEntry } from '../schema/assets';
+import { EMOTION_EXPR, EMOTION_GESTURE } from '../timeline/compile';
+import { traceability, type Paragraph } from './paragraphs';
+import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
+import { INSERT_HINT, SPECIAL_ATTENTION } from './vocab';
+import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
+
+export interface Validated<T> {
+  value: T;
+  warnings: string[];
+  /** Structural problems the deterministic repair could not fix. */
+  errors: string[];
+}
+
+// ---- Pass 1 ------------------------------------------------------------------------------------------------------
+export function validateBreakdown(input: Breakdown, ctx: { catalog: DirectorCatalog; paragraphCount: number; paragraphOffset?: number }): Validated<Breakdown> {
+  const L = lookup(ctx.catalog);
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const b: Breakdown = JSON.parse(JSON.stringify(input)) as Breakdown;
+  const isChar = (k: string) => L.characters.has(k) && !L.characters.get(k)!.isSub;
+
+  for (const c of b.cast) {
+    if (c.characterKey !== null && !isChar(c.characterKey)) {
+      warnings.push(`角色「${c.nameInText}」的 characterKey ${c.characterKey} 不存在，已作为未映射角色（仅旁白）`);
+      c.characterKey = null;
+    }
+  }
+
+  const first = ctx.paragraphOffset ?? 0;
+  const last = first + ctx.paragraphCount - 1;
+  // contiguous, ordered, covering ranges
+  b.scenes.sort((x, y) => x.startParagraph - y.startParagraph);
+  b.scenes = b.scenes.filter((s) => s.endParagraph >= first && s.startParagraph <= last);
+  if (b.scenes.length === 0) errors.push('没有任何场景（或场景段落范围都在文本之外）');
+  b.scenes.forEach((s, i) => {
+    const start = i === 0 ? first : Math.max(s.startParagraph, b.scenes[i - 1]!.endParagraph + 1);
+    const next = b.scenes[i + 1];
+    const end = next ? Math.max(start, Math.min(s.endParagraph, next.startParagraph - 1)) : last;
+    if (start !== s.startParagraph || end !== s.endParagraph) warnings.push(`场景「${s.title}」的段落范围 ${s.startParagraph}–${s.endParagraph} 已调整为 ${start}–${end}`);
+    s.startParagraph = start;
+    s.endParagraph = end;
+  });
+  // an end that stops short of the next start leaves a gap: extend
+  b.scenes.forEach((s, i) => {
+    const next = b.scenes[i + 1];
+    if (next && next.startParagraph > s.endParagraph + 1) {
+      warnings.push(`场景「${s.title}」与下一场景之间有段落空缺，已延长`);
+      s.endParagraph = next.startParagraph - 1;
+    }
+  });
+
+  for (const s of b.scenes) {
+    // background
+    if (!L.backgrounds.has(s.location.backgroundId)) {
+      const best = rankBackgrounds(ctx.catalog.backgrounds, `${s.title} ${s.location.reason} ${s.location.backgroundId} ${s.mood}`, { time: s.timeOfDay })[0];
+      if (best) {
+        warnings.push(`场景「${s.title}」的背景 ${s.location.backgroundId} 不存在，已换成最相近的 ${best.id}（${best.name}）`);
+        s.location.backgroundId = best.id;
+      } else errors.push(`场景「${s.title}」没有可用背景`);
+    }
+    // people: keys must be real, stage-capable characters
+    const present = new Set<string>();
+    for (const k of s.presentCast) {
+      if (isChar(k)) present.add(k);
+      else warnings.push(`场景「${s.title}」的在场角色 ${k} 不存在，已忽略`);
+    }
+    const wardrobe = new Map<string, Breakdown['scenes'][number]['wardrobe'][number]>();
+    for (const w of s.wardrobe) {
+      if (!isChar(w.characterKey)) {
+        warnings.push(`场景「${s.title}」的服装条目角色 ${w.characterKey} 不存在，已忽略`);
+        continue;
+      }
+      present.add(w.characterKey);
+      wardrobe.set(w.characterKey, w);
+    }
+    for (const key of present) {
+      const w = wardrobe.get(key);
+      const m = w ? L.models.get(w.modelId) : undefined;
+      let bad: string | null = null;
+      if (!w) bad = '缺少服装';
+      else if (!m) bad = `服装 ${w.modelId} 不存在`;
+      else if (m.characterKey !== key) bad = `服装 ${w.modelId} 不属于该角色`;
+      else if (m.quality === 'low' || m.still) bad = `服装 ${w.modelId} 是低质量/静态版本`;
+      else if (m.mode === 'live' && !s.isPerformance) bad = `非演出场景不能用 live-mode 服装 ${w.modelId}`;
+      else if (m.mode === 'adv' && s.isPerformance && defaultModel(L, key, { live: true })) bad = `演出场景应使用 live-mode 服装（${w!.modelId} 不是）`;
+      if (bad) {
+        const wantLive = s.isPerformance && !!defaultModel(L, key, { live: true });
+        const fix = defaultModel(L, key, { live: wantLive }) ?? defaultModel(L, key);
+        if (fix) {
+          warnings.push(`场景「${s.title}」${L.characters.get(key)?.name ?? key}：${bad}，已改为 ${fix.id}`);
+          wardrobe.set(key, { characterKey: key, modelId: fix.id, reason: w?.reason ?? '默认服装' });
+        } else {
+          warnings.push(`场景「${s.title}」${key} 没有可用服装，已移出在场角色`);
+          present.delete(key);
+          wardrobe.delete(key);
+        }
+      }
+    }
+    s.presentCast = [...present];
+    s.wardrobe = s.presentCast.map((k) => wardrobe.get(k)!);
+    warnings.push(...repairBackground(s, ctx.catalog, L));
+    if (s.band !== null && !ctx.catalog.bands.some((x) => x.key === s.band || x.name === s.band)) {
+      warnings.push(`场景「${s.title}」的乐队 ${s.band} 不存在，已清除`);
+      s.band = null;
+    }
+  }
+  return { value: b, warnings, errors };
+}
+
+/** Band/stage fit of the chosen background; a conflicting one is replaced by the best compliant background (deterministic). Returns warnings. */
+export function repairBackground(s: Breakdown['scenes'][number], cat: DirectorCatalog, L: Lookup): string[] {
+  if (!cat.backgrounds.some((b) => b.labels)) return [];
+  const cur = L.backgrounds.get(s.location.backgroundId);
+  if (!cur) return [];
+  const who: SceneWho = { bands: sceneBands(L.characters, s.presentCast), cast: s.presentCast, guestOf: s.location.guestOf ?? null, mood: `${s.mood} ${s.timeOfDay}`, text: `${s.title} ${s.location.reason} ${s.mood}` };
+  const bandName = (k: string) => cat.bands.find((b) => b.key === k)?.name ?? k;
+  const stageBad = s.isPerformance && cur.labels !== undefined && !cur.labels.stage;
+  const fit = bgFit(cur.labels, who, cat.labelRules);
+  if (fit === 'ok' && !stageBad) return [];
+  if (fit === 'fallback' && !stageBad) return [`场景「${s.title}」的背景 ${cur.id}（${cur.name}）主人不明，仅作兜底使用，请确认`];
+  const { ok, fallback } = allowedBackgrounds(cat.backgrounds, who, { performance: s.isPerformance, rules: cat.labelRules });
+  const pool = ok.length > 0 ? ok : fallback;
+  const why = stageBad && fit !== 'no' ? '正式演出需要舞台背景' : `属于 ${bandText(cur.labels, bandName)}，与出场乐队冲突`;
+  const best = rankBackgrounds(pool, `${s.title} ${s.location.reason} ${cur.name} ${cur.location ?? ''}`, { ...(cur.setting ? { setting: cur.setting } : {}), time: s.timeOfDay })[0];
+  if (!best) return [`场景「${s.title}」的背景 ${cur.name} ${why}，但没有可替换的合规背景，已保留`];
+  s.location.backgroundId = best.id;
+  s.location.reason = `${s.location.reason}（已由 ${cur.id} 换成合规背景）`;
+  return [`场景「${s.title}」的背景 ${cur.id}（${cur.name}）${why}，已换成 ${best.id}（${best.name}）`];
+}
+
+// ---- Pass 2 ------------------------------------------------------------------------------------------------------
+export interface DirectionContext {
+  catalog: DirectorCatalog;
+  /** People on stage with their outfit at the start of the scene. */
+  cast: Array<{ castId: string; characterKey: string; modelId: string }>;
+  paragraphs: Paragraph[];
+  /** Inclusive paragraph range of the scene. */
+  range: { start: number; end: number };
+  isPerformance: boolean;
+  /** Ids of existing beats the model was told to keep (locked / hand-made / the beats of a partial regeneration). */
+  fixedBeatIds?: Set<string>;
+}
+
+const FAMILY_RE = /^([a-z]+)(\d*)/;
+export const familyOf = (name: string): string => name.replace(/^mtn_/, '').replace(/_[LCR]\d*$/, '');
+const motionSet = (m: ModelEntry) => new Set(m.motions.map((x) => x.family));
+
+/** The family to use for a wanted motion, or null. */
+export function repairMotion(m: ModelEntry, wanted: string, emotion: string): string | null {
+  const live = m.mode === 'live';
+  const all = [...motionSet(m)].filter((f) => (live ? /^(play|action|finish)/.test(f) : !f.startsWith('idle')));
+  const w = familyOf(wanted.trim());
+  if (all.includes(w)) return w;
+  const prefix = FAMILY_RE.exec(w)?.[1];
+  const same = prefix ? all.filter((f) => FAMILY_RE.exec(f)?.[1] === prefix).sort() : [];
+  if (same.length > 0) return same[0]!;
+  if (live) return all.find((f) => f.startsWith('play')) ?? null;
+  return (EMOTION_GESTURE[emotion] ?? []).find((g) => all.includes(g)) ?? null;
+}
+
+export function repairExpression(m: ModelEntry, wanted: string, emotion: string): string | null {
+  if (m.mode === 'live') return null;
+  const names = m.expressions.map((e) => e.name);
+  const w = wanted.trim().startsWith('exp_') ? wanted.trim() : `exp_${wanted.trim()}`;
+  if (names.includes(w)) return w;
+  const prefix = /^(exp_[a-z]+)/.exec(w)?.[1];
+  const same = prefix ? names.filter((n) => n.startsWith(prefix)).sort() : [];
+  if (same.length > 0) return same[0]!;
+  return (EMOTION_EXPR[emotion] ?? []).find((e) => names.includes(e)) ?? null;
+}
+
+const LEGACY_SHOT: Record<string, DirectedBeat['shot']['type']> = { closeup: 'cu', bust: 'mcu', medium: 'mcu', wide: 'group', establishing: 'group' };
+
+export function validateDirection(input: SceneDirection, ctx: DirectionContext): Validated<SceneDirection> {
+  const L: Lookup = lookup(ctx.catalog);
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const d: SceneDirection = JSON.parse(JSON.stringify(input)) as SceneDirection;
+  const castIds = new Set(ctx.cast.map((c) => c.castId));
+  const keyOf = new Map(ctx.cast.map((c) => [c.castId, c.characterKey]));
+  const present = (id: string | null | undefined): id is string => !!id && castIds.has(id);
+
+  // blocking
+  const seen = new Set<string>();
+  d.blocking = d.blocking.filter((b) => {
+    if (!castIds.has(b.castId)) {
+      warnings.push(`站位里的 ${b.castId} 不在场景中，已忽略`);
+      return false;
+    }
+    if (seen.has(b.castId)) return false;
+    seen.add(b.castId);
+    return true;
+  });
+
+  if (d.bgm !== null && !L.audio.has(d.bgm)) {
+    warnings.push(`BGM ${d.bgm} 不存在，已清除`);
+    d.bgm = null;
+  }
+
+  // costume changes: real outfit of that character, valid beat
+  const lastBeat = Math.max(0, d.beats.length - 1);
+  const reject = (msg: string): false => (warnings.push(msg), false);
+  d.costumeChanges = d.costumeChanges.filter((c) => {
+    const m = L.models.get(c.modelId);
+    if (!castIds.has(c.castId)) return reject(`换装的角色 ${c.castId} 不在场景中，已忽略`);
+    if (!m || m.characterKey !== keyOf.get(c.castId)) return reject(`换装 ${c.castId} → ${c.modelId} 不是该角色的服装，已忽略`);
+    if (!selectable(m, { live: m.mode === 'live' })) return reject(`换装 ${c.modelId} 是低质量/静态版本，已忽略`);
+    if ((m.mode === 'live') !== ctx.isPerformance) return reject(`换装 ${c.modelId}：live-mode 与场景类型不符，已忽略`);
+    c.beatIndex = Math.min(lastBeat, Math.max(0, c.beatIndex));
+    return true;
+  });
+  const modelAt = (castId: string, beatIndex: number): ModelEntry | undefined => {
+    let id = ctx.cast.find((c) => c.castId === castId)?.modelId;
+    for (const c of [...d.costumeChanges].sort((a, b) => a.beatIndex - b.beatIndex)) if (c.castId === castId && c.beatIndex <= beatIndex) id = c.modelId;
+    return id ? L.models.get(id) : undefined;
+  };
+
+  const paraOf = (i: number) => ctx.paragraphs[i];
+  const inRange = (i: number) => i >= ctx.range.start && i <= ctx.range.end;
+  let dialogue = 0;
+  let untraceable = 0;
+  const usedKeep = new Set<string>();
+
+  d.beats.forEach((b, bi) => {
+    const where = `第 ${bi + 1} 句`;
+    if (!inRange(b.paragraph)) {
+      const c = Math.min(ctx.range.end, Math.max(ctx.range.start, b.paragraph));
+      warnings.push(`${where}的段落号 ${b.paragraph} 超出场景范围 ${ctx.range.start}–${ctx.range.end}，已改为 ${c}`);
+      b.paragraph = c;
+    }
+    if (b.keepId !== null) {
+      if (!ctx.fixedBeatIds?.has(b.keepId) || usedKeep.has(b.keepId)) {
+        warnings.push(`${where}的 keepId ${b.keepId} 无效，已忽略`);
+        b.keepId = null;
+      } else usedKeep.add(b.keepId);
+    }
+    // speaker
+    if (b.kind === 'dialogue') {
+      if (!present(b.speaker)) {
+        warnings.push(`${where}的说话人 ${b.speaker ?? '(空)'} 不在场，已改为旁白`);
+        b.kind = 'narration';
+        b.speaker = null;
+      }
+    } else if (b.speaker !== null) b.speaker = null;
+    if (b.kind === 'dialogue' && b.keepId === null) {
+      // spoken lines are shown without their quotation marks (the name plate already says who speaks)
+      const t = b.text.trim().replace(/^[“"「『]+/, '').replace(/[”"」』]+$/, '');
+      if (t !== b.text && t.length > 0) b.text = t;
+    }
+    if (b.kind === 'silent') b.text = '';
+    // text must come from the source paragraph (beats the model only reproduces from the project - locked or hand-written - are exempt)
+    if (b.kind !== 'silent' && b.keepId === null) {
+      const para = paraOf(b.paragraph);
+      let t = para ? traceability(b.text, para.text) : 0;
+      const need = b.kind === 'dialogue' ? 0.6 : 0.3;
+      if (t < need) {
+        const alt = ctx.paragraphs.filter((p) => inRange(p.index)).map((p) => ({ p, t: traceability(b.text, p.text) })).sort((x, y) => y.t - x.t)[0];
+        if (alt && alt.t >= need) {
+          warnings.push(`${where}的文本在第 ${alt.p.index} 段（不是 ${b.paragraph}），已更正段落号`);
+          b.paragraph = alt.p.index;
+          t = alt.t;
+        }
+      }
+      if (b.kind === 'dialogue') dialogue++;
+      if (t < need) {
+        if (b.kind === 'dialogue') untraceable++;
+        warnings.push(`${where}的文本无法回溯到原文段落 ${b.paragraph}`);
+      }
+    }
+    // shot
+    const legacy = LEGACY_SHOT[b.shot.type as string];
+    if (legacy) {
+      warnings.push(`${where}的景别 ${b.shot.type} 已改为 ${legacy}`);
+      b.shot.type = legacy;
+    }
+    b.shot.focus = [...new Set(b.shot.focus.filter(present))];
+    if (b.shot.focus.length === 0 && b.shot.type !== 'group') b.shot.focus = b.speaker ? [b.speaker] : ctx.cast.slice(0, 1).map((c) => c.castId);
+    if (b.shot.type === 'two_shot' && b.shot.focus.length < 2) {
+      const other = ctx.cast.find((c) => !b.shot.focus.includes(c.castId))?.castId;
+      if (other) b.shot.focus.push(other);
+      else b.shot.type = 'mcu';
+    }
+    if (b.shot.dof !== null && (b.shot.dof < 0 || b.shot.dof > 6)) b.shot.dof = Math.min(6, Math.max(0, b.shot.dof));
+    // actors
+    const used = new Set<string>();
+    b.actors = b.actors.filter((a) => {
+      if (!castIds.has(a.castId) || used.has(a.castId)) {
+        if (!castIds.has(a.castId)) warnings.push(`${where}的演员 ${a.castId} 不在场景中，已忽略`);
+        return false;
+      }
+      used.add(a.castId);
+      return true;
+    });
+    for (const a of b.actors) {
+      const m = modelAt(a.castId, bi);
+      if (a.motion !== null) {
+        const fix = m ? repairMotion(m, a.motion, b.emotion) : null;
+        if (fix !== a.motion) warnings.push(`${where} ${a.castId} 的动作 ${a.motion} 在 ${m?.id ?? '?'} 中不存在，${fix ? `已改为 ${fix}` : '已去掉'}`);
+        a.motion = fix;
+      }
+      if (a.expression !== null) {
+        const fix = m ? repairExpression(m, a.expression, b.emotion) : null;
+        if (fix !== a.expression) warnings.push(`${where} ${a.castId} 的表情 ${a.expression} 在 ${m?.id ?? '?'} 中不存在，${fix ? `已改为 ${fix}` : '已去掉'}`);
+        a.expression = fix;
+      }
+      if (a.attention !== null && !present(a.attention) && !(SPECIAL_ATTENTION as readonly string[]).includes(a.attention)) {
+        warnings.push(`${where} ${a.castId} 的视线对象 ${a.attention} 无效，已忽略`);
+        a.attention = null;
+      }
+      if (a.attention === a.castId) a.attention = null;
+    }
+    // an insert only makes sense when there is something to show: a gesture, an instrument being played, a prop named in the text
+    if (b.shot.type === 'insert') {
+      const who = b.shot.focus[0] ?? b.speaker ?? '';
+      const playing = b.actors.some((a) => a.motion !== null && /^(play|action|finish)/.test(a.motion) && modelAt(a.castId, bi)?.mode === 'live');
+      const hinted = INSERT_HINT.test(b.text);
+      if (!playing && !hinted) {
+        warnings.push(`${where}的插入镜头没有可拍的手/物件/乐器，已改为 cu`);
+        b.shot.type = 'cu';
+        b.shot.insertTarget = null;
+        if (!b.shot.focus.includes(who) && who) b.shot.focus = [who];
+      } else if (!b.shot.insertTarget) {
+        b.shot.insertTarget = playing ? 'instrument' : 'hands';
+      }
+    } else if (b.shot.insertTarget) b.shot.insertTarget = null;
+  });
+  if (d.beats.length === 0) errors.push('没有任何节拍');
+  if (dialogue >= 2 && untraceable / dialogue > 0.4) errors.push(`${untraceable}/${dialogue} 句对白无法回溯到原文，文本疑似编造`);
+  return { value: d, warnings, errors };
+}

@@ -1,0 +1,584 @@
+{
+  "reason": "RiNG咖啡厅内，五人围桌推敲歌词；以温暖安静为基调，从进门、落座、灯犹豫到素世肯定，镜头随情绪由群像收拢到灯的脸。",
+  "blocking": [
+    {
+      "castId": "c_004",
+      "slot": "left",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_002",
+      "slot": "center_left",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_001",
+      "slot": "center",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_003",
+      "slot": "center_right",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_005",
+      "slot": "right",
+      "depth": "mid"
+    }
+  ],
+  "transitionIn": "scene_black",
+  "bgm": null,
+  "beats": [
+    {
+      "keepId": "s_3b_1",
+      "paragraph": 6,
+      "kind": "narration",
+      "speaker": null,
+      "text": "RiNG的门被推开，铃铛叮当响了一声。",
+      "emotion": "neutral",
+      "reason": "场景开场，交代到来",
+      "shot": {
+        "type": "group",
+        "focus": [],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": null,
+          "attention": null,
+          "enter": true,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_002",
+          "motion": null,
+          "expression": null,
+          "attention": null,
+          "enter": true,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_003",
+          "motion": null,
+          "expression": null,
+          "attention": null,
+          "enter": true,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_004",
+          "motion": null,
+          "expression": null,
+          "attention": null,
+          "enter": true,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_14",
+      "paragraph": 6,
+      "kind": "narration",
+      "speaker": null,
+      "text": "素世已经坐在靠窗的位置，面前放着一杯没动过的红茶。",
+      "emotion": "neutral",
+      "reason": "先到者的静候",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "look01",
+          "expression": "exp_idle01",
+          "attention": "camera",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_15",
+      "paragraph": 7,
+      "kind": "dialogue",
+      "speaker": "c_005",
+      "text": "你们来了。",
+      "emotion": "happy",
+      "reason": "温和地迎接",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "smile02",
+          "expression": "exp_smile02",
+          "attention": "camera",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_16",
+      "paragraph": 7,
+      "kind": "dialogue",
+      "speaker": "c_005",
+      "text": "我先点了饮料，大家随便坐吧。",
+      "emotion": "happy",
+      "reason": "照顾大家，气氛放松",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "smile01",
+          "expression": "exp_smile01",
+          "attention": "camera",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_3",
+      "paragraph": 8,
+      "kind": "narration",
+      "speaker": null,
+      "text": "大家围着桌子坐下。",
+      "emotion": "neutral",
+      "reason": "交代座位与全体",
+      "shot": {
+        "type": "group",
+        "focus": [],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": "exp_idle02",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_002",
+          "motion": null,
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_003",
+          "motion": null,
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_004",
+          "motion": null,
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_005",
+          "motion": null,
+          "expression": "exp_idle02",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_17",
+      "paragraph": 8,
+      "kind": "narration",
+      "speaker": null,
+      "text": "爱音把写满歌词的笔记本摊开，",
+      "emotion": "neutral",
+      "reason": "物件特写，进入正题",
+      "shot": {
+        "type": "insert",
+        "focus": [
+          "c_002"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_002",
+          "motion": null,
+          "expression": "exp_idle01",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_18",
+      "paragraph": 8,
+      "kind": "narration",
+      "speaker": null,
+      "text": "灯盯着那几行字，轻轻咬住下唇。",
+      "emotion": "thinking",
+      "reason": "灯犹豫，收拢近景",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "push_in",
+        "dof": 2
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "thinking01",
+          "expression": "exp_serious02",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_19",
+      "paragraph": 9,
+      "kind": "dialogue",
+      "speaker": "c_001",
+      "text": "这里……我想换一个说法。",
+      "emotion": "thinking",
+      "reason": "斟酌措辞，语气迟疑",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "thinking01",
+          "expression": "exp_serious02",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_20",
+      "paragraph": 9,
+      "kind": "dialogue",
+      "speaker": "c_001",
+      "text": "‘一起走下去’，我总觉得不是我想说的。",
+      "emotion": "sad",
+      "reason": "说不出口的别扭",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "static",
+        "dof": 2
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "sad01",
+          "expression": "exp_sad02",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_21",
+      "paragraph": 10,
+      "kind": "dialogue",
+      "speaker": "c_004",
+      "text": "那你想说什么？",
+      "emotion": "thinking",
+      "reason": "追问，语气不重",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_004"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_004",
+          "motion": "question01",
+          "expression": "exp_idle01",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_6",
+      "paragraph": 11,
+      "kind": "silent",
+      "speaker": null,
+      "text": "",
+      "emotion": "thinking",
+      "reason": "长时间的沉默，只留反应",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "static",
+        "dof": 2
+      },
+      "cutIn": "dip_black",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": "exp_serious03",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_22",
+      "paragraph": 11,
+      "kind": "narration",
+      "speaker": null,
+      "text": "乐奈从旁边探过头来，眼睛亮亮的。",
+      "emotion": "happy",
+      "reason": "乐奈的好奇打破沉默",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_003"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_003",
+          "motion": "look01",
+          "expression": "exp_smile03",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_23",
+      "paragraph": 11,
+      "kind": "narration",
+      "speaker": null,
+      "text": "素世安静地等着。",
+      "emotion": "neutral",
+      "reason": "安静的等待，节奏放慢",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": null,
+          "expression": "exp_idle01",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_24",
+      "paragraph": 11,
+      "kind": "dialogue",
+      "speaker": "c_001",
+      "text": "我想说……就算走丢了，也想再一次找到大家。",
+      "emotion": "serious",
+      "reason": "灯终于说出真心话",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "push_in",
+        "dof": 2
+      },
+      "cutIn": "cut",
+      "fx": "memory_glow",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "smile02",
+          "expression": "exp_smile02",
+          "attention": "camera",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_25",
+      "paragraph": 12,
+      "kind": "dialogue",
+      "speaker": "c_005",
+      "text": "这句好。",
+      "emotion": "happy",
+      "reason": "轻轻的肯定，温暖收束",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "memory_glow",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "nod01",
+          "expression": "exp_smile03",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": "s_3b_26",
+      "paragraph": 12,
+      "kind": "dialogue",
+      "speaker": "c_005",
+      "text": "比原来的更像灯。",
+      "emotion": "happy",
+      "reason": "两人相视，温柔作结",
+      "shot": {
+        "type": "two_shot",
+        "focus": [
+          "c_005",
+          "c_001"
+        ],
+        "move": "static",
+        "dof": 6
+      },
+      "cutIn": "cut",
+      "fx": "memory_glow",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "smile02",
+          "expression": "exp_smile04",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": "exp_smile03",
+          "attention": "c_005",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    }
+  ],
+  "costumeChanges": []
+}

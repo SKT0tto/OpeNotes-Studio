@@ -1,0 +1,70 @@
+[
+  {
+    "schemaName": "Breakdown",
+    "file": "breakdown-story.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[0,2]",
+      "\"scopes\":[\"scene\"]"
+    ],
+    "file": "scene-0-2-scene.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[3,5]",
+      "\"scopes\":[\"scene\"]"
+    ],
+    "file": "scene-3-5-scene.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[6,12]",
+      "\"scopes\":[\"scene\"]"
+    ],
+    "file": "scene-6-12-scene.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[13,18]",
+      "\"scopes\":[\"scene\"]"
+    ],
+    "file": "scene-13-18-scene.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[19,22]",
+      "\"scopes\":[\"scene\"]"
+    ],
+    "file": "scene-19-22-scene.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[3,5]",
+      "\"scopes\":[\"camera\"]"
+    ],
+    "file": "scene-3-5-camera.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[6,12]",
+      "\"scopes\":[\"camera\"]"
+    ],
+    "file": "scene-6-12-camera.json"
+  },
+  {
+    "schemaName": "SceneDirection",
+    "match": [
+      "\"paragraphRange\":[13,18]",
+      "\"scopes\":[\"camera\"]"
+    ],
+    "file": "scene-13-18-camera.json"
+  }
+]

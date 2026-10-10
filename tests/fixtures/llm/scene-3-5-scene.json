@@ -1,0 +1,207 @@
+{
+  "reason": "校门口五人会合，立希催促、爱音打趣，节奏轻快略带凉意",
+  "blocking": [
+    {
+      "castId": "c_003",
+      "slot": "far_left",
+      "depth": "front"
+    },
+    {
+      "castId": "c_004",
+      "slot": "left",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_001",
+      "slot": "center_right",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_002",
+      "slot": "right",
+      "depth": "front"
+    }
+  ],
+  "transitionIn": "scene_black",
+  "bgm": null,
+  "beats": [
+    {
+      "keepId": null,
+      "paragraph": 3,
+      "kind": "narration",
+      "speaker": null,
+      "text": "走出校门的时候，傍晚的风带着一点凉意。",
+      "emotion": "neutral",
+      "reason": "交代傍晚环境，节奏放缓",
+      "shot": {
+        "type": "group",
+        "focus": [],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "look01",
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": true,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_002",
+          "motion": "look01",
+          "expression": "exp_idle02",
+          "attention": null,
+          "enter": true,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 3,
+      "kind": "narration",
+      "speaker": null,
+      "text": "立希和乐奈已经在路口等着，乐奈蹲在地上盯着一只路过的猫，立希则抱着胳膊，一脸不耐烦。",
+      "emotion": "neutral",
+      "reason": "先到两人的状态，立希不耐",
+      "shot": {
+        "type": "two_shot",
+        "focus": [
+          "c_004",
+          "c_003"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_003",
+          "motion": "look01",
+          "expression": "exp_idle01",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_004",
+          "motion": "serious01",
+          "expression": "exp_angry01",
+          "attention": "away",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 4,
+      "kind": "dialogue",
+      "speaker": "c_004",
+      "text": "“你们太慢了。”",
+      "emotion": "angry",
+      "reason": "立希抱怨迟到，语气冲",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_004"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_004",
+          "motion": "angry01",
+          "expression": "exp_angry01",
+          "attention": "c_002",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 4,
+      "kind": "dialogue",
+      "speaker": "c_004",
+      "text": "“新歌的副歌还一点头绪都没有，今天一定要定下来。”",
+      "emotion": "serious",
+      "reason": "谈新歌进度，态度坚决",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_004"
+        ],
+        "move": "push_in",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_004",
+          "motion": "serious01",
+          "expression": "exp_serious02",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 5,
+      "kind": "dialogue",
+      "speaker": "c_002",
+      "text": "“知道啦知道啦，立希你好凶。”",
+      "emotion": "happy",
+      "reason": "爱音笑着化解，气氛转轻",
+      "shot": {
+        "type": "two_shot",
+        "focus": [
+          "c_002",
+          "c_004"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_002",
+          "motion": "bye01",
+          "expression": "exp_smile02",
+          "attention": "c_004",
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_004",
+          "motion": null,
+          "expression": "exp_bsmile01",
+          "attention": "c_002",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    }
+  ],
+  "costumeChanges": []
+}

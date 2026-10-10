@@ -1,0 +1,43 @@
+{
+  "Version": 3,
+  "Meta": {
+    "Duration": 3,
+    "Fps": 30,
+    "Loop": false
+  },
+  "Curves": [
+    {
+      "Target": "Parameter",
+      "Id": "ParamAngleX",
+      "Segments": [
+        0,
+        -22,
+        0,
+        3,
+        -22
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamBodyAngleX",
+      "Segments": [
+        0,
+        -10,
+        0,
+        3,
+        -10
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Id": "ParamEyeBallX",
+      "Segments": [
+        0,
+        0.16,
+        0,
+        3,
+        0.16
+      ]
+    }
+  ]
+}
