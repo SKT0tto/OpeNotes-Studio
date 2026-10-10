@@ -2,6 +2,7 @@ import type { Ticker } from 'pixi.js';
 import type { CubismInternalModel, Live2DModel } from 'untitled-pixi-live2d-engine/cubism';
 import type { AxisSigns } from '@shared/schema/calibration';
 import { ParamOverride, type ParamAccess } from './ParamOverride';
+import { idleNameOf } from '@shared/timeline/motionMap';
 import type { ensureRuntime } from './runtime';
 
 type Runtime = Awaited<ReturnType<typeof ensureRuntime>>;
@@ -44,6 +45,9 @@ export class Live2DActor {
   private mouth = 0;
   private readonly mouthIndex: number;
   private motionToken = 0;
+  /** `playMotion` calls that are still loading: while any is pending the queue is allowed to be empty. */
+  private inflight = 0;
+  private aliveAfter = 0;
   private lastNow = 0;
 
   private constructor(
@@ -103,6 +107,7 @@ export class Live2DActor {
       this.lastNow = now;
       this.override.step(dt / 1000);
       update(dt, now);
+      this.keepAlive(now);
     };
     im.updateFocus = () => {
       this.override.apply();
@@ -111,6 +116,18 @@ export class Live2DActor {
     im.on('beforeModelUpdate', () => {
       for (let i = 0; i < this.applied.length; i++) this.applied[i] = core.getParameterValueByIndex(i);
     });
+  }
+
+  /**
+   * Nobody on stage is ever frozen: when the motion queue has run dry (a one-shot finished before the timeline's next event,
+   * a start was refused, a model without a compiled idle) the actor's idle loop starts again on the next frame. Only for a
+   * model that is on stage and not in the middle of starting something.
+   */
+  private keepAlive(now: number): void {
+    if (!this.model.parent || this.inflight > 0 || now < this.aliveAfter || !this.internal.motionManager.isFinished()) return;
+    this.aliveAfter = now + 250; // a model whose idle cannot start is retried a few times a second, not every frame
+    const idle = this.idleName ?? idleNameOf(this.motionNames);
+    if (idle) void this.playMotion(idle, { loop: true });
   }
 
   /** Pseudo lip-sync: mouth opening (0..1 of the parameter range) held until changed; 0 leaves the motion alone. */
@@ -151,6 +168,11 @@ export class Live2DActor {
     return Object.keys(this.internal.motionManager.definitions);
   }
 
+  /** True while the motion queue still has a running motion (a finished queue means the model is only breathing / blinking). */
+  get motionRunning(): boolean {
+    return !this.internal.motionManager.isFinished();
+  }
+
   get expressionNames(): string[] {
     return (this.internal.motionManager.expressionManager?.definitions ?? []).map((d) => (d as { Name: string }).Name);
   }
@@ -164,27 +186,35 @@ export class Live2DActor {
    * Play a motion; a new call force-interrupts and cross-fades from the previous one.
    * One-shots fall back to the idle motion when they finish.
    */
-  async playMotion(name: string, opts: { loop?: boolean; returnToIdle?: boolean; offset?: number } = {}): Promise<boolean> {
+  async playMotion(name: string, opts: { loop?: boolean; returnToIdle?: boolean; offset?: number; restart?: boolean } = {}): Promise<boolean> {
     const token = ++this.motionToken;
     const loop = opts.loop ?? false;
     const back = opts.returnToIdle ?? true;
-    // Start part-way through (seek): the engine begins a motion at (now - offsetTime). The motion object is cached
-    // and shared, so the offset is always written, 0 included.
-    const motion = await this.internal.motionManager.loadMotion(name, 0);
-    if (token !== this.motionToken) return false;
-    if (motion) {
-      const offset = Math.max(0, opts.offset ?? 0);
-      const cycle = loop ? motion.getLoopDuration() : motion.getDuration();
-      motion.setOffsetTime(cycle > 0 ? (loop ? offset % cycle : Math.min(offset, cycle)) : 0);
+    this.inflight++;
+    try {
+      // Start part-way through (seek): the engine begins a motion at (now - offsetTime). The motion object is cached
+      // and shared, so the offset is always written, 0 included.
+      const mm = this.internal.motionManager;
+      const motion = await mm.loadMotion(name, 0);
+      if (token !== this.motionToken) return false;
+      if (motion) {
+        const offset = Math.max(0, opts.offset ?? 0);
+        const cycle = loop ? motion.getLoopDuration() : motion.getDuration();
+        motion.setOffsetTime(cycle > 0 ? (loop ? offset % cycle : Math.min(offset, cycle)) : 0);
+      }
+      // The engine refuses to "start" the motion that is already current, which would leave a seek at the old position.
+      if (opts.restart && (mm.state.currentGroup === name || mm.state.reservedGroup === name)) mm.stopAllMotions();
+      return await this.model.motion(name, 0, this.rt.MotionPriority.FORCE, {
+        loop,
+        onFinish: () => {
+          if (token === this.motionToken && !loop && back && this.idleName && this.idleName !== name) {
+            void this.playMotion(this.idleName, { loop: true });
+          }
+        },
+      });
+    } finally {
+      this.inflight--;
     }
-    return this.model.motion(name, 0, this.rt.MotionPriority.FORCE, {
-      loop,
-      onFinish: () => {
-        if (token === this.motionToken && !loop && back && this.idleName && this.idleName !== name) {
-          void this.playMotion(this.idleName, { loop: true });
-        }
-      },
-    });
   }
 
   /** Play `name` as the looping idle (and remember it for fallbacks). */
@@ -196,6 +226,18 @@ export class Live2DActor {
   /** Fetch + parse motion files ahead of time so the first play has no delay. */
   async preloadMotions(names: readonly string[]): Promise<void> {
     await Promise.all(names.map((n) => this.internal.motionManager.loadMotion(n, 0)));
+  }
+
+  /** Fetch + parse expression files ahead of time (a scene change must not wait for a file while the stage is hidden). */
+  async preloadExpressions(names: readonly string[]): Promise<void> {
+    const em = this.internal.motionManager.expressionManager as unknown as { getExpressionIndex(n: string): number; loadExpression(i: number): Promise<unknown> } | undefined;
+    if (!em) return;
+    await Promise.all(
+      names.map(async (n) => {
+        const i = em.getExpressionIndex(n);
+        if (i >= 0) await em.loadExpression(i).catch(() => undefined);
+      }),
+    );
   }
 
   stopMotions(): void {

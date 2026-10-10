@@ -112,7 +112,7 @@ export function buildGroups(project: Project, scene: Scene, sceneIndex: number, 
       if (ch === 'head') {
         return rks.length === 0 ? [] : rks.map((r) => ({ id: `ghost:${castId}:head:${r.beatId}`, at: r.at, duration: r.duration, label: '听者转头', locked: false, ghost: { castId, keys: rks }, title: `规则导演：听者转头（双击烘焙全部 ${rks.length} 个，转为人工关键帧）` }));
       }
-      return rks.map((r) => ({ id: `ghost:${castId}:${ch}:${r.beatId}`, at: r.at, duration: 0, label: valueLabel(ch, r.value), locked: false, ghost: { castId, keys: [r] }, title: `规则导演：${CHANNEL_LABEL[ch]} ${valueLabel(ch, r.value)}（${(r.value as { name?: string }).name}，双击烘焙为关键帧）` }));
+      return rks.map((r) => ({ id: `ghost:${castId}:${ch}:${r.beatId}:${r.offset}`, at: r.at, duration: 0, label: valueLabel(ch, r.value), locked: false, ghost: { castId, keys: [r] }, title: `规则导演：${CHANNEL_LABEL[ch]} ${valueLabel(ch, r.value)}（${(r.value as { name?: string }).name}，双击烘焙为关键帧）` }));
     };
     groups.push({
       id: `actor:${castId}`, label: cast?.displayName ?? castId, color: 'var(--track-actor)', castId,

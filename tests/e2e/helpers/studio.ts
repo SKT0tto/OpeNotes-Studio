@@ -20,6 +20,9 @@ export interface Studio {
   player: Player | null;
   listLoadedModels(): string[];
   getActorParams(id: string, ids?: string[]): Record<string, { applied: number; base: number }>;
+  getActorMotion(id: string): { running: boolean };
+  stopActorMotion(id: string): void;
+  stageProbe(): { sceneVisible: boolean; people: string[]; hasBackground: boolean } | null;
   getRenderState(): Array<{ id: string; worldTransform: { a: number; d: number } }>;
   getCamera(): { x: number; y: number; zoom: number; bgZoom?: number; bgViewZoom?: number } | null;
   snapshotPixels(x: number, y: number, w: number, h: number): number[];

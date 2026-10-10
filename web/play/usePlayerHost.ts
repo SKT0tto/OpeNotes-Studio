@@ -13,7 +13,7 @@ import { HudLayer } from '../engine/HudLayer';
 import { ModelLibrary } from '../engine/ModelLibrary';
 import { Player } from '../engine/Player';
 import { STAGE_H, STAGE_RES, Stage } from '../engine/Stage';
-import { registerDebugApp, registerDebugCamera, registerDebugPlayer } from '../engine/debugHooks';
+import { registerDebugApp, registerDebugCamera, registerDebugPlayer, registerDebugStage } from '../engine/debugHooks';
 import { ensureRuntime } from '../engine/runtime';
 
 export interface PlayInfo {
@@ -122,6 +122,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
         reload: (p) => player!.reload(p),
         beatStarts: () => Object.fromEntries(player!.compiled.scenes.flatMap((sc) => sc.beats.map((b) => [b.id, b.start]))),
       });
+      registerDebugStage(() => stage!.probe());
       registerDebugCamera(() => ({ ...stage!.camera.pose, bgViewZoom: stage!.bgViewZoom }));
       unsubscribe = player.subscribe((s: RenderState, p) => {
         // identity-stable while the interface is hidden, so the layers do not re-layout every frame
@@ -153,6 +154,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       dead = true;
       registerDebugPlayer(null);
       registerDebugCamera(null);
+      registerDebugStage(null);
       registerDebugApp(null);
       unsubscribe?.();
       player?.dispose();

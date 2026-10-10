@@ -166,6 +166,9 @@ const BASE = {
     gestureEvery: 1,
     exprAtLineStart: true,
     listenerTurnDelay: 0.3,
+    /** Bystanders make a small reaction (nod, glance ...) when they have been still this long while somebody else speaks. */
+    listenerReact: true,
+    listenerReactGap: 5,
     mouthGain: 1,
   },
   fx: {
@@ -341,6 +344,8 @@ export const STYLE_FIELDS: StyleField[] = [
   int('performance.gestureEvery', '每 N 句换手势', G.perf, 1, 6),
   bool('performance.exprAtLineStart', '句首换表情', G.perf),
   num('performance.listenerTurnDelay', '听者转头延迟', G.perf, 0, 1, 0.05, 's'),
+  bool('performance.listenerReact', '听者反应动作', G.perf),
+  num('performance.listenerReactGap', '听者反应最小间隔', G.perf, 0, 30, 0.5, 's'),
   num('performance.mouthGain', '口型增益', G.perf, 0, 2, 0.05),
   num('fx.anxietyDesat', '不安暗角 去饱和', G.fx, 0, 1, 0.05),
   num('fx.anxietyInset', '不安暗角 边缘宽度/W', G.fx, 0, 0.5, 0.01),

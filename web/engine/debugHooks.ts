@@ -28,6 +28,7 @@ export interface DebugPlayer {
 }
 let player: DebugPlayer | null = null;
 type CamInfo = { x: number; y: number; zoom: number; bgZoom?: number; bgViewZoom?: number };
+let stageProbe: (() => { sceneVisible: boolean; people: string[]; hasBackground: boolean }) | null = null;
 let cameraGetter: (() => CamInfo) | null = null;
 
 export interface ParamReading {
@@ -40,6 +41,12 @@ export interface ParamReading {
 export interface StudioDebug {
   listLoadedModels(): string[];
   getActorParams(actorId: string, ids?: string[]): Record<string, ParamReading>;
+  /** Whether the actor's motion queue is running (false = no motion at all, only the engine's own breath / blink). */
+  getActorMotion(actorId: string): { running: boolean };
+  /** Test-only: stop every motion of an actor (a stand-in for "something went wrong"; the actor must come back to its idle by itself). */
+  stopActorMotion(actorId: string): void;
+  /** What the stage really shows right now: scene visibility and the people attached and visible. */
+  stageProbe(): { sceneVisible: boolean; people: string[]; hasBackground: boolean } | null;
   getRenderState(): Array<{
     id: string;
     worldTransform: { a: number; b: number; c: number; d: number; tx: number; ty: number };
@@ -66,6 +73,10 @@ export function registerDebugPlayer(p: DebugPlayer | null): void {
   player = p;
 }
 
+export function registerDebugStage(get: typeof stageProbe): void {
+  stageProbe = get;
+}
+
 export function registerDebugCamera(get: (() => CamInfo) | null): void {
   cameraGetter = get;
 }
@@ -81,6 +92,17 @@ if (import.meta.env.DEV) {
       const a = actors.get(actorId);
       if (!a) throw new Error(`unknown actor ${actorId}`);
       return Object.fromEntries(ids.map((id) => [id, { applied: a.appliedValue(id), base: a.baseValue(id) }]));
+    },
+    stageProbe: () => stageProbe?.() ?? null,
+    stopActorMotion(actorId) {
+      const a = actors.get(actorId);
+      if (!a) throw new Error(`unknown actor ${actorId}`);
+      a.stopMotions();
+    },
+    getActorMotion(actorId) {
+      const a = actors.get(actorId);
+      if (!a) throw new Error(`unknown actor ${actorId}`);
+      return { running: a.motionRunning };
     },
     getRenderState: () =>
       [...actors.values()].map((a) => {
