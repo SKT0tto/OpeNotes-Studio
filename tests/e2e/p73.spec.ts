@@ -5,14 +5,14 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import './helpers/studio';
 
-test.use({ viewport: { width: 1920, height: 1200 } });
+test.use({ viewport: { width: 1920, height: 1400 } });
 
 async function openDemo(page: Page) {
   const errors: string[] = [];
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/play/demo');
-  await page.addStyleTag({ content: '.play-stage{width:1920px !important;max-width:none !important}' });
+  await page.addStyleTag({ content: '.play{padding:0 !important}' });
   await expect(page.getByTestId('play-status')).toHaveText('就绪', { timeout: 180_000 });
   return errors;
 }

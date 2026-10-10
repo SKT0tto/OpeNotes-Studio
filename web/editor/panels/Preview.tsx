@@ -5,11 +5,14 @@ import type { Project } from '@shared/schema/project';
 import type { usePlayerHost } from '../../play/usePlayerHost';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
+import { AspectBox } from '../../ui/AspectBox';
 import { StageOverlay } from '../stageTools/StageOverlay';
 import { useRenderState } from '../useRenderState';
 import { ActorControls } from './ActorFields';
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(2).padStart(5, '0')}`;
+/** The editor always previews in the project's frame, 16:9. */
+const EDITOR_ASPECT = 16 / 9;
 type Host = ReturnType<typeof usePlayerHost>;
 
 const OVERLAYS: Array<['safe' | 'thirds' | 'eyeLine', string, string]> = [
@@ -69,14 +72,12 @@ export function Preview({ host, project, catalog }: { host: Host; project: Proje
           </>
         )}
       </div>
-      <div className="viewport">
-        <div className="stage-frame">
-          <div className="play-stage" ref={hostRef} data-testid="play-stage" />
-          {ready && !empty && <StageOverlay host={host} project={project} compiled={compiled} />}
-          {empty && <p className="overlay-msg" data-testid="preview-empty">这个项目还没有场景。在左侧“剧本”里点“添加场景”开始，或基于示例创建。</p>}
-          {error && <p className="overlay-msg bad" data-testid="play-error">{error}</p>}
-        </div>
-      </div>
+      <AspectBox className="viewport" frameClassName="stage-frame" frameTestId="stage-frame" aspect={EDITOR_ASPECT}>
+        <div className="play-stage" ref={hostRef} data-testid="play-stage" />
+        {ready && !empty && <StageOverlay host={host} project={project} compiled={compiled} />}
+        {empty && <p className="overlay-msg" data-testid="preview-empty">这个项目还没有场景。在左侧“剧本”里点“添加场景”开始，或基于示例创建。</p>}
+        {error && <p className="overlay-msg bad" data-testid="play-error">{error}</p>}
+      </AspectBox>
       {castId && scene && !playing && (
         <div className="quickbar" data-testid="quickbar">
           <strong>{project.cast.find((c) => c.id === castId)?.displayName ?? castId}</strong>

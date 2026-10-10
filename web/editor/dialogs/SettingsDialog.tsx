@@ -58,14 +58,18 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
   const test = async () => {
     setBusy(true);
     setResult(null);
-    if (await save()) setResult(await testLlm());
+    if (await save()) {
+      setResult(await testLlm());
+      // the server remembers the outcome: show "verified" / "failed" in the status line too
+      await fetchLlmSettings().then(adopt, () => undefined);
+    }
     setBusy(false);
   };
 
   const keyInfo = (k: PublicLlmSettings['anthropic'], which: 'anthropic' | 'openai') =>
     k.hasKey ? (
       <span className="hint" data-testid={`${which}-key-state`}>
-        已配置 <code>{k.mask}</code>（{k.source === 'env' ? '来自环境变量 / .env' : '已保存在服务端'}）
+        已填写 key <code>{k.mask}</code>（{k.source === 'env' ? '来自环境变量 / .env' : '已保存在服务端'}）
         {k.source === 'file' && <button className="btn-s" onClick={() => void clearKey(which)}>清除</button>}
       </span>
     ) : (
@@ -78,7 +82,7 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
         <p className="hint">{error ?? '读取中…'}</p>
       ) : (
         <div className="settings-form">
-          <p className={s.status.configured ? 'ok' : 'warn'} data-testid="llm-status">{s.status.message}</p>
+          <p className={s.status.verified === 'ok' ? 'ok' : s.status.configured && s.status.verified !== 'failed' ? 'hint' : 'warn'} data-testid="llm-status" data-verified={s.status.verified}>{s.status.message}</p>
           <label className="srow">
             <span>提供方</span>
             <select value={provider} onChange={(e) => setProvider(e.target.value as LlmProviderId)} data-testid="llm-provider">

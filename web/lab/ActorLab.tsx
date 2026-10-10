@@ -9,6 +9,7 @@ import { Live2DActor, NEUTRAL_SIGNS } from '../engine/Live2DActor';
 import { probeModel } from '../engine/ModelProbe';
 import { registerDebugActor, registerDebugApp } from '../engine/debugHooks';
 import { ZERO_INTENTS } from '../engine/ParamOverride';
+import { AspectBox } from '../ui/AspectBox';
 
 const STAGE_W = 560;
 const STAGE_H = 760;
@@ -222,7 +223,9 @@ export function ActorLab({ health }: { health: Health }) {
   return (
     <div className="lab" data-testid="actor-lab">
       <div className="lab-stage">
-        <div ref={host} data-testid="lab-canvas" />
+        <AspectBox className="lab-canvas" frameClassName="lab-frame" frameTestId="stage-frame" aspect={STAGE_W / STAGE_H}>
+          <div ref={host} style={{ width: '100%', height: '100%' }} data-testid="lab-canvas" />
+        </AspectBox>
         <p className="dim" data-testid="lab-status">{status}</p>
         {error && <p className="bad" data-testid="lab-error">{error}</p>}
       </div>

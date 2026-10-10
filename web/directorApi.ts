@@ -33,7 +33,7 @@ export interface SceneResponse {
   cached: boolean;
 }
 export interface BatchItem { sceneId: string; result?: SceneResponse; error?: { kind: string; message: string } }
-export interface BatchProgress { sceneId: string; title: string; state: 'start' | 'done' | 'error'; message?: string; cached?: boolean; result?: SceneResponse }
+export interface BatchProgress { sceneId: string; title: string; state: 'start' | 'done' | 'error'; message?: string; kind?: string; cached?: boolean; result?: SceneResponse }
 
 /** A failed AI request: `kind` (not_configured, auth, network, truncated, repair_failed, ...) and a message safe to show. */
 export class DirectorApiError extends Error {

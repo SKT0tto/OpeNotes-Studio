@@ -17,6 +17,7 @@ import { STAGE_H, Stage, stageSceneOf } from '../engine/Stage';
 import { registerDebugApp, registerDebugCamera } from '../engine/debugHooks';
 import { ensureRuntime } from '../engine/runtime';
 import type { TransitionKind } from '../engine/Transitions';
+import { AspectBox } from '../ui/AspectBox';
 
 interface LabActor {
   id: string;
@@ -161,7 +162,9 @@ export function StageLab({ health }: { health: Health }) {
   return (
     <div className="lab" data-testid="stage-lab">
       <div className="lab-stage">
-        <div ref={host} className="lab-canvas-wide" data-testid="stage-canvas" />
+        <AspectBox className="lab-canvas-wide" frameClassName="lab-frame" frameTestId="stage-frame" aspect={16 / 9}>
+          <div ref={host} style={{ width: '100%', height: '100%' }} data-testid="stage-canvas" />
+        </AspectBox>
         <p className="dim" data-testid="stage-status">{status}</p>
         {error && <p className="bad" data-testid="stage-error">{error}</p>}
       </div>

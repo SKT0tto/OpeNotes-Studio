@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1
+
+- Preview frame: the editor preview, `/play`, Stage Lab, Actor Lab and storyboard thumbnails now keep the exact project frame shape (16:9, or 2.16:1 on the play page) in any window size, panel drag / collapse and browser zoom, letterboxed / pillarboxed and never stretched or cropped. One shared `AspectBox` (ResizeObserver) hosts every canvas
+- LLM settings: the server re-reads `.env` on every request (no restart after editing a key); real environment variables win over `.env`, and a value saved in the AI settings panel wins over both
+- The AI settings no longer claim "configured" without a usable key: empty and placeholder keys (`sk-ant-...`) count as missing, a hosted OpenAI-compatible endpoint needs a key, and the status says "filled in, not verified" / "verified" / "last call failed" from the real connection test and real generation results
+- Generation failures are shown as failures: a 401 / timeout / network error never ends in "all scenes generated" or a passing continuity check; the dialog names the reason and the fix (for example "API key invalid or missing -> open AI settings"), lists succeeded and failed scenes separately and retries only the failed ones
+- Changing a costume no longer flashes a black preview: the new model is loaded first while the previous frame stays on screen
+
 ## 0.1.0
 
 First public release (renamed from the internal "Our Notes AI Story Studio").

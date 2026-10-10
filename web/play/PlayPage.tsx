@@ -3,6 +3,7 @@ import { ProjectSchema, type Project } from '@shared/schema/project';
 import demoJson from '../../tests/fixtures/demo-project.json';
 import type { Health } from '../api';
 import { loadProject } from '../projectsApi';
+import { AspectBox } from '../ui/AspectBox';
 import { usePlayerHost } from './usePlayerHost';
 
 /** Window shapes: the editor's 16:9, and the original game's wide frame (reference frames are 1920x890). */
@@ -48,7 +49,9 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
   const err = loadError ?? error;
   return (
     <div className="play" ref={root} data-testid="play-page" style={{ ['--aspect' as string]: aspect }}>
-      <div className="play-stage" ref={host} onClick={advance} data-testid="play-stage" />
+      <AspectBox className="play-viewport" frameClassName="play-frame" frameTestId="stage-frame" aspect={aspect}>
+        <div className="play-stage" ref={host} onClick={advance} data-testid="play-stage" />
+      </AspectBox>
       <p className="dim" data-testid="play-status">{err ? '' : project ? status : '读取项目…'}</p>
       {err && <p className="bad" data-testid="play-error">{err}</p>}
       <div className="play-controls">

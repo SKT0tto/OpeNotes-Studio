@@ -49,6 +49,8 @@ export class Player {
   private sceneIdx = -1;
   private dirty = true;
   private pendingSeek: number | null = null;
+  /** The next scene entry is a re-entry after an edit (everything is already loaded): keep showing the last frame, never a black one. */
+  private keepVisible = false;
   private prefetched = new Set<number>();
   private lastState: RenderState | null = null;
   private readonly listeners = new Set<PlayerListener>();
@@ -92,7 +94,14 @@ export class Player {
     this.prefetched.clear();
     // Re-enter the scene only when what must be loaded changed (background, models, motions); other edits just redraw.
     const now = compiled.scenes[this.sceneIdx];
-    if (!now || JSON.stringify(stageSceneOf(now)) !== JSON.stringify(this.stage.sceneInfo)) this.sceneIdx = -1;
+    if (!now || JSON.stringify(stageSceneOf(now)) !== JSON.stringify(this.stage.sceneInfo)) {
+      if (now && this.sceneIdx >= 0) {
+        // New costume / background / motions: load them while the previous frame stays on screen, then swap without hiding the scene.
+        await this.stage.prepare(stageSceneOf(now));
+        this.keepVisible = true;
+      }
+      this.sceneIdx = -1;
+    }
     await this.seek(Math.min(this.t, compiled.duration));
     return true;
   }
@@ -215,7 +224,8 @@ export class Player {
     if (changed) {
       const scene = this.compiled.scenes[state.sceneIndex]!;
       if (snapshot && scene.transitionIn.kind !== 'cut' && this.sceneIdx >= 0) this.stage.captureSnapshot();
-      this.stage.setSceneVisible(false);
+      if (!this.keepVisible) this.stage.setSceneVisible(false);
+      this.keepVisible = false;
       await this.stage.setScene(stageSceneOf(scene));
       this.sceneIdx = state.sceneIndex;
     }
