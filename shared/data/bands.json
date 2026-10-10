@@ -1,0 +1,30 @@
+{
+  "_note": "Public setting facts. Formation x: -1 (stage left) .. +1 (right); depth: 0 front .. 1 back. Editable defaults.",
+  "bands": [
+    { "key": "mygo", "name": "MyGO!!!!!", "members": ["001", "002", "003", "004", "005"],
+      "formation": [
+        { "key": "001", "x": 0, "depth": 0 }, { "key": "002", "x": -0.55, "depth": 0.1 },
+        { "key": "003", "x": -0.28, "depth": 0.22 }, { "key": "004", "x": 0.55, "depth": 0.1 },
+        { "key": "005", "x": 0, "depth": 0.8 } ] },
+    { "key": "avemujica", "name": "Ave Mujica", "members": ["006", "007", "008", "009", "010"],
+      "formation": [
+        { "key": "006", "x": 0, "depth": 0 }, { "key": "007", "x": -0.55, "depth": 0.1 },
+        { "key": "008", "x": 0.55, "depth": 0.1 }, { "key": "009", "x": 0, "depth": 0.8 },
+        { "key": "010", "x": -0.8, "depth": 0.6 } ] },
+    { "key": "mewtype", "name": "梦限大MewType", "members": ["011", "012", "013", "014", "015"],
+      "formation": [
+        { "key": "011", "x": 0, "depth": 0 }, { "key": "012", "x": -0.55, "depth": 0.1 },
+        { "key": "013", "x": 0.55, "depth": 0.1 }, { "key": "014", "x": -0.8, "depth": 0.6 },
+        { "key": "015", "x": 0.8, "depth": 0.6 } ] },
+    { "key": "millsage", "name": "millsage", "members": ["016", "017", "018", "019", "020"],
+      "formation": [
+        { "key": "016", "x": 0, "depth": 0 }, { "key": "017", "x": -0.55, "depth": 0.1 },
+        { "key": "018", "x": -0.28, "depth": 0.22 }, { "key": "019", "x": 0.55, "depth": 0.1 },
+        { "key": "020", "x": 0, "depth": 0.8 } ] },
+    { "key": "dumbrock", "name": "一家Dumb Rock!", "members": ["021", "022", "023", "024", "025"],
+      "formation": [
+        { "key": "021", "x": -0.25, "depth": 0 }, { "key": "022", "x": 0.25, "depth": 0 },
+        { "key": "023", "x": 0.55, "depth": 0.1 }, { "key": "024", "x": 0, "depth": 0.8 },
+        { "key": "025", "x": -0.8, "depth": 0.6 } ] }
+  ]
+}

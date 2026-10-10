@@ -1,0 +1,5 @@
+{
+  "background-fake0001": { "assetId": "background-fake0001", "assetName": "adv_bkg_stage_000001", "kind": "background", "url": "/fake/1.png" },
+  "background-fake0002": { "assetId": "background-fake0002", "assetName": "adv_bkg_stage_000002", "kind": "background", "url": "/fake/2.png" },
+  "background-fake0003": { "assetId": "background-fake0003", "assetName": "adv_bkg_stage_000900", "kind": "background", "url": "/fake/3.png" }
+}

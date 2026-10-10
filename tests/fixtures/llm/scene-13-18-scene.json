@@ -1,0 +1,420 @@
+{
+  "reason": "傍晚咖啡厅里，立希拍板副歌与节奏、爱音松一口气，随后众人收拾，灯独自留下并向素世道出想独自再去一个地方——节奏由紧到静，结尾轻柔收束。",
+  "blocking": [
+    {
+      "castId": "c_004",
+      "slot": "left",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_005",
+      "slot": "center_left",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_001",
+      "slot": "center",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_002",
+      "slot": "right",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_003",
+      "slot": "far_right",
+      "depth": "mid"
+    }
+  ],
+  "transitionIn": "scene_black",
+  "bgm": null,
+  "beats": [
+    {
+      "keepId": null,
+      "paragraph": 13,
+      "kind": "narration",
+      "speaker": null,
+      "text": "立希拿起笔，在纸上飞快地写着。",
+      "emotion": "serious",
+      "reason": "落笔定音的专注感",
+      "shot": {
+        "type": "insert",
+        "focus": [
+          "c_004"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_004",
+          "motion": "note01",
+          "expression": "exp_serious01",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 13,
+      "kind": "dialogue",
+      "speaker": "c_004",
+      "text": "那副歌就从这句开始。",
+      "emotion": "serious",
+      "reason": "果断定下副歌起点",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_004"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_004",
+          "motion": "note01",
+          "expression": "exp_serious01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 13,
+      "kind": "dialogue",
+      "speaker": "c_004",
+      "text": "节奏我来改。",
+      "emotion": "serious",
+      "reason": "主动揽下改编的担当",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_004"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_004",
+          "motion": "nod01",
+          "expression": "exp_serious02",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 14,
+      "kind": "narration",
+      "speaker": null,
+      "text": "爱音长长地吐出一口气，笑了。",
+      "emotion": "happy",
+      "reason": "紧绷后放松的反应",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_002"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_002",
+          "motion": "smile01",
+          "expression": "exp_smile02",
+          "attention": "c_004",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 14,
+      "kind": "dialogue",
+      "speaker": "c_002",
+      "text": "太好了，总算有头绪了。",
+      "emotion": "happy",
+      "reason": "看到进展的雀跃",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_002"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_002",
+          "motion": "smile02",
+          "expression": "exp_smile01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 15,
+      "kind": "narration",
+      "speaker": null,
+      "text": "讨论结束的时候，窗外的天色已经完全暗下来。",
+      "emotion": "neutral",
+      "reason": "时间流逝的转场感",
+      "shot": {
+        "type": "insert",
+        "focus": [],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": []
+    },
+    {
+      "keepId": null,
+      "paragraph": 15,
+      "kind": "narration",
+      "speaker": null,
+      "text": "大家各自收拾东西，灯却没有动。",
+      "emotion": "thinking",
+      "reason": "热闹散去，只有灯静着",
+      "shot": {
+        "type": "group",
+        "focus": [
+          "c_001"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": "exp_idle03",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_002",
+          "motion": "bye01",
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_003",
+          "motion": "bye02",
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_004",
+          "motion": "check01",
+          "expression": "exp_idle01",
+          "attention": null,
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 16,
+      "kind": "dialogue",
+      "speaker": "c_005",
+      "text": "灯，不回去吗？",
+      "emotion": "neutral",
+      "reason": "轻声试探的关心",
+      "shot": {
+        "type": "two_shot",
+        "focus": [
+          "c_005",
+          "c_001"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "look01",
+          "expression": "exp_idle02",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        },
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": "exp_idle01",
+          "attention": "c_005",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 17,
+      "kind": "dialogue",
+      "speaker": "c_001",
+      "text": "我想再去一个地方。",
+      "emotion": "serious",
+      "reason": "下定决心的坦白",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "serious01",
+          "expression": "exp_serious01",
+          "attention": "c_005",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 17,
+      "kind": "dialogue",
+      "speaker": "c_001",
+      "text": "一个人。",
+      "emotion": "sad",
+      "reason": "独自承担的低声补充",
+      "shot": {
+        "type": "ecu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "push_in",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "sad01",
+          "expression": "exp_sad02",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 18,
+      "kind": "narration",
+      "speaker": null,
+      "text": "素世看了她一会儿，没有再问，只是点了点头。",
+      "emotion": "neutral",
+      "reason": "温柔的克制与理解",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "nod01",
+          "expression": "exp_idle01",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 18,
+      "kind": "dialogue",
+      "speaker": "c_005",
+      "text": "早点回家。",
+      "emotion": "neutral",
+      "reason": "轻声送别的余韵",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_005"
+        ],
+        "move": "pull_out",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_005",
+          "motion": "look01",
+          "expression": "exp_idle03",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    }
+  ],
+  "costumeChanges": []
+}

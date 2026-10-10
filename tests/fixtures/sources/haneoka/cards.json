@@ -1,0 +1,6 @@
+{
+  "entries": {
+    "1": { "backgroundId": 1, "image": "/fake/bg_fake_01.png", "name": ["", "[Background] Fake", "", "[背景]假", ""] },
+    "2": { "backgroundId": 2, "image": "/fake/bg_fake_02.png", "name": ["", "[Background] Fake 2", "", "[背景]假二", ""] }
+  }
+}

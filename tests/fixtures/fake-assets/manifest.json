@@ -1,0 +1,48 @@
+{
+  "models": [
+    {
+      "id": "001_casual_spring_01",
+      "name": "高松灯",
+      "nickname": "灯",
+      "characterKey": "001",
+      "bandName": "MyGO!!!!!",
+      "color": "#77BBDD",
+      "aliases": [
+        "Tomori",
+        "灯"
+      ]
+    },
+    {
+      "id": "sub_bota_casual_spring_01_still",
+      "name": "bota",
+      "nickname": "bota",
+      "characterKey": "sub_bota",
+      "bandName": "配角 / NPC",
+      "color": "#bba6ef",
+      "aliases": [
+        "bota"
+      ]
+    }
+  ],
+  "backgrounds": [
+    {
+      "id": "1",
+      "name": "RiNG 咖啡厅 · 夜间",
+      "aliases": [
+        "RiNG Cafe"
+      ],
+      "kind": "scene",
+      "location": "RiNG 咖啡厅",
+      "category": "餐饮",
+      "setting": "室内",
+      "time": "夜间",
+      "weather": "未指定",
+      "description": "木地板和吧台",
+      "tags": [
+        "名片场景"
+      ],
+      "width": 1,
+      "height": 1
+    }
+  ]
+}

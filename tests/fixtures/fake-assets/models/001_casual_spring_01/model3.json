@@ -1,0 +1,79 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "model.moc3",
+    "Textures": [
+      "textures/texture_00.png",
+      "textures/texture_01.png"
+    ],
+    "Physics": "physics3.json",
+    "Expressions": [
+      {
+        "Name": "exp_smile01",
+        "File": "expressions/exp_smile01.exp3.json"
+      },
+      {
+        "Name": "exp_bsmile02",
+        "File": "expressions/exp_bsmile02.exp3.json"
+      }
+    ],
+    "Motions": {
+      "mtn_idle01_L": [
+        {
+          "File": "motions/mtn_idle01_L.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_idle01_C": [
+        {
+          "File": "motions/mtn_idle01_C.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_idle01_R": [
+        {
+          "File": "motions/mtn_idle01_R.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_haruhikage01_C%20": [
+        {
+          "File": "motions/mtn_haruhikage01_C .motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_check01_R2": [
+        {
+          "File": "motions/mtn_check01_R2.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_look02_R_omit": [
+        {
+          "File": "motions/mtn_look02_R_omit.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "misc_tear01": [
+        {
+          "File": "motions/misc_tear01.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_ghost01_C": [
+        {
+          "File": "motions/does_not_exist.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ]
+    }
+  }
+}

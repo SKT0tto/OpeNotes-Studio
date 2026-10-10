@@ -1,0 +1,25 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "model.moc3",
+    "Textures": [
+      "textures/texture_00.png"
+    ],
+    "Physics": "physics3.json",
+    "Expressions": [
+      {
+        "Name": "exp_smile01",
+        "File": "expressions/exp_smile01.exp3.json"
+      }
+    ],
+    "Motions": {
+      "mtn_idle01_L": [
+        {
+          "File": "motions/mtn_idle01_L.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ]
+    }
+  }
+}

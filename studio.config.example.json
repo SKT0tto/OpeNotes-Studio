@@ -1,0 +1,7 @@
+{
+  "assetRoot": "D:\\path\\to\\assets",
+  "audioRoots": [],
+  "cubismCoreUrl": "https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js",
+  "port": 5274,
+  "importMaxBytes": 17179869184
+}

@@ -1,0 +1,30 @@
+# deps / build
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# runtime data, local config, secrets
+/data/
+/data-test/
+/vendor/
+.env
+.env.*
+!.env.example
+*.local.json
+studio.config.json
+.verify/
+
+# game assets (read-only external mount; never commit)
+/assets/
+*.moc3
+*.motion3.json
+*.exp3.json
+*.physics3.json
+*.model3.json
+textures/
+
+# synthetic fixtures are hand-written and allowed
+!tests/fixtures/
+!tests/fixtures/**

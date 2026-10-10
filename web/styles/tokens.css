@@ -1,0 +1,51 @@
+/* Design tokens (docs/PLAN_REVISION.md 4.2). Every colour, size and radius in the editor comes from here,
+   so restyling means editing this file only. */
+:root {
+  color-scheme: dark;
+  /* surfaces */
+  --bg-0: #0b0c0f; /* canvas / preview surround */
+  --bg-1: #121419; /* app */
+  --bg-2: #181b22; /* panels */
+  --bg-3: #1f232c; /* inputs, cards */
+  --bg-4: #272c37; /* hover */
+  --line: #2a2f3a;
+  --line-strong: #3a4150;
+  /* text */
+  --text-1: #e6e9ef;
+  --text-2: #a3aab8;
+  --text-3: #6b7385;
+  /* accents and state */
+  --accent: #5b8cff;
+  --accent-weak: rgba(91, 140, 255, 0.16);
+  --playhead: #ff5a5f;
+  --key: #f5c451;
+  --key-locked: #8a93a6;
+  --ok: #5ad19a;
+  --warn: #e6b450;
+  --bad: #ff6b6b;
+  /* provenance badges */
+  --src-ai: #b48cff;
+  --src-rule: #4fc3c7;
+  --src-user: #7bd88f;
+  --src-default: #6b7385;
+  /* tracks (P10) */
+  --track-actor: #4c6fff;
+  --track-camera: #e58a3c;
+  --track-audio: #3fb68b;
+  --track-fx: #c565d8;
+  --track-screen: #8c96a8;
+  /* shape, type, motion */
+  --radius-s: 4px;
+  --radius-m: 6px;
+  --font-ui: 'Inter', 'HarmonyOS Sans SC', 'Microsoft YaHei UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+  --fs-body: 12px;
+  --fs-label: 11px;
+  --fs-title: 13px;
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --ease: 120ms ease-out;
+  /* layout */
+  --topbar-h: 40px;
+  --statusbar-h: 22px;
+  --focus-ring: 0 0 0 2px var(--accent);
+}

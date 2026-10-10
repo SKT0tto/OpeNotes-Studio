@@ -1,0 +1,171 @@
+{
+  "cast": [
+    {
+      "nameInText": "灯",
+      "characterKey": "001",
+      "evidence": "“灯，快点”以及后文“灯把课本一本一本放进书包”，MyGO!!!!!主唱高松灯，别名灯。"
+    },
+    {
+      "nameInText": "爱音",
+      "characterKey": "002",
+      "evidence": "“爱音站在教室门口”，MyGO!!!!!吉他千早爱音，别名爱音。"
+    },
+    {
+      "nameInText": "立希",
+      "characterKey": "005",
+      "evidence": "“立希和乐奈已经在路口等着”“你们太慢了”，MyGO!!!!!鼓手椎名立希，别名立希。"
+    },
+    {
+      "nameInText": "乐奈",
+      "characterKey": "003",
+      "evidence": "“乐奈蹲在地上盯着一只路过的猫”，MyGO!!!!!吉他要乐奈，别名乐奈。"
+    },
+    {
+      "nameInText": "素世",
+      "characterKey": "004",
+      "evidence": "“素世已经坐在靠窗的位置”，MyGO!!!!!贝斯长崎爽世，别名素世。"
+    }
+  ],
+  "scenes": [
+    {
+      "title": "放学后的教室",
+      "startParagraph": 0,
+      "endParagraph": 2,
+      "location": {
+        "backgroundId": "adv_bkg_stage_000135",
+        "reason": "文中“放学的铃声刚响过，羽丘的走廊里……灯把课本放进书包”“爱音站在教室门口”，是放学后的校内教室场景，光线偏晚，故选普通教室·傍晚。"
+      },
+      "timeOfDay": "傍晚",
+      "presentCast": [
+        "001",
+        "002"
+      ],
+      "wardrobe": [
+        {
+          "characterKey": "001",
+          "modelId": "001_school_winter_hs_1st",
+          "reason": "在校上课放学后的场景，穿羽丘校服；“傍晚的风带着一点凉意”暗示天气偏冷，选冬季高中一年级制服。"
+        },
+        {
+          "characterKey": "002",
+          "modelId": "002_school_winter_hs_1st",
+          "reason": "同为羽丘在校生，放学后仍着校服，与灯同校同季，选冬季高中一年级制服。"
+        }
+      ],
+      "mood": "放学后教室里轻快又略带心事的日常气氛。",
+      "isPerformance": false,
+      "band": null
+    },
+    {
+      "title": "校门口集合",
+      "startParagraph": 3,
+      "endParagraph": 5,
+      "location": {
+        "backgroundId": "adv_bkg_stage_000151",
+        "reason": "“走出校门的时候，傍晚的风带着一点凉意”，众人在学校门口的路口集合，故选羽丘女子学园校门·傍晚。"
+      },
+      "timeOfDay": "傍晚",
+      "presentCast": [
+        "001",
+        "002",
+        "003",
+        "005"
+      ],
+      "wardrobe": [
+        {
+          "characterKey": "001",
+          "modelId": "001_school_winter_hs_1st",
+          "reason": "刚从学校出来，同一放学时段，无换装理由，保持冬季校服。"
+        },
+        {
+          "characterKey": "002",
+          "modelId": "002_school_winter_hs_1st",
+          "reason": "同一放学时段从校门出来，保持冬季校服。"
+        },
+        {
+          "characterKey": "003",
+          "modelId": "003_school_winter_jhs",
+          "reason": "乐奈为初中生，放学后同样未换装，保持冬季初中校服。"
+        },
+        {
+          "characterKey": "005",
+          "modelId": "005_school_winter_hs",
+          "reason": "立希放学后直接在校门口等候，保持冬季高中校服。"
+        }
+      ],
+      "mood": "略带凉意的傍晚，五人会合准备去排练的热闹感。",
+      "isPerformance": false,
+      "band": null
+    },
+    {
+      "title": "RiNG 咖啡厅讨论新歌",
+      "startParagraph": 6,
+      "endParagraph": 18,
+      "location": {
+        "backgroundId": "adv_bkg_stage_000154",
+        "reason": "“RiNG的门被推开，铃铛叮当响了一声……木地板和吧台在暖黄色的灯光下显得很柔和”，是室内咖啡厅，天色渐晚，故选RiNG 咖啡厅·傍晚。"
+      },
+      "timeOfDay": "傍晚",
+      "presentCast": [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005"
+      ],
+      "wardrobe": [
+        {
+          "characterKey": "001",
+          "modelId": "001_school_winter_hs_1st",
+          "reason": "放学后直接来RiNG，无换装，保持冬季校服。"
+        },
+        {
+          "characterKey": "002",
+          "modelId": "002_school_winter_hs_1st",
+          "reason": "放学后直接来RiNG，无换装，保持冬季校服。"
+        },
+        {
+          "characterKey": "003",
+          "modelId": "003_school_winter_jhs",
+          "reason": "放学后直接来RiNG，无换装，保持冬季初中校服。"
+        },
+        {
+          "characterKey": "004",
+          "modelId": "004_school_winter_hs",
+          "reason": "素世放学后先行到店等候，仍在同一日放学时段，保持冬季高中校服。"
+        },
+        {
+          "characterKey": "005",
+          "modelId": "005_school_winter_hs",
+          "reason": "放学后直接来RiNG，无换装，保持冬季高中校服。"
+        }
+      ],
+      "mood": "安静温暖的咖啡厅里，五人认真又温柔地推敲歌词。",
+      "isPerformance": false,
+      "band": null
+    },
+    {
+      "title": "夜晚的学校天台",
+      "startParagraph": 19,
+      "endParagraph": 22,
+      "location": {
+        "backgroundId": "adv_bkg_stage_000118",
+        "reason": "“夜里的风比白天冷得多。灯一个人爬上学校的天台……城市的灯光在脚下铺开”，是夜间高处天台俯视城市的场景，故选城市天台无围栏视角·夜间。"
+      },
+      "timeOfDay": "夜间",
+      "presentCast": [
+        "001"
+      ],
+      "wardrobe": [
+        {
+          "characterKey": "001",
+          "modelId": "001_school_winter_hs_1st",
+          "reason": "从RiNG讨论后独自上天台，未回家换装，延续当日冬季校服。"
+        }
+      ],
+      "mood": "夜风中独自咀嚼歌词、带着微光般希望的静谧收尾。",
+      "isPerformance": false,
+      "band": null
+    }
+  ]
+}

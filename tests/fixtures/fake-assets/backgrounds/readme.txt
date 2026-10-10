@@ -1,0 +1,1 @@
+ignored: not a png

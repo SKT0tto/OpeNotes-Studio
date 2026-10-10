@@ -1,0 +1,26 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "model.moc3",
+    "Textures": [
+      "textures/texture_00.png",
+      "textures/texture_01.png"
+    ],
+    "Motions": {
+      "mtn_idle_01": [
+        {
+          "File": "motions/mtn_idle_01.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ],
+      "mtn_play01_01": [
+        {
+          "File": "motions/mtn_play01_01.motion3.json",
+          "FadeInTime": 1,
+          "FadeOutTime": 1
+        }
+      ]
+    }
+  }
+}

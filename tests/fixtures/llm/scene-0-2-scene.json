@@ -1,0 +1,201 @@
+{
+  "reason": "放学后的教室日常：先交代环境与灯的迟缓，再引入爱音的催促，最后灯道歉并小跑跟上，节奏轻快带一点心事。",
+  "blocking": [
+    {
+      "castId": "c_001",
+      "slot": "center_left",
+      "depth": "mid"
+    },
+    {
+      "castId": "c_002",
+      "slot": "right",
+      "depth": "mid"
+    }
+  ],
+  "transitionIn": "scene_black",
+  "bgm": null,
+  "beats": [
+    {
+      "keepId": null,
+      "paragraph": 0,
+      "kind": "narration",
+      "speaker": null,
+      "text": "放学的铃声刚响过，羽丘的走廊里一下子热闹起来。",
+      "emotion": "neutral",
+      "reason": "交代放学环境，铺日常氛围",
+      "shot": {
+        "type": "group",
+        "focus": [
+          "c_001",
+          "c_002"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": []
+    },
+    {
+      "keepId": null,
+      "paragraph": 0,
+      "kind": "narration",
+      "speaker": null,
+      "text": "灯把课本一本一本放进书包，动作很慢，像是在想什么事情。",
+      "emotion": "thinking",
+      "reason": "动作慢，显出灯的心事",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "push_in",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "thinking01",
+          "expression": "exp_idle03",
+          "attention": "down",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 1,
+      "kind": "narration",
+      "speaker": null,
+      "text": "爱音站在教室门口，书包带子挂在肩膀上，一脸等不及的样子。",
+      "emotion": "happy",
+      "reason": "爱音登场，等不及的催促感",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_002"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_002",
+          "motion": "smile01",
+          "expression": "exp_smile03",
+          "attention": "c_001",
+          "enter": true,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 1,
+      "kind": "dialogue",
+      "speaker": "c_002",
+      "text": "灯，快点，再磨蹭RiNG的位子就被别人占了。",
+      "emotion": "happy",
+      "reason": "轻快催促，推动节奏",
+      "shot": {
+        "type": "mcu",
+        "focus": [
+          "c_002"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_002",
+          "motion": "question01",
+          "expression": "exp_smile04",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 2,
+      "kind": "dialogue",
+      "speaker": "c_001",
+      "text": "啊，对不起……我马上好。",
+      "emotion": "shy",
+      "reason": "被催后小声道歉，带点慌",
+      "shot": {
+        "type": "cu",
+        "focus": [
+          "c_001"
+        ],
+        "move": "static",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": "nod01",
+          "expression": "exp_shy01",
+          "attention": "c_002",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    },
+    {
+      "keepId": null,
+      "paragraph": 2,
+      "kind": "narration",
+      "speaker": null,
+      "text": "灯小声回答，抱起书包小跑过去。",
+      "emotion": "neutral",
+      "reason": "灯跟上爱音，收束这一段",
+      "shot": {
+        "type": "two_shot",
+        "focus": [
+          "c_001",
+          "c_002"
+        ],
+        "move": "pull_out",
+        "dof": null
+      },
+      "cutIn": "cut",
+      "fx": "none",
+      "actors": [
+        {
+          "castId": "c_001",
+          "motion": null,
+          "expression": "exp_smile02",
+          "attention": "c_002",
+          "enter": false,
+          "exit": false,
+          "move": "center_right"
+        },
+        {
+          "castId": "c_002",
+          "motion": "look01",
+          "expression": "exp_smile02",
+          "attention": "c_001",
+          "enter": false,
+          "exit": false,
+          "move": null
+        }
+      ]
+    }
+  ],
+  "costumeChanges": []
+}

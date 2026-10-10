@@ -1,0 +1,371 @@
+/** Right-hand inspector: every value of the selected project / scene / beat is a field you can edit by hand. */
+import { useMemo, useState } from 'react';
+import type { Draft } from 'immer';
+import { EMOTION_LABEL, costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
+import { filterBackgrounds } from '@shared/catalog/search';
+import { bandText, bgFit, sceneBands } from '@shared/director/bandFit';
+import type { BackgroundEntry, CompactCatalog } from '@shared/schema/assets';
+import { resolveStyle } from '@shared/style/ournotes';
+import type { Beat, Project, Scene } from '@shared/schema/project';
+import { EMOTION_TAGS } from '@shared/timeline/compile';
+import type { CompiledProject, RenderState } from '@shared/timeline/types';
+import { addCast, selectActor, toggleActorInScene } from '../../store/actions';
+import { defaultModelOf } from '../castModel';
+import { touch, useProject } from '../../store/projectStore';
+import { useUi, type InspectorTab } from '../../store/uiStore';
+import { FieldLock, NumField, Row, Section, SliderField, setFieldLock } from '../ui';
+import { ActorControls } from './ActorFields';
+import { KeyFields } from './KeyFields';
+import { ShotFields } from './ShotFields';
+import { LabelBadges } from './BgLabelUi';
+import { StyleSection } from './StyleFields';
+
+const TRANSITIONS: Array<[Scene['transitionIn']['kind'], string]> = [
+  ['cut', '硬切'], ['dip_black', '黑场眨眼'], ['scene_black', '换场黑场'], ['fade_black', '黑场（旧）'], ['fade_white', '白场（旧）'], ['crossfade', '交叉溶解（旧）'], ['wipe', '擦除（旧）'],
+];
+const BEAT_KINDS: Array<[Beat['kind'], string]> = [
+  ['dialogue', '对白'], ['narration', '旁白'], ['action', '动作'], ['pause', '停顿'], ['establishing', '空镜（建立镜头）'], ['silent', '无声节拍'], ['empty', '空景（人物淡出）'],
+];
+const VARIANTS: Array<[Beat['variant'], string]> = [['normal', '普通'], ['monologue', '内心独白'], ['offscreen', '画外音']];
+
+const TABS: Array<[InspectorTab, string]> = [['project', '项目'], ['scene', '场景'], ['beat', '句子'], ['actor', '角色'], ['shot', '镜头'], ['key', '关键帧'], ['style', '风格']];
+
+export function Inspector({ catalog, compiled, state, t }: { catalog: CompactCatalog | null; compiled?: CompiledProject | null; state: RenderState | null; t: number }) {
+  const project = useProject((s) => s.project);
+  const selection = useProject((s) => s.selection);
+  const tab = useUi((s) => s.inspectorTab);
+  const keyCount = useUi((s) => s.keySel.length);
+  if (!project) return null;
+  const scene = project.scenes.find((s) => s.id === selection.sceneId) ?? null;
+  const beat = scene?.beats.find((b) => b.id === selection.beatId) ?? null;
+  const castId = selection.castId && scene?.wardrobe[selection.castId] ? selection.castId : null;
+  const need = (what: string) => <p className="hint" data-testid="insp-need">{what}</p>;
+  return (
+    <div className="inspector" data-testid="inspector">
+      <nav className="insp-tabs" role="tablist" data-testid="insp-tabs">
+        {TABS.map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => useUi.getState().set({ inspectorTab: k })} data-testid={`insp-tab-${k}`}>
+            {label}{k === 'key' && keyCount > 0 ? <span className="badge">{keyCount}</span> : null}
+          </button>
+        ))}
+      </nav>
+      {tab === 'project' && <ProjectFields project={project} catalog={catalog} />}
+      {tab === 'scene' && (scene ? <SceneFields project={project} scene={scene} catalog={catalog} /> : need('选择一个场景后，这里显示它的转场、背景、站位与音乐。'))}
+      {tab === 'beat' && (scene && beat ? <BeatFields project={project} scene={scene} beat={beat} compiled={compiled ?? null} /> : need('在左侧剧本里选择一句台词后，这里编辑它。'))}
+      {tab === 'actor' && (scene ? <ActorTab project={project} scene={scene} castId={castId} catalog={catalog} state={state} t={t} /> : need('选择场景后可以编辑其中的角色。'))}
+      {tab === 'shot' && (scene && beat ? <Section title="镜头" hint={beat.id} testid="insp-shot-section"><ShotFields project={project} scene={scene} beat={beat} compiled={compiled ?? null} /></Section> : need('选择一句台词后，这里编辑它的镜头。'))}
+      {tab === 'key' && (scene ? <KeyFields project={project} scene={scene} catalog={catalog} /> : need('选择场景后，这里编辑时间轴上选中的关键帧。'))}
+      {tab === 'style' && <StyleTab project={project} scene={scene} beat={beat} />}
+    </div>
+  );
+}
+
+function StyleTab({ project, scene, beat }: { project: Project; scene: Scene | null; beat: Beat | null }) {
+  const unit = useUi((s) => s.styleUnit);
+  return (
+    <div data-testid="insp-style-tab">
+      <div className="style-bar">
+        <span className="dim">数值单位</span>
+        <span className="seg" role="group" aria-label="风格数值单位">
+          <button className={unit === 'H' ? 'on' : ''} aria-pressed={unit === 'H'} data-testid="style-unit-h" onClick={() => useUi.getState().set({ styleUnit: 'H' })} title="画面高度的小数（内部存储值）">H</button>
+          <button className={unit === 'px' ? 'on' : ''} aria-pressed={unit === 'px'} data-testid="style-unit-px" onClick={() => useUi.getState().set({ styleUnit: 'px' })} title="按 1080 行换算的像素">px@1080</button>
+        </span>
+      </div>
+      <StyleSection project={project} layer={{ kind: 'project' }} title="风格预设（全局）" />
+      {scene && <StyleSection project={project} layer={{ kind: 'scene', sceneId: scene.id }} title="风格（本场景覆盖）" />}
+      {scene && beat && <StyleSection project={project} layer={{ kind: 'beat', sceneId: scene.id, beatId: beat.id }} title="风格（本句覆盖）" />}
+    </div>
+  );
+}
+
+function ActorTab({ project, scene, castId, catalog, state, t }: { project: Project; scene: Scene; castId: string | null; catalog: CompactCatalog | null; state: RenderState | null; t: number }) {
+  const ids = Object.keys(scene.wardrobe);
+  if (ids.length === 0) return <p className="hint" data-testid="insp-need">这个场景里还没有角色。在“场景”标签的“角色站位与服装”里让角色入场。</p>;
+  const cur = castId ?? ids[0]!;
+  return (
+    <div data-testid="insp-actor">
+      <div className="actor-pick" role="group" aria-label="选择角色">
+        {ids.map((id) => (
+          <button key={id} className={`chip pick${id === cur ? ' on' : ''}`} onClick={() => selectActor(id, false)} data-testid={`pick-actor-${id}`}>{project.cast.find((c) => c.id === id)?.displayName ?? id}</button>
+        ))}
+      </div>
+      <Section title="播放头处的表演" hint={`@ ${t.toFixed(2)}s`} testid="insp-actor-controls">
+        <p className="hint">改动会在播放头位置写入关键帧（已有关键帧则更新），人工锁定后重新生成不会覆盖。</p>
+        <ActorControls ctx={{ project, scene, castId: cur, t, state, catalog }} />
+      </Section>
+    </div>
+  );
+}
+
+const useEdit = () => useProject.getState();
+
+function ProjectFields({ project, catalog }: { project: Project; catalog: CompactCatalog | null }) {
+  const [pick, setPick] = useState('');
+  const { applyEdit, seal } = useEdit();
+  return (
+    <>
+    <Section title="项目" testid="insp-project">
+      <Row label="标题">
+        <input className="text" value={project.title} data-testid="insp-project-title" onChange={(e) => applyEdit((d) => void (d.title = e.target.value), '修改项目标题', { coalesce: 'project.title' })} onBlur={seal} />
+      </Row>
+      <Row label="文字速度">
+        <SliderField value={resolveStyle(project.style).values.rhythm.textSpeedCps} min={2} max={40} step={0.5} digits={1} unit="字/秒" testid="insp-cps" onChange={(v) => applyEdit((d) => { d.style.overrides['rhythm.textSpeedCps'] = v; touch(d.style.meta); }, '修改文字速度', { coalesce: 'style.rhythm.cps' })} onCommit={seal} />
+      </Row>
+      <Row label="帧率"><span className="ro">{project.settings.fps} fps · {project.settings.aspect}</span></Row>
+    </Section>
+    <Section title="角色" hint={`${project.cast.length} 人`} testid="insp-cast-list">
+      {project.cast.length === 0 && <p className="hint" data-testid="cast-empty">还没有角色。从下拉里选择一个角色加入项目，再到场景里让 TA 入场。</p>}
+      {project.cast.map((c) => (
+        <Row key={c.id} label={c.id} meta={c.meta}>
+          <input className="text" value={c.displayName} aria-label={`${c.id} 显示名`} data-testid={`cast-name-${c.id}`} onChange={(e) => applyEdit((d) => { const m = d.cast.find((x) => x.id === c.id); if (m) { m.displayName = e.target.value; touch(m.meta); } }, '修改角色名', { coalesce: `cast.${c.id}` })} onBlur={seal} />
+        </Row>
+      ))}
+      <Row label="添加">
+        <select value={pick} data-testid="cast-pick" onChange={(e) => setPick(e.target.value)}>
+          <option value="">（选择角色…）</option>
+          {catalog?.characters.filter((ch) => ch.modelIds.length > 0).map((ch) => <option key={ch.key} value={ch.key}>{ch.name}</option>)}
+        </select>
+        <button className="btn-s" disabled={!pick} data-testid="cast-add" onClick={() => { const ch = catalog?.characters.find((x) => x.key === pick); if (ch) { addCast(ch.key, ch.name); setPick(''); } }}>加入</button>
+      </Row>
+    </Section>
+    </>
+  );
+}
+
+function SceneFields({ project, scene, catalog }: { project: Project; scene: Scene; catalog: CompactCatalog | null }) {
+  const { applyEdit, seal } = useEdit();
+  const up = (label: string, fn: (s: Draft<Scene>) => void, coalesce?: string) =>
+    applyEdit((d) => {
+      const s = d.scenes.find((x) => x.id === scene.id);
+      if (s) fn(s);
+    }, label, coalesce ? { coalesce: `${scene.id}.${coalesce}` } : {});
+  const lock = (get: (s: Draft<Scene>) => { locked: boolean } | undefined) => (locked: boolean) => up(locked ? '锁定' : '解锁', (s) => void (get(s) && (get(s)!.locked = locked)));
+  const castIds = Object.keys(scene.wardrobe);
+  const name = (id: string) => project.cast.find((c) => c.id === id)?.displayName ?? id;
+  const idx = project.scenes.indexOf(scene) + 1;
+
+  return (
+    <>
+      <Section title={`场景 ${idx}`} hint={scene.id} testid="insp-scene">
+        <Row label="标题" meta={scene.meta} onLock={lock((s) => s.meta)}>
+          <input className="text" value={scene.title} data-testid="insp-scene-title" onChange={(e) => up('修改场景标题', (s) => { s.title = e.target.value; touch(s.meta); }, 'title')} onBlur={seal} />
+        </Row>
+        <Row label="转场" meta={scene.transitionIn.meta} onLock={lock((s) => s.transitionIn.meta)}>
+          <select value={scene.transitionIn.kind} data-testid="insp-transition" onChange={(e) => up('修改转场', (s) => { s.transitionIn.kind = e.target.value as Scene['transitionIn']['kind']; touch(s.transitionIn.meta); })}>
+            {TRANSITIONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </Row>
+        {!['dip_black', 'scene_black'].includes(scene.transitionIn.kind) && (
+          <Row label="转场时长">
+            <NumField value={scene.transitionIn.duration} min={0} max={10} step={0.05} unit="s" testid="insp-transition-dur" onChange={(v) => up('修改转场时长', (s) => { s.transitionIn.duration = v; touch(s.transitionIn.meta); }, 'tdur')} onCommit={seal} />
+          </Row>
+        )}
+        {['dip_black', 'scene_black'].includes(scene.transitionIn.kind) && <Row label="转场时长"><span className="ro">各段时长在下方“风格 → 转场”中调整</span></Row>}
+        <Row label="地点标题条" {...(scene.location ? { meta: scene.location.meta, onLock: lock((s) => s.location?.meta) } : {})}>
+          <input type="checkbox" checked={scene.location?.show ?? false} data-testid="insp-location-show" onChange={(e) => up('地点标题条', (s) => { if (s.location) { s.location.show = e.target.checked; touch(s.location.meta); } else s.location = { text: s.title, show: e.target.checked, meta: { source: 'user', locked: false, updatedAt: Date.now() } }; })} />
+          <input className="text" value={scene.location?.text ?? ''} placeholder="地名" data-testid="insp-location-text" onChange={(e) => up('地点标题条文字', (s) => { if (s.location) { s.location.text = e.target.value; touch(s.location.meta); } else s.location = { text: e.target.value, show: true, meta: { source: 'user', locked: false, updatedAt: Date.now() } }; }, 'loc')} onBlur={seal} />
+        </Row>
+      </Section>
+      <Section title="背景" testid="insp-background">
+        <BackgroundPicker project={project} scene={scene} catalog={catalog} onPick={(id) => up('更换背景', (s) => { s.background.assetId = id; touch(s.background.meta); })} lock={lock((s) => s.background.meta)} />
+        <Row label="取景缩放"><SliderField value={scene.background.framing.zoom} min={1} max={3} step={0.01} testid="insp-bg-zoom" onChange={(v) => up('背景取景', (s) => { s.background.framing.zoom = v; touch(s.background.meta); }, 'bgzoom')} onCommit={seal} /></Row>
+        <Row label="取景 X"><NumField value={scene.background.framing.offsetX} step={5} digits={0} unit="px" onChange={(v) => up('背景取景', (s) => { s.background.framing.offsetX = v; touch(s.background.meta); }, 'bgx')} onCommit={seal} /></Row>
+        <Row label="取景 Y"><NumField value={scene.background.framing.offsetY} step={5} digits={0} unit="px" onChange={(v) => up('背景取景', (s) => { s.background.framing.offsetY = v; touch(s.background.meta); }, 'bgy')} onCommit={seal} /></Row>
+      </Section>
+
+      <Section title="角色站位与服装" hint={`${castIds.length} 人`} testid="insp-cast">
+        <Row label="在场角色">
+          <span className="chips">
+            {project.cast.length === 0 && <span className="ro">先在“项目”标签里添加角色</span>}
+            {project.cast.map((c) => (
+              <label key={c.id} className="chip check">
+                <input type="checkbox" checked={castIds.includes(c.id)} data-testid={`scene-has-${c.id}`} onChange={(e) => toggleActorInScene(scene.id, c.id, e.target.checked, defaultModelOf(catalog, project, c.id))} />
+                {c.displayName}
+              </label>
+            ))}
+          </span>
+        </Row>
+        {castIds.map((cid) => {
+          const cm = project.cast.find((c) => c.id === cid);
+          const modelIds = catalog?.characters.find((c) => c.key === cm?.characterKey)?.modelIds ?? [];
+          const options = catalog ? catalog.models.filter((m) => modelIds.includes(m.id) && (m.quality !== 'low' || m.id === scene.wardrobe[cid]!.modelId)) : [];
+          const bl = scene.blocking[cid];
+          return (
+            <div key={cid} className="cast-card" data-testid={`insp-cast-${cid}`}>
+              <div className="cast-name">{name(cid)}</div>
+              <Row label="服装" meta={scene.wardrobe[cid]!.meta} onLock={lock((s) => s.wardrobe[cid]?.meta)}>
+                <select value={scene.wardrobe[cid]!.modelId} data-testid={`insp-wardrobe-${cid}`} onChange={(e) => up('更换服装', (s) => { const w = s.wardrobe[cid]; if (w) { w.modelId = e.target.value; touch(w.meta); } })}>
+                  {!options.some((m) => m.id === scene.wardrobe[cid]!.modelId) && <option value={scene.wardrobe[cid]!.modelId}>（素材库中缺失的服装）</option>}
+                  {options.map((m) => <option key={m.id} value={m.id} title={m.id}>{costumeLabelZh(m.costumeInfo, m.costume)}</option>)}
+                </select>
+              </Row>
+              {bl && (
+                <>
+                  <Row label="横向位置" meta={bl.meta} onLock={lock((s) => s.blocking[cid]?.meta)} testid={`insp-slot-row-${cid}`}>
+                    <SliderField value={bl.slot} min={-1} max={1} step={0.01} testid={`insp-slot-${cid}`} onChange={(v) => up('调整站位', (s) => { const b = s.blocking[cid]; if (b) { b.slot = v; touch(b.meta); } }, `slot.${cid}`)} onCommit={seal} />
+                  </Row>
+                  <Row label="纵深">
+                    <SliderField value={bl.depth} min={0} max={1} step={0.01} testid={`insp-depth-${cid}`} onChange={(v) => up('调整站位', (s) => { const b = s.blocking[cid]; if (b) { b.depth = v; touch(b.meta); } }, `depth.${cid}`)} onCommit={seal} />
+                  </Row>
+                  <Row label="入场">
+                    <select value={bl.enter?.beatId ?? ''} data-testid={`insp-enter-${cid}`} onChange={(e) => up('入场时机', (s) => { const b = s.blocking[cid]; if (!b) return; if (e.target.value) b.enter = { beatId: e.target.value, side: b.enter?.side ?? 'none' }; else delete b.enter; touch(b.meta); })}>
+                      <option value="">（开场就在）</option>
+                      {scene.beats.map((b, i) => <option key={b.id} value={b.id}>第 {i + 1} 句</option>)}
+                    </select>
+                    {bl.enter && (
+                      <select value={bl.enter.side} data-testid={`insp-enter-side-${cid}`} onChange={(e) => up('入场方向', (s) => { const b = s.blocking[cid]; if (b?.enter) { b.enter.side = e.target.value as 'left' | 'right' | 'none'; touch(b.meta); } })}>
+                        <option value="none">无滑入</option><option value="left">从左</option><option value="right">从右</option>
+                      </select>
+                    )}
+                  </Row>
+                  <Row label="退场">
+                    <select value={bl.exit?.beatId ?? ''} data-testid={`insp-exit-${cid}`} onChange={(e) => up('退场时机', (s) => { const b = s.blocking[cid]; if (!b) return; if (e.target.value) b.exit = { beatId: e.target.value }; else delete b.exit; touch(b.meta); })}>
+                      <option value="">（不退场）</option>
+                      {scene.beats.map((b, i) => <option key={b.id} value={b.id}>第 {i + 1} 句</option>)}
+                    </select>
+                  </Row>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </Section>
+
+      <Section title="音乐" defaultOpen={false} testid="insp-audio">
+        <Row label="BGM" {...(scene.audio.bgm ? { meta: scene.audio.bgm.meta, onLock: lock((s) => s.audio.bgm?.meta) } : {})}>
+          <select value={scene.audio.bgm?.assetId ?? ''} data-testid="insp-bgm" onChange={(e) => up('更换 BGM', (s) => {
+            if (!e.target.value) delete s.audio.bgm;
+            else if (s.audio.bgm) { s.audio.bgm.assetId = e.target.value; touch(s.audio.bgm.meta); }
+            else s.audio.bgm = { assetId: e.target.value, volume: 0.6, meta: { source: 'user', locked: false, updatedAt: Date.now() } };
+          })}>
+            <option value="">（无）</option>
+            {catalog?.audio.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            {scene.audio.bgm && !catalog?.audio.some((a) => a.id === scene.audio.bgm!.assetId) && <option value={scene.audio.bgm.assetId}>{scene.audio.bgm.assetId}（素材库中缺失）</option>}
+          </select>
+        </Row>
+        {scene.audio.bgm && (
+          <Row label="音量"><SliderField value={scene.audio.bgm.volume} min={0} max={1} step={0.01} onChange={(v) => up('BGM 音量', (s) => { if (s.audio.bgm) { s.audio.bgm.volume = v; touch(s.audio.bgm.meta); } }, 'bgmvol')} onCommit={seal} /></Row>
+        )}
+      </Section>
+    </>
+  );
+}
+
+function BackgroundPicker({ project, scene, catalog, onPick, lock }: { project: Project; scene: Scene; catalog: CompactCatalog | null; onPick: (id: string) => void; lock: (l: boolean) => void }) {
+  const [query, setQuery] = useState('');
+  const current = catalog?.backgrounds.find((b) => b.id === scene.background.assetId);
+  const results = useMemo(() => (catalog ? filterBackgrounds(catalog.backgrounds, { query }).slice(0, 80) : []), [catalog, query]);
+  // who is on stage decides which backgrounds fit; a manual choice is always allowed, but flagged
+  const keys = Object.keys(scene.wardrobe).map((id) => project.cast.find((c) => c.id === id)?.characterKey ?? '').filter(Boolean);
+  const who = (() => {
+    const infos = new Map((catalog?.characters ?? []).map((c) => [c.key, c] as const));
+    return { bands: sceneBands(infos, keys), cast: keys, guestOf: scene.brief?.guestOf ?? null, mood: scene.brief?.mood, text: `${scene.title} ${scene.brief?.mood ?? ''}` };
+  })();
+  const bandName = (k: string) => catalog?.bands.find((b) => b.key === k)?.name ?? k;
+  const fitOf = (b: BackgroundEntry | undefined) => bgFit(b?.labels, who, catalog?.labelRules);
+  const mark = (b: BackgroundEntry) => (fitOf(b) === 'no' ? '⚠ ' : fitOf(b) === 'fallback' ? '？ ' : '') + b.name + (b.labels ? ` 〔${bandText(b.labels, bandName)}${b.labels.stage ? '·舞台' : ''}〕` : '');
+  const curFit = current ? fitOf(current) : 'ok';
+  const notStage = scene.brief?.isPerformance === true && current?.labels && !current.labels.stage;
+  return (
+    <>
+      <Row label="背景" meta={scene.background.meta} onLock={lock}>
+        <select value={scene.background.assetId} data-testid="insp-bg" onChange={(e) => onPick(e.target.value)}>
+          {!current && <option value={scene.background.assetId}>{scene.background.assetId}（素材库中缺失）</option>}
+          {current && !results.includes(current) && <option value={current.id}>{mark(current)}</option>}
+          {results.map((b) => <option key={b.id} value={b.id} title={b.id}>{mark(b)}</option>)}
+        </select>
+      </Row>
+      {current?.labels && <div className="badges" data-testid="insp-bg-label"><LabelBadges label={current.labels} catalog={catalog!} /></div>}
+      {curFit === 'no' && <p className="bg-warn" data-testid="insp-bg-warn">⚠ 这个背景属于 {bandText(current!.labels, bandName)}，与场景里的出场角色不符（手动选择仍然有效）。</p>}
+      {curFit === 'fallback' && <p className="bg-warn" data-testid="insp-bg-warn">？ 这个背景的主人/归属不明，请确认是否合适。</p>}
+      {notStage && <p className="bg-warn" data-testid="insp-bg-warn-stage">⚠ 这是正式演出，但这个背景不是舞台。</p>}
+      <Row label="搜索">
+        <input className="text" type="search" placeholder="名称 / 地点 / 时间，多个词用空格" value={query} onChange={(e) => setQuery(e.target.value)} data-testid="insp-bg-search" />
+      </Row>
+      {current && <img className="bg-thumb" src={current.url} alt={current.name} loading="lazy" />}
+    </>
+  );
+}
+
+function BeatFields({ project, scene, beat, compiled }: { project: Project; scene: Scene; beat: Beat; compiled: CompiledProject | null }) {
+  const { applyEdit, seal } = useEdit();
+  const up = (label: string, fn: (b: Draft<Beat>) => void, coalesce?: string) =>
+    applyEdit((d) => {
+      const b = d.scenes.find((s) => s.id === scene.id)?.beats.find((x) => x.id === beat.id);
+      if (b) fn(b);
+    }, label, coalesce ? { coalesce: `${beat.id}.${coalesce}` } : {});
+  const lock = (get: (b: Draft<Beat>) => { locked: boolean }) => (locked: boolean) => up(locked ? '锁定' : '解锁', (b) => void (get(b).locked = locked));
+  const fl = (field: string) => <FieldLock meta={beat.meta} field={field} toggle={(on) => up(on ? '锁定字段' : '解锁字段', (b) => setFieldLock(b.meta, field, on))} />;
+  const castIds = Object.keys(scene.wardrobe);
+  const name = (id: string) => project.cast.find((c) => c.id === id)?.displayName ?? id;
+  const n = scene.beats.indexOf(beat) + 1;
+  // What the compiler made of this line (preview truth): held camera, and the rule director's expression / gesture
+  const cScene = compiled?.scenes.find((x) => x.id === scene.id);
+  const cBeat = cScene?.beats.find((x) => x.id === beat.id);
+  const speaker = cScene?.actors.find((a) => a.castId === beat.speakerId);
+  const ruleExpr = cBeat && speaker?.expressions.find((e) => Math.abs(e.at - cBeat.start) < 1e-6)?.name;
+  const ruleGesture = cBeat && speaker?.motions.find((m) => !m.loop && Math.abs(m.at - (cBeat.start + 0.15)) < 1e-6)?.name;
+  return (
+    <>
+      <Section title={`台词 ${n}`} hint={beat.id} testid="insp-beat">
+        <Row label="类型" meta={beat.meta} onLock={lock((b) => b.meta)}>
+          <select value={beat.kind} data-testid="insp-beat-kind" onChange={(e) => up('修改类型', (b) => { b.kind = e.target.value as Beat['kind']; touch(b.meta); })}>
+            {BEAT_KINDS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </Row>
+        <Row label="形式">
+          <select value={beat.variant} data-testid="insp-beat-variant" onChange={(e) => up('修改台词形式', (b) => { b.variant = e.target.value as Beat['variant']; touch(b.meta); })}>
+            {VARIANTS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </Row>
+        <Row label="说话人">
+          <select value={beat.speakerId ?? ''} data-testid="insp-beat-speaker" onChange={(e) => up('修改说话人', (b) => { if (e.target.value) b.speakerId = e.target.value; else delete b.speakerId; touch(b.meta); })}>
+            <option value="">（无）</option>
+            {castIds.map((id) => <option key={id} value={id}>{name(id)}</option>)}
+          </select>
+        </Row>
+        <Row label="同时说话">
+          <span className="chips">
+            {castIds.filter((id) => id !== beat.speakerId).map((id) => (
+              <label key={id} className="chip check">
+                <input type="checkbox" checked={beat.coSpeakers.includes(id)} data-testid={`insp-cospeaker-${id}`} onChange={(e) => up('修改同时说话人', (b) => { b.coSpeakers = e.target.checked ? [...b.coSpeakers, id] : b.coSpeakers.filter((x) => x !== id); touch(b.meta); })} />
+                {name(id)}
+              </label>
+            ))}
+          </span>
+        </Row>
+        <Row label="镜头切入" extra={fl('cutIn')}>
+          <select value={beat.cutIn} data-testid="insp-beat-cutin" onChange={(e) => up('修改切入方式', (b) => { b.cutIn = e.target.value as Beat['cutIn']; touch(b.meta); })}>
+            <option value="cut">硬切</option><option value="dip_black">黑场眨眼</option>
+          </select>
+          {beat.cutIn === 'dip_black' && (
+            <label className="chip check"><input type="checkbox" checked={beat.cutInKeepDialog} data-testid="insp-beat-keepdialog" onChange={(e) => up('黑场保留对话区', (b) => { b.cutInKeepDialog = e.target.checked; touch(b.meta); })} />保留对话区</label>
+          )}
+        </Row>
+        <Row label="台词文本" extra={fl('text')}><span className="ro">锁字段后，重新生成时这句的文字不变</span></Row>
+        <textarea className="area" rows={4} value={beat.text} data-testid="insp-beat-text" onChange={(e) => up('修改台词', (b) => { b.text = e.target.value; touch(b.meta); }, 'text')} onBlur={seal} />
+        <Row label="情绪" extra={fl('emotion')}>
+          <select value={beat.emotion ?? ''} data-testid="insp-beat-emotion" onChange={(e) => up('修改情绪', (b) => { if (e.target.value) b.emotion = e.target.value; else delete b.emotion; touch(b.meta); })}>
+            <option value="">（未设置）</option>
+            {(beat.emotion && !EMOTION_TAGS.includes(beat.emotion) ? [beat.emotion, ...EMOTION_TAGS] : EMOTION_TAGS).map((k) => <option key={k} value={k}>{EMOTION_LABEL[k] ?? k}</option>)}
+          </select>
+        </Row>
+        {(ruleExpr || ruleGesture) && (
+          <Row label="规则导演" meta={{ source: 'rule', locked: false, updatedAt: 0 }}>
+            <span className="ro" data-testid="insp-rule-output" title={`${ruleExpr ?? ''} ${ruleGesture ?? ''}`}>表情 {ruleExpr ? expressionLabel(ruleExpr) : '—'} · 手势 {ruleGesture ? motionLabel(ruleGesture) : '—'}</span>
+          </Row>
+        )}
+        <Row label="时长" extra={fl('duration')}>
+          <select value={beat.duration.mode} data-testid="insp-beat-dur-mode" onChange={(e) => up('修改时长模式', (b) => { b.duration.mode = e.target.value as 'auto' | 'fixed'; if (b.duration.mode === 'fixed' && b.duration.seconds <= 0) b.duration.seconds = 3; touch(b.meta); })}>
+            <option value="auto">自动（按文字）</option>
+            <option value="fixed">固定</option>
+          </select>
+          {beat.duration.mode === 'fixed' && (
+            <NumField value={beat.duration.seconds} min={0.2} max={60} step={0.1} digits={1} unit="s" testid="insp-beat-dur" onChange={(v) => up('修改时长', (b) => { b.duration.seconds = v; touch(b.meta); }, 'dur')} onCommit={seal} />
+          )}
+        </Row>
+      </Section>
+
+    </>
+  );
+}

@@ -1,0 +1,30 @@
+{
+  "_note": "Public setting facts (names/bands/roles). Names follow the asset manifest; do not 'correct' them.",
+  "characters": [
+    { "key": "001", "name": "高松灯", "band": "mygo", "role": "Vo." },
+    { "key": "002", "name": "千早爱音", "band": "mygo", "role": "Gt." },
+    { "key": "003", "name": "要乐奈", "band": "mygo", "role": "Gt." },
+    { "key": "004", "name": "长崎爽世", "band": "mygo", "role": "Ba." },
+    { "key": "005", "name": "椎名立希", "band": "mygo", "role": "Dr." },
+    { "key": "006", "name": "三角初华", "band": "avemujica", "role": "Gt.&Vo." },
+    { "key": "007", "name": "若叶睦", "band": "avemujica", "role": "Gt." },
+    { "key": "008", "name": "八幡海铃", "band": "avemujica", "role": "Ba." },
+    { "key": "009", "name": "祐天寺若麦", "band": "avemujica", "role": "Dr." },
+    { "key": "010", "name": "丰川祥子", "band": "avemujica", "role": "Key." },
+    { "key": "011", "name": "仲町阿拉蕾", "band": "mewtype", "role": "Vo." },
+    { "key": "012", "name": "宫永野乃花", "band": "mewtype", "role": "Gt." },
+    { "key": "013", "name": "峰月律", "band": "mewtype", "role": "Gt." },
+    { "key": "014", "name": "藤都子", "band": "mewtype", "role": "Key." },
+    { "key": "015", "name": "千石由乃", "band": "mewtype", "role": "DJ&Mp." },
+    { "key": "016", "name": "汐见萤", "band": "millsage", "role": "Key.&Vo." },
+    { "key": "017", "name": "伊泽枣", "band": "millsage", "role": "Gt." },
+    { "key": "018", "name": "琴平凪", "band": "millsage", "role": "Gt." },
+    { "key": "019", "name": "滨崎茉幌", "band": "millsage", "role": "Ba." },
+    { "key": "020", "name": "和泉朋花", "band": "millsage", "role": "Dr." },
+    { "key": "021", "name": "须贺蕾叶", "band": "dumbrock", "role": "Gt.&Vo." },
+    { "key": "022", "name": "马桥心玖", "band": "dumbrock", "role": "Gt.&Vo." },
+    { "key": "023", "name": "矢仓蓬咲", "band": "dumbrock", "role": "Ba." },
+    { "key": "024", "name": "梅里千樱梨", "band": "dumbrock", "role": "Dr." },
+    { "key": "025", "name": "四宫宁月", "band": "dumbrock", "role": "Key." }
+  ]
+}
