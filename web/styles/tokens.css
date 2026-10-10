@@ -1,4 +1,4 @@
-/* Design tokens (docs/PLAN_REVISION.md 4.2). Every colour, size and radius in the editor comes from here,
+/* Design tokens. Every colour, size and radius in the editor comes from here,
    so restyling means editing this file only. */
 :root {
   color-scheme: dark;

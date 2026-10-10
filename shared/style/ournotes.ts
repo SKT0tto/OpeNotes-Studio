@@ -1,5 +1,5 @@
 /**
- * Style preset system (PLAN_REVISION P7.2). Every number that shapes the look of a shot, the dialogue UI, the
+ * Style preset system (values derived from docs/STYLE_REFERENCE.md). Every number that shapes the look of a shot, the dialogue UI, the
  * rhythm, transitions, performance and effects lives here, so engine / solver / compiler only READ it.
  *
  * Three inheritance layers: preset (global) -> project.style -> scene.style -> beat.style. A layer stores

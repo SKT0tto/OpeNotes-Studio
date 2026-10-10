@@ -1,7 +1,7 @@
 /**
  * Additive head / body / gaze overlay on top of whatever the motion is doing.
  *
- * Injection point (see docs/RESEARCH.md 3.3): the engine calls `updateFocus()` after
+ * Injection point: the engine calls `updateFocus()` after
  * `saveParameters()` (motion + expression already applied) and before physics, and ends the
  * frame with `loadParameters()`. Adding here therefore (1) lets hair physics react to the turn
  * and (2) never accumulates across frames, because the saved motion values are restored.
