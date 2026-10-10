@@ -40,14 +40,14 @@ describe('V6 rule director', () => {
   });
 
   it('gives the speaker a new gesture on every line (gestureEvery=1) and never repeats the same family twice in a row', () => {
-    const c = compileProject(miniProject({ style: { 'performance.ruleDirector': true }, beats: lines(['happy', 'thinking', 'surprised', 'neutral', 'happy', 'thinking']) }), MINI_CTX);
+    const c = compileProject(miniProject({ style: { 'performance.ruleDirector': true, 'performance.listenerReact': false }, beats: lines(['happy', 'thinking', 'surprised', 'neutral', 'happy', 'thinking']) }), MINI_CTX);
     const sc = c.scenes[0]!;
     for (const id of ['a', 'b']) {
       const shots = sc.actors.find((x) => x.castId === id)!.motions.filter((m) => !m.loop);
       expect(shots).toHaveLength(3);
       for (let i = 1; i < shots.length; i++) expect(shots[i]!.name.replace(/_[LCR]$/, '')).not.toBe(shots[i - 1]!.name.replace(/_[LCR]$/, ''));
     }
-    const every2 = compileProject(miniProject({ style: { 'performance.ruleDirector': true, 'performance.gestureEvery': 2 }, beats: lines(['happy', 'thinking', 'surprised', 'neutral', 'happy', 'thinking']) }), MINI_CTX);
+    const every2 = compileProject(miniProject({ style: { 'performance.ruleDirector': true, 'performance.listenerReact': false, 'performance.gestureEvery': 2 }, beats: lines(['happy', 'thinking', 'surprised', 'neutral', 'happy', 'thinking']) }), MINI_CTX);
     expect(every2.scenes[0]!.actors.find((x) => x.castId === 'a')!.motions.filter((m) => !m.loop).length).toBe(1);
   });
 

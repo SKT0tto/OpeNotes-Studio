@@ -5,7 +5,8 @@
  */
 import type { Breakdown, DirectedBeat, SceneDirection } from '../schema/ai';
 import type { ModelEntry } from '../schema/assets';
-import { EMOTION_EXPR, EMOTION_GESTURE } from '../timeline/compile';
+import { EMOTION_EXPR } from '../timeline/compile';
+import { canon, familyOfName, isIdleFamily, mapExpressionName, mapMotionFamily } from '../timeline/motionMap';
 import { traceability, type Paragraph } from './paragraphs';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
 import { INSERT_HINT, SPECIAL_ATTENTION } from './vocab';
@@ -148,32 +149,21 @@ export interface DirectionContext {
   fixedBeatIds?: Set<string>;
 }
 
-const FAMILY_RE = /^([a-z]+)(\d*)/;
-export const familyOf = (name: string): string => name.replace(/^mtn_/, '').replace(/_[LCR]\d*$/, '');
-const motionSet = (m: ModelEntry) => new Set(m.motions.map((x) => x.family));
+export const familyOf = (name: string): string => familyOfName(name);
 
-/** The family to use for a wanted motion, or null. */
+/**
+ * The family to use for a wanted motion: the same family, the same kind with another number, a keyword category, the emotion
+ * table, a mild generic gesture - never "nothing" for a model that has any gesture (null only for a model with idles only).
+ */
 export function repairMotion(m: ModelEntry, wanted: string, emotion: string): string | null {
-  const live = m.mode === 'live';
-  const all = [...motionSet(m)].filter((f) => (live ? /^(play|action|finish)/.test(f) : !f.startsWith('idle')));
-  const w = familyOf(wanted.trim());
-  if (all.includes(w)) return w;
-  const prefix = FAMILY_RE.exec(w)?.[1];
-  const same = prefix ? all.filter((f) => FAMILY_RE.exec(f)?.[1] === prefix).sort() : [];
-  if (same.length > 0) return same[0]!;
-  if (live) return all.find((f) => f.startsWith('play')) ?? null;
-  return (EMOTION_GESTURE[emotion] ?? []).find((g) => all.includes(g)) ?? null;
+  // idle is automatic and never a directed gesture: a request for it becomes the emotion's gesture
+  return mapMotionFamily(m.motions, isIdleFamily(canon(wanted)) ? '' : wanted, emotion, m.id);
 }
 
+/** The expression to use for a wanted one (closest by name, keyword, emotion, else the neutral one); null only for models without expressions. */
 export function repairExpression(m: ModelEntry, wanted: string, emotion: string): string | null {
   if (m.mode === 'live') return null;
-  const names = m.expressions.map((e) => e.name);
-  const w = wanted.trim().startsWith('exp_') ? wanted.trim() : `exp_${wanted.trim()}`;
-  if (names.includes(w)) return w;
-  const prefix = /^(exp_[a-z]+)/.exec(w)?.[1];
-  const same = prefix ? names.filter((n) => n.startsWith(prefix)).sort() : [];
-  if (same.length > 0) return same[0]!;
-  return (EMOTION_EXPR[emotion] ?? []).find((e) => names.includes(e)) ?? null;
+  return mapExpressionName(m.expressions.map((e) => e.name), wanted, emotion, EMOTION_EXPR);
 }
 
 const LEGACY_SHOT: Record<string, DirectedBeat['shot']['type']> = { closeup: 'cu', bust: 'mcu', medium: 'mcu', wide: 'group', establishing: 'group' };

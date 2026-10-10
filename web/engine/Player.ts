@@ -224,6 +224,9 @@ export class Player {
     if (changed) {
       const scene = this.compiled.scenes[state.sceneIndex]!;
       if (snapshot && scene.transitionIn.kind !== 'cut' && this.sceneIdx >= 0) this.stage.captureSnapshot();
+      // A jump (editor click, seek bar) loads the new scene's background, models, motions and expressions while the previous
+      // frame stays on screen; only the final swap, which needs no I/O, happens with the stage hidden. Never seconds of black.
+      if (!snapshot && this.sceneIdx >= 0) await this.stage.prepare(stageSceneOf(scene));
       if (!this.keepVisible) this.stage.setSceneVisible(false);
       this.keepVisible = false;
       await this.stage.setScene(stageSceneOf(scene));

@@ -186,12 +186,13 @@ describe('scene direction validation and repair', () => {
     for (const c of d.costumeChanges) expect(L.models.get(c.modelId)!.characterKey).toBe(ctx.cast.find((x) => x.castId === c.castId)!.characterKey);
   });
 
-  it('motion / expression repair: same family, then emotion table, else dropped; live-mode has no expressions', () => {
+  it('motion / expression repair: same family, keyword category, emotion table, generic gesture (never empty); live-mode has no expressions', () => {
     const m = L.models.get('001_casual_spring_01')!;
     expect(repairMotion(m, 'mtn_nod01_L', 'happy')).toBe('nod01');
     expect(repairMotion(m, 'nod07', 'happy')).toBe('nod01');
     expect(repairMotion(m, 'zzz99', 'happy')).toBe('smile01');
-    expect(repairMotion(m, 'zzz99', 'no-such-emotion')).toBeNull();
+    expect(m.motions.some((x) => x.family === repairMotion(m, 'zzz99', 'no-such-emotion'))).toBe(true); // never nothing: a mild generic gesture
+    expect(repairMotion(m, 'happy_wave', 'sad')).toBe('smile01'); // keyword category beats the beat's emotion
     expect(repairExpression(m, 'smile01', 'happy')).toBe('exp_smile01');
     expect(repairExpression(m, 'exp_smile09', 'happy')).toBe('exp_smile01');
     expect(repairExpression(m, 'exp_nonsense', 'sad')).toBe('exp_sad01');

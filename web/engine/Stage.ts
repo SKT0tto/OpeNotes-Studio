@@ -31,11 +31,14 @@ export interface StageScene {
   modelIds: string[];
   /** Motion names each model will play (warmed before the scene is shown). */
   motions: Record<string, string[]>;
+  /** Expression names each model will show (loaded before the scene is shown, so a scene change never waits for a file). */
+  expressions: Record<string, string[]>;
 }
 
 export function stageSceneOf(s: CompiledScene): StageScene {
   const ids = new Set<string>();
   const motions: Record<string, Set<string>> = {};
+  const expressions: Record<string, Set<string>> = {};
   for (const a of s.actors) {
     ids.add(a.initialModelId);
     a.models.forEach((m) => ids.add(m.modelId));
@@ -43,12 +46,19 @@ export function stageSceneOf(s: CompiledScene): StageScene {
       const id = lastBefore(a.models, ev.at)?.modelId ?? a.initialModelId;
       (motions[id] ??= new Set()).add(ev.name);
     }
+    for (const ev of a.expressions) {
+      if (ev.name === null) continue;
+      const id = lastBefore(a.models, ev.at)?.modelId ?? a.initialModelId;
+      (expressions[id] ??= new Set()).add(ev.name);
+    }
   }
+  const flat = (m: Record<string, Set<string>>) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k, [...v]]));
   return {
     bgAssetId: s.bgAssetId,
     bg: s.bg,
     modelIds: [...ids],
-    motions: Object.fromEntries(Object.entries(motions).map(([k, v]) => [k, [...v]])),
+    motions: flat(motions),
+    expressions: flat(expressions),
   };
 }
 
@@ -131,7 +141,10 @@ export class Stage {
     this.library.pin([...(this.scene?.modelIds ?? []), ...scene.modelIds]);
     await Promise.all([
       this.library.backgroundTexture(scene.bgAssetId),
-      ...scene.modelIds.map(async (id) => (await this.library.acquire(id)).preloadMotions(scene.motions[id] ?? [])),
+      ...scene.modelIds.map(async (id) => {
+        const actor = await this.library.acquire(id);
+        await Promise.all([actor.preloadMotions(scene.motions[id] ?? []), actor.preloadExpressions(scene.expressions[id] ?? [])]);
+      }),
     ]);
   }
 
@@ -244,7 +257,7 @@ export class Stage {
         // After a jump the motion must continue from where sequential playback would be; the physics catch-up
         // (settle) then advances model time by SETTLE seconds, which is taken off here.
         const offset = this.resyncMotions ? Math.max(0, a.motion.elapsed - this.settleLead) : 0;
-        this.pending.push(actor.playMotion(a.motion.name, { loop: a.motion.loop, offset }));
+        this.pending.push(actor.playMotion(a.motion.name, { loop: a.motion.loop, offset, restart: this.resyncMotions }));
       }
     }
     if (a.expression !== slot.expression) {
@@ -297,6 +310,7 @@ export class Stage {
     slot.actor = next;
     slot.eventKey = '';
     slot.expression = undefined;
+    next.setIdle(null);
   }
 
   private resyncMotions = false;
@@ -351,6 +365,12 @@ export class Stage {
 
   actorPlacement(castId: string) {
     return this.lastPlacement.get(castId) ?? null;
+  }
+
+  /** What is really on screen right now (for tests): the scene root's visibility and the people attached to it. */
+  probe(): { sceneVisible: boolean; people: string[]; hasBackground: boolean } {
+    const people = [...this.slots.values()].filter((s) => s.actor && s.wrapper.visible && s.wrapper.parent && s.actor.model.parent === s.wrapper).map((s) => s.castId);
+    return { sceneVisible: this.sceneRoot.visible, people, hasBackground: this.scene !== null };
   }
 
   actorFor(castId: string): Live2DActor | null {

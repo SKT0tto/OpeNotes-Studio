@@ -81,18 +81,21 @@ describe('compile', () => {
     expect(back.at).toBeCloseTo(nod.at + nod.length);
   });
 
-  it('unknown motions / expressions / beats are dropped with a warning, never invented', () => {
+  it('unknown motions are mapped to the closest one the model has (never invented, never silently dropped); unknown beats are dropped with a warning', () => {
     const tracks = [
       { id: 't1', target: actor('a'), channel: 'motion', keys: [key('k1', 'b1', 0, { name: 'doesnotexist99' })] },
       { id: 't2', target: actor('a'), channel: 'expression', keys: [key('k2', 'b1', 0, { name: 'exp_nope' }), key('k3', 'ghost', 0, { name: 'exp_smile01' })] },
     ];
     const out = compileProject(miniProject({ tracks }), MINI_CTX);
     const a = out.scenes[0]!.actors.find((x) => x.castId === 'a')!;
-    expect(a.motions.every((m) => m.name.startsWith('mtn_idle01'))).toBe(true);
-    expect(a.expressions).toEqual([]);
-    expect(out.warnings.join('\n')).toMatch(/doesnotexist99/);
-    expect(out.warnings.join('\n')).toMatch(/exp_nope/);
-    expect(out.warnings.join('\n')).toMatch(/ghost/);
+    const model = MINI_CTX.models.mA!.motions.map((m) => m.name);
+    expect(a.motions.every((m) => model.includes(m.name))).toBe(true); // only real motions
+    expect(a.motions.filter((m) => !m.loop)).toHaveLength(1); // the unknown one became a real gesture, at its time
+    expect(a.expressions).toEqual([]); // nothing close in the (synthetic) model: dropped
+    const warned = out.warnings.join(' | ');
+    expect(warned).toMatch(/doesnotexist99.*mapped to mtn_/);
+    expect(warned).toMatch(/exp_nope/);
+    expect(warned).toMatch(/ghost/);
   });
 
   it('a costume change is a discrete model key plus a fresh idle for the new model', () => {

@@ -92,6 +92,8 @@ test('F2: deleting a line that carries a locked key is refused', async () => {
   await page.getByTestId('outline-beat-s1b3').click();
   await page.getByTestId('actor-hit-c_002').click({ position: { x: 30, y: 60 } });
   const bar = page.getByTestId('quickbar');
+  await expect(bar.getByTestId('actor-expression').locator('option')).not.toHaveCount(0); // the catalog may still be loading under load
+  await expect.poll(() => bar.getByTestId('actor-expression').locator('option').count()).toBeGreaterThan(2);
   const cur = (await stateOf(page)).actors.find((a) => a.castId === 'c_002')!.expression;
   const next = (await bar.getByTestId('actor-expression').locator('option').evaluateAll((o) => o.map((x) => (x as HTMLOptionElement).value).filter(Boolean))).find((v) => v !== cur)!;
   await bar.getByTestId('actor-expression').selectOption(next);

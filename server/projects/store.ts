@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { ProjectSchema, type Project } from '../../shared/schema/project';
+import { readTextRetry, renameRetry } from '../util/fsRetry';
 
 export const MAX_HISTORY = 20;
 export const PROJECT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
@@ -50,7 +51,7 @@ export class ProjectStore {
   private async read(id: string): Promise<{ text: string; project: Project } | null> {
     let text: string;
     try {
-      text = await fs.readFile(path.join(this.dir(id), 'project.json'), 'utf8');
+      text = await readTextRetry(path.join(this.dir(id), 'project.json'));
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
       throw e;
@@ -81,7 +82,7 @@ export class ProjectStore {
     await fs.mkdir(dir, { recursive: true });
     const tmp = path.join(dir, `.project.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`);
     await fs.writeFile(tmp, text, 'utf8');
-    await fs.rename(tmp, path.join(dir, 'project.json'));
+    await renameRetry(tmp, path.join(dir, 'project.json'));
     return { project, etag: etagOf(text) };
   }
 

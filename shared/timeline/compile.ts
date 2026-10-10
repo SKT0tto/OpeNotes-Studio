@@ -1,7 +1,8 @@
 /**
  * compile: Project (intent level) -> CompiledProject (absolute time, real resources, solved camera poses).
- * Pure: the same project + context always gives the same result. It never invents resources: an unknown motion
- * is dropped with a warning (callers/validators decide how to repair).
+ * Pure: the same project + context always gives the same result. It never invents resources: a motion / expression the
+ * actor's CURRENT model does not have is mapped to the closest one that it does have (with a warning), and every actor on
+ * stage always has an idle loop to fall back to.
  */
 import type { Calibration } from '../schema/calibration';
 import type { Channel, Project, Scene, Track } from '../schema/project';
@@ -10,6 +11,7 @@ import { cameraMove, normalizeShotType, solveShotDetailed, type FramingActor, ty
 import { placeActor, type Placement } from '../staging/ground';
 import { defaultGround, type BgInfo, type CameraPose } from '../staging/world';
 import { clamp, lerp } from './easing';
+import { EMOTION_GESTURE, familyOfName, idleFamilyOf, isLiveSet, isLoopFamily, mapExpressionName, mapMotionFamily, pickReaction } from './motionMap';
 import { clipOverlaps, lastBefore, sampleKeys } from './sample';
 import type { StyleValues } from '../style/ournotes';
 import { EMPTY_KINDS, TEXT_KINDS, sceneTimes, type SceneTime } from './time';
@@ -107,21 +109,14 @@ export const EMOTION_EXPR: Record<string, string[]> = {
   serious: ['exp_serious01', 'exp_serious02'],
   neutral: ['exp_idle01'],
 };
-export const EMOTION_GESTURE: Record<string, string[]> = {
-  happy: ['smile01', 'nod01', 'smile02'],
-  sad: ['sad01', 'cry01'],
-  angry: ['angry01'],
-  surprised: ['surprised01', 'question01'],
-  shy: ['kime01', 'smile02'],
-  thinking: ['thinking01', 'check01', 'question01'],
-  serious: ['serious01', 'nod02'],
-  neutral: ['nod01', 'look01', 'check01', 'nod02'],
-};
+export { EMOTION_GESTURE };
 
 /** Emotion tags the rule director understands (the `emotion` field of a beat). */
 export const EMOTION_TAGS = Object.keys(EMOTION_EXPR);
 
 type Interval = [number, number];
+const hashStr = (s: string) => [...s].reduce((a, c) => (a * 31 + c.codePointAt(0)!) >>> 0, 7);
+const isIdleName = (name: string) => /^(mtn_)?idle/i.test(name);
 const mergeIntervals = (xs: Interval[]): Interval[] => {
   const out: Interval[] = [];
   for (const x of [...xs].sort((a, b) => a[0] - b[0])) {
@@ -295,40 +290,59 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     ]);
 
     // motions ---------------------------------------------------------------------------------------------
-    const resolveMotion = (modelId: string, name: string, wantYaw: number): MotionEvent | null => {
+    const emotionAt = (t: number): string => {
+      const i = st.beats.findIndex((b) => t >= b.start - 1e-6 && t < b.end - 1e-6);
+      return (i >= 0 ? list[i]!.emotion : undefined) ?? 'neutral';
+    };
+    /** Resolve a wanted name against ONE model: the exact motion, another variant of its family, else the closest family the model has. */
+    const resolveMotion = (modelId: string, name: string, wantYaw: number, emotion = 'neutral', salt = ''): { ev: MotionEvent; mapped: boolean } | null => {
       const entry = ctx.models[modelId];
       const cal = calOf(modelId);
       if (!entry) return null;
       const exact = entry.motions.find((m) => m.name === name);
       let motion = exact;
       let nominal = exact ? nominalScreenYaw(exact.stats?.angleX?.mean ?? null, cal.headSign) : 0;
+      let mapped = false;
       if (!motion) {
-        const family = name.replace(/^mtn_/, '');
-        const pick = chooseMotionVariant(variantsOfFamily(entry.motions, family), wantYaw, cal.headSign);
+        let variants = variantsOfFamily(entry.motions, familyOfName(name));
+        if (variants.length === 0) {
+          const fam = mapMotionFamily(entry.motions, name, emotion, `${w.castId}:${salt}`);
+          variants = fam ? variantsOfFamily(entry.motions, fam) : [];
+          mapped = variants.length > 0;
+        }
+        const pick = chooseMotionVariant(variants, wantYaw, cal.headSign);
         motion = pick ? entry.motions.find((m) => m.name === pick.name) : undefined;
         nominal = pick?.nominalYaw ?? 0;
       }
       if (!motion) return null;
-      return { at: 0, name: motion.name, loop: motion.family.startsWith('idle'), nominalYaw: nominal, length: motion.stats?.duration ?? 3 };
+      return { ev: { at: 0, name: motion.name, loop: isLoopFamily(motion.family), nominalYaw: nominal, length: motion.stats?.duration ?? 3 }, mapped };
     };
+    /** The looping idle of the model the actor wears at `t` (`idle01`, or `idle_01` for live-mode models); null only for a model without any idle. */
     const idleAt = (t: number): MotionEvent | null => {
-      const ev = resolveMotion(modelAt(w, t), 'idle01', yawAt(t));
-      return ev ? { ...ev, at: t } : null;
+      const model = modelAt(w, t);
+      const fam = idleFamilyOf(ctx.models[model]?.motions ?? []);
+      const r = fam ? resolveMotion(model, fam, yawAt(t)) : null;
+      return r ? { ...r.ev, at: t } : null;
     };
 
     const explicit: MotionEvent[] = [];
     const first = idleAt(st.start);
     if (first) explicit.push(first);
-    else warnings.push(`scene ${scene.id}: ${w.castId} (${w.initialModelId}) has no idle01 motion`);
+    else warnings.push(`scene ${scene.id}: ${w.castId} (${w.initialModelId}) has no idle motion`);
     for (const m of w.models) {
       const ev = idleAt(m.at);
       if (ev) explicit.push(ev);
     }
     const motionKeys = collect(scene, 'motion', mine, abs);
     for (const { k, at } of motionKeys) {
-      const ev = resolveMotion(modelAt(w, at), k.value.name, yawAt(at));
-      if (ev) explicit.push({ ...ev, at });
-      else warnings.push(`scene ${scene.id}: ${w.castId} (${modelAt(w, at)}) has no motion "${k.value.name}" (dropped)`);
+      const model = modelAt(w, at);
+      const r = resolveMotion(model, k.value.name, yawAt(at), emotionAt(at), k.value.name);
+      if (!r) {
+        warnings.push(`scene ${scene.id}: ${w.castId} (${model}) has no motion "${k.value.name}" (dropped)`);
+        continue;
+      }
+      if (r.mapped) warnings.push(`scene ${scene.id}: ${w.castId} (${model}) has no motion "${k.value.name}" (mapped to ${r.ev.name})`);
+      explicit.push({ ...r.ev, at });
     }
     // Rule director: the speaker changes pose every `gestureEvery` lines, preferring families that fit the beat's emotion.
     const speaks = list
@@ -345,13 +359,49 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
         const have = new Set((ctx.models[modelAt(w, bt.start)]?.motions ?? []).map((m) => m.family));
         const cands = (EMOTION_GESTURE[b.emotion ?? 'neutral'] ?? EMOTION_GESTURE.neutral!).filter((f) => have.has(f) && f !== lastFamily);
         const fam = cands[(n >> 1) % Math.max(1, cands.length)];
-        const ev = fam ? resolveMotion(modelAt(w, bt.start), fam, yawAt(bt.start)) : null;
-        if (ev && fam) {
+        const r = fam ? resolveMotion(modelAt(w, bt.start), fam, yawAt(bt.start)) : null;
+        if (r && fam) {
           lastFamily = fam;
-          explicit.push({ ...ev, at: bt.start + 0.15 });
+          explicit.push({ ...r.ev, at: bt.start + 0.15 });
           ruleKeys.push({ channel: 'motion', beatId: b.id, offset: 0.15, at: bt.start + 0.15, duration: 0, value: { name: fam } });
         }
       }
+    }
+    // Rule director: bystanders are not statues. While somebody else speaks (or the shot is a silent reaction), an actor that has
+    // been still for `listenerReactGap` seconds makes a small reaction (nod, glance, shy smile ...) chosen from the line's emotion.
+    // Hand-made / AI motion keys inside the line win; musicians (live-mode) keep playing; no AI call is involved and nothing is
+    // written into the project.
+    {
+      explicit.sort((a, b) => a.at - b.at);
+      let lastFamily = '';
+      let rot = hashStr(w.castId);
+      list.forEach((b, i) => {
+        const ps = st.styles[i]!.values.performance;
+        const bt = st.beats[i]!;
+        if (!ps.ruleDirector || !ps.listenerReact || ps.listenerReactGap <= 0) return;
+        if (EMPTY_KINDS.includes(b.kind) || b.speakerId === w.castId || b.coSpeakers.includes(w.castId)) return;
+        if (!presentAt(w, bt.start) || bt.end - bt.start < 1) return;
+        if (motionKeys.some((m) => m.at >= bt.start - 1e-6 && m.at < bt.end)) return;
+        const gap = ps.listenerReactGap;
+        // a different moment for each bystander, so nobody reacts in unison
+        const jitter = (hashStr(`${w.castId}:${i}`) % 5) * 0.25;
+        for (let at = bt.start + Math.max(0.6, ps.listenerTurnDelay + 0.3) + jitter; at < bt.end - 1; at += gap) {
+          const model = modelAt(w, at);
+          const mo = ctx.models[model]?.motions ?? [];
+          if (isLiveSet(mo) || !presentAt(w, at)) break;
+          const lastShot = explicit.filter((e) => !e.loop && e.at <= at).at(-1);
+          const nextEv = explicit.find((e) => e.at > at);
+          if ((lastShot && at - lastShot.at < gap) || (nextEv && nextEv.at - at < 1.2)) continue;
+          const fam = pickReaction(mo, b.emotion ?? 'neutral', rot++, lastFamily);
+          const r = fam ? resolveMotion(model, fam, yawAt(at)) : null;
+          if (r && fam) {
+            lastFamily = fam;
+            explicit.push({ ...r.ev, at });
+            explicit.sort((x, y) => x.at - y.at);
+            ruleKeys.push({ channel: 'motion', beatId: b.id, offset: Math.round((at - bt.start) * 1000) / 1000, at, duration: 0, value: { name: fam } });
+          }
+        }
+      });
     }
     explicit.sort((a, b) => a.at - b.at);
     // one-shots fall back to idle when they finish (unless something else starts first)
@@ -369,10 +419,10 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     for (const yk of yaw) {
       const te = yk.at + yk.duration;
       const cur = lastBefore(motions, te);
-      if (!cur || !cur.loop || yk.duration === 0) continue;
+      if (!cur || !cur.loop || yk.duration === 0 || !isIdleName(cur.name)) continue;
       const want = yawAt(te);
       if (Math.abs(want - cur.nominalYaw) <= RESELECT_YAW_GAP) continue;
-      const alt = resolveMotion(modelAt(w, te), 'idle01', want);
+      const alt = idleAt(te);
       if (alt && alt.name !== cur.name) {
         const at = yk.at + yk.duration * 0.35;
         motions = motions.filter((m) => m.at !== at);
@@ -387,7 +437,9 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     for (const { k, at } of exprKeys) {
       const have = ctx.models[modelAt(w, at)]?.expressions ?? [];
       if (k.value.name !== null && !have.includes(k.value.name)) {
-        warnings.push(`scene ${scene.id}: ${w.castId} (${modelAt(w, at)}) has no expression "${k.value.name}" (dropped)`);
+        const near = mapExpressionName(have, k.value.name, emotionAt(at), EMOTION_EXPR);
+        warnings.push(`scene ${scene.id}: ${w.castId} (${modelAt(w, at)}) has no expression "${k.value.name}" (${near ? `mapped to ${near}` : 'dropped'})`);
+        if (near) expressions.push({ at, name: near });
         continue;
       }
       expressions.push({ at, name: k.value.name });
