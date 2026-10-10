@@ -46,6 +46,12 @@ export async function directorDeps(d: DirectorRouteDeps, res: Response, signal: 
   };
 }
 
+/** A rejected key / unreachable endpoint during real work must show up in the settings panel too (not "已配置" forever). */
+function noteFailure(d: DirectorRouteDeps, e: unknown, engine?: 'rule'): void {
+  if (engine === 'rule') return;
+  if (e instanceof LlmError && (e.kind === 'auth' || e.kind === 'network' || e.kind === 'timeout')) d.settings.noteResult(false, e.message);
+}
+
 export const abortOnClose = (res: Response): AbortSignal => {
   const ctl = new AbortController();
   res.on('close', () => !res.writableEnded && ctl.abort());
@@ -64,9 +70,11 @@ export function directorRoutes(d: DirectorRouteDeps): Router {
       if (!deps) return;
       const genId = `g_${Date.now().toString(36)}`;
       const out = await runBreakdown(deps, body.data.text, body.data.title ?? '未命名项目', genId);
+      if (body.data.engine !== 'rule') d.settings.noteResult(true);
       out.project.catalogVersion = deps.catalogVersion;
       res.json({ ...out, cached: out.runs.every((x) => x.cached) });
     } catch (e) {
+      noteFailure(d, e, body.data.engine);
       fail(res, e);
     }
   });
@@ -89,8 +97,10 @@ export function directorRoutes(d: DirectorRouteDeps): Router {
       const deps = await directorDeps(d, res, abortOnClose(res), body.data.refresh === true, body.data.engine);
       if (!deps) return;
       const result = await runScene(deps, { project, sceneId: body.data.sceneId, scopes: body.data.scopes as never, beatIds: body.data.beatIds, overwriteUser: body.data.overwriteUser }, `g_${Date.now().toString(36)}`);
+      if (body.data.engine !== 'rule') d.settings.noteResult(true);
       res.json({ ...result, cached: result.runs.every((x) => x.cached) });
     } catch (e) {
+      noteFailure(d, e, body.data.engine);
       fail(res, e);
     }
   });
@@ -110,6 +120,11 @@ data: ${JSON.stringify(data)}
 `);
       const ids = body.data.sceneIds ?? project.scenes.map((s) => s.id);
       const items = await runScenes(deps, project, ids, body.data.scopes as never, `g_${Date.now().toString(36)}`, body.data.concurrency ?? 3, (p) => send('progress', p), body.data.overwriteUser === true);
+      if (body.data.engine !== 'rule') {
+        const bad = items.find((i) => i.error?.kind === 'auth' || i.error?.kind === 'network');
+        if (bad) d.settings.noteResult(false, bad.error!.message);
+        else if (items.some((i) => i.result)) d.settings.noteResult(true);
+      }
       send('done', { items });
       res.end();
     } catch (e) {

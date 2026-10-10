@@ -26,8 +26,10 @@ export function llmRoutes(settings: LlmSettings): Router {
     res.on('close', () => ctl.abort());
     try {
       const t = await p.provider.test(ctl.signal);
+      settings.noteResult(true);
       res.json({ ok: true, provider: p.provider.id, model: t.model, latencyMs: t.latencyMs });
     } catch (e) {
+      if (!ctl.signal.aborted) settings.noteResult(false, errorBody(e).message);
       res.json({ ok: false, provider: p.provider.id, model: p.provider.model, error: errorBody(e) });
     }
   });

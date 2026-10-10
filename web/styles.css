@@ -77,7 +77,8 @@ button.card:hover { border-color: var(--accent); }
 
 .lab { flex: 1; display: flex; flex-wrap: wrap; gap: 18px; padding: 14px 18px; min-height: 0; overflow: auto; }
 .lab-stage { flex: 0 1 960px; min-width: 0; }
-.lab-stage canvas { display: block; border: 1px solid var(--line); border-radius: 6px; }
+:where([data-aspect-area]) { min-width: 0; min-height: 0; }
+.lab-frame { background: #000; outline: 1px solid var(--line); }
 .lab-panel { flex: 1 1 360px; min-width: 300px; max-width: 760px; }
 .lab-panel h3 { margin: 16px 0 6px; font-size: 13px; color: var(--dim); }
 .lab-panel .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 6px 0; }
@@ -94,18 +95,21 @@ button.card:hover { border-color: var(--accent); }
 .demos figcaption { font-size: 12px; color: var(--dim); }
 
 /* ---- stage lab / player ---- */
-.lab-canvas-wide canvas { display: block; width: min(960px, 100%); height: auto; aspect-ratio: 16 / 9; background: #000; }
+.lab-canvas-wide { width: 100%; max-width: 960px; height: min(540px, 56vw, calc(100vh - 220px)); min-height: 120px; }
+.lab-canvas-wide canvas, .lab-canvas canvas { display: block; width: 100%; height: 100%; }
+.lab-canvas { width: 100%; max-width: 560px; height: min(760px, calc(100vh - 220px)); min-height: 200px; }
 .lab-actor { padding: 6px 8px; margin: 4px 0; background: var(--panel2); border-radius: 6px; }
 
-.play { flex: 1; min-width: 0; padding: 14px 18px 30px; overflow-y: auto; }
-.play-stage { position: relative; width: min(100%, calc((100vh - 150px) * var(--aspect, 1.7778))); aspect-ratio: var(--aspect, 1.7778); background: #000; cursor: pointer; user-select: none; }
+.play { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 14px 18px 14px; overflow: auto; }
+/* the frame's size comes from <AspectBox>; the stage fills it */
+.play-viewport { flex: 1 1 0; min-height: 160px; }
+.play-frame { background: #000; }
+.play-stage { position: relative; width: 100%; height: 100%; background: #000; cursor: pointer; user-select: none; }
 .play-stage canvas { display: block; width: 100%; height: 100%; }
-.play-controls { display: flex; align-items: center; gap: 12px; width: min(100%, calc((100vh - 150px) * var(--aspect, 1.7778))); margin-top: 10px; }
+.play-controls { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex: none; }
 .play-controls .seek { flex: 1; }
 .play-controls .time { font-variant-numeric: tabular-nums; color: var(--dim); min-width: 110px; }
-.play-scenes { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.play-scenes { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; flex: none; max-height: 84px; overflow-y: auto; }
 
 .play:fullscreen { justify-content: center; background: #000; }
-.play:fullscreen .play-stage { width: min(100vw, calc((100vh - 60px) * var(--aspect, 1.7778))); }
-.play:fullscreen .play-controls { width: min(100vw, calc((100vh - 60px) * var(--aspect, 1.7778))); }
 .play:fullscreen .play-scenes, .play:fullscreen [data-testid="play-status"] { display: none; }

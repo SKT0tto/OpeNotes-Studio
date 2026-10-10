@@ -191,6 +191,8 @@ export interface BatchProgress {
   title: string;
   state: 'start' | 'done' | 'error';
   message?: string;
+  /** With `error`: the failure class (auth, network, timeout, ...), so the UI can say what to fix. */
+  kind?: string;
   cached?: boolean;
   /** Sent with `done`, so a client that cancels midway still has every finished scene. */
   result?: SceneResult;
@@ -222,7 +224,7 @@ export async function runScenes(
       } catch (e) {
         const kind = e instanceof LlmError ? e.kind : e instanceof DirectorError ? e.kind : 'server';
         out[i] = { sceneId, error: { kind, message: (e as Error).message } };
-        onProgress({ sceneId, title, state: 'error', message: (e as Error).message });
+        onProgress({ sceneId, title, state: 'error', message: (e as Error).message, kind });
       }
     }
   };

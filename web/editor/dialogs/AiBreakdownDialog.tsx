@@ -27,6 +27,20 @@ const addRuns = (s: Stats, runs: RunInfo[]): Stats => runs.reduce((a, r) => ({
   calls: a.calls + (r.cached ? 0 : 1), cached: a.cached + (r.cached ? 1 : 0), inTok: a.inTok + (r.cached ? 0 : r.usage.inputTokens), outTok: a.outTok + (r.cached ? 0 : r.usage.outputTokens), repairs: a.repairs + (r.repaired ? 1 : 0), ms: a.ms,
 }), s);
 
+/** What to do about a failure, by kind. */
+export function fixHint(kind: string | undefined): { text: string; settings: boolean } | null {
+  switch (kind) {
+    case 'auth': return { text: 'API key 无效或未配置 → 打开 AI 设置，重新填写 key 并点「测试连接」', settings: true };
+    case 'not_configured': return { text: '尚未配置 AI → 打开 AI 设置填写 key，或把引擎切换为「规则导演（非 AI）」', settings: true };
+    case 'network': return { text: '连不上模型服务 → 检查网络、代理或接口地址（AI 设置里的「接口地址」），然后重试', settings: true };
+    case 'timeout': return { text: '请求超时 → 稍后重试；本地模型可换更小的模型，或检查服务是否在运行', settings: false };
+    case 'rate_limit': return { text: '请求过于频繁或额度不足 → 稍等片刻后重试，或检查账户额度', settings: false };
+    case 'truncated': return { text: '模型输出被截断 → 重试；仍失败时把长场景拆短', settings: false };
+    case 'repair_failed': case 'invalid_output': return { text: '模型输出不合格且自动修复失败 → 重试，或换用更强的模型 / 规则导演', settings: false };
+    default: return null;
+  }
+}
+
 const directed = (b: { meta: { source: string; reason?: string | undefined } }) => !(b.meta.source === 'rule' && b.meta.reason?.startsWith('原文段落'));
 
 export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: CompactCatalog | null; onClose: () => void; onCreated: (id: string) => void }) {
@@ -38,7 +52,12 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
   const [fileInfo, setFileInfo] = useState('');
   const [phase, setPhase] = useState<Phase>('input');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setErrorText] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<string | undefined>(undefined);
+  const setError = (m: string | null, kind?: string) => {
+    setErrorText(m);
+    setErrorKind(m === null ? undefined : kind);
+  };
   const [res, setRes] = useState<BreakdownResponse | null>(null);
   const [ms, setMs] = useState(0);
   // one-click run
@@ -56,6 +75,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
   const t0 = useRef(0);
   const statsRef = useRef<Stats>(zero());
 
+  const refreshSettings = () => void fetchLlmSettings().then(setSettings, () => undefined);
   useEffect(() => {
     fetchLlmSettings().then(setSettings, () => setSettings(null));
   }, []);
@@ -75,9 +95,10 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
       setPhase('review');
     } catch (e) {
       setRes(null);
-      setError(e instanceof DirectorApiError ? e.message : (e as Error).message);
+      setError(e instanceof DirectorApiError ? e.message : (e as Error).message, e instanceof DirectorApiError ? e.kind : undefined);
     } finally {
       setBusy(false);
+      refreshSettings();
     }
   };
 
@@ -122,7 +143,8 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
         setProjectId(id);
       }
       const current = localRef.current!.project;
-      const todo = current.scenes.filter((s) => s.beats.length === 0 || s.beats.every((b) => !directed(b))).map((s) => s.id);
+      const retry = new Set(Object.values(progress).filter((p) => p.state === 'error').map((p) => p.sceneId));
+      const todo = current.scenes.filter((s) => retry.has(s.id) || s.beats.length === 0 || s.beats.every((b) => !directed(b))).map((s) => s.id);
       setSceneTotal(current.scenes.length);
       setProgress(Object.fromEntries(current.scenes.filter((s) => !todo.includes(s.id)).map((s) => [s.id, { sceneId: s.id, title: s.title, state: 'done' as const, cached: false }])));
       if (todo.length > 0) {
@@ -138,11 +160,11 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
           }, signal);
         } catch (e) {
           if ((e as Error).name !== 'AbortError') throw e;
-          setError(`已取消：保留已完成的 ${results.length} 个场景。点「继续生成剩余场景」只生成其余（已完成的不会重做）。`);
+          setError(`已取消：保留已完成的 ${results.length} 个场景。点「继续生成剩余场景」只生成其余（已完成的不会重做）。`, 'aborted');
         }
       }
     } catch (e) {
-      if ((e as Error).name !== 'AbortError') setError(e instanceof DirectorApiError ? e.message : (e as Error).message);
+      if ((e as Error).name !== 'AbortError') setError(e instanceof DirectorApiError ? e.message : (e as Error).message, e instanceof DirectorApiError ? e.kind : undefined);
     } finally {
       // whatever finished is applied (one undo step) and saved, also after a cancel or a failure
       if (results.length > 0 && localRef.current) {
@@ -167,6 +189,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
       setStage('');
       setBusy(false);
       ctl.current = null;
+      refreshSettings();
     }
   };
 
@@ -188,7 +211,16 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
   const nameOf = (key: string) => catalog?.characters.find((c) => c.key === key)?.name ?? key;
   const provider = res?.runs[0]?.provider;
   const originLabel = provider === 'rule' ? '规则生成（非 AI）' : provider === 'fixture' ? '测试回放（非 AI）' : `${provider === 'anthropic' ? 'Claude' : 'OpenAI 兼容'} · ${res?.runs[0]?.model}`;
-  const remaining = local ? local.scenes.filter((s) => s.beats.length === 0 || s.beats.every((b) => !directed(b))).length : 0;
+  const failed = Object.values(progress).filter((p) => p.state === 'error');
+  const succeeded = Object.values(progress).filter((p) => p.state === 'done');
+  const undirected = local ? local.scenes.filter((s) => s.beats.length === 0 || s.beats.every((b) => !directed(b))).map((s) => s.id) : [];
+  // a scene that failed is still to do, whatever its skeleton beats look like
+  const remaining = new Set([...undirected, ...failed.map((p) => p.sceneId)]).size;
+  const aborted = errorKind === 'aborted';
+  const hasFailure = failed.length > 0 || (error !== null && !aborted);
+  /** Only a run that really produced every scene may say so. */
+  const allDone = !!local && remaining === 0 && !hasFailure && !aborted;
+  const hint = fixHint(failed[0]?.kind ?? errorKind);
   const warnings = useMemo(() => (phase === 'full' && local ? continuityOf(local, catalog) : []), [phase, local, catalog]);
   const doneCount = Object.values(progress).filter((p) => p.state === 'done').length;
 
@@ -196,7 +228,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
     <Modal title="AI 拆解 / 一键生成：从小说创建项目" onClose={onClose} testid="ai-breakdown-dialog" wide>
       <div className="settings-form">
         {settings && (
-          <p className={configured ? 'ok' : 'warn'} data-testid="ai-status">
+          <p className={settings.status.verified === 'ok' ? 'ok' : configured && settings.status.verified !== 'failed' ? 'hint' : 'warn'} data-testid="ai-status">
             {settings.status.message}
             {' '}<button className="btn-s" onClick={() => setShowSettings(true)} data-testid="ai-open-settings">AI 设置</button>
           </p>
@@ -233,6 +265,12 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
           </>
         )}
         {error && <pre className="bad ai-error" data-testid="ai-error">{error}</pre>}
+        {error && phase !== 'full' && fixHint(errorKind) && (
+          <p className="warn" data-testid="ai-fix">
+            {fixHint(errorKind)!.text}{' '}
+            {fixHint(errorKind)!.settings && <button className="btn-s" onClick={() => setShowSettings(true)} data-testid="ai-fix-settings">打开 AI 设置</button>}
+          </p>
+        )}
         {phase === 'review' && res && (
           <div data-testid="breakdown-view">
             <p className="hint">
@@ -270,7 +308,12 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
         )}
         {phase === 'full' && (
           <div data-testid="full-view" data-project={projectId ?? ""}>
-            <p className="hint" data-testid="full-stage">{stage || (busy ? '' : remaining === 0 ? '全部场景已生成' : `还有 ${remaining} 个场景没有生成`)}</p>
+            <p className={!busy && hasFailure ? 'bad' : 'hint'} data-testid="full-stage">
+              {stage || (busy ? '' : allDone ? '全部场景已生成'
+                : !local ? (aborted ? '已取消' : '生成失败（未能拆解全文）')
+                : failed.length > 0 ? `生成未完成：${succeeded.length} 个场景成功，${failed.length} 个失败`
+                : hasFailure ? '生成失败' : `还有 ${remaining} 个场景没有生成`)}
+            </p>
             {sceneTotal > 0 && (
               <div data-testid="full-meter">
                 <div className="ai-meter"><i style={{ width: `${Math.round((doneCount / sceneTotal) * 100)}%` }} /></div>
@@ -288,7 +331,20 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
               <span className={`src ${useRule ? 'src-rule' : 'src-ai'}`}>{useRule ? '规则' : 'AI'}</span>
               {' '}{useRule ? '规则运算，没有调用模型' : `${stats.calls} 次调用（缓存命中 ${stats.cached}，修复 ${stats.repairs}）`} · 输入 {stats.inTok} / 输出 {stats.outTok} tokens · {Math.round(stats.ms / 100) / 10} s
             </p>
-            {!busy && finishedAt > 0 && (
+            {!busy && finishedAt > 0 && failed.length > 0 && (
+              <div className="bad" data-testid="full-failures">
+                <strong>{failed.length} 个场景生成失败：</strong>
+                <ul>{failed.map((p) => <li key={p.sceneId} data-testid="full-failed-scene">{p.title}：{p.message}</li>)}</ul>
+                {succeeded.length > 0 && <p className="ok" data-testid="full-succeeded">已成功 {succeeded.length} 个：{succeeded.map((p) => p.title).join('、')}</p>}
+              </div>
+            )}
+            {!busy && finishedAt > 0 && hint && hasFailure && (
+              <p className="warn" data-testid="full-fix">
+                {hint.text}{' '}
+                {hint.settings && <button className="btn-s" onClick={() => setShowSettings(true)} data-testid="full-open-settings">打开 AI 设置</button>}
+              </p>
+            )}
+            {!busy && finishedAt > 0 && allDone && (
               <div data-testid="full-done">
                 {warnings.length === 0 ? <p className="ok">连续性检查：未发现问题</p> : (
                   <details open>
@@ -300,7 +356,9 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
             )}
             <div className="modal-actions">
               {busy && <button className="btn danger" onClick={() => ctl.current?.abort()} data-testid="full-cancel">取消</button>}
-              {!busy && remaining > 0 && <button className="btn" onClick={() => void full()} data-testid="full-resume">继续生成剩余场景（{remaining}）</button>}
+              {!busy && remaining > 0 && local && <button className="btn" onClick={() => void full()} data-testid="full-resume">{failed.length > 0 ? `重试失败场景（${failed.length}）` : `继续生成剩余场景（${remaining}）`}</button>}
+              {!busy && !local && hasFailure && <button className="btn" onClick={() => void full()} data-testid="full-retry">重试</button>}
+              {!busy && !local && hasFailure && <button className="btn" onClick={() => { setError(null); setPhase('input'); }} data-testid="full-back">返回修改</button>}
               {!busy && projectId && <a className="btn primary" href={`/play/${projectId}`} target="_blank" rel="noreferrer" data-testid="full-play">放映</a>}
               {!busy && projectId && <button className="btn" onClick={() => void openEditor(projectId)} data-testid="full-edit">在编辑器中精修</button>}
             </div>

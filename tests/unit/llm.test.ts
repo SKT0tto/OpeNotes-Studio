@@ -297,7 +297,7 @@ describe('settings and routes: keys stay on the server', () => {
   });
 
   it('a refused connection becomes a clear error body, not a hang', async () => {
-    await put({ openai: { baseUrl: 'http://refused.local:1234/v1', apiKey: null } });
+    await put({ openai: { baseUrl: 'http://refused.local:1234/v1' } }); // the saved key stays; a hosted endpoint without one is "not configured"
     const t = await (await fetch(`${base}/api/llm/test`, { method: 'POST' })).json();
     expect(t.ok).toBe(false);
     expect(t.error.kind).toBe('network');

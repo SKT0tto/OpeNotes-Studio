@@ -34,7 +34,16 @@ export interface PublicLlmSettings {
   available: LlmProviderId[];
   anthropic: PublicKeyInfo & { model: string; baseUrl: string };
   openai: PublicKeyInfo & { model: string; baseUrl: string };
-  status: { configured: boolean; provider: LlmProviderId | null; model: string | null; message: string };
+  status: {
+    /** A usable key / address is present (not whether the provider accepts it). */
+    configured: boolean;
+    provider: LlmProviderId | null;
+    model: string | null;
+    /** Result of the last real call with this exact configuration: `ok` / `failed`, `untested` when none yet, `none` when not applicable. */
+    verified: 'ok' | 'failed' | 'untested' | 'none';
+    message: string;
+    testedAt?: number;
+  };
 }
 
 export const NOT_CONFIGURED_MESSAGE = '未配置 AI：请在设置中填写 ANTHROPIC_API_KEY 或 OpenAI 兼容地址；也可使用『规则生成（非 AI）』';

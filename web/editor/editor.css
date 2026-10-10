@@ -61,9 +61,10 @@
 
 /* preview */
 .preview { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.viewport { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 14px; }
-.stage-frame { position: relative; aspect-ratio: 16 / 9; width: 100%; max-height: 100%; background: #000; box-shadow: var(--shadow-pop); }
-.viewport .play-stage { width: 100%; height: 100%; aspect-ratio: auto; }
+.viewport { flex: 1; min-height: 0; min-width: 0; padding: 14px; }
+/* the frame's size comes from <AspectBox> (exact aspect, letterboxed); never size it with CSS */
+.stage-frame { background: #000; box-shadow: var(--shadow-pop); }
+.viewport .play-stage { width: 100%; height: 100%; }
 .overlay-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; padding: 20px; text-align: center; color: var(--text-2); font-size: var(--fs-title); }
 .overlay-msg.bad { color: var(--bad); }
 .transport { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; background: var(--bg-2); border-top: 1px solid var(--line); flex: none; }

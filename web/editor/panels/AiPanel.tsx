@@ -171,7 +171,7 @@ export function AiPanel() {
   return (
     <div className="ai-panel" data-testid="ai-panel">
       {settings && (
-        <p className={configured ? 'ok' : 'warn'} data-testid="ai-status">
+        <p className={settings?.status.verified === 'ok' ? 'ok' : configured && settings?.status.verified !== 'failed' ? 'hint' : 'warn'} data-testid="ai-status">
           {settings.status.message}
           {' '}<button className="btn-s" onClick={() => setShowSettings(true)} data-testid="ai-open-settings">AI 设置</button>
         </p>

@@ -30,6 +30,8 @@ export interface AppExtras {
   env?: Record<string, string | undefined>;
   /** Injected in tests (mock fetch for the providers). */
   fetch?: typeof fetch;
+  /** `.env` to re-read on every LLM request (hot reload); `base` is the process environment from before `.env` was loaded. */
+  dotEnv?: { file: string; base: Record<string, string | undefined> };
 }
 
 export function createApp(config: StudioConfig, log: (msg: string) => void = () => {}, extras: AppExtras = {}): AppHandle {
@@ -68,6 +70,7 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
     env,
     fixtureProvider: env.NODE_ENV === 'test' ? () => fixtureSingleton(fixtureDir) : undefined,
     ...(extras.fetch ? { fetch: extras.fetch } : {}),
+    ...(extras.dotEnv ? { dotEnv: extras.dotEnv } : {}),
   });
   const llmCache = new LlmCache(path.join(config.dataDir, 'llm-cache'));
   app.use(llmRoutes(llm));
