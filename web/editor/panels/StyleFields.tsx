@@ -1,5 +1,5 @@
 /**
- * Style layer editor (PLAN_REVISION 3.1): the same field table for the three layers project / scene / beat.
+ * Style layer editor: the same field table for the three layers project / scene / beat.
  * A value shows the resolved number; inherited values are dim with the layer they come from, overridden ones have the
  * layer colour bar and a "back to inherited" button. Every edit lands in `layer.overrides[path]` and reaches the
  * preview through the normal project -> recompile path.

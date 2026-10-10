@@ -17,7 +17,7 @@ export const MetaSchema = z
 export type Meta = z.infer<typeof MetaSchema>;
 
 /**
- * Reserved style-preset layer (PLAN_REVISION P7.2): project = global preset, Scene.style = scene override,
+ * Reserved style-preset layer: project = global preset, Scene.style = scene override,
  * Beat.style = shot/beat override. Values are keyed by style-field path and resolve beat > scene > project > preset;
  * nothing reads them until the style system lands.
  */

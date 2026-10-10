@@ -28,3 +28,6 @@ textures/
 # synthetic fixtures are hand-written and allowed
 !tests/fixtures/
 !tests/fixtures/**
+
+# local development notes (plans, acceptance logs, labelling Q&A)
+dev-notes/
