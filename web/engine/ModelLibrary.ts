@@ -8,6 +8,7 @@ import type { BackgroundEntry, CompactCatalog, ModelEntry } from '@shared/schema
 import type { CompileContext } from '@shared/timeline/types';
 import type { GroundOverride } from '@shared/schema/ground';
 import { fetchBackgroundGround, fetchCalibration, fetchCatalog, fetchModel, saveCalibration } from '../api';
+import { staleModelIds } from '@shared/cubismHeap';
 import { Live2DActor, NEUTRAL_SIGNS } from './Live2DActor';
 import { registerDebugActor } from './debugHooks';
 import { probeModel } from './ModelProbe';
@@ -24,6 +25,7 @@ export class ModelLibrary {
   private readonly actors = new Map<string, Promise<Live2DActor>>();
   private readonly ready = new Map<string, Live2DActor>();
   private readonly unregister = new Map<string, () => void>();
+  private readonly reloadListeners = new Set<(fresh: Live2DActor, old: Live2DActor | null) => void>();
   private readonly textures = new Map<string, Promise<Texture>>();
   private readonly grounds = new Map<string, Promise<GroundOverride | null>>();
   /** Model ids used by the scene on screen; never evicted. */
@@ -34,8 +36,8 @@ export class ModelLibrary {
     private readonly ticker: Ticker,
   ) {}
 
-  static async create(coreUrl: string, ticker: Ticker): Promise<ModelLibrary> {
-    return new ModelLibrary(await ensureRuntime(coreUrl), ticker);
+  static async create(coreUrl: string, ticker: Ticker, memoryMB?: number): Promise<ModelLibrary> {
+    return new ModelLibrary(await ensureRuntime(coreUrl, memoryMB), ticker);
   }
 
   catalog(): Promise<CompactCatalog> {
@@ -102,18 +104,59 @@ export class ModelLibrary {
     let p = this.actors.get(modelId);
     if (!p) {
       p = (async () => {
-        const [entry, saved] = await Promise.all([this.model(modelId), fetchCalibration(modelId)]);
-        if (saved) this.cals.set(modelId, saved);
-        const actor = await Live2DActor.load(this.rt, { id: modelId, modelUrl: entry.url, signs: saved ?? NEUTRAL_SIGNS, ticker: this.ticker });
+        const actor = await this.loadFresh(modelId);
         this.ready.set(modelId, actor);
         this.unregister.set(modelId, registerDebugActor(actor));
+        await this.repairHeap();
         this.evict();
-        return actor;
+        return this.ready.get(modelId) ?? actor;
       })();
       this.actors.set(modelId, p);
       p.catch(() => this.actors.delete(modelId));
     }
     return p;
+  }
+
+  private async loadFresh(modelId: string): Promise<Live2DActor> {
+    const [entry, saved] = await Promise.all([this.model(modelId), fetchCalibration(modelId)]);
+    if (saved) this.cals.set(modelId, saved);
+    return Live2DActor.load(this.rt, { id: modelId, modelUrl: entry.url, signs: saved ?? NEUTRAL_SIGNS, ticker: this.ticker });
+  }
+
+  /**
+   * Safety net for the Cubism Core heap (see shared/cubismHeap): when loading a model made the Core re-allocate its heap, every
+   * model created before it renders frozen. Rebuild those; the stage swaps the new instance in on its next frame.
+   */
+  private async repairHeap(): Promise<void> {
+    for (let round = 0; round < 4; round++) {
+      const stale = staleModelIds([...this.ready.values()].map((a) => ({ id: a.id, seq: a.seq, token: a.heapToken() })));
+      if (stale.length === 0) return;
+      console.error(`[cubism] heap reallocated, reloading ${stale.length} models`);
+      await Promise.all(stale.map((id) => this.reload(id)));
+    }
+  }
+
+  /** Called with (new, old) whenever a model's actor was rebuilt; the old one is destroyed right after. */
+  onReload(fn: (fresh: Live2DActor, old: Live2DActor | null) => void): () => void {
+    this.reloadListeners.add(fn);
+    return () => void this.reloadListeners.delete(fn);
+  }
+
+  /** Destroy and re-create one model's actor (new heap view); callers holding the old instance must switch to `loaded(id)`. */
+  async reload(modelId: string): Promise<Live2DActor> {
+    const old = this.ready.get(modelId);
+    const fresh = await this.loadFresh(modelId);
+    await Promise.all([fresh.preloadMotions([...(old?.preloadedMotions ?? [])]), fresh.preloadExpressions([...(old?.preloadedExpressions ?? [])])]);
+    const cal = this.cals.get(modelId);
+    if (cal) fresh.override.signs = cal;
+    this.unregister.get(modelId)?.();
+    this.ready.set(modelId, fresh);
+    this.actors.set(modelId, Promise.resolve(fresh));
+    this.unregister.set(modelId, registerDebugActor(fresh));
+    // Listeners (the stage) put the new instance where the old one stands; only then is the old one destroyed.
+    for (const fn of this.reloadListeners) fn(fresh, old ?? null);
+    old?.destroy();
+    return fresh;
   }
 
   /** Loaded instance, or null while it is still loading. */

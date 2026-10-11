@@ -88,6 +88,8 @@ export interface CompiledActor {
   shiftY: NumKey[];
   /** Scale about the head centre (1 = natural); evens out the head sizes of a two-shot. */
   shiftS: NumKey[];
+  /** Draw order inside a group of three or more (larger = in front, 0 = by blocking depth). */
+  shiftZ?: NumKey[];
   /** 0 while the edge rule hides this person for a single-person shot, else 1. */
   shotVisible: NumKey[];
   /** Desired absolute screen yaw of the head (-1..1). */
@@ -178,6 +180,8 @@ export interface ActorRender {
   shiftX: number;
   shiftY: number;
   shiftS: number;
+  /** Draw order inside a group (larger = in front); 0 = by blocking depth. */
+  shiftZ: number;
   /** Extra blur (pixels at 720p) for actors out of focus. */
   blur: number;
   motion: { name: string; loop: boolean; elapsed: number; eventAt: number } | null;

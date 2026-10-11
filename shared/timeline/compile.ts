@@ -471,7 +471,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
 
     return {
       castId: w.castId, initialModelId: w.initialModelId, initialPos: w.initialPos, models: w.models, position: w.position, opacity,
-      presence: clipOverlaps(presence), slide: clipOverlaps(slide), shiftX: [], shiftY: [], shiftS: [], shotVisible: [], yaw, bodyYaw, gaze, motions, expressions, ruleKeys,
+      presence: clipOverlaps(presence), slide: clipOverlaps(slide), shiftX: [], shiftY: [], shiftS: [], shiftZ: [], shotVisible: [], yaw, bodyYaw, gaze, motions, expressions, ruleKeys,
     };
   });
 
@@ -493,21 +493,22 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   const poseFull = (type: ShotType, ids: string[], t: number, v: StyleValues, insertBox?: InsertBox, move?: CameraMove) => {
     const all = works.filter((w) => presentAt(w, t + 1e-6) || ids.includes(w.castId)).map((w) => frameActor(w, t));
     const chosen = ids.map((id) => all.find((a) => a.id === id) ?? (works.some((w) => w.castId === id) ? frameActor(works.find((w) => w.castId === id)!, t) : undefined)).filter((a): a is FramingActor => !!a);
-    const { pose, edgeCut, shifts } = solveShotDetailed({ type, focus: chosen.length > 0 ? chosen : all, all, bg, framing, style: v, aspect: ctx.aspect ?? 16 / 9, ...(insertBox ? { insertBox } : {}), ...(move ? { move } : {}) });
+    const { pose, edgeCut, shifts, moveLimits } = solveShotDetailed({ type, focus: chosen.length > 0 ? chosen : all, all, bg, framing, style: v, aspect: ctx.aspect ?? 16 / 9, ...(insertBox ? { insertBox } : {}), ...(move ? { move } : {}) });
     // The original never shows half of another person at the edge: in a single-person shot an unavoidable intruder is hidden for the shot.
     const hide = chosen.length === 1 ? edgeCut : [];
     if (edgeCut.length > 0) warnings.push(`scene ${scene.id}: edge-cut at ${t.toFixed(2)}s, ${edgeCut.join(',')} is cut by the frame edge (${type})${hide.length > 0 ? ', hidden for this shot' : ''}`);
-    return { pose, shifts, hide };
+    return { pose, shifts, hide, moveLimits };
   };
   const poseOf = (type: ShotType, ids: string[], t: number, v: StyleValues): CameraPose => poseFull(type, ids, t, v).pose;
   /** Per-actor screen arrangement keys of a shot (multi-person layout, bystanders hidden by the edge rule). */
-  const shiftKeys = new Map<string, { x: NumKey[]; y: NumKey[]; s: NumKey[]; vis: NumKey[] }>(works.map((w) => [w.castId, { x: [], y: [], s: [], vis: [] }]));
-  const pushShift = (at: number, duration: number, ease: NumKey['ease'], shifts: Record<string, { dx: number; dy: number; s: number }>, hide: string[]) => {
+  const shiftKeys = new Map<string, { x: NumKey[]; y: NumKey[]; s: NumKey[]; z: NumKey[]; vis: NumKey[] }>(works.map((w) => [w.castId, { x: [], y: [], s: [], z: [], vis: [] }]));
+  const pushShift = (at: number, duration: number, ease: NumKey['ease'], shifts: Record<string, { dx: number; dy: number; s: number; z?: number }>, hide: string[]) => {
     for (const [id, k] of shiftKeys) {
       const sh = shifts[id] ?? { dx: 0, dy: 0, s: 1 };
       k.x.push({ at, duration, ease, value: sh.dx });
       k.y.push({ at, duration, ease, value: sh.dy });
       k.s.push({ at, duration, ease, value: sh.s });
+      k.z.push({ at, duration: 0, ease: 'linear', value: ('z' in sh ? sh.z : 0) ?? 0 });
       k.vis.push({ at, duration: 0, ease: 'linear', value: hide.includes(id) ? 0 : 1 });
     }
   };
@@ -559,7 +560,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     if (!held) {
       const solved = poseFull(type, shotIds, bt.start, v, beat.shot.insertBox, beat.shot.move);
       const base = solved.pose;
-      const { from, to } = cameraMove(base, beat.shot.move, bg, v.framing, ctx.aspect ?? 16 / 9);
+      const { from, to } = cameraMove(base, beat.shot.move, bg, solved.moveLimits ? { ...v.framing, ...solved.moveLimits } : v.framing, ctx.aspect ?? 16 / 9);
       const reframe = entering && shotIds.length >= 2;
       const gs = v.performance.glideSeconds;
       const wantsGlide = (beat.shot.transition ?? (gs > 0 ? 'glide' : 'cut')) === 'glide';
@@ -615,7 +616,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     timing: st.timing, ui: uiOf(sceneV), hiddenDialog, location,
     actors: actors.map((a) => {
       const k = shiftKeys.get(a.castId)!;
-      return { ...a, shiftX: clipOverlaps(k.x), shiftY: clipOverlaps(k.y), shiftS: clipOverlaps(k.s), shotVisible: clipOverlaps(k.vis) };
+      return { ...a, shiftX: clipOverlaps(k.x), shiftY: clipOverlaps(k.y), shiftS: clipOverlaps(k.s), shiftZ: clipOverlaps(k.z), shotVisible: clipOverlaps(k.vis) };
     }), beats, camera: clipOverlaps(camera), shakes, dof: clipOverlaps(dof), focus,
   };
 }

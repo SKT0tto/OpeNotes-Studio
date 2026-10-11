@@ -11,7 +11,8 @@ import { chunkParagraphs, detectChapters, splitParagraphs } from '../../shared/d
 import { segments } from '../../shared/director/ruleDirector';
 import { findLockViolations } from '../../shared/project/locks';
 import { compileProject } from '../../shared/timeline/compile';
-import { faceLayout, groupFaceOffsets } from '../../shared/staging/framing';
+import { line, measureGroup } from './helpers/groupMeasure';
+import { faceLayout } from '../../shared/staging/framing';
 import { OURNOTES_STYLE } from '../../shared/style/ournotes';
 import { STORY, compileContext, fixtureCatalog } from './helpers/directorCatalog';
 
@@ -137,10 +138,10 @@ describe('wide frame (2.16:1)', () => {
     const wideAsp = 1920 / 890;
     expect(faceLayout('two_shot', 2, fr)).toEqual([-fr.twoShotFaceX, fr.twoShotFaceX]);
     expect(faceLayout('two_shot', 2, fr, wideAsp)[1]).toBeCloseTo(fr.twoShotFaceX * (wideAsp / (16 / 9)), 5);
-    const people = [0, 1, 2].map(() => ({ w: 0.4, back: false }));
-    const narrow = groupFaceOffsets(people, fr);
-    const wide = groupFaceOffsets(people, fr, wideAsp);
-    expect(wide.x[2]! / narrow.x[2]!).toBeCloseTo(wideAsp / (16 / 9), 5);
-    expect(groupFaceOffsets(people, { ...fr, groupWideStretch: 0 }, wideAsp).x).toEqual(narrow.x);
+    // groups (v0.1.4): the pitch is in head heights and never stretches with the window; the wider frame lets the heads grow to their target
+    const narrow = measureGroup(line(5), 16 / 9).faces;
+    const wide = measureGroup(line(5), wideAsp).faces;
+    expect(wide[0]!.headH).toBeGreaterThan(narrow[0]!.headH);
+    expect((wide[1]!.x - wide[0]!.x) / wide[0]!.headH).toBeCloseTo((narrow[1]!.x - narrow[0]!.x) / narrow[0]!.headH, 2);
   });
 });

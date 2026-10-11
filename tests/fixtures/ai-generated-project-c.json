@@ -1,0 +1,9183 @@
+{
+ "schemaVersion": 1,
+ "id": "p_fixture_c",
+ "title": "Liveness fixture (10 models, placeholder text)",
+ "createdAt": 1791686489855,
+ "updatedAt": 1791686489855,
+ "catalogVersion": "a28066a78ca5bfe4",
+ "settings": {
+  "aspect": "16:9",
+  "fps": 30,
+  "textSpeedCps": 12,
+  "defaultLineGap": 0.25
+ },
+ "source": {
+  "text": "Placeholder source text. The story content has been removed; this fixture only exercises models, scenes and timing.",
+  "format": "novel"
+ },
+ "cast": [
+  {
+   "id": "c_001",
+   "characterKey": "015",
+   "displayName": "千石由乃",
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 1",
+    "updatedAt": 1791686489855
+   }
+  },
+  {
+   "id": "c_002",
+   "characterKey": "011",
+   "displayName": "仲町阿拉蕾",
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 2",
+    "updatedAt": 1791686489855
+   }
+  },
+  {
+   "id": "c_003",
+   "characterKey": "012",
+   "displayName": "宫永野乃花",
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 3",
+    "updatedAt": 1791686489855
+   }
+  },
+  {
+   "id": "c_004",
+   "characterKey": "013",
+   "displayName": "峰月律",
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 4",
+    "updatedAt": 1791686489855
+   }
+  },
+  {
+   "id": "c_005",
+   "characterKey": "014",
+   "displayName": "藤都子",
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 5",
+    "updatedAt": 1791686489855
+   }
+  }
+ ],
+ "scenes": [
+  {
+   "id": "s_1",
+   "title": "title 1",
+   "sourceSpan": {
+    "start": 1,
+    "end": 149
+   },
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 6",
+    "updatedAt": 1791686489855
+   },
+   "background": {
+    "assetId": "adv_bkg_stage_000008",
+    "framing": {
+     "zoom": 1,
+     "offsetX": 0,
+     "offsetY": 0
+    },
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "reason": "reason 7",
+     "updatedAt": 1791686489855
+    }
+   },
+   "wardrobe": {
+    "c_001": {
+     "modelId": "015_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 8",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_002": {
+     "modelId": "011_casual_spring_01_twintails",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 9",
+      "updatedAt": 1791686489855
+     }
+    }
+   },
+   "blocking": {
+    "c_001": {
+     "slot": -0.25,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 10",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_002": {
+     "slot": 0.25,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 11",
+      "updatedAt": 1791686490434
+     }
+    }
+   },
+   "transitionIn": {
+    "kind": "scene_black",
+    "duration": 0,
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37vjuq",
+     "reason": "reason 12",
+     "updatedAt": 1791686490434
+    }
+   },
+   "location": {
+    "text": "text 2",
+    "show": true,
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "style": {
+    "overrides": {},
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "audio": {},
+   "brief": {
+    "timeOfDay": "夜间",
+    "mood": "mood 1",
+    "isPerformance": false,
+    "band": null
+   },
+   "beats": [
+    {
+     "id": "s_1b_2",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 3",
+     "sourceOffset": 11,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "group",
+      "focus": [
+       "c_001",
+       "c_002"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 13",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 14",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_3",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 30,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_001"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 15",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 16",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_8",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_001",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 4",
+     "sourceOffset": 54,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "sad",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_001"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 17",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 18",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_9",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 5",
+     "sourceOffset": 86,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "thinking",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 19",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 20",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_6",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 96,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "sad",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_001"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 21",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 22",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_7",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 6",
+     "sourceOffset": 104,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "group",
+      "focus": [
+       "c_001",
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 23",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 24",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_10",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 104,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "sad",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 25",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 26",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_1b_11",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 104,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "sad",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_001"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 27",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 28",
+      "updatedAt": 1791686490434
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "id": "tr_1",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_1",
+       "at": {
+        "beatId": "s_1b_2",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 29",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_6",
+       "at": {
+        "beatId": "s_1b_3",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 30",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_10",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 31",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_19",
+       "at": {
+        "beatId": "s_1b_9",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 32",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_22",
+       "at": {
+        "beatId": "s_1b_6",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 33",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_26",
+       "at": {
+        "beatId": "s_1b_7",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "away"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 34",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_35",
+       "at": {
+        "beatId": "s_1b_11",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 35",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_2",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_2",
+       "at": {
+        "beatId": "s_1b_2",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 36",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_12",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 37",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_17",
+       "at": {
+        "beatId": "s_1b_9",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 38",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_28",
+       "at": {
+        "beatId": "s_1b_7",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "away"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 39",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_31",
+       "at": {
+        "beatId": "s_1b_10",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 40",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_3",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_3",
+       "at": {
+        "beatId": "s_1b_2",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_pale02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 41",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_8",
+       "at": {
+        "beatId": "s_1b_3",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 42",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_14",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_sad02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 43",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_23",
+       "at": {
+        "beatId": "s_1b_6",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_sad02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 44",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_29",
+       "at": {
+        "beatId": "s_1b_7",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_pale01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 45",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_36",
+       "at": {
+        "beatId": "s_1b_11",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_sad01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 46",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_4",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_4",
+       "at": {
+        "beatId": "s_1b_2",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_surprised02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 47",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_21",
+       "at": {
+        "beatId": "s_1b_9",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_question01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 48",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_30",
+       "at": {
+        "beatId": "s_1b_7",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_panic01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 49",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_33",
+       "at": {
+        "beatId": "s_1b_10",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_sad03"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 50",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_5",
+     "target": {
+      "kind": "screen"
+     },
+     "channel": "fx",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_5",
+       "at": {
+        "beatId": "s_1b_2",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 51",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_15",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.4,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_24",
+       "at": {
+        "beatId": "s_1b_6",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 52",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_37",
+       "at": {
+        "beatId": "s_1b_11",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.4,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_6",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_7",
+       "at": {
+        "beatId": "s_1b_3",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "check01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 53",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_13",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 54",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_7",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_9",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 55",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_18",
+       "at": {
+        "beatId": "s_1b_9",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 56",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_25",
+       "at": {
+        "beatId": "s_1b_7",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "away"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 57",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_34",
+       "at": {
+        "beatId": "s_1b_11",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 58",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_8",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_11",
+       "at": {
+        "beatId": "s_1b_8",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 59",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_16",
+       "at": {
+        "beatId": "s_1b_9",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 60",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_27",
+       "at": {
+        "beatId": "s_1b_7",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "away"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 61",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_9",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_20",
+       "at": {
+        "beatId": "s_1b_9",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "question01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 62",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_32",
+       "at": {
+        "beatId": "s_1b_10",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "sad01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 63",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    }
+   ],
+   "idSeq": {
+    "s_1b": 11,
+    "tr": 9,
+    "k": 37
+   }
+  },
+  {
+   "id": "s_2",
+   "title": "title 2",
+   "sourceSpan": {
+    "start": 151,
+    "end": 342
+   },
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 64",
+    "updatedAt": 1791686489855
+   },
+   "background": {
+    "assetId": "adv_bkg_stage_000008",
+    "framing": {
+     "zoom": 1,
+     "offsetX": 0,
+     "offsetY": 0
+    },
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "reason": "reason 65",
+     "updatedAt": 1791686489855
+    }
+   },
+   "wardrobe": {
+    "c_002": {
+     "modelId": "011_casual_spring_01_twintails",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 66",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_003": {
+     "modelId": "012_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 67",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_004": {
+     "modelId": "013_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 68",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_005": {
+     "modelId": "014_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 69",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_001": {
+     "modelId": "015_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 70",
+      "updatedAt": 1791686489855
+     }
+    }
+   },
+   "blocking": {
+    "c_002": {
+     "slot": -0.25,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 71",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_003": {
+     "slot": 0.25,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 72",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_004": {
+     "slot": -0.55,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 73",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_005": {
+     "slot": 0.55,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 74",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_001": {
+     "slot": 0.85,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 75",
+      "updatedAt": 1791686490434
+     }
+    }
+   },
+   "transitionIn": {
+    "kind": "scene_black",
+    "duration": 0,
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37vjuq",
+     "reason": "reason 76",
+     "updatedAt": 1791686490434
+    }
+   },
+   "location": {
+    "text": "text 7",
+    "show": true,
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "style": {
+    "overrides": {},
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "audio": {},
+   "brief": {
+    "timeOfDay": "夜间",
+    "mood": "mood 2",
+    "isPerformance": false,
+    "band": null
+   },
+   "beats": [
+    {
+     "id": "s_2b_1",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 8",
+     "sourceOffset": 151,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 77",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 78",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_10",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_004",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 9",
+     "sourceOffset": 166,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_004"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 79",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 80",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_11",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 10",
+     "sourceOffset": 190,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "angry",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 81",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 82",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_12",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_003",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 11",
+     "sourceOffset": 219,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "neutral",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_003"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 83",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 84",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_13",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 12",
+     "sourceOffset": 245,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "angry",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 85",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 86",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_6",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 256,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "surprised",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_003"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 87",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 88",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_14",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_003",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 13",
+     "sourceOffset": 268,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "sad",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_003"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 89",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 90",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_8",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 292,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "thinking",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_005"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 91",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 92",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_2b_15",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_005",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 14",
+     "sourceOffset": 322,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_005"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 93",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 94",
+      "updatedAt": 1791686490434
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "id": "tr_1",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_1",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 95",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_19",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 96",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_31",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 97",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_43",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 98",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_59",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 99",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_79",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_005"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 100",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_2",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_2",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 101",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_20",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 102",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_32",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 103",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_44",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 104",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_60",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 105",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_80",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_005"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 106",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_3",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_3",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_004"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 107",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_15",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_004"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 108",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_29",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 109",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_39",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 110",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_57",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 111",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_75",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_005"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 112",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_4",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_4",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_004"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 113",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_16",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_004"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 114",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_30",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 115",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_40",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 116",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_58",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 117",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_76",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_005"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 118",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_5",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_5",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_004"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 119",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_17",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 120",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_27",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 121",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_41",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 122",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_55",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 123",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_77",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_005"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 124",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_6",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_6",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_004"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 125",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_18",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 126",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_28",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 127",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_42",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 128",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_52",
+       "at": {
+        "beatId": "s_2b_6",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 129",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_56",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 130",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_78",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_005"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 131",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_7",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_7",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_004"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 132",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_21",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 133",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_33",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 134",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_45",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 135",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_61",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 136",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_73",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 137",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_8",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_8",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_004"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 138",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_22",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 139",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_34",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 140",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_46",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 141",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_62",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 142",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_69",
+       "at": {
+        "beatId": "s_2b_8",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 143",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_74",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 144",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_9",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_9",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_004"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 145",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_23",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 146",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_35",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 147",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_47",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 148",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_63",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 149",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_81",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_005"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 150",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_10",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_10",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_004"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 151",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_24",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 152",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_36",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 153",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_48",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 154",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_64",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 155",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_82",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_005"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 156",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_11",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_11",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 157",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_12",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_12",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 158",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_13",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_13",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 159",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_26",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_angry02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 160",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_50",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_angry01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 161",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_67",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_surprised02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 162",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_85",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_idle02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 163",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_14",
+     "target": {
+      "kind": "screen"
+     },
+     "channel": "fx",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_14",
+       "at": {
+        "beatId": "s_2b_10",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 164",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_54",
+       "at": {
+        "beatId": "s_2b_6",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.4,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_68",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0
+       },
+       "value": {
+        "fx": "memory_glow",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 165",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_72",
+       "at": {
+        "beatId": "s_2b_8",
+        "offset": 0
+       },
+       "value": {
+        "fx": "memory_glow",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.4,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_15",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_25",
+       "at": {
+        "beatId": "s_2b_11",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "denial01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 166",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_49",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "angry01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 167",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_16",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_37",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "smile01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 168",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_65",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "sad01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 169",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_17",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_38",
+       "at": {
+        "beatId": "s_2b_12",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_smile02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 170",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_51",
+       "at": {
+        "beatId": "s_2b_13",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_sad02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 171",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_53",
+       "at": {
+        "beatId": "s_2b_6",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_sad02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 172",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_66",
+       "at": {
+        "beatId": "s_2b_14",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_smile04"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 173",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_18",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_70",
+       "at": {
+        "beatId": "s_2b_8",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "check01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 174",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_83",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "nod01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 175",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_19",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_71",
+       "at": {
+        "beatId": "s_2b_8",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_thinking01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 176",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_84",
+       "at": {
+        "beatId": "s_2b_15",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 177",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    }
+   ],
+   "idSeq": {
+    "s_2b": 15,
+    "tr": 19,
+    "k": 85
+   }
+  },
+  {
+   "id": "s_3",
+   "title": "title 3",
+   "sourceSpan": {
+    "start": 344,
+    "end": 538
+   },
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 178",
+    "updatedAt": 1791686489855
+   },
+   "background": {
+    "assetId": "adv_bkg_stage_000241",
+    "framing": {
+     "zoom": 1,
+     "offsetX": 0,
+     "offsetY": 0
+    },
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "reason": "reason 179",
+     "updatedAt": 1791686489855
+    }
+   },
+   "wardrobe": {
+    "c_002": {
+     "modelId": "011_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 180",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_003": {
+     "modelId": "012_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 181",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_004": {
+     "modelId": "013_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 182",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_005": {
+     "modelId": "014_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 183",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_001": {
+     "modelId": "015_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 184",
+      "updatedAt": 1791686489855
+     }
+    }
+   },
+   "blocking": {
+    "c_002": {
+     "slot": 0,
+     "depth": 0,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 185",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_003": {
+     "slot": -0.55,
+     "depth": 0.1,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 186",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_004": {
+     "slot": 0.55,
+     "depth": 0.1,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 187",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_005": {
+     "slot": -0.8,
+     "depth": 0.6,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 188",
+      "updatedAt": 1791686490434
+     }
+    },
+    "c_001": {
+     "slot": 0.8,
+     "depth": 0.6,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 189",
+      "updatedAt": 1791686490434
+     }
+    }
+   },
+   "transitionIn": {
+    "kind": "scene_black",
+    "duration": 0,
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37vjuq",
+     "reason": "reason 190",
+     "updatedAt": 1791686490434
+    }
+   },
+   "location": {
+    "text": "text 15",
+    "show": true,
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "style": {
+    "overrides": {},
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "audio": {},
+   "brief": {
+    "timeOfDay": "夜间",
+    "mood": "mood 3",
+    "isPerformance": true,
+    "band": "梦限大MewType"
+   },
+   "beats": [
+    {
+     "id": "s_3b_2",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 16",
+     "sourceOffset": 354,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 191",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 192",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_12",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 17",
+     "sourceOffset": 379,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "sad",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 193",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 194",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_4",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 397,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "surprised",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 195",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 196",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_13",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 18",
+     "sourceOffset": 407,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "thinking",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 197",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 198",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_6",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 427,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 199",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 200",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_14",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 19",
+     "sourceOffset": 427,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 201",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 202",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_15",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 427,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "pull_out",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 203",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 204",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_7",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 450,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "two_shot",
+      "focus": [
+       "c_004",
+       "c_001"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 205",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 206",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_16",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_001",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 20",
+     "sourceOffset": 477,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_001"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 207",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 208",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_9",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 493,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 209",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 210",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_10",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "dip_black",
+     "cutInKeepDialog": false,
+     "text": "text 21",
+     "sourceOffset": 502,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "neutral",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 211",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 212",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_11",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 512,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "pull_out",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 213",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 214",
+      "updatedAt": 1791686490434
+     }
+    },
+    {
+     "id": "s_3b_17",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 512,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "insert",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "insertBox": {
+       "x": 0.12,
+       "y": 0.4,
+       "w": 0.76,
+       "h": 0.26
+      },
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 215",
+       "updatedAt": 1791686490434
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686490434
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 216",
+      "updatedAt": 1791686490434
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "id": "tr_1",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_1",
+       "at": {
+        "beatId": "s_3b_2",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 217",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_41",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 218",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_64",
+       "at": {
+        "beatId": "s_3b_11",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "finish_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 219",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_70",
+       "at": {
+        "beatId": "s_3b_17",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "finish_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 220",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_2",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_2",
+       "at": {
+        "beatId": "s_3b_2",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 221",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_42",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 222",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_65",
+       "at": {
+        "beatId": "s_3b_11",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "finish_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 223",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_3",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_3",
+       "at": {
+        "beatId": "s_3b_2",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 224",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_43",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 225",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_66",
+       "at": {
+        "beatId": "s_3b_11",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "finish_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 226",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_4",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_4",
+       "at": {
+        "beatId": "s_3b_2",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 227",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_44",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 228",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_67",
+       "at": {
+        "beatId": "s_3b_11",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "finish_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 229",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_5",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_5",
+       "at": {
+        "beatId": "s_3b_2",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 230",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_40",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 231",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_59",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "action_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 232",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_68",
+       "at": {
+        "beatId": "s_3b_11",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "finish_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 233",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_6",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_6",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 234",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_19",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 235",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_30",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 236",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_51",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 237",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_60",
+       "at": {
+        "beatId": "s_3b_9",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 238",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_7",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_7",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 239",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_17",
+       "at": {
+        "beatId": "s_3b_4",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 240",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_20",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 241",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_31",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 242",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_52",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 243",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_61",
+       "at": {
+        "beatId": "s_3b_9",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 244",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_69",
+       "at": {
+        "beatId": "s_3b_17",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 245",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_8",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_8",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 246",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_21",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 247",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_32",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 248",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_53",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 249",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_9",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_9",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 250",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_22",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 251",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_33",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 252",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_54",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 253",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_10",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_10",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 254",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_23",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 255",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_34",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 256",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_45",
+       "at": {
+        "beatId": "s_3b_7",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 257",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_55",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 258",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_11",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_11",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 259",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_12",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 1.1
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 260",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_24",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 261",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_35",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 262",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_46",
+       "at": {
+        "beatId": "s_3b_7",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 263",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_56",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 264",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_12",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_13",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 265",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_25",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 266",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_36",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 267",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_57",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 268",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_13",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_14",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 269",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_26",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 270",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_37",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 271",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_58",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 272",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_14",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_15",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 273",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_27",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 274",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_38",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 275",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_47",
+       "at": {
+        "beatId": "s_3b_7",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_004"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 276",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_49",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 277",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_62",
+       "at": {
+        "beatId": "s_3b_9",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 278",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_15",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_16",
+       "at": {
+        "beatId": "s_3b_12",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 279",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_28",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 280",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_39",
+       "at": {
+        "beatId": "s_3b_15",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 281",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_48",
+       "at": {
+        "beatId": "s_3b_7",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_004"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 282",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_50",
+       "at": {
+        "beatId": "s_3b_16",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 283",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_63",
+       "at": {
+        "beatId": "s_3b_9",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 284",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_16",
+     "target": {
+      "kind": "screen"
+     },
+     "channel": "fx",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686490434
+     },
+     "keys": [
+      {
+       "id": "k_18",
+       "at": {
+        "beatId": "s_3b_4",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 285",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_29",
+       "at": {
+        "beatId": "s_3b_13",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.4,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_71",
+       "at": {
+        "beatId": "s_3b_17",
+        "offset": 0
+       },
+       "value": {
+        "fx": "memory_glow",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 286",
+        "updatedAt": 1791686490434
+       }
+      },
+      {
+       "id": "k_72",
+       "at": {
+        "beatId": "s_3b_17",
+        "offset": 4
+       },
+       "value": {
+        "fx": "memory_glow",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.6,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686490434
+       }
+      }
+     ]
+    }
+   ],
+   "idSeq": {
+    "s_3b": 17,
+    "tr": 16,
+    "k": 72
+   }
+  },
+  {
+   "id": "s_4",
+   "title": "title 4",
+   "sourceSpan": {
+    "start": 540,
+    "end": 640
+   },
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 287",
+    "updatedAt": 1791686489855
+   },
+   "background": {
+    "assetId": "adv_bkg_stage_000008",
+    "framing": {
+     "zoom": 1,
+     "offsetX": 0,
+     "offsetY": 0
+    },
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "reason": "reason 288",
+     "updatedAt": 1791686489855
+    }
+   },
+   "wardrobe": {
+    "c_002": {
+     "modelId": "011_casual_spring_01_twintails",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 289",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_003": {
+     "modelId": "012_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 290",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_005": {
+     "modelId": "014_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 291",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_001": {
+     "modelId": "015_casual_spring_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 292",
+      "updatedAt": 1791686489855
+     }
+    }
+   },
+   "blocking": {
+    "c_002": {
+     "slot": -0.25,
+     "depth": 0.08,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 293",
+      "updatedAt": 1791686504374
+     }
+    },
+    "c_003": {
+     "slot": 0.25,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 294",
+      "updatedAt": 1791686504374
+     }
+    },
+    "c_005": {
+     "slot": -0.55,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 295",
+      "updatedAt": 1791686504374
+     }
+    },
+    "c_001": {
+     "slot": 0,
+     "depth": 0.3,
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 296",
+      "updatedAt": 1791686504374
+     }
+    }
+   },
+   "transitionIn": {
+    "kind": "scene_black",
+    "duration": 0,
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37vjuq",
+     "reason": "reason 297",
+     "updatedAt": 1791686504374
+    }
+   },
+   "location": {
+    "text": "text 22",
+    "show": true,
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "style": {
+    "overrides": {},
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "audio": {},
+   "brief": {
+    "timeOfDay": "夜间",
+    "mood": "mood 4",
+    "isPerformance": false,
+    "band": null
+   },
+   "beats": [
+    {
+     "id": "s_4b_1",
+     "kind": "narration",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 23",
+     "sourceOffset": 540,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "surprised",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 298",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 299",
+      "updatedAt": 1791686504374
+     }
+    },
+    {
+     "id": "s_4b_8",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_001",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 24",
+     "sourceOffset": 558,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_001"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 300",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686504374
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 301",
+      "updatedAt": 1791686504374
+     }
+    },
+    {
+     "id": "s_4b_9",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_003",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 25",
+     "sourceOffset": 570,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "thinking",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_003"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 302",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686504374
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 303",
+      "updatedAt": 1791686504374
+     }
+    },
+    {
+     "id": "s_4b_4",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 579,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_005"
+      ],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 304",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 305",
+      "updatedAt": 1791686504374
+     }
+    },
+    {
+     "id": "s_4b_5",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 596,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "surprised",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "static",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 306",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 307",
+      "updatedAt": 1791686504374
+     }
+    },
+    {
+     "id": "s_4b_6",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 609,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 308",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 309",
+      "updatedAt": 1791686504374
+     }
+    },
+    {
+     "id": "s_4b_10",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 26",
+     "sourceOffset": 626,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "serious",
+     "shot": {
+      "type": "cu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 310",
+       "updatedAt": 1791686504374
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686504374
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 311",
+      "updatedAt": 1791686504374
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "id": "tr_1",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_1",
+       "at": {
+        "beatId": "s_4b_1",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 312",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_5",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 313",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_21",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 314",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_32",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "away"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 315",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_52",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 316",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_2",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_2",
+       "at": {
+        "beatId": "s_4b_1",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "check01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 317",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_12",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "smile01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 318",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_35",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "look01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 319",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_3",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_3",
+       "at": {
+        "beatId": "s_4b_1",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_surprised01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 320",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_13",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_smile02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 321",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_36",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_surprised01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 322",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_4",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_4",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 323",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_20",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 324",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_31",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "away"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 325",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_51",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 326",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_5",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_6",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 327",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_16",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 328",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_40",
+       "at": {
+        "beatId": "s_4b_6",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "away"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 329",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_45",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 330",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_6",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_7",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 331",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_17",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 332",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_41",
+       "at": {
+        "beatId": "s_4b_6",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "away"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 333",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_46",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 334",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_7",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_8",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 335",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_14",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 336",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_27",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "away"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 337",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_47",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 338",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_8",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_9",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 339",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_15",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 340",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_28",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "away"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 341",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_48",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 342",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_9",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_10",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_001"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 343",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_18",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_003"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 344",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_29",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "away"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 345",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_49",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "c_002"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 346",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_10",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_11",
+       "at": {
+        "beatId": "s_4b_8",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "c_001"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 347",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_19",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "c_003"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 348",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_24",
+       "at": {
+        "beatId": "s_4b_4",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "down"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 349",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_30",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "away"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 350",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_50",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "c_002"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 351",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_11",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_22",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "question01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 352",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_33",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "look01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 353",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_12",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_23",
+       "at": {
+        "beatId": "s_4b_9",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_thinking01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 354",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_34",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_surprised02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 355",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_13",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_25",
+       "at": {
+        "beatId": "s_4b_4",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "nod01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 356",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_37",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "look02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 357",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_14",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_26",
+       "at": {
+        "beatId": "s_4b_4",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_serious01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 358",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_38",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_serious02"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 359",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_15",
+     "target": {
+      "kind": "screen"
+     },
+     "channel": "fx",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_39",
+       "at": {
+        "beatId": "s_4b_5",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 1,
+        "roll": 0
+       },
+       "duration": 0.5,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 360",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_44",
+       "at": {
+        "beatId": "s_4b_6",
+        "offset": 0
+       },
+       "value": {
+        "fx": "vignette_anxiety",
+        "strength": 0,
+        "roll": 0
+       },
+       "duration": 0.4,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_16",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_42",
+       "at": {
+        "beatId": "s_4b_6",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "cry01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 361",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_53",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "kime01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 362",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_17",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "expression",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686504374
+     },
+     "keys": [
+      {
+       "id": "k_43",
+       "at": {
+        "beatId": "s_4b_6",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_cry01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 363",
+        "updatedAt": 1791686504374
+       }
+      },
+      {
+       "id": "k_54",
+       "at": {
+        "beatId": "s_4b_10",
+        "offset": 0
+       },
+       "value": {
+        "name": "exp_kime01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 364",
+        "updatedAt": 1791686504374
+       }
+      }
+     ]
+    }
+   ],
+   "idSeq": {
+    "s_4b": 10,
+    "tr": 17,
+    "k": 54
+   }
+  },
+  {
+   "id": "s_5",
+   "title": "title 5",
+   "sourceSpan": {
+    "start": 642,
+    "end": 664
+   },
+   "meta": {
+    "source": "ai",
+    "locked": false,
+    "genId": "g_mv37v40s",
+    "reason": "reason 365",
+    "updatedAt": 1791686489855
+   },
+   "background": {
+    "assetId": "adv_bkg_stage_000241",
+    "framing": {
+     "zoom": 1,
+     "offsetX": 0,
+     "offsetY": 0
+    },
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "reason": "reason 366",
+     "updatedAt": 1791686489855
+    }
+   },
+   "wardrobe": {
+    "c_002": {
+     "modelId": "011_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 367",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_003": {
+     "modelId": "012_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 368",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_004": {
+     "modelId": "013_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 369",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_005": {
+     "modelId": "014_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 370",
+      "updatedAt": 1791686489855
+     }
+    },
+    "c_001": {
+     "modelId": "015_live-mode_live_01",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37v40s",
+      "reason": "reason 371",
+      "updatedAt": 1791686489855
+     }
+    }
+   },
+   "blocking": {
+    "c_002": {
+     "slot": 0,
+     "depth": 0,
+     "enter": {
+      "beatId": "s_5b_1",
+      "side": "right"
+     },
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 372",
+      "updatedAt": 1791686506617
+     }
+    },
+    "c_003": {
+     "slot": -0.55,
+     "depth": 0.1,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 373",
+      "updatedAt": 1791686506617
+     }
+    },
+    "c_004": {
+     "slot": 0.55,
+     "depth": 0.1,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 374",
+      "updatedAt": 1791686506617
+     }
+    },
+    "c_005": {
+     "slot": -0.8,
+     "depth": 0.6,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 375",
+      "updatedAt": 1791686506617
+     }
+    },
+    "c_001": {
+     "slot": 0.8,
+     "depth": 0.6,
+     "meta": {
+      "source": "rule",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 376",
+      "updatedAt": 1791686506617
+     }
+    }
+   },
+   "transitionIn": {
+    "kind": "scene_black",
+    "duration": 0,
+    "meta": {
+     "source": "ai",
+     "locked": false,
+     "genId": "g_mv37vjuq",
+     "reason": "reason 377",
+     "updatedAt": 1791686506617
+    }
+   },
+   "location": {
+    "text": "text 27",
+    "show": true,
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "style": {
+    "overrides": {},
+    "meta": {
+     "source": "rule",
+     "locked": false,
+     "genId": "g_mv37v40s",
+     "updatedAt": 1791686489855
+    }
+   },
+   "audio": {},
+   "brief": {
+    "timeOfDay": "夜间",
+    "mood": "mood 5",
+    "isPerformance": true,
+    "band": "梦限大MewType"
+   },
+   "beats": [
+    {
+     "id": "s_5b_1",
+     "kind": "silent",
+     "variant": "normal",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "",
+     "sourceOffset": 642,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "mcu",
+      "focus": [
+       "c_002"
+      ],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 378",
+       "updatedAt": 1791686506617
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37v40s",
+       "updatedAt": 1791686489855
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 379",
+      "updatedAt": 1791686506617
+     }
+    },
+    {
+     "id": "s_5b_3",
+     "kind": "dialogue",
+     "variant": "normal",
+     "speakerId": "c_002",
+     "coSpeakers": [],
+     "cutIn": "cut",
+     "cutInKeepDialog": false,
+     "text": "text 28",
+     "sourceOffset": 652,
+     "duration": {
+      "mode": "auto",
+      "seconds": 0
+     },
+     "emotion": "happy",
+     "shot": {
+      "type": "group",
+      "focus": [],
+      "move": "push_in",
+      "meta": {
+       "source": "ai",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "reason": "reason 380",
+       "updatedAt": 1791686506617
+      }
+     },
+     "style": {
+      "overrides": {},
+      "meta": {
+       "source": "rule",
+       "locked": false,
+       "genId": "g_mv37vjuq",
+       "updatedAt": 1791686506617
+      }
+     },
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "reason": "reason 381",
+      "updatedAt": 1791686506617
+     }
+    }
+   ],
+   "tracks": [
+    {
+     "id": "tr_1",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_1",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 382",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_9",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 383",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_2",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_2",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 384",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_10",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.1
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 385",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_3",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_3",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "action_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 386",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_19",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "action_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 387",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_4",
+     "target": {
+      "kind": "actor",
+      "castId": "c_002"
+     },
+     "channel": "position",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_4",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0
+       },
+       "value": {
+        "slot": 0,
+        "depth": 0.08
+       },
+       "duration": 0.8,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 388",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_5",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_5",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 389",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_20",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 390",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_6",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_6",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 391",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_21",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 392",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_7",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_7",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 393",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_22",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 394",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_8",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "motion",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_8",
+       "at": {
+        "beatId": "s_5b_1",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "rule",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 395",
+        "updatedAt": 1791686506617
+       }
+      },
+      {
+       "id": "k_23",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.05
+       },
+       "value": {
+        "name": "play01_01"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 396",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_9",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_11",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.2
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 397",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_10",
+     "target": {
+      "kind": "actor",
+      "castId": "c_003"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_12",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.35
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 398",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_11",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_13",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 399",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_12",
+     "target": {
+      "kind": "actor",
+      "castId": "c_004"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_14",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 400",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_13",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_15",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.4
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 401",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_14",
+     "target": {
+      "kind": "actor",
+      "castId": "c_005"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_16",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.55
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 402",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_15",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "head",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_17",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.3
+       },
+       "value": {
+        "mode": "target",
+        "target": "camera"
+       },
+       "duration": 0.3,
+       "ease": "inOutSine",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 403",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    },
+    {
+     "id": "tr_16",
+     "target": {
+      "kind": "actor",
+      "castId": "c_001"
+     },
+     "channel": "gaze",
+     "meta": {
+      "source": "ai",
+      "locked": false,
+      "genId": "g_mv37vjuq",
+      "updatedAt": 1791686506617
+     },
+     "keys": [
+      {
+       "id": "k_18",
+       "at": {
+        "beatId": "s_5b_3",
+        "offset": 0.45
+       },
+       "value": {
+        "target": "camera"
+       },
+       "duration": 0,
+       "ease": "inOutQuad",
+       "meta": {
+        "source": "ai",
+        "locked": false,
+        "genId": "g_mv37vjuq",
+        "reason": "reason 404",
+        "updatedAt": 1791686506617
+       }
+      }
+     ]
+    }
+   ],
+   "idSeq": {
+    "s_5b": 3,
+    "tr": 16,
+    "k": 23
+   }
+  }
+ ],
+ "style": {
+  "overrides": {},
+  "meta": {
+   "source": "default",
+   "locked": false,
+   "updatedAt": 0
+  }
+ },
+ "generation": {
+  "runs": []
+ },
+ "idSeq": {
+  "s": 5,
+  "c": 5
+ }
+}

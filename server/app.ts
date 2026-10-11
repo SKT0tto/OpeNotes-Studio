@@ -59,6 +59,7 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
       assetRoot,
       audioRoots,
       cubismCoreUrl: config.cubismCoreUrl,
+      cubismMemoryMB: config.cubismMemoryMB,
       catalog: catalog.status,
     });
   });

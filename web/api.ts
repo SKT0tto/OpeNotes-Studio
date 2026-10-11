@@ -10,6 +10,8 @@ export interface Health {
     | { ok: false; path: string; error: string };
   audioRoots: Array<{ path: string; ok: boolean }>;
   cubismCoreUrl: string;
+  /** Cubism Core heap size (MB), applied before the first model is created. */
+  cubismMemoryMB?: number;
   catalog: { state: 'indexing' } | { state: 'ready'; ms: number } | { state: 'error'; error: string };
 }
 

@@ -72,7 +72,9 @@ export interface SolveInput {
 export interface ShotSolution {
   pose: CameraPose;
   /** Multi-person shots arrange the faces on the screen positions of the original: per-actor world offset (cut-safe, blocking untouched). */
-  shifts: Record<string, { dx: number; dy: number; s: number }>;
+  shifts: Record<string, { dx: number; dy: number; s: number; /** Draw order inside a group: larger = in front (absent = by blocking depth). */ z?: number }>;
+  /** Groups of three or more: camera moves are kept this small (framing.groupMoveZoom / groupPanShare). */
+  moveLimits?: { moveZoom: number; panShare: number };
   /** Ids of bystanders that stay cut by the frame edge although no acceptable shift was found. */
   edgeCut: string[];
 }
@@ -166,34 +168,6 @@ export function faceLayout(_type: 'two_shot' | 'group', n: number, fr: Framing, 
   return [-fr.twoShotFaceX * k, fr.twoShotFaceX * k];
 }
 
-/** Person-count adaptive size of a group (1 for up to three people, shrinking by `groupShrink` per extra person, never below `groupMinScale`). */
-export const groupSizeScale = (n: number, fr: Pick<Framing, 'groupShrink' | 'groupMinScale'>): number => clamp(1 - fr.groupShrink * Math.max(0, n - 3), fr.groupMinScale, 1);
-
-export interface GroupLayoutPerson {
-  /** Visible head width in world units after the size scale. */
-  w: number;
-  back: boolean;
-}
-
-/**
- * Face-centre offsets from the first face (world units) of a group left to right: the pitch between neighbours is `groupSpacing`
- * head widths in the same row and `groupRowSpacing` across rows (back row people sit between the front ones), stretched with the
- * window width. Returns the offsets, the total width of the arrangement (outer head edges) and the wide-screen factor applied.
- */
-export function groupFaceOffsets(people: GroupLayoutPerson[], fr: Framing, aspect: number = ASPECT): { x: number[]; width: number } {
-  const k = 1 + (Math.max(1, aspect / ASPECT) - 1) * fr.groupWideStretch;
-  const x = [0];
-  for (let i = 1; i < people.length; i++) {
-    const a = people[i - 1]!;
-    const b = people[i]!;
-    const factor = a.back === b.back ? fr.groupSpacing : fr.groupRowSpacing;
-    x.push(x[i - 1]! + factor * k * ((a.w + b.w) / 2));
-  }
-  const first = people[0]!;
-  const last = people.at(-1)!;
-  return { x, width: x.at(-1)! + first.w / 2 + last.w / 2 };
-}
-
 export function solveShotDetailed(input: SolveInput): ShotSolution {
   const { type, bg } = input;
   const sv = input.style ?? OURNOTES_STYLE;
@@ -214,48 +188,12 @@ export function solveShotDetailed(input: SolveInput): ShotSolution {
 
   let pose: CameraPose;
   let layout: ((camX: number) => ShotSolution['shifts']) | null = null;
+  let moveLimits: ShotSolution['moveLimits'];
   if (type === 'group' && actors.length >= 3) {
-    // Group of three or more: faces are laid out left to right with a spacing in head widths, smaller and in two staggered rows when
-    // there are many; the camera zooms out as far as needed so that every head (and its margin) is inside the frame.
-    const group = actors.slice().sort((a, b) => a.head.x + a.head.w / 2 - (b.head.x + b.head.w / 2) || b.body.y + b.body.h - (a.body.y + a.body.h));
-    const n = group.length;
-    const back = groupRows(group, bg, fr);
-    const vis = (a: FramingActor) => visibleHead(a, fr).h;
-    const refH = Math.max(...group.map(vis));
-    const sizeK = groupSizeScale(n, fr);
-    // each person's size is pulled towards the common head size (model scale differs), the back row is smaller
-    const sc = group.map((a, i) => Math.pow(refH / vis(a), fr.groupSizeEqualize) * (back[i] ? fr.groupBackScale : 1));
-    const people = group.map((a, i) => ({ w: a.head.w * sc[i]!, back: back[i]! }));
-    const lay = groupFaceOffsets(people, fr, asp);
-    const target = clamp((spec.headH * sizeK * H) / refH, MIN_ZOOM, MAX_ZOOM);
-    // zoom out until the whole arrangement plus the edge margins fits the window width
-    const mv = input.move ?? 'static';
-    const moveRoom = mv === 'push_in' || mv === 'pull_out' ? fr.moveZoom : 1;
-    const travel = mv === 'pan' ? fr.panShare : mv === 'track' ? fr.panShare * 0.6 : 0;
-    const fit = (H * (asp * (1 - 2 * travel) - 2 * fr.groupEdgeMargin - 2 * Math.abs(fr.groupCenterX))) / (lay.width * moveRoom);
-    const zoom = clamp(Math.min(target, fit), MIN_ZOOM, MAX_ZOOM);
-    const Hv = H / zoom;
-    const centreY = group.map((a) => a.head.y + a.head.h / 2);
-    const eyes = group.map((a, i) => centreY[i]! + (eyeWorldY(a, fr) - centreY[i]!) * sc[i]!);
-    const tops = group.map((a, i) => centreY[i]! + (visibleHead(a, fr).top - centreY[i]!) * sc[i]!);
-    const rowMean = (isBack: boolean) => {
-      const xs = eyes.filter((_, i) => back[i] === isBack);
-      return xs.length > 0 ? xs.reduce((q, e) => q + e, 0) / xs.length : null;
-    };
-    const frontMean = rowMean(false) ?? rowMean(true)!;
-    const backMean = rowMean(true);
-    const dy = eyes.map((e, i) => {
-      const mean = back[i] ? backMean! : frontMean;
-      const aim = frontMean + (back[i] ? fr.groupRowDrop * refH * sizeK : 0) + (e - mean) * (1 - fr.heightEqualize);
-      return aim - e;
-    });
-    let cy = frontMean + (0.5 - spec.eyeY) * Hv;
-    cy = headTopFloor(cy, Math.min(...tops.map((t, i) => t + dy[i]!)), Hv, spec.topMargin);
-    const faceCx = group.map((a) => a.head.x + a.head.w / 2);
-    const rel = lay.x.map((x) => x - lay.width / 2 + people[0]!.w / 2 + fr.groupCenterX * Hv);
-    const cx = faceCx.reduce((q, c, i) => q + c - rel[i]!, 0) / n;
-    pose = mk(cx, cy, zoom);
-    layout = (camX) => Object.fromEntries(group.map((a, i) => [a.id, { dx: camX + rel[i]! - faceCx[i]!, dy: dy[i]!, s: sc[i]! }]));
+    const g = solveGroup(actors, input, spec, mk);
+    pose = g.pose;
+    layout = g.layout;
+    moveLimits = g.moveLimits;
   } else if ((type === 'two_shot' || type === 'group') && actors.length >= 2) {
     const group = (type === 'group' ? actors : actors.slice(0, 2)).slice().sort((a, b) => a.head.x + a.head.w / 2 - (b.head.x + b.head.w / 2));
     const vis = (a: FramingActor) => visibleHead(a, fr).h;
@@ -298,21 +236,128 @@ export function solveShotDetailed(input: SolveInput): ShotSolution {
     const lead = clamp(a.yaw, -1, 1) * spec.lookRoom * (W / zoom);
     pose = mk(a.head.x + a.head.w / 2 + lead, cy, zoom);
   }
+  // A group of three or more is arranged by its faces only (hair and bodies may leave the frame, nobody is shrunk to avoid that).
+  if (moveLimits) return { pose, shifts: layout!(pose.x), moveLimits, edgeCut: [] };
   const res = avoidEdgeCuts(input, pose, actors, safe, layout !== null);
   return { pose: res.pose, shifts: layout ? layout(res.pose.x) : {}, edgeCut: res.edgeCut };
 }
 
+/** Target visible head height (share of H) of a group of `n` people on a wide frame (3: groupHead3, then x groupHeadDecay per person, floor groupHeadMin). */
+export const groupHeadTarget = (n: number, fr: Pick<Framing, 'groupHead3' | 'groupHeadDecay' | 'groupHeadMin'>): number =>
+  Math.max(fr.groupHeadMin, fr.groupHead3 * Math.pow(fr.groupHeadDecay, Math.max(0, n - 3)));
+
+/** Distance between neighbouring face centres in head heights for a group of `n` people. */
+export const groupPitchHeads = (n: number, fr: Pick<Framing, 'groupPitch3' | 'groupPitchStep' | 'groupPitchMin'>): number =>
+  Math.max(fr.groupPitchMin, fr.groupPitch3 - fr.groupPitchStep * Math.max(0, n - 3));
+
 /**
- * Which people of a group stand in the back row. With the blocking's depth range (>= groupRowDepthGap) the far half is the back
- * row (a band: drummer behind the vocalist); otherwise groups of `groupStaggerFrom` or more alternate (every second person back).
+ * Group of three or more, laid out like the original: big, tight heads; faces never covered and fully inside the frame; bodies
+ * may overlap and leave the frame at the sides; one row, centred, equal pitch, similar sizes, the middle person a touch bigger and in front.
+ * A back row exists only for a real depth difference in the blocking (a band's drummer) or beyond `groupOneRowMax` people, and its
+ * people stand between two front faces.
  */
-export function groupRows(group: FramingActor[], bg: BgInfo, fr: Pick<Framing, 'groupRowDepthGap' | 'groupStaggerFrom'>): boolean[] {
-  const depth = group.map((a) => feetToSlotDepth({ x: a.body.x + a.body.w / 2, y: a.body.y + a.body.h }, bg).depth);
-  const lo = Math.min(...depth);
-  const hi = Math.max(...depth);
-  if (hi - lo >= fr.groupRowDepthGap) return depth.map((d) => d > lo + (hi - lo) / 2);
-  if (group.length >= fr.groupStaggerFrom) return group.map((_, i) => i % 2 === 1);
-  return group.map(() => false);
+function solveGroup(
+  actors: FramingActor[],
+  input: SolveInput,
+  spec: StyleValues['shots'][StyleShotKey],
+  mk: (x: number, y: number, zoom: number) => CameraPose,
+): { pose: CameraPose; layout: (camX: number) => ShotSolution['shifts']; moveLimits: NonNullable<ShotSolution['moveLimits']> } {
+  const { bg } = input;
+  const fr = (input.style ?? OURNOTES_STYLE).framing;
+  const asp = input.aspect ?? ASPECT;
+  const H = viewWorldHeight(bg);
+  const cxOf = (a: FramingActor) => a.head.x + a.head.w / 2;
+  const vis = (a: FramingActor) => visibleHead(a, fr).h;
+
+  // ---- rows
+  const depth = new Map(actors.map((a) => [a.id, feetToSlotDepth({ x: a.body.x + a.body.w / 2, y: a.body.y + a.body.h }, bg).depth] as const));
+  const lo = Math.min(...depth.values());
+  let front = actors.filter((a) => depth.get(a.id)! - lo < fr.groupDepthGap);
+  if (front.length < 2) front = actors.slice();
+  let overflow = false;
+  if (front.length > fr.groupOneRowMax) {
+    // focus people first (the caller lists them first), then the ones nearest to the middle of the group
+    const mid = actors.reduce((q, a) => q + cxOf(a), 0) / actors.length;
+    const rank = new Map(actors.map((a, i) => [a.id, i] as const));
+    const focusN = Math.min(input.focus.length, actors.length);
+    const prio = (a: FramingActor) => (rank.get(a.id)! < focusN ? rank.get(a.id)! - 1e6 : Math.abs(cxOf(a) - mid));
+    front = front.slice().sort((p, q) => prio(p) - prio(q)).slice(0, fr.groupFrontCrowded);
+    overflow = true;
+  }
+  const inFront = new Set(front.map((a) => a.id));
+  const byX = (p: FramingActor, q: FramingActor) => cxOf(p) - cxOf(q) || depth.get(p.id)! - depth.get(q.id)!;
+  front = front.slice().sort(byX);
+  const back = actors.filter((a) => !inFront.has(a.id)).sort(byX);
+  const m = front.length;
+  const nEff = Math.max(3, m);
+
+  // ---- sizes: pulled towards one common head size; the middle person of an odd row is a touch bigger
+  const ref = Math.max(...actors.map(vis));
+  const centreIdx = m % 2 === 1 ? (m - 1) / 2 : -1;
+  const backScale = overflow ? fr.groupOverflowScale : fr.groupBackScale;
+  const backDrop = overflow ? fr.groupOverflowDrop : fr.groupBackDrop;
+  const scOf = (a: FramingActor, boost: number) => Math.pow(ref / vis(a), fr.groupSizeEqualize) * boost;
+  const sc = new Map<string, number>();
+  front.forEach((a, j) => sc.set(a.id, scOf(a, j === centreIdx ? fr.groupCenterBoost : 1)));
+  back.forEach((a) => sc.set(a.id, scOf(a, backScale)));
+  const meanHead = front.reduce((q, a) => q + vis(a) * sc.get(a.id)!, 0) / m;
+
+  // ---- screen x (world offsets from the group centre): equal pitch in the front row, back people in the gaps between front faces
+  const faceW = (a: FramingActor) => fr.groupFaceShare * a.head.w * sc.get(a.id)!;
+  let pitchW = groupPitchHeads(nEff, fr) * meanHead;
+  // a back person stands half a pitch from both neighbours: wide enough that its face does not touch theirs
+  if (back.length > 0) pitchW = Math.max(pitchW, Math.max(...front.map(faceW)) + Math.max(...back.map(faceW)));
+  const x = new Map<string, number>();
+  front.forEach((a, j) => x.set(a.id, (j - (m - 1) / 2) * pitchW));
+  if (back.length > 0) {
+    const gaps = Array.from({ length: m - 1 }, (_, k) => (k + 0.5 - (m - 1) / 2) * pitchW).sort((p, q) => Math.abs(p) - Math.abs(q) || p - q);
+    const used = back.map((_, i) => gaps[i % gaps.length]!).sort((p, q) => p - q);
+    back.forEach((a, i) => x.set(a.id, used[i]!));
+  }
+
+  // ---- zoom: the target head height, limited so that every face fits (with the small room a capped camera move needs)
+  const mv = input.move ?? 'static';
+  const limits = { moveZoom: Math.min(fr.moveZoom, fr.groupMoveZoom), panShare: Math.min(fr.panShare, fr.groupPanShare) };
+  const moveRoom = mv === 'push_in' || mv === 'pull_out' ? limits.moveZoom : 1;
+  const travel = mv === 'pan' ? limits.panShare : mv === 'track' ? limits.panShare * 0.6 : 0;
+  const all = [...front, ...back];
+  const reach = Math.max(...all.map((a) => Math.abs(x.get(a.id)!) + faceW(a) / 2));
+  const avail = asp / 2 - fr.groupFaceEdge - travel * asp - Math.abs(fr.groupCenterX);
+  const eyeY = fr.groupEyeY;
+  const chinDrop = front.reduce((q, a) => q + (visibleHead(a, fr).bottom - eyeWorldY(a, fr)) * sc.get(a.id)!, 0) / m;
+  const target = groupHeadTarget(nEff, fr);
+  let zoom = Math.min((target * H) / meanHead, (H * avail) / (reach * moveRoom));
+  zoom = Math.max(zoom, (fr.groupHeadMin * H) / meanHead); // never smaller than the floor, whatever the frame
+  zoom = Math.max(zoom, (H * (1 - eyeY)) / (2.4 * meanHead + chinDrop)); // the lower edge cuts at the chest / waist, never lower
+  zoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+  const Hv = H / zoom;
+
+  // ---- eye lines: the front row on one common line (pulled together), back people a little lower
+  const centreY = new Map(all.map((a) => [a.id, a.head.y + a.head.h / 2] as const));
+  const eye = new Map(all.map((a) => [a.id, centreY.get(a.id)! + (eyeWorldY(a, fr) - centreY.get(a.id)!) * sc.get(a.id)!] as const));
+  const top = new Map(all.map((a) => [a.id, centreY.get(a.id)! + (visibleHead(a, fr).top - centreY.get(a.id)!) * sc.get(a.id)!] as const));
+  const mean = (list: FramingActor[]) => list.reduce((q, a) => q + eye.get(a.id)!, 0) / list.length;
+  const frontMean = mean(front);
+  const backMean = back.length > 0 ? mean(back) : 0;
+  const dy = new Map(
+    all.map((a) => {
+      const isBack = !inFront.has(a.id);
+      const aim = frontMean + (isBack ? backDrop * Hv : 0) + (eye.get(a.id)! - (isBack ? backMean : frontMean)) * (1 - fr.groupHeightEqualize);
+      return [a.id, aim - eye.get(a.id)!] as const;
+    }),
+  );
+  let cy = frontMean + (0.5 - eyeY) * Hv;
+  cy = headTopFloor(cy, Math.min(...all.map((a) => top.get(a.id)! + dy.get(a.id)!)), Hv, Math.max(0, spec.topMargin));
+
+  const faceCx = new Map(all.map((a) => [a.id, cxOf(a)] as const));
+  const off = fr.groupCenterX * Hv;
+  const cx = all.reduce((q, a) => q + faceCx.get(a.id)! - x.get(a.id)! - off, 0) / all.length;
+  const z = (a: FramingActor) => (inFront.has(a.id) ? 100 - Math.round(Math.abs(front.indexOf(a) - (m - 1) / 2) * 10) : 1);
+  return {
+    pose: mk(cx, cy, zoom),
+    moveLimits: limits,
+    layout: (camX) => Object.fromEntries(all.map((a) => [a.id, { dx: camX + x.get(a.id)! + off - faceCx.get(a.id)!, dy: dy.get(a.id)!, s: sc.get(a.id)!, z: z(a) }])),
+  };
 }
 
 /** Lower the head on screen when its top would be closer to the upper edge than `margin` (share of the frame). */

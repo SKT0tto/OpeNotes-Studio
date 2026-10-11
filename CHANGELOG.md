@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.4
+
+Fixes "some characters do not move" and "group shots are not harmonious" (v0.1.3 feedback).
+
+**Frozen characters (root cause, present since 0.1.0).** The Cubism Core heap was configured at 32 MB. Loading the 6th-10th model of a project made the Core re-allocate its heap, and every model created before that kept views on the old heap: motions and parameters kept running in JS (so every parameter-based check passed) but the rendered output stopped. Which people froze depended on the model load order.
+- Core heap default is now 256 MB, configurable with `cubismMemoryMB` in `studio.config.json` or `CUBISM_MEMORY_MB` (64-1024, delivered through `/api/health`, applied before the first model is created in the play page, stage lab and actor lab).
+- Safety net: after every model load the library compares heap views; models left on an old heap are rebuilt (`[cubism] heap reallocated, reloading N models`) and the stage swaps the new instance in at once.
+- Debug hooks `getActorVertexHash`, `getActorHeapStale`, `getActorScreenBoxes`; new e2e `liveness-real` (10-model project, sequential play and the s_2 -> s_3 -> s_4 -> s_1 -> s_5 jump order, 16:9 and 2.16:1, editor, and a forced 32 MB heap) checks vertices and head pixels instead of parameters.
+
+**Group shots (3+ people) follow the original again.** Measured on the original: big tight heads (3 people 0.41H ... 6 people 0.29H on the wide frame), faces about 1.45 -> 1.21 head heights apart, faces never covered and always inside the frame, bodies and hair may overlap and leave the frame, never full-body. Replaces the 0.1.3 shrink-to-fit layout (heads 0.11-0.17H, zig-zag rows).
+- One row, centred, equal pitch, head sizes pulled together (min/max >= 0.90), the middle person x1.04 and in front; a back row only for a real depth difference (a band's drummer, standing between two front faces) or beyond six people.
+- Camera moves of a group are capped (push-in 1.05x, pan 0.024W) and the faces stay inside the frame at both ends.
+- Style fields: new `framing.groupHead3 / groupHeadDecay / groupHeadMin / groupPitch3 / groupPitchStep / groupPitchMin / groupFaceShare / groupFaceEdge / groupEyeY / groupHeightEqualize / groupCenterBoost / groupDepthGap / groupBackScale / groupBackDrop / groupOneRowMax / groupFrontCrowded / groupOverflowScale / groupOverflowDrop / groupMoveZoom / groupPanShare`; the old `groupSpacing, groupRowSpacing, groupRowDrop, groupStaggerFrom, groupShrink, groupMinScale, groupEdgeMargin, groupWideStretch, groupRowDepthGap` are removed (stored overrides are ignored and listed as style issues). Two-shots are unchanged.
+
 ## 0.1.3
 
 Fixes "the group shot (everybody in frame) looks crowded".

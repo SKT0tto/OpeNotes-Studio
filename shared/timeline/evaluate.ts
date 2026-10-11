@@ -79,6 +79,7 @@ function evalActor(s: CompiledScene, a: CompiledActor, t: number, ctxBeat: Scene
     shiftX: sampleNum(a.shiftX, t, 0),
     shiftY: sampleNum(a.shiftY, t, 0),
     shiftS: sampleNum(a.shiftS, t, 1),
+    shiftZ: sampleNum(a.shiftZ ?? [], t, 0),
     blur,
     motion: ev ? { name: ev.name, loop: ev.loop, elapsed: t - ev.at, eventAt: ev.at } : null,
     expression: lastBefore(a.expressions, t)?.name ?? null,

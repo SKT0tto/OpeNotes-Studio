@@ -73,7 +73,7 @@ export function ActorLab({ health }: { health: Health }) {
     const a = new Application();
     const el = host.current;
     (async () => {
-      await ensureRuntime(health.cubismCoreUrl);
+      await ensureRuntime(health.cubismCoreUrl, health.cubismMemoryMB);
       await a.init({ width: STAGE_W, height: STAGE_H, background: 0x20242d, antialias: true, preserveDrawingBuffer: true });
       inited = true;
       if (dead) return void a.destroy(true);
@@ -94,7 +94,7 @@ export function ActorLab({ health }: { health: Health }) {
       setApp(null);
       if (inited && el?.contains(a.canvas)) a.destroy(true, { children: true });
     };
-  }, [health.cubismCoreUrl]);
+  }, [health.cubismCoreUrl, health.cubismMemoryMB]);
 
   // Load the selected model; probe + persist calibration on first sight.
   useEffect(() => {
@@ -104,7 +104,7 @@ export function ActorLab({ health }: { health: Health }) {
     (async () => {
       setStatus(`加载 ${modelId}…`);
       setError(null);
-      const rt = await ensureRuntime(health.cubismCoreUrl);
+      const rt = await ensureRuntime(health.cubismCoreUrl, health.cubismMemoryMB);
       const [me, saved] = await Promise.all([fetchModel(modelId), fetchCalibration(modelId)]);
       if (dead) return;
       const actor = await Live2DActor.load(rt, { id: modelId, modelUrl: me.url, signs: saved ?? NEUTRAL_SIGNS, ticker: app.ticker });
@@ -136,7 +136,7 @@ export function ActorLab({ health }: { health: Health }) {
       setDemos([]);
       setChosen('');
     };
-  }, [app, modelId, health.cubismCoreUrl]);
+  }, [app, modelId, health.cubismCoreUrl, health.cubismMemoryMB]);
 
   useEffect(() => {
     const t = setInterval(() => {

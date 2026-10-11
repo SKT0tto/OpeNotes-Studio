@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { clampCubismMemoryMB } from '../shared/cubismHeap';
 
 export const DEFAULT_ASSET_ROOT = './assets';
 export const DEFAULT_CUBISM_CORE_URL = 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js';
@@ -10,6 +11,8 @@ export interface StudioConfig {
   assetRoot: string;
   audioRoots: string[];
   cubismCoreUrl: string;
+  /** Cubism Core heap in MB (64-1024). The Core re-allocates a too-small heap while models load, which freezes the earlier ones. */
+  cubismMemoryMB: number;
   port: number;
   /** Writable runtime data (index cache, projects, ...). */
   dataDir: string;
@@ -26,6 +29,7 @@ export interface FileConfig {
   assetRoot?: string;
   audioRoots?: string[];
   cubismCoreUrl?: string;
+  cubismMemoryMB?: number;
   port?: number;
   dataDir?: string;
   importMaxBytes?: number;
@@ -48,6 +52,7 @@ export function resolveConfig(env: Env, file: FileConfig = {}, cwd: string = pro
     assetRoot: path.resolve(nonEmpty(env.ASSET_ROOT) ?? file.assetRoot ?? DEFAULT_ASSET_ROOT),
     audioRoots: audioRoots.map((p) => path.resolve(p)),
     cubismCoreUrl: nonEmpty(env.CUBISM_CORE_URL) ?? file.cubismCoreUrl ?? DEFAULT_CUBISM_CORE_URL,
+    cubismMemoryMB: clampCubismMemoryMB(nonEmpty(env.CUBISM_MEMORY_MB) ?? file.cubismMemoryMB),
     port,
     dataDir: path.resolve(cwd, nonEmpty(env.DATA_DIR) ?? file.dataDir ?? 'data'),
     configFile: path.resolve(cwd, nonEmpty(env.STUDIO_CONFIG_FILE) ?? 'studio.config.json'),
