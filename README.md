@@ -24,12 +24,26 @@ Screenshots are intentionally not committed because they would contain game asse
 
 ## Setup
 
+### Option 1: download package (recommended for beginners)
+
+1. Install [Node.js](https://nodejs.org) 22 or newer (LTS).
+2. Download `OpeNotes-Studio-v<version>.zip` from [Releases](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) and unzip it anywhere (a path without spaces is safest).
+3. Windows: double-click `Start-Windows.cmd`. macOS / Linux: run `./start.sh` in a terminal (or `bash start.sh`).
+4. On the first run it installs the dependencies (needs internet) and asks whether you accept the [Live2D Proprietary Software License](https://www.live2d.com/eula/live2d-proprietary-software-license-agreement_en.html) and want the Live2D Cubism Core downloaded from Live2D's official address. Answer `Y` (or `N` and do it later in the web wizard).
+5. The browser opens at <http://127.0.0.1:5274>; follow the setup wizard to import your assets. Keep the window open while you work; closing it stops the server.
+
+The package contains the built app only (no game assets, no Cubism Core). **To upgrade, unzip the new version over the old folder and keep `data/` and `studio.config.json`** (your projects, settings and asset-library path). Automation flags for the start scripts: `--yes` (accept the licence and download the Core), `--no-core` (skip it), `--no-browser`. The port is `API_PORT` or `port` in `studio.config.json` (default 5274). Maintainers: `npm run package-release` builds the same zip locally into `release/`; pushing a `v*` tag publishes it via `.github/workflows/release.yml`.
+
+### Option 2: developers (git clone)
+
 Requires Node.js 22+ (developed on 24) and, for `npm run test:e2e`, Microsoft Edge.
 
 ```
 npm install
 npm run dev        # server on :5274, Vite on :5273 (open http://127.0.0.1:5273)
 ```
+
+Production-style run from a clone: `npm run build && npm start` (one port, 5274, serves the web app and the API from `dist/`).
 
 ### First run: the setup wizard
 
@@ -45,7 +59,7 @@ The studio reads an asset library (`models/`, `backgrounds/`, `media/`, optional
 
 Configure with, in priority order:
 
-1. environment variables: `ASSET_ROOT`, `AUDIO_ROOTS` (`;`-separated extra audio folders), `CUBISM_CORE_URL`, `PORT`, `DATA_DIR`, `IMPORT_MAX_BYTES` (uncompressed size cap of one import, default 16 GB)
+1. environment variables: `ASSET_ROOT`, `AUDIO_ROOTS` (`;`-separated extra audio folders), `CUBISM_CORE_URL`, `API_PORT`, `DATA_DIR`, `IMPORT_MAX_BYTES` (uncompressed size cap of one import, default 16 GB)
 2. `studio.config.json` (copy `studio.config.example.json`; gitignored; the wizard also writes `assetRoot` / `cubismCoreUrl` here)
 3. built-in defaults (see `server/config.ts`)
 
@@ -63,7 +77,8 @@ Live2D rendering needs the proprietary Cubism Core 5.x, which is not in this rep
 
 | Script | What |
 |---|---|
-| `npm run dev` / `start` / `build` | dev servers / production server (serves `dist/web` when built) / Vite build |
+| `npm run dev` / `build` / `start` | dev servers / Vite build + server bundle (`dist/web`, `dist/server`) / production server (serves `dist/web` and the API on one port; `start:dev` runs the TypeScript sources with tsx) |
+| `npm run package-release` | build the download zip into `release/` (run `npm run build` first) |
 | `npm run typecheck`, `npm run lint` | tsc, eslint |
 | `npm test` | unit tests (no real assets needed) |
 | `npm run test:integration` | against the real `ASSET_ROOT` (skipped with a notice if unreadable) |

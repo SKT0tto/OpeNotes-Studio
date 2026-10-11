@@ -21,5 +21,6 @@ export default defineConfig({
       '^/vendor/': target,
     },
   },
-  build: { outDir: '../dist/web', emptyOutDir: true },
+  // not "assets": /assets/* is the asset library route of the server
+  build: { outDir: '../dist/web', emptyOutDir: true, assetsDir: 'app' },
 });

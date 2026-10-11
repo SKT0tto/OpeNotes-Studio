@@ -31,3 +31,6 @@ textures/
 
 # local development notes (plans, acceptance logs, labelling Q&A)
 dev-notes/
+
+# release package output (npm run package-release)
+/release/
