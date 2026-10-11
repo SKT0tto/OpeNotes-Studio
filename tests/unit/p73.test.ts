@@ -68,14 +68,15 @@ describe('N3 / N4 solver', () => {
     }
   });
 
-  it('three-person groups use the original positions, ordered left to right', () => {
-    const [l, m, r] = [actor('l', -0.5, 0.1), actor('m', 0.0, 0.3), actor('r', 0.5, 0.1)];
+  it('three-person groups are laid out left to right, evenly spaced and symmetric about the frame centre', () => {
+    const [l, m, r] = [actor('l', -0.5, 0.1), actor('m', 0.0, 0.1), actor('r', 0.5, 0.1)];
     const s = solveShotDetailed({ type: 'group', focus: [r, l, m], bg });
     const Hv = viewRect(bg, s.pose).h;
     const x = (a: FramingActor) => (s.shifts[a.id]!.dx + a.head.x + a.head.w / 2 - s.pose.x) / Hv;
-    expect(x(l)).toBeCloseTo(OURNOTES_STYLE.framing.groupFaceX0, 3);
-    expect(x(m)).toBeCloseTo(OURNOTES_STYLE.framing.groupFaceX1, 3);
-    expect(x(r)).toBeCloseTo(OURNOTES_STYLE.framing.groupFaceX2, 3);
+    expect(x(l)).toBeLessThan(x(m));
+    expect(x(m)).toBeLessThan(x(r));
+    expect(x(l) + x(r)).toBeCloseTo(0, 3);
+    expect(x(m) - x(l)).toBeCloseTo(x(r) - x(m), 3);
   });
 
   it('the style fields drive the layout (heightEqualize / sizeEqualize = 0 leave eye lines and sizes alone)', () => {
@@ -119,7 +120,7 @@ describe('N5 / N7 / N8 / N9 style data', () => {
     expect(v.hud.autoSpinDegPerSec).toBe(72);
     expect(v.fx.anxietySmoke).toBeGreaterThan(0);
     expect(v.fx.anxietyTint).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(v.framing.groupFaceX0).toBe(-0.5);
+    expect(v.framing.groupSpacing).toBeGreaterThan(1);
     expect(v.framing.twoShotFaceX).toBe(0.47);
   });
 });

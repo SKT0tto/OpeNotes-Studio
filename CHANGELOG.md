@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.3
+
+Fixes "the group shot (everybody in frame) looks crowded".
+
+Measured on the real AI-generated projects in `data/projects` (daily scenes and band performances, 16:9 / 2.16:1, original reference t094 for comparison):
+
+- Before: neighbouring faces were 0.51H apart for three people, 0.40H for four and 0.30H for five (16:9); with four and five people the head boxes overlapped by up to 30% / 51% (a face half covered by the next one), and the three-person layout was fixed to the right so the left head was cut by the frame edge (up to -0.16H) while the right side had a wide margin.
+- After: faces keep at least 1.2-1.5 head widths between their centres, no head box overlaps another (0%), every head including the hair is inside the frame with at least 0.06H margin on both sides, and the arrangement is centred. Spacing (16:9): 3 people 0.54H, 4 people 0.39H, 5 people 0.28H (wide 2.16:1: 0.70H / 0.49H / 0.36H); bodies may overlap slightly, faces never.
+
+Changes:
+
+- Groups of three or more are laid out by head width instead of by fixed screen positions: the pitch between neighbouring faces is `framing.groupSpacing` head widths inside a row and `framing.groupRowSpacing` between a front and a back row person; the arrangement is centred and the camera zooms out as far as needed so that everybody (and a margin of `framing.groupEdgeMargin`) fits, also at the end of a push-in / pan.
+- More people are drawn smaller (`groupShrink` per extra person, floor `groupMinScale`) and in two staggered rows: with a depth range in the blocking the far half is the back row (a band: the vocalist stays front centre, the drummer behind, the others left and right), otherwise groups of `groupStaggerFrom` or more alternate. The back row sits lower (`groupRowDrop`) and a little smaller (`groupBackScale`). Wide frames spread the spacing over the extra width (`groupWideStretch`).
+- A group shot shows everybody on stage: a person who is present but not in the beat's focus is arranged with the others instead of standing half behind a neighbour.
+- All of it is style data (global -> scene -> shot) with inspector fields in the "Framing" group, previewed instantly. The old `framing.groupFaceX0/1/2` values are replaced by these.
+
 ## 0.1.2
 
 Fixes "several characters do not move at all in generated performances".
