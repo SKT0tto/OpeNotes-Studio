@@ -42,10 +42,31 @@ const BASE = {
     darkLuma: 0.15,
     /** Two-shot: both face centres sit this far (share of H) left / right of the frame centre (original t051: +-0.47H). */
     twoShotFaceX: 0.47,
-    /** Group of three, screen left to right (original t094); more people are spread linearly between the outer two. */
-    groupFaceX0: -0.5,
-    groupFaceX1: 0.19,
-    groupFaceX2: 0.7,
+    /**
+     * Groups of three or more (original t094: three people, faces ~0.6-0.7H apart). Spacing is measured in head widths between
+     * neighbouring face centres: `groupSpacing` inside a row (1.9 = nearly a whole head width of air between two faces) and
+     * `groupRowSpacing` between a front and a back row person (they also differ in height, so faces never touch).
+     */
+    groupSpacing: 1.9,
+    groupRowSpacing: 1.4,
+    /** Back row: eye line this many (front) head heights lower, drawn at this share of the front size. */
+    groupRowDrop: 0.5,
+    groupBackScale: 0.88,
+    /** Groups of at least this many people stand in two alternating rows even when the blocking has no depth. */
+    groupStaggerFrom: 4,
+    /** Depth difference (0..1) in the blocking from which the far half is the back row (a band: the drummer behind the vocalist). */
+    groupRowDepthGap: 0.3,
+    /** Head size multiplier per person beyond three (more people = smaller, further away), and its floor. */
+    groupShrink: 0.08,
+    groupMinScale: 0.6,
+    /** Share of H kept free between the outermost head box and the frame edge; the arrangement zooms out until it fits. */
+    groupEdgeMargin: 0.06,
+    /** Horizontal shift of the arrangement from the frame centre (H). */
+    groupCenterX: 0,
+    /** 0..1: how far the spacing grows with a window wider than 16:9 (1 = in proportion to the width). */
+    groupWideStretch: 1,
+    /** 0..1: how far the head sizes inside a group are pulled together. */
+    groupSizeEqualize: 0.85,
     /** 0..1: how far the eye lines of a multi-person shot are pulled towards their mean (original: height difference <= 0.07H). */
     heightEqualize: 0.75,
     /** 0..1: how far the head sizes of the two people of a two-shot are pulled together (model scale differs between characters). */
@@ -246,9 +267,18 @@ export const STYLE_FIELDS: StyleField[] = [
   int('framing.darkDofBonus', '暗背景 dof 加成', G.frame, 0, 3),
   num('framing.darkLuma', '暗背景亮度阈值', G.frame, 0, 1, 0.01),
   num('framing.twoShotFaceX', '双人 脸中心距画面中线/H', G.frame, 0, 1, 0.01),
-  num('framing.groupFaceX0', '群像 左起第 1 人脸 x/H', G.frame, -1, 1, 0.01),
-  num('framing.groupFaceX1', '群像 第 2 人脸 x/H', G.frame, -1, 1, 0.01),
-  num('framing.groupFaceX2', '群像 最右人脸 x/H', G.frame, -1, 1, 0.01),
+  num('framing.groupSpacing', '群像 同排脸间距（头宽倍数）', G.frame, 0.6, 3, 0.05),
+  num('framing.groupRowSpacing', '群像 前后排脸间距（头宽倍数）', G.frame, 0.3, 3, 0.05),
+  num('framing.groupRowDrop', '群像 后排下沉（头高倍数）', G.frame, 0, 1.5, 0.05),
+  num('framing.groupBackScale', '群像 后排缩放', G.frame, 0.5, 1, 0.01),
+  int('framing.groupStaggerFrom', '群像 前后错排起始人数', G.frame, 3, 12),
+  num('framing.groupRowDepthGap', '群像 按站位纵深分前后排的深度差', G.frame, 0.05, 1, 0.05),
+  num('framing.groupShrink', '群像 每多一人缩小', G.frame, 0, 0.3, 0.01),
+  num('framing.groupMinScale', '群像 最小缩放', G.frame, 0.3, 1, 0.01),
+  num('framing.groupEdgeMargin', '群像 头部距画面边缘/H', G.frame, 0, 0.3, 0.005),
+  num('framing.groupCenterX', '群像 整体横向偏移/H', G.frame, -0.5, 0.5, 0.01),
+  num('framing.groupWideStretch', '群像 宽画幅拉伸', G.frame, 0, 1, 0.05),
+  num('framing.groupSizeEqualize', '群像 头高拉平', G.frame, 0, 1, 0.05),
   num('framing.heightEqualize', '多人镜头 眼线拉平', G.frame, 0, 1, 0.05),
   num('framing.sizeEqualize', '双人镜头 头高拉平', G.frame, 0, 1, 0.05),
   num('framing.chestHeads', '胸线（头高倍数）', G.frame, 1, 5, 0.1),

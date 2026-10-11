@@ -11,7 +11,7 @@ import { chunkParagraphs, detectChapters, splitParagraphs } from '../../shared/d
 import { segments } from '../../shared/director/ruleDirector';
 import { findLockViolations } from '../../shared/project/locks';
 import { compileProject } from '../../shared/timeline/compile';
-import { faceLayout } from '../../shared/staging/framing';
+import { faceLayout, groupFaceOffsets } from '../../shared/staging/framing';
 import { OURNOTES_STYLE } from '../../shared/style/ournotes';
 import { STORY, compileContext, fixtureCatalog } from './helpers/directorCatalog';
 
@@ -134,10 +134,13 @@ describe('diff view and continuity', () => {
 describe('wide frame (2.16:1)', () => {
   it('spreads two-shots and groups over the extra width and keeps 16:9 unchanged', () => {
     const fr = OURNOTES_STYLE.framing;
-    const narrow = faceLayout('group', 3, fr);
-    const wide = faceLayout('group', 3, fr, 1920 / 890);
-    expect(narrow).toEqual([fr.groupFaceX0, fr.groupFaceX1, fr.groupFaceX2]);
-    wide.forEach((x, i) => expect(Math.abs(x)).toBeCloseTo(Math.abs(narrow[i]!) * (1920 / 890 / (16 / 9)), 5));
-    expect(faceLayout('two_shot', 2, fr, 1920 / 890)[1]).toBeGreaterThan(fr.twoShotFaceX);
+    const wideAsp = 1920 / 890;
+    expect(faceLayout('two_shot', 2, fr)).toEqual([-fr.twoShotFaceX, fr.twoShotFaceX]);
+    expect(faceLayout('two_shot', 2, fr, wideAsp)[1]).toBeCloseTo(fr.twoShotFaceX * (wideAsp / (16 / 9)), 5);
+    const people = [0, 1, 2].map(() => ({ w: 0.4, back: false }));
+    const narrow = groupFaceOffsets(people, fr);
+    const wide = groupFaceOffsets(people, fr, wideAsp);
+    expect(wide.x[2]! / narrow.x[2]!).toBeCloseTo(wideAsp / (16 / 9), 5);
+    expect(groupFaceOffsets(people, { ...fr, groupWideStretch: 0 }, wideAsp).x).toEqual(narrow.x);
   });
 });

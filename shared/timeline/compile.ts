@@ -7,7 +7,7 @@
 import type { Calibration } from '../schema/calibration';
 import type { Channel, Project, Scene, Track } from '../schema/project';
 import { chooseMotionVariant, desiredGaze, desiredYaw, nominalScreenYaw, variantsOfFamily, yawTowardsCamera } from '../staging/facing';
-import { cameraMove, normalizeShotType, solveShotDetailed, type FramingActor, type InsertBox, type ShotType } from '../staging/framing';
+import { cameraMove, normalizeShotType, solveShotDetailed, type CameraMove, type FramingActor, type InsertBox, type ShotType } from '../staging/framing';
 import { placeActor, type Placement } from '../staging/ground';
 import { defaultGround, type BgInfo, type CameraPose } from '../staging/world';
 import { clamp, lerp } from './easing';
@@ -490,10 +490,10 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   const focus: CompiledScene['focus'] = [];
   const hiddenDialog: Interval[] = [];
 
-  const poseFull = (type: ShotType, ids: string[], t: number, v: StyleValues, insertBox?: InsertBox) => {
+  const poseFull = (type: ShotType, ids: string[], t: number, v: StyleValues, insertBox?: InsertBox, move?: CameraMove) => {
     const all = works.filter((w) => presentAt(w, t + 1e-6) || ids.includes(w.castId)).map((w) => frameActor(w, t));
     const chosen = ids.map((id) => all.find((a) => a.id === id) ?? (works.some((w) => w.castId === id) ? frameActor(works.find((w) => w.castId === id)!, t) : undefined)).filter((a): a is FramingActor => !!a);
-    const { pose, edgeCut, shifts } = solveShotDetailed({ type, focus: chosen.length > 0 ? chosen : all, all, bg, framing, style: v, aspect: ctx.aspect ?? 16 / 9, ...(insertBox ? { insertBox } : {}) });
+    const { pose, edgeCut, shifts } = solveShotDetailed({ type, focus: chosen.length > 0 ? chosen : all, all, bg, framing, style: v, aspect: ctx.aspect ?? 16 / 9, ...(insertBox ? { insertBox } : {}), ...(move ? { move } : {}) });
     // The original never shows half of another person at the edge: in a single-person shot an unavoidable intruder is hidden for the shot.
     const hide = chosen.length === 1 ? edgeCut : [];
     if (edgeCut.length > 0) warnings.push(`scene ${scene.id}: edge-cut at ${t.toFixed(2)}s, ${edgeCut.join(',')} is cut by the frame edge (${type})${hide.length > 0 ? ', hidden for this shot' : ''}`);
@@ -557,7 +557,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
       shotType: type, dof: dofLevel,
     });
     if (!held) {
-      const solved = poseFull(type, shotIds, bt.start, v, beat.shot.insertBox);
+      const solved = poseFull(type, shotIds, bt.start, v, beat.shot.insertBox, beat.shot.move);
       const base = solved.pose;
       const { from, to } = cameraMove(base, beat.shot.move, bg, v.framing, ctx.aspect ?? 16 / 9);
       const reframe = entering && shotIds.length >= 2;

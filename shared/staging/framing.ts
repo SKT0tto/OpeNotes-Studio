@@ -6,6 +6,7 @@
  */
 import { OURNOTES_STYLE, type StyleShotKey, type StyleValues } from '../style/ournotes';
 import { clamp } from '../timeline/easing';
+import { feetToSlotDepth } from './ground';
 import { ASPECT, MAX_ZOOM, MIN_ZOOM, clampCamera, clampZoom, viewRect, viewWorldHeight, type BgFraming, type BgInfo, type CameraPose, type Rect } from './world';
 
 export const SHOT_TYPES = ['establishing', 'group', 'two_shot', 'mcu', 'cu', 'ecu', 'insert'] as const;
@@ -62,6 +63,8 @@ export interface SolveInput {
   bg: BgInfo;
   framing?: BgFraming;
   style?: StyleValues;
+  /** The camera move of the shot; a group leaves room for it (zoom-in / pan travel) so nobody is cut at the end of the move. */
+  move?: CameraMove;
   /** Window aspect (width / height); default 16:9. A wider frame spreads two-shots and groups over its width (faces stay proportional to H). */
   aspect?: number;
 }
@@ -155,17 +158,40 @@ function avoidEdgeCuts(input: SolveInput, pose: CameraPose, focus: FramingActor[
   return found ? { pose: found, edgeCut: [] } : { pose, edgeCut: initial.map((a) => a.id) };
 }
 
-/** Screen x (share of H, from the frame centre) of the faces of an n-person shot, left to right. */
-export function faceLayout(type: 'two_shot' | 'group', n: number, fr: Framing, aspect: number = ASPECT): number[] {
+/** Screen x (share of H, from the frame centre) of the faces of a two-person shot (or a lone person), left to right. */
+export function faceLayout(_type: 'two_shot' | 'group', n: number, fr: Framing, aspect: number = ASPECT): number[] {
   // wider than 16:9: the same arrangement, stretched over the extra width (the original re-lays its multi-person shots per screen width)
   const k = Math.max(1, aspect / ASPECT);
-  const xs = (() => {
-    if (n <= 1) return [0];
-    if (type === 'two_shot' || n === 2) return [-fr.twoShotFaceX, fr.twoShotFaceX];
-    if (n === 3) return [fr.groupFaceX0, fr.groupFaceX1, fr.groupFaceX2];
-    return Array.from({ length: n }, (_, i) => fr.groupFaceX0 + ((fr.groupFaceX2 - fr.groupFaceX0) * i) / (n - 1));
-  })();
-  return xs.map((x) => x * k);
+  if (n <= 1) return [0];
+  return [-fr.twoShotFaceX * k, fr.twoShotFaceX * k];
+}
+
+/** Person-count adaptive size of a group (1 for up to three people, shrinking by `groupShrink` per extra person, never below `groupMinScale`). */
+export const groupSizeScale = (n: number, fr: Pick<Framing, 'groupShrink' | 'groupMinScale'>): number => clamp(1 - fr.groupShrink * Math.max(0, n - 3), fr.groupMinScale, 1);
+
+export interface GroupLayoutPerson {
+  /** Visible head width in world units after the size scale. */
+  w: number;
+  back: boolean;
+}
+
+/**
+ * Face-centre offsets from the first face (world units) of a group left to right: the pitch between neighbours is `groupSpacing`
+ * head widths in the same row and `groupRowSpacing` across rows (back row people sit between the front ones), stretched with the
+ * window width. Returns the offsets, the total width of the arrangement (outer head edges) and the wide-screen factor applied.
+ */
+export function groupFaceOffsets(people: GroupLayoutPerson[], fr: Framing, aspect: number = ASPECT): { x: number[]; width: number } {
+  const k = 1 + (Math.max(1, aspect / ASPECT) - 1) * fr.groupWideStretch;
+  const x = [0];
+  for (let i = 1; i < people.length; i++) {
+    const a = people[i - 1]!;
+    const b = people[i]!;
+    const factor = a.back === b.back ? fr.groupSpacing : fr.groupRowSpacing;
+    x.push(x[i - 1]! + factor * k * ((a.w + b.w) / 2));
+  }
+  const first = people[0]!;
+  const last = people.at(-1)!;
+  return { x, width: x.at(-1)! + first.w / 2 + last.w / 2 };
 }
 
 export function solveShotDetailed(input: SolveInput): ShotSolution {
@@ -177,7 +203,9 @@ export function solveShotDetailed(input: SolveInput): ShotSolution {
   const H = viewWorldHeight(bg);
   const asp = input.aspect ?? ASPECT;
   const W = H * asp;
-  const actors = input.focus.length > 0 ? input.focus : (input.all ?? []);
+  const focusActors = input.focus.length > 0 ? input.focus : (input.all ?? []);
+  // A group shot shows everybody on stage: people who are present but not named in the focus are arranged with the others (otherwise one of them stands half behind a neighbour).
+  const actors = type === 'group' ? [...focusActors, ...(input.all ?? []).filter((o) => !focusActors.some((f) => f.id === o.id))] : focusActors;
   const mk = (x: number, y: number, zoom: number): CameraPose => ({ x, y, zoom: clampZoom(zoom), bgZoom: spec.bgZoom });
 
   if (type === 'establishing' || actors.length === 0) {
@@ -186,7 +214,49 @@ export function solveShotDetailed(input: SolveInput): ShotSolution {
 
   let pose: CameraPose;
   let layout: ((camX: number) => ShotSolution['shifts']) | null = null;
-  if ((type === 'two_shot' || type === 'group') && actors.length >= 2) {
+  if (type === 'group' && actors.length >= 3) {
+    // Group of three or more: faces are laid out left to right with a spacing in head widths, smaller and in two staggered rows when
+    // there are many; the camera zooms out as far as needed so that every head (and its margin) is inside the frame.
+    const group = actors.slice().sort((a, b) => a.head.x + a.head.w / 2 - (b.head.x + b.head.w / 2) || b.body.y + b.body.h - (a.body.y + a.body.h));
+    const n = group.length;
+    const back = groupRows(group, bg, fr);
+    const vis = (a: FramingActor) => visibleHead(a, fr).h;
+    const refH = Math.max(...group.map(vis));
+    const sizeK = groupSizeScale(n, fr);
+    // each person's size is pulled towards the common head size (model scale differs), the back row is smaller
+    const sc = group.map((a, i) => Math.pow(refH / vis(a), fr.groupSizeEqualize) * (back[i] ? fr.groupBackScale : 1));
+    const people = group.map((a, i) => ({ w: a.head.w * sc[i]!, back: back[i]! }));
+    const lay = groupFaceOffsets(people, fr, asp);
+    const target = clamp((spec.headH * sizeK * H) / refH, MIN_ZOOM, MAX_ZOOM);
+    // zoom out until the whole arrangement plus the edge margins fits the window width
+    const mv = input.move ?? 'static';
+    const moveRoom = mv === 'push_in' || mv === 'pull_out' ? fr.moveZoom : 1;
+    const travel = mv === 'pan' ? fr.panShare : mv === 'track' ? fr.panShare * 0.6 : 0;
+    const fit = (H * (asp * (1 - 2 * travel) - 2 * fr.groupEdgeMargin - 2 * Math.abs(fr.groupCenterX))) / (lay.width * moveRoom);
+    const zoom = clamp(Math.min(target, fit), MIN_ZOOM, MAX_ZOOM);
+    const Hv = H / zoom;
+    const centreY = group.map((a) => a.head.y + a.head.h / 2);
+    const eyes = group.map((a, i) => centreY[i]! + (eyeWorldY(a, fr) - centreY[i]!) * sc[i]!);
+    const tops = group.map((a, i) => centreY[i]! + (visibleHead(a, fr).top - centreY[i]!) * sc[i]!);
+    const rowMean = (isBack: boolean) => {
+      const xs = eyes.filter((_, i) => back[i] === isBack);
+      return xs.length > 0 ? xs.reduce((q, e) => q + e, 0) / xs.length : null;
+    };
+    const frontMean = rowMean(false) ?? rowMean(true)!;
+    const backMean = rowMean(true);
+    const dy = eyes.map((e, i) => {
+      const mean = back[i] ? backMean! : frontMean;
+      const aim = frontMean + (back[i] ? fr.groupRowDrop * refH * sizeK : 0) + (e - mean) * (1 - fr.heightEqualize);
+      return aim - e;
+    });
+    let cy = frontMean + (0.5 - spec.eyeY) * Hv;
+    cy = headTopFloor(cy, Math.min(...tops.map((t, i) => t + dy[i]!)), Hv, spec.topMargin);
+    const faceCx = group.map((a) => a.head.x + a.head.w / 2);
+    const rel = lay.x.map((x) => x - lay.width / 2 + people[0]!.w / 2 + fr.groupCenterX * Hv);
+    const cx = faceCx.reduce((q, c, i) => q + c - rel[i]!, 0) / n;
+    pose = mk(cx, cy, zoom);
+    layout = (camX) => Object.fromEntries(group.map((a, i) => [a.id, { dx: camX + rel[i]! - faceCx[i]!, dy: dy[i]!, s: sc[i]! }]));
+  } else if ((type === 'two_shot' || type === 'group') && actors.length >= 2) {
     const group = (type === 'group' ? actors : actors.slice(0, 2)).slice().sort((a, b) => a.head.x + a.head.w / 2 - (b.head.x + b.head.w / 2));
     const vis = (a: FramingActor) => visibleHead(a, fr).h;
     const refH = type === 'group' ? Math.max(...group.map(vis)) : group.reduce((s, a) => s + vis(a), 0) / group.length;
@@ -230,6 +300,19 @@ export function solveShotDetailed(input: SolveInput): ShotSolution {
   }
   const res = avoidEdgeCuts(input, pose, actors, safe, layout !== null);
   return { pose: res.pose, shifts: layout ? layout(res.pose.x) : {}, edgeCut: res.edgeCut };
+}
+
+/**
+ * Which people of a group stand in the back row. With the blocking's depth range (>= groupRowDepthGap) the far half is the back
+ * row (a band: drummer behind the vocalist); otherwise groups of `groupStaggerFrom` or more alternate (every second person back).
+ */
+export function groupRows(group: FramingActor[], bg: BgInfo, fr: Pick<Framing, 'groupRowDepthGap' | 'groupStaggerFrom'>): boolean[] {
+  const depth = group.map((a) => feetToSlotDepth({ x: a.body.x + a.body.w / 2, y: a.body.y + a.body.h }, bg).depth);
+  const lo = Math.min(...depth);
+  const hi = Math.max(...depth);
+  if (hi - lo >= fr.groupRowDepthGap) return depth.map((d) => d > lo + (hi - lo) / 2);
+  if (group.length >= fr.groupStaggerFrom) return group.map((_, i) => i % 2 === 1);
+  return group.map(() => false);
 }
 
 /** Lower the head on screen when its top would be closer to the upper edge than `margin` (share of the frame). */
