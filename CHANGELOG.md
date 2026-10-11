@@ -16,6 +16,12 @@ Changes:
 - A group shot shows everybody on stage: a person who is present but not in the beat's focus is arranged with the others instead of standing half behind a neighbour.
 - All of it is style data (global -> scene -> shot) with inspector fields in the "Framing" group, previewed instantly. The old `framing.groupFaceX0/1/2` values are replaced by these.
 
+Download package and production run:
+
+- GitHub Releases now carry a ready-to-run zip (`OpeNotes-Studio-v<version>.zip`, built by `.github/workflows/release.yml` on a `v*` tag, or locally with `npm run package-release`): the built app, `Start-Windows.cmd` / `start.sh`, docs, `asset-labels/` and `examples/`; no game assets, no Cubism Core, no tests (about 0.7 MB). Unzip it and double-click the start script (Node.js 22+ is needed): it installs the production dependencies on the first run, offers to download the Live2D Cubism Core from Live2D's official address after you accept the Live2D Proprietary Software License (`scripts/fetch-core.mjs`; answering no leaves it to the web wizard), starts the server and opens the browser. To upgrade, unzip the new version over the old folder and keep `data/` and `studio.config.json`.
+- `npm run build` now also bundles the server to `dist/server/index.mjs`, and `npm start` runs that bundle (one port, default 5274, serves the web app and the API; no Vite, no tsx). The front-end-only packages (React, Pixi, zustand, immer, the Live2D engine) moved to devDependencies, so `npm ci --omit=dev` installs only what the server needs. `npm run start:dev` keeps the old tsx start.
+- Fix: in a production build the web bundle's `/assets/*` files collided with the server's asset-library route; the bundle is now emitted to `/app/*`.
+
 ## 0.1.2
 
 Fixes "several characters do not move at all in generated performances".

@@ -1,0 +1,33 @@
+# Builds the download package and publishes it as a GitHub Release when a version tag (v*) is pushed.
+# The tag must match package.json "version" (v0.1.3 <-> 0.1.3). The release notes are that version's CHANGELOG.md section.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test # unit tests only: no assets, no API keys needed
+      - run: npm run build
+      - name: Assemble the package
+        run: node scripts/package-release.mjs --tag "$GITHUB_REF_NAME"
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: OpeNotes Studio ${{ github.ref_name }}
+          body_path: release/RELEASE_NOTES.md
+          files: release/OpeNotes-Studio-${{ github.ref_name }}.zip
