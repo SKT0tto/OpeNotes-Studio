@@ -2,6 +2,7 @@
 import { Rectangle, type Application } from 'pixi.js';
 import type { Project } from '@shared/schema/project';
 import type { RenderState } from '@shared/timeline/types';
+import { staleModelIds } from '@shared/cubismHeap';
 import type { Live2DActor } from './Live2DActor';
 
 const WATCHED = ['ParamAngleX', 'ParamAngleY', 'ParamAngleZ', 'ParamBodyAngleX', 'ParamEyeBallX', 'ParamEyeBallY'];
@@ -30,6 +31,13 @@ let player: DebugPlayer | null = null;
 type CamInfo = { x: number; y: number; zoom: number; bgZoom?: number; bgViewZoom?: number };
 let stageProbe: (() => { sceneVisible: boolean; people: string[]; hasBackground: boolean }) | null = null;
 let cameraGetter: (() => CamInfo) | null = null;
+export interface ScreenBox {
+  castId: string;
+  modelId: string | null;
+  /** Head box in stage pixels (0..width x 0..height, the logical size, not the renderer resolution). */
+  head: { x: number; y: number; w: number; h: number };
+}
+let boxesGetter: (() => ScreenBox[]) | null = null;
 
 export interface ParamReading {
   /** Value the renderer used (motion + expression + overlay + physics). */
@@ -56,6 +64,12 @@ export interface StudioDebug {
   player: DebugPlayer | null;
   /** Camera pose currently applied to the stage. */
   getCamera(): { x: number; y: number; zoom: number; bgZoom?: number; bgViewZoom?: number } | null;
+  /** Sampled sum of the Core's output vertices of a model: it must keep changing while the model is on screen. */
+  getActorVertexHash(modelId: string): number;
+  /** True when the model's Core heap view is not the newest model's (frozen output; the library repairs this). */
+  getActorHeapStale(modelId: string): boolean;
+  /** Head boxes of the people on screen (stage pixels), with the model each one wears. */
+  getActorScreenBoxes(): ScreenBox[];
   /** RGBA bytes of a stage region. */
   snapshotPixels(x: number, y: number, w: number, h: number): number[];
 }
@@ -77,6 +91,10 @@ export function registerDebugStage(get: typeof stageProbe): void {
   stageProbe = get;
 }
 
+export function registerDebugBoxes(get: (() => ScreenBox[]) | null): void {
+  boxesGetter = get;
+}
+
 export function registerDebugCamera(get: (() => CamInfo) | null): void {
   cameraGetter = get;
 }
@@ -94,6 +112,16 @@ if (import.meta.env.DEV) {
       return Object.fromEntries(ids.map((id) => [id, { applied: a.appliedValue(id), base: a.baseValue(id) }]));
     },
     stageProbe: () => stageProbe?.() ?? null,
+    getActorVertexHash(modelId) {
+      const a = actors.get(modelId);
+      if (!a) throw new Error(`unknown actor ${modelId}`);
+      return a.vertexHash();
+    },
+    getActorHeapStale(modelId) {
+      if (!actors.has(modelId)) throw new Error(`unknown actor ${modelId}`);
+      return staleModelIds([...actors.values()].map((a) => ({ id: a.id, seq: a.seq, token: a.heapToken() }))).includes(modelId);
+    },
+    getActorScreenBoxes: () => boxesGetter?.() ?? [],
     stopActorMotion(actorId) {
       const a = actors.get(actorId);
       if (!a) throw new Error(`unknown actor ${actorId}`);

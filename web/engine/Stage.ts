@@ -72,6 +72,8 @@ interface Slot {
   actor: Live2DActor | null;
   eventKey: string;
   expression: string | null | undefined;
+  /** The model was rebuilt in place (Core heap repair): restart its motion at the elapsed time instead of at 0. */
+  resyncOnce?: boolean;
 }
 
 /** Share of the body box added around an actor's filter area so swaying hair is never clipped. */
@@ -116,7 +118,18 @@ export class Stage {
     this.fadeRect.visible = false;
     this.transitions = new Transitions(app.renderer, this.width, this.height);
     app.stage.addChild(this.sceneRoot, this.fadeRect, this.transitions.layer);
+    // A model rebuilt after a Core heap re-allocation takes the old instance's place at once (the player may be paused: no frame follows).
+    this.offReload = library.onReload((fresh, old) => {
+      if (!old) return;
+      for (const slot of this.slots.values()) {
+        if (slot.actor !== old) continue;
+        fresh.model.position.copyFrom(old.model.position);
+        fresh.model.scale.copyFrom(old.model.scale);
+        this.swapModel(slot, fresh);
+      }
+    });
   }
+  private readonly offReload: () => void;
 
   get sceneInfo(): StageScene | null {
     return this.scene;
@@ -247,17 +260,19 @@ export class Stage {
     const sx = a.slideH * viewWorldHeight(bg) + a.shiftX;
     actor.model.scale.set(k); // always positive: facing never comes from mirroring
     actor.model.position.set(pl.headCenter.x + (pl.pos.x - pl.headCenter.x) * a.shiftS + sx, pl.headCenter.y + (pl.pos.y - pl.headCenter.y) * a.shiftS + a.shiftY);
-    slot.wrapper.zIndex = Math.round((1 - a.depth) * 10000);
+    slot.wrapper.zIndex = a.shiftZ > 0.5 ? 20000 + Math.round(a.shiftZ) : Math.round((1 - a.depth) * 10000);
 
     if (a.motion) {
       const key = `${a.motion.eventAt}|${a.motion.name}`;
-      if (key !== slot.eventKey || this.resyncMotions) {
+      const resync = this.resyncMotions || slot.resyncOnce === true;
+      if (key !== slot.eventKey || resync) {
+        slot.resyncOnce = false;
         slot.eventKey = key;
         if (a.motion.loop) actor.setIdle(a.motion.name);
         // After a jump the motion must continue from where sequential playback would be; the physics catch-up
         // (settle) then advances model time by SETTLE seconds, which is taken off here.
-        const offset = this.resyncMotions ? Math.max(0, a.motion.elapsed - this.settleLead) : 0;
-        this.pending.push(actor.playMotion(a.motion.name, { loop: a.motion.loop, offset, restart: this.resyncMotions }));
+        const offset = resync ? Math.max(0, a.motion.elapsed - (this.resyncMotions ? this.settleLead : 0)) : 0;
+        this.pending.push(actor.playMotion(a.motion.name, { loop: a.motion.loop, offset, restart: resync }));
       }
     }
     if (a.expression !== slot.expression) {
@@ -300,6 +315,7 @@ export class Stage {
 
   /** Atomic costume swap: the new model is already loaded, so there is never an empty frame. */
   private swapModel(slot: Slot, next: Live2DActor): void {
+    const rebuilt = slot.actor?.id === next.id; // same model, new instance: the library repaired a Core heap re-allocation
     if (slot.actor) {
       slot.actor.stopMotions();
       slot.actor.setMouth(0);
@@ -310,7 +326,9 @@ export class Stage {
     slot.actor = next;
     slot.eventKey = '';
     slot.expression = undefined;
+    slot.resyncOnce = rebuilt;
     next.setIdle(null);
+    if (rebuilt) next.settle(0.3);
   }
 
   private resyncMotions = false;
@@ -378,6 +396,7 @@ export class Stage {
   }
 
   destroy(): void {
+    this.offReload();
     for (const slot of this.slots.values()) this.dropSlot(slot);
     this.slots.clear();
     this.transitions.clear();

@@ -81,13 +81,13 @@ export function StageLab({ health }: { health: Health }) {
     const app = new Application();
     const el = host.current!;
     (async () => {
-      await ensureRuntime(health.cubismCoreUrl);
+      await ensureRuntime(health.cubismCoreUrl, health.cubismMemoryMB);
       await app.init({ width: Math.round((STAGE_H * 16) / 9), height: STAGE_H, background: 0x000000, antialias: true, preserveDrawingBuffer: true });
       inited = true;
       if (dead) return;
       el.appendChild(app.canvas);
       registerDebugApp(app);
-      const library = await ModelLibrary.create(health.cubismCoreUrl, app.ticker);
+      const library = await ModelLibrary.create(health.cubismCoreUrl, app.ticker, health.cubismMemoryMB);
       setCatalog(await library.catalog());
       const stage = new Stage(app, library);
       stageRef.current = stage;
@@ -103,7 +103,7 @@ export function StageLab({ health }: { health: Health }) {
       setLib(null);
       if (inited) app.destroy(true, { children: true });
     };
-  }, [health.cubismCoreUrl]);
+  }, [health.cubismCoreUrl, health.cubismMemoryMB]);
 
   // Re-render the stage whenever an input changes.
   useEffect(() => {

@@ -43,30 +43,44 @@ const BASE = {
     /** Two-shot: both face centres sit this far (share of H) left / right of the frame centre (original t051: +-0.47H). */
     twoShotFaceX: 0.47,
     /**
-     * Groups of three or more (original t094: three people, faces ~0.6-0.7H apart). Spacing is measured in head widths between
-     * neighbouring face centres: `groupSpacing` inside a row (1.9 = nearly a whole head width of air between two faces) and
-     * `groupRowSpacing` between a front and a back row person (they also differ in height, so faces never touch).
+     * Groups of three or more (measured on the original, 2.16:1: five people 0.30-0.345H heads, faces 1.25 heads apart, bodies cut by the
+     * frame sides; three people 0.40-0.46H, 1.45 heads apart). Big, tight heads: faces never covered and always inside the frame; bodies,
+     * hair and instruments may overlap and leave the frame. Head height share of H: 3 people `groupHead3`, x `groupHeadDecay` per extra person.
      */
-    groupSpacing: 1.9,
-    groupRowSpacing: 1.4,
-    /** Back row: eye line this many (front) head heights lower, drawn at this share of the front size. */
-    groupRowDrop: 0.5,
-    groupBackScale: 0.88,
-    /** Groups of at least this many people stand in two alternating rows even when the blocking has no depth. */
-    groupStaggerFrom: 4,
-    /** Depth difference (0..1) in the blocking from which the far half is the back row (a band: the drummer behind the vocalist). */
-    groupRowDepthGap: 0.3,
-    /** Head size multiplier per person beyond three (more people = smaller, further away), and its floor. */
-    groupShrink: 0.08,
-    groupMinScale: 0.6,
-    /** Share of H kept free between the outermost head box and the frame edge; the arrangement zooms out until it fits. */
-    groupEdgeMargin: 0.06,
+    groupHead3: 0.41,
+    groupHeadDecay: 0.89,
+    groupHeadMin: 0.24,
+    /** Distance between neighbouring face centres in head heights: 3 people `groupPitch3`, minus `groupPitchStep` per extra person, floor `groupPitchMin`. */
+    groupPitch3: 1.45,
+    groupPitchStep: 0.08,
+    groupPitchMin: 1.15,
+    /** The face: this share of the head box width, centred, from the chin up 75% of the head height (never covered, never leaves the frame). */
+    groupFaceShare: 0.7,
+    /** Smallest distance of a face box to the frame's left / right edge (H); hair and bodies may leave the frame. */
+    groupFaceEdge: 0.01,
+    /** Eye line of the front row (share of H from the top). */
+    groupEyeY: 0.38,
+    /** 0..1: how far the head sizes inside a group are pulled together (result min / max >= 0.90). */
+    groupSizeEqualize: 0.95,
+    /** 0..1: how far the eye lines of a group are pulled towards their mean (spread <= 0.04H). */
+    groupHeightEqualize: 0.85,
+    /** The middle person of an odd row (a band's vocalist) is drawn this much bigger and in front. */
+    groupCenterBoost: 1.04,
+    /** A person whose blocking depth is at least this far behind the frontmost one stands in a back row (a band's drummer); otherwise one row. */
+    groupDepthGap: 0.4,
+    /** Back row: size share and eye-line drop (H). Back people stand between two front faces. */
+    groupBackScale: 0.92,
+    groupBackDrop: 0.04,
+    /** Up to this many people stand in one row; with more, only `groupFrontCrowded` stay in front (focus, speaker and the people near the middle) and the rest stand behind, a little smaller and lower. */
+    groupOneRowMax: 6,
+    groupFrontCrowded: 5,
+    groupOverflowScale: 0.88,
+    groupOverflowDrop: 0.06,
     /** Horizontal shift of the arrangement from the frame centre (H). */
     groupCenterX: 0,
-    /** 0..1: how far the spacing grows with a window wider than 16:9 (1 = in proportion to the width). */
-    groupWideStretch: 1,
-    /** 0..1: how far the head sizes inside a group are pulled together. */
-    groupSizeEqualize: 0.85,
+    /** Camera moves of a group stay small, so nobody leaves the frame at the end: push-in / pull-out zoom and pan share of the frame width. */
+    groupMoveZoom: 1.05,
+    groupPanShare: 0.024,
     /** 0..1: how far the eye lines of a multi-person shot are pulled towards their mean (original: height difference <= 0.07H). */
     heightEqualize: 0.75,
     /** 0..1: how far the head sizes of the two people of a two-shot are pulled together (model scale differs between characters). */
@@ -267,18 +281,28 @@ export const STYLE_FIELDS: StyleField[] = [
   int('framing.darkDofBonus', '暗背景 dof 加成', G.frame, 0, 3),
   num('framing.darkLuma', '暗背景亮度阈值', G.frame, 0, 1, 0.01),
   num('framing.twoShotFaceX', '双人 脸中心距画面中线/H', G.frame, 0, 1, 0.01),
-  num('framing.groupSpacing', '群像 同排脸间距（头宽倍数）', G.frame, 0.6, 3, 0.05),
-  num('framing.groupRowSpacing', '群像 前后排脸间距（头宽倍数）', G.frame, 0.3, 3, 0.05),
-  num('framing.groupRowDrop', '群像 后排下沉（头高倍数）', G.frame, 0, 1.5, 0.05),
-  num('framing.groupBackScale', '群像 后排缩放', G.frame, 0.5, 1, 0.01),
-  int('framing.groupStaggerFrom', '群像 前后错排起始人数', G.frame, 3, 12),
-  num('framing.groupRowDepthGap', '群像 按站位纵深分前后排的深度差', G.frame, 0.05, 1, 0.05),
-  num('framing.groupShrink', '群像 每多一人缩小', G.frame, 0, 0.3, 0.01),
-  num('framing.groupMinScale', '群像 最小缩放', G.frame, 0.3, 1, 0.01),
-  num('framing.groupEdgeMargin', '群像 头部距画面边缘/H', G.frame, 0, 0.3, 0.005),
-  num('framing.groupCenterX', '群像 整体横向偏移/H', G.frame, -0.5, 0.5, 0.01),
-  num('framing.groupWideStretch', '群像 宽画幅拉伸', G.frame, 0, 1, 0.05),
+  num('framing.groupHead3', '群像 3 人头高/H', G.frame, 0.2, 0.7, 0.005),
+  num('framing.groupHeadDecay', '群像 每多一人头高 ×', G.frame, 0.7, 1, 0.005),
+  num('framing.groupHeadMin', '群像 头高下限/H', G.frame, 0.1, 0.5, 0.005),
+  num('framing.groupPitch3', '群像 3 人脸间距（头高倍数）', G.frame, 0.8, 3, 0.01),
+  num('framing.groupPitchStep', '群像 每多一人间距减', G.frame, 0, 0.3, 0.01),
+  num('framing.groupPitchMin', '群像 脸间距下限（头高倍数）', G.frame, 0.8, 3, 0.01),
+  num('framing.groupFaceShare', '群像 脸框宽（头框宽占比）', G.frame, 0.3, 1, 0.01),
+  num('framing.groupFaceEdge', '群像 脸框距画面边缘/H', G.frame, 0, 0.3, 0.005),
+  num('framing.groupEyeY', '群像 眼线 y/H', G.frame, 0.1, 0.7, 0.01),
   num('framing.groupSizeEqualize', '群像 头高拉平', G.frame, 0, 1, 0.05),
+  num('framing.groupHeightEqualize', '群像 眼线拉平', G.frame, 0, 1, 0.05),
+  num('framing.groupCenterBoost', '群像 中心人物放大', G.frame, 1, 1.3, 0.01, '×'),
+  num('framing.groupDepthGap', '群像 分后排的纵深差', G.frame, 0.05, 1, 0.05),
+  num('framing.groupBackScale', '群像 后排缩放', G.frame, 0.5, 1, 0.01),
+  num('framing.groupBackDrop', '群像 后排眼线下沉/H', G.frame, 0, 0.2, 0.005),
+  int('framing.groupOneRowMax', '群像 单排最多人数', G.frame, 3, 9),
+  int('framing.groupFrontCrowded', '群像 超出单排时前排人数', G.frame, 3, 9),
+  num('framing.groupOverflowScale', '群像 超出前排者缩放', G.frame, 0.5, 1, 0.01),
+  num('framing.groupOverflowDrop', '群像 超出前排者下沉/H', G.frame, 0, 0.2, 0.005),
+  num('framing.groupCenterX', '群像 整体横向偏移/H', G.frame, -0.5, 0.5, 0.01),
+  num('framing.groupMoveZoom', '群像 推拉倍率上限', G.frame, 1, 1.5, 0.01, '×'),
+  num('framing.groupPanShare', '群像 横移幅度上限/画面宽', G.frame, 0, 0.3, 0.005),
   num('framing.heightEqualize', '多人镜头 眼线拉平', G.frame, 0, 1, 0.05),
   num('framing.sizeEqualize', '双人镜头 头高拉平', G.frame, 0, 1, 0.05),
   num('framing.chestHeads', '胸线（头高倍数）', G.frame, 1, 5, 0.1),

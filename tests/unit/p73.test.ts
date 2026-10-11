@@ -120,7 +120,7 @@ describe('N5 / N7 / N8 / N9 style data', () => {
     expect(v.hud.autoSpinDegPerSec).toBe(72);
     expect(v.fx.anxietySmoke).toBeGreaterThan(0);
     expect(v.fx.anxietyTint).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(v.framing.groupSpacing).toBeGreaterThan(1);
+    expect(v.framing.groupPitch3).toBeGreaterThan(1);
     expect(v.framing.twoShotFaceX).toBe(0.47);
   });
 });

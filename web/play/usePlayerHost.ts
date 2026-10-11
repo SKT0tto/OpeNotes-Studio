@@ -13,7 +13,7 @@ import { HudLayer } from '../engine/HudLayer';
 import { ModelLibrary } from '../engine/ModelLibrary';
 import { Player } from '../engine/Player';
 import { STAGE_H, STAGE_RES, Stage } from '../engine/Stage';
-import { registerDebugApp, registerDebugCamera, registerDebugPlayer, registerDebugStage } from '../engine/debugHooks';
+import { registerDebugApp, registerDebugBoxes, registerDebugCamera, registerDebugPlayer, registerDebugStage } from '../engine/debugHooks';
 import { ensureRuntime } from '../engine/runtime';
 
 export interface PlayInfo {
@@ -67,14 +67,14 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
     (async () => {
       setStatus('加载 Cubism Core…');
       app = new Application();
-      await ensureRuntime(health.cubismCoreUrl);
+      await ensureRuntime(health.cubismCoreUrl, health.cubismMemoryMB);
       await app.init({ width: Math.round(STAGE_H * aspect), height: STAGE_H, resolution: STAGE_RES, background: 0x000000, antialias: true, preserveDrawingBuffer: true });
       inited = true;
       if (dead) return;
       app.canvas.dataset.testid = 'play-canvas';
       el.insertBefore(app.canvas, el.firstChild);
       registerDebugApp(app);
-      const library = await ModelLibrary.create(health.cubismCoreUrl, app.ticker);
+      const library = await ModelLibrary.create(health.cubismCoreUrl, app.ticker, health.cubismMemoryMB);
       const catalog = await library.catalog();
       const colorOf = (castId: string | null) => {
         const cast = projectRef.current?.cast.find((c) => c.id === castId);
@@ -123,6 +123,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
         beatStarts: () => Object.fromEntries(player!.compiled.scenes.flatMap((sc) => sc.beats.map((b) => [b.id, b.start]))),
       });
       registerDebugStage(() => stage!.probe());
+      registerDebugBoxes(() => stage!.actorGeometry().map((g) => ({ castId: g.castId, modelId: stage!.actorFor(g.castId)?.id ?? null, head: g.head })));
       registerDebugCamera(() => ({ ...stage!.camera.pose, bgViewZoom: stage!.bgViewZoom }));
       unsubscribe = player.subscribe((s: RenderState, p) => {
         // identity-stable while the interface is hidden, so the layers do not re-layout every frame
@@ -155,6 +156,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       registerDebugPlayer(null);
       registerDebugCamera(null);
       registerDebugStage(null);
+      registerDebugBoxes(null);
       registerDebugApp(null);
       unsubscribe?.();
       player?.dispose();
@@ -172,7 +174,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       setInfo(EMPTY);
       setCompiled(null);
     };
-  }, [health.cubismCoreUrl, initKey, hasScenes, aspect]);
+  }, [health.cubismCoreUrl, health.cubismMemoryMB, initKey, hasScenes, aspect]);
 
   // Edits: recompile the live player (debounced; a later edit supersedes an earlier one).
   useEffect(() => {

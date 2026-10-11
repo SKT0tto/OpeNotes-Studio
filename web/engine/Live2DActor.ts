@@ -17,8 +17,11 @@ export interface ParamInfo {
 
 /** The slice of the Cubism core model we touch that the public typings do not expose. */
 interface CoreInternals {
-  _model: { parameters: { ids: string[] } };
+  _model: { parameters: { ids: string[]; values?: { buffer: ArrayBufferLike } }; drawables?: { vertexPositions?: Array<{ buffer: ArrayBufferLike } | undefined> } };
 }
+
+/** Creation counter: tells which actor was created last (see shared/cubismHeap). */
+let creationSeq = 0;
 
 const BREATH_DEPTH = 0.05;
 export const NEUTRAL_SIGNS: AxisSigns = { headSign: 1, bodySign: 1, eyeSign: 1 };
@@ -33,6 +36,11 @@ export interface ActorOptions {
 
 export class Live2DActor {
   readonly id: string;
+  /** Creation order among all actors of this page. */
+  readonly seq = ++creationSeq;
+  /** Motion / expression names fetched ahead of time (carried over when the actor is rebuilt after a heap re-allocation). */
+  readonly preloadedMotions = new Set<string>();
+  readonly preloadedExpressions = new Set<string>();
   /** The Pixi container to place on a stage. Never flip it (scale.x must stay > 0). */
   readonly model: Live2DModel;
   readonly internal: CubismInternalModel;
@@ -225,11 +233,13 @@ export class Live2DActor {
 
   /** Fetch + parse motion files ahead of time so the first play has no delay. */
   async preloadMotions(names: readonly string[]): Promise<void> {
+    names.forEach((n) => this.preloadedMotions.add(n));
     await Promise.all(names.map((n) => this.internal.motionManager.loadMotion(n, 0)));
   }
 
   /** Fetch + parse expression files ahead of time (a scene change must not wait for a file while the stage is hidden). */
   async preloadExpressions(names: readonly string[]): Promise<void> {
+    names.forEach((n) => this.preloadedExpressions.add(n));
     const em = this.internal.motionManager.expressionManager as unknown as { getExpressionIndex(n: string): number; loadExpression(i: number): Promise<unknown> } | undefined;
     if (!em) return;
     await Promise.all(
@@ -238,6 +248,27 @@ export class Live2DActor {
         if (i >= 0) await em.loadExpression(i).catch(() => undefined);
       }),
     );
+  }
+
+  /**
+   * The Core heap view this model was created on. Models created before a heap re-allocation keep the old one and render frozen;
+   * identity is compared by the library (staleModelIds).
+   */
+  heapToken(): ArrayBufferLike | null {
+    const m = (this.internal.coreModel as unknown as CoreInternals)._model;
+    return m.drawables?.vertexPositions?.[0]?.buffer ?? m.parameters.values?.buffer ?? null;
+  }
+
+  /** Sampled sum of the Core's output vertices: changes whenever the model's rendered shape changes (debug / tests). */
+  vertexHash(): number {
+    const core = this.internal.coreModel;
+    let h = 0;
+    const n = core.getDrawableCount();
+    for (let d = 0; d < n; d += 3) {
+      const v = core.getDrawableVertices(d);
+      for (let i = 0; i < v.length; i += 7) h += v[i]!;
+    }
+    return h;
   }
 
   stopMotions(): void {
