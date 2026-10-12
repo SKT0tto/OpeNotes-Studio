@@ -208,6 +208,8 @@ p { margin: 0 0 .8em; }
 .author { display: flex; gap: 24px; align-items: center; padding: 26px 30px; }
 .avatar { flex: none; width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #ffb6d3, #b9dcff); display: grid; place-items: end center; overflow: hidden; color: #fff; }
 .avatar svg { width: 76px; height: 82px; }
+.avatar-photo { place-items: center; padding: 3px; box-shadow: 0 6px 18px rgba(255, 105, 160, .28); }
+.avatar-photo img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; border: 3px solid #fff; }
 .author h3 { font-size: 24px; } .author p { color: var(--muted); margin: 4px 0 0; }
 .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px !important; }
 .links .btn { min-height: 42px; font-size: 15px; padding: 0 20px; }
