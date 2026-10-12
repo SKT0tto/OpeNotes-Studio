@@ -1,517 +1,239 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OpeNotes Studio · 把小说演成 Live2D 剧情演出</title>
-  <meta name="description" content="OpeNotes Studio 是基于 Live2D 的 AI 剧情演出导演与制作平台：一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出，并可在时间轴编辑器里精细手调每个细节。开源、GPL-3.0、非官方同人项目。" />
-  <meta name="keywords" content="OpeNotes Studio, Live2D, AI 导演, 剧情演出, 小说转演出, BanG Dream, Our Notes, 时间轴编辑器, 同人, 开源" />
-  <meta name="author" content="羽丘魅魔高松灯" />
-  <meta name="theme-color" content="#0a0b22" />
-  <meta name="color-scheme" content="dark" />
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="OpeNotes Studio" />
-  <meta property="og:title" content="OpeNotes Studio · 把小说演成 Live2D 剧情演出" />
-  <meta property="og:description" content="AI 剧情演出导演与制作平台：一键把小说转成 Our Notes 风格的 Live2D 动态演出，再逐句精修。开源 · GPL-3.0 · 非官方同人项目。" />
-  <meta property="og:image" content="https://skt0tto.github.io/OpeNotes-Studio/og.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="OpeNotes Studio 标志与标语：把小说，演成一场剧情演出" />
-  <meta property="og:locale" content="zh_CN" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="OpeNotes Studio" />
-  <meta name="twitter:description" content="一键把小说转成 Our Notes 风格的 Live2D 剧情演出，并可精细手调每个细节。" />
-  <meta name="twitter:image" content="https://skt0tto.github.io/OpeNotes-Studio/og.png" />
-
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="theme.css" />
-  <script>document.documentElement.classList.add('js');</script>
-  <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpeNotes Studio","applicationCategory":"MultimediaApplication","operatingSystem":"Windows, macOS, Linux (Node.js 22+)","license":"https://www.gnu.org/licenses/gpl-3.0.html","softwareVersion":"0.1.4","author":{"@type":"Person","name":"羽丘魅魔高松灯","url":"https://space.bilibili.com/358479834"},"offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
-  </script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpeNotes Studio · 把小说演成 Live2D 剧情演出</title>
+<meta name="description" content="OpeNotes Studio 是基于 Live2D 的 AI 剧情演出导演与制作平台：一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出，并可在时间轴编辑器里逐句精修。开源 GPL-3.0，非官方同人项目。" />
+<meta name="keywords" content="OpeNotes Studio, Live2D, AI 导演, 剧情演出, 小说转演出, BanG Dream, Our Notes, 时间轴编辑器, 同人, 开源" />
+<meta name="author" content="羽丘魅魔高松灯" />
+<meta name="theme-color" content="#fff5f8" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="OpeNotes Studio" />
+<meta property="og:title" content="OpeNotes Studio · 把小说演成 Live2D 剧情演出" />
+<meta property="og:description" content="AI 剧情演出导演与制作平台：一键把小说转成 Our Notes 风格的 Live2D 动态演出，再逐句精修。开源 · GPL-3.0 · 非官方同人项目。" />
+<meta property="og:image" content="https://skt0tto.github.io/OpeNotes-Studio/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="zh_CN" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="stylesheet" href="styles.css" />
+<script src="main.js" defer></script>
 </head>
 <body>
-  <a class="skip" href="#main">跳到正文</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="spark" viewBox="0 0 24 24"><path d="M12 0c1 7 4 10 12 12-8 2-11 5-12 12-1-7-4-10-12-12 8-2 11-5 12-12z" fill="currentColor"/></symbol>
+    <symbol id="fig" viewBox="0 0 120 140"><circle cx="60" cy="42" r="26" fill="currentColor"/><path d="M8 140c2-42 26-62 52-62s50 20 52 62z" fill="currentColor"/></symbol>
+    <symbol id="logo" viewBox="0 0 48 48"><rect width="48" height="48" rx="14" fill="#e0447c"/><path d="M18 33V15l14-3v18" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14.5" cy="33" r="3.6" fill="#fff"/><circle cx="28.5" cy="30" r="3.6" fill="#fff"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 5.5v-.5a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></symbol>
+  </defs>
+</svg>
+<a class="skip" href="#main">跳到正文</a>
 
-  <!-- Shared SVG symbols (original artwork) -->
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8cff" /><stop offset="1" stop-color="#b48cff" /></linearGradient>
-      <symbol id="logo" viewBox="0 0 48 48">
-        <rect width="48" height="48" rx="12" fill="url(#brand)" />
-        <path d="M18 33V15l14-3v18" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="14.5" cy="33" r="3.5" fill="#fff" /><circle cx="28.5" cy="30" r="3.5" fill="#fff" />
-      </symbol>
-      <!-- abstract silhouette: head, hair, shoulders -->
-      <symbol id="fig" viewBox="0 0 200 260">
-        <path d="M14 260C18 206 56 182 100 180s82 26 86 80z" />
-        <rect x="87" y="136" width="26" height="52" rx="10" />
-        <ellipse cx="100" cy="100" rx="43" ry="49" />
-        <path d="M50 116c-8-56 22-80 54-80 38 2 58 30 50 84-2 22-6 42-12 54 0-26 2-56-10-78-18-12-48-12-66 0-10 24-6 54-8 76-6-14-8-36-8-56z" />
-      </symbol>
-      <symbol id="spark" viewBox="0 0 24 24"><path d="M12 0c1 7 4 10 12 12-8 2-11 5-12 12-1-7-4-10-12-12 8-2 11-5 12-12z" fill="currentColor"/></symbol>
-      <symbol id="pick" viewBox="0 0 24 28"><path d="M12 1C5 1 1 5 1 11c0 8 8 14 11 16 3-2 11-8 11-16C23 5 19 1 12 1z" fill="currentColor"/><path d="M12 8v8m-3-4h6" stroke="#0a0b22" stroke-width="1.6" stroke-linecap="round" opacity=".35"/></symbol>
-      <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></symbol>
-      <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-      <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></symbol>
-      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 5.5v-.5a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
-      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-      <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor" fill-opacity=".25" stroke="currentColor" stroke-width="1.4"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
-      <symbol id="i-stage" viewBox="0 0 32 32"><path d="M4 7h24M6 7v18M26 7v18M4 25h24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6 7c4 6 6 8 10 8s6-2 10-8" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="20" r="2.4" fill="currentColor"/></symbol>
-      <symbol id="i-director" viewBox="0 0 32 32"><path d="M5 12h22v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m5 12-.6-4.2a1.5 1.5 0 0 1 1.2-1.7l18.4-3a1.5 1.5 0 0 1 1.7 1.2L26.4 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10 5.5 2.4 5M17 4.4l2.4 5" stroke="currentColor" stroke-width="1.8"/><path d="m22.5 15.5.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" fill="currentColor"/></symbol>
-      <symbol id="i-editor" viewBox="0 0 32 32"><rect x="3.5" y="5.5" width="25" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 18.5h25M11 18.5v8" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="21" width="8" height="2.6" rx="1.3" fill="currentColor"/><path d="M21 9.5v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
-      <symbol id="i-llm" viewBox="0 0 32 32"><circle cx="16" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="8" r="2.5" fill="currentColor"/><circle cx="26" cy="8" r="2.5" fill="currentColor"/><circle cx="6" cy="24" r="2.5" fill="currentColor"/><circle cx="26" cy="24" r="2.5" fill="currentColor"/><path d="m8 9.6 5 3.6M24 9.6l-5 3.6M8 22.4l5-3.6M24 22.4l-5-3.6" stroke="currentColor" stroke-width="1.8"/></symbol>
-      <symbol id="i-rule" viewBox="0 0 32 32"><path d="M6 6h20M6 12h14M6 18h20M6 24h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m21 23 2.5 2.5L28 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-      <symbol id="i-save" viewBox="0 0 32 32"><path d="M7 4.5h14l5.5 5.5v15.5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-19a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 4.5v6h10v-6M10 27.5v-8h12v8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
-      <symbol id="i-book" viewBox="0 0 32 32"><path d="M16 8c-3-2.4-7-3-11-2.5v20c4-.5 8 0 11 2.5 3-2.5 7-3 11-2.5v-20C23 5 19 5.6 16 8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 8v20" stroke="currentColor" stroke-width="1.8"/></symbol>
-      <symbol id="i-sliders" viewBox="0 0 32 32"><path d="M6 9h20M6 16h20M6 23h20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="9" r="3" fill="#121419" stroke="currentColor" stroke-width="1.8"/><circle cx="21" cy="16" r="3" fill="#121419" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="23" r="3" fill="#121419" stroke="currentColor" stroke-width="1.8"/></symbol>
-      <symbol id="i-screen" viewBox="0 0 32 32"><rect x="3.5" y="6.5" width="25" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 11.5v6l5-3z" fill="currentColor"/><path d="M11 26.5h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
-      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m8.8 12 2.2 2.2 4.2-4.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-    </defs>
-  </svg>
+<header class="nav" id="top">
+  <div class="nav-in">
+    <a class="brand" href="#top" aria-label="OpeNotes Studio 首页"><svg aria-hidden="true" width="34" height="34"><use href="#logo"/></svg><span>OpeNotes <b>Studio</b></span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="打开导航菜单"><span></span><span></span></button>
+    <nav id="nav-menu" class="nav-menu" aria-label="主导航">
+      <a href="#features">特色</a><a href="#workflow">流程</a><a href="#bands">乐队</a><a href="#privacy">隐私</a><a href="#start">开始使用</a><a href="#updates">更新</a><a href="#faq">FAQ</a>
+      <a class="nav-gh" href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
 
-  <header class="nav" id="top">
-    <div class="wrap nav-in">
-      <a class="brand" href="#top" aria-label="OpeNotes Studio 首页">
-        <svg class="brand-logo" aria-hidden="true"><use href="#logo" /></svg>
-        <span>OpeNotes <b>Studio</b></span>
-      </a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="打开导航菜单">
-        <span></span><span></span>
-      </button>
-      <nav id="nav-menu" class="nav-menu" aria-label="主导航">
-        <a href="#features">特性</a>
-        <a href="#workflow">流程</a>
-        <a href="#editor">编辑器</a>
-        <a href="#ai">AI 与隐私</a>
-        <a href="#start">快速开始</a>
-        <a href="#faq">FAQ</a>
-        <a class="btn btn-ghost btn-sm" href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-github" /></svg>GitHub</a>
-      </nav>
+<main id="main">
+<!-- HERO / KEY VISUAL -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-bg" aria-hidden="true">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <svg class="sp s1"><use href="#spark"/></svg><svg class="sp s2"><use href="#spark"/></svg><svg class="sp s3"><use href="#spark"/></svg><svg class="sp s4"><use href="#spark"/></svg>
+    <i class="note n1">♪</i><i class="note n2">♫</i><i class="note n3">♩</i><i class="note n4">♬</i>
+  </div>
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <p class="pill-tag"><span>v0.1.4</span>开源 · GPL-3.0 · 非官方同人项目</p>
+      <h1 id="hero-title">Ope<span>Notes</span> Studio</h1>
+      <p class="tagline">把小说，演成一场 Live。</p>
+      <p class="lead">基于 Live2D 的 AI 剧情演出导演与制作平台。一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出——分场、选景、换装、镜头与表演由 AI 导演完成，每一句、每一帧仍由你精细手调。</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载最新版</a>
+        <a class="btn btn-ghost" href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-gh"/></svg>在 GitHub 查看</a>
+      </div>
+      <ul class="chips" aria-label="支持的 AI 提供商"><li>Claude</li><li>OpenAI 兼容</li><li>DeepSeek</li><li>LM Studio</li><li>规则导演（非 AI）</li></ul>
     </div>
-  </header>
-
-  <main id="main">
-    <!-- ============ HERO ============ -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-bg" aria-hidden="true">
-        <div class="glow g1"></div><div class="glow g2"></div>
-        <div class="spot"></div>
-        <div class="beams"><i class="bm b1"></i><i class="bm b2"></i><i class="bm b3"></i><i class="bm b4"></i></div>
-        <div class="deco">
-          <svg class="tw" style="--x:6%;--y:14%;--z:22px;--c:var(--yellow);--d:0s"><use href="#spark" /></svg>
-          <svg class="tw" style="--x:46%;--y:8%;--z:16px;--c:var(--cyan);--d:.7s"><use href="#spark" /></svg>
-          <svg class="tw" style="--x:90%;--y:20%;--z:26px;--c:var(--pink);--d:1.3s"><use href="#spark" /></svg>
-          <svg class="tw" style="--x:12%;--y:72%;--z:14px;--c:var(--purple);--d:.4s"><use href="#spark" /></svg>
-          <svg class="tw" style="--x:55%;--y:86%;--z:20px;--c:var(--orange);--d:1.9s"><use href="#spark" /></svg>
-          <svg class="pk" style="--x:3%;--y:44%;--z:30px;--c:var(--pink);--r:-18deg"><use href="#pick" /></svg>
-          <svg class="pk" style="--x:94%;--y:56%;--z:34px;--c:var(--cyan);--r:22deg"><use href="#pick" /></svg>
-          <svg class="pk" style="--x:48%;--y:94%;--z:24px;--c:var(--yellow);--r:8deg"><use href="#pick" /></svg>
+    <figure class="kv" aria-label="原创示意图：舞台与对话框">
+      <div class="game">
+        <div class="game-top"><span class="g-dot"></span><span class="g-dot"></span><span class="g-dot"></span><span class="g-title">第 5 场 · 排练室</span><span class="g-auto">AUTO</span></div>
+        <div class="stage" aria-hidden="true">
+          <i class="beam bm1"></i><i class="beam bm2"></i><i class="beam bm3"></i>
+          <svg class="fg f1"><use href="#fig"/></svg><svg class="fg f2"><use href="#fig"/></svg><svg class="fg f3"><use href="#fig"/></svg>
+          <svg class="sp x1"><use href="#spark"/></svg><svg class="sp x2"><use href="#spark"/></svg>
+          <i class="note x3">♪</i><i class="note x4">♫</i>
         </div>
-        <svg class="staff" viewBox="0 0 1440 220" preserveAspectRatio="none">
-          <g stroke="currentColor" stroke-width="1" fill="none">
-            <path d="M0 60C360 20 720 120 1080 70s300-10 360 0" /><path d="M0 80C360 40 720 140 1080 90s300-10 360 0" /><path d="M0 100C360 60 720 160 1080 110s300-10 360 0" /><path d="M0 120C360 80 720 180 1080 130s300-10 360 0" /><path d="M0 140C360 100 720 200 1080 150s300-10 360 0" />
-          </g>
-        </svg>
-        <div class="notes">
-          <i style="--x:8%;--d:0s;--s:1">♪</i><i style="--x:22%;--d:3s;--s:.8">♫</i><i style="--x:41%;--d:6s;--s:1.1">♩</i><i style="--x:63%;--d:1.5s;--s:.9">♪</i><i style="--x:82%;--d:4.5s;--s:1.2">♬</i><i style="--x:93%;--d:8s;--s:.8">♪</i>
+        <div class="dialog">
+          <span class="name">角色 A</span>
+          <p>今天的排练，一起加油吧！</p>
+          <span class="next" aria-hidden="true">▼</span>
         </div>
       </div>
+      <figcaption>原创示意图：抽象剪影与示例台词，非游戏截图。</figcaption>
+    </figure>
+  </div>
+</section>
 
-      <div class="wrap hero-in">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="pill">开源 · GPL-3.0</span><span class="sep" aria-hidden="true"></span>非官方同人项目 · v0.1.4</p>
-          <h1 id="hero-title" class="hero-title">Ope<span class="grad">Notes</span> Studio<svg class="h1-spark" aria-hidden="true"><use href="#spark" /></svg></h1>
-          <p class="hero-tag"><span class="nw">把小说，</span><span class="nw">演成一场 <em class="live">Live</em>。</span></p>
-          <p class="hero-lead">基于 Live2D 的 AI 剧情演出导演与制作平台。一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出——分场、选景、换装、镜头与表演由 AI 导演完成，每一句、每一帧仍由你精细手调。</p>
-          <div class="cta">
-            <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-github" /></svg>在 GitHub 查看</a>
-            <a class="btn btn-ghost" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-down" /></svg>下载</a>
-          </div>
-          <ul class="hero-meta" aria-label="支持的 AI 提供商">
-            <li>Claude</li><li>OpenAI 兼容</li><li>DeepSeek</li><li>LM Studio</li><li>规则导演（非 AI）</li>
-          </ul>
-        </div>
-
-        <figure class="hero-visual">
-          <div class="stage-frame" aria-hidden="true">
-            <div class="stage">
-              <div class="st-bg">
-                <div class="st-wall"></div>
-                <div class="st-window"><i></i><i></i><i></i><i></i></div>
-                <div class="st-amp"></div><div class="st-mic"></div>
-                <div class="st-floor"></div>
-              </div>
-              <svg class="st-fig f1"><use href="#fig" /></svg>
-              <svg class="st-fig f2"><use href="#fig" /></svg>
-              <div class="st-loc"><span>放学后 · 排练室</span></div>
-              <div class="st-dlg">
-                <div class="st-name">角色 A</div>
-                <div class="st-line"><span class="type">……明天的排练，再试一次那首歌吧。</span></div>
-                <div class="st-auto"></div>
-              </div>
-              <div class="st-menu"><i></i><i></i><i></i></div>
-            </div>
-          </div>
-          <div class="hero-chips" aria-hidden="true">
-            <span class="chip c-cam">镜头 · 中近景 → 特写</span>
-            <span class="chip c-ai">AI 导演 · 第 2 场</span>
-            <span class="chip c-tr">转场 · 黑场眨眼</span>
-          </div>
-          <figcaption>原创示意画面：抽象剪影代替角色，非游戏截图。</figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <div class="ticker" aria-label="特性关键词">
-      <div class="tk-track"><div class="tk-set"><span>AI 导演</span><i aria-hidden="true"></i><span>Live2D 演出</span><i aria-hidden="true"></i><span>时间轴编辑器</span><i aria-hidden="true"></i><span>一键成片</span><i aria-hidden="true"></i><span>多 LLM</span><i aria-hidden="true"></i><span>规则导演</span><i aria-hidden="true"></i><span>景深镜头</span><i aria-hidden="true"></i><span>差异审阅</span><i aria-hidden="true"></i><span>开源 GPL-3.0</span><i aria-hidden="true"></i><span>自带 Key</span><i aria-hidden="true"></i></div><div class="tk-set" aria-hidden="true"><span>AI 导演</span><i aria-hidden="true"></i><span>Live2D 演出</span><i aria-hidden="true"></i><span>时间轴编辑器</span><i aria-hidden="true"></i><span>一键成片</span><i aria-hidden="true"></i><span>多 LLM</span><i aria-hidden="true"></i><span>规则导演</span><i aria-hidden="true"></i><span>景深镜头</span><i aria-hidden="true"></i><span>差异审阅</span><i aria-hidden="true"></i><span>开源 GPL-3.0</span><i aria-hidden="true"></i><span>自带 Key</span><i aria-hidden="true"></i></div></div>
+<!-- FEATURES -->
+<section class="section" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <header class="sec-head"><p class="en">FEATURES</p><h2 id="features-title">特色</h2><p class="sub">演出引擎、AI 导演与可视化编辑器三位一体：AI 负责把整部小说跑通，你负责让每一个瞬间恰到好处。</p></header>
+    <div class="grid g3">
+      <article class="glass card wide"><span class="ico">1</span><h3>Our Notes 风格演出引擎</h3><p>按原作演出语汇构图与剪辑：Live2D 上半身入画，中景、中近景、特写自由切换；角色真实转头、视线互看；同场景硬切、段落黑场眨眼；背景随景别放大虚化形成景深；换场时浮现地点标题条，情绪段落叠加特效。</p><ul class="tags"><li>真实转头与视线</li><li>硬切 / 黑场</li><li>景深</li><li>地点标题条</li><li>情绪特效</li></ul></article>
+      <article class="glass card"><span class="ico">2</span><h3>AI Director</h3><p>读完全文再下判断，而不是逐句瞎猜。</p><ul class="list"><li>全文拆解场景，选择背景与时间</li><li>调度情绪、动作、表情、镜头与节奏</li><li>服装连续性检查与合理换装</li><li>演出场景的乐队站位</li><li>只使用资源库中真实存在的模型、动作与背景</li><li>背景按乐队标注过滤，不串场</li><li>锁定的内容与你改过的内容永不被覆盖</li></ul></article>
+      <article class="glass card"><span class="ico">3</span><h3>可视化编辑器</h3><p>资源浏览器、剧本、预览拖拽、多轨时间轴、分镜与属性面板——像剪片子一样打磨演出。</p></article>
+      <article class="glass card"><span class="ico">4</span><h3>多 LLM，自带 Key</h3><p>Claude、OpenAI 兼容接口、DeepSeek、本地 LM Studio 任选；Key 只保存在你自己的电脑上。</p></article>
+      <article class="glass card"><span class="ico">5</span><h3>规则导演 · 无需 Key</h3><p>没有 API Key 也能出片：按章节与时间词分场、按关键词匹配背景与服装、识别引号台词与说话人，并使用固定镜头节奏。产出一律标注「规则」，绝不冒充 AI。</p></article>
+      <article class="glass card"><span class="ico">6</span><h3>项目保存与导入导出</h3><p>项目保存在本机 <code>data/</code> 目录；可导出为 <code>.openotes.json</code> 分享给他人。导出文件只记录资源 id，从不包含任何素材文件。</p></article>
     </div>
+  </div>
+</section>
 
-    <!-- ============ FEATURES ============ -->
-    <section class="section" id="features" aria-labelledby="features-title">
-      <div class="wrap">
-        <header class="sec-head reveal">
-          <p class="kicker"><span>01</span>核心特性</p>
-          <h2 id="features-title">从一段文字，到一场有呼吸的演出</h2>
-          <p class="sec-lead">演出引擎、AI 导演与可视化编辑器三位一体：AI 负责把整部小说跑通，你负责让每一个瞬间恰到好处。</p>
-        </header>
+<!-- WORKFLOW -->
+<section class="section alt" id="workflow" aria-labelledby="workflow-title">
+  <div class="wrap">
+    <header class="sec-head"><p class="en">WORKFLOW</p><h2 id="workflow-title">流程</h2><p class="sub">四个乐章，一部作品。每一步都可以停下来、改一改、再继续。</p></header>
+    <ol class="steps">
+      <li class="glass"><span class="num">01</span><h3>导入小说</h3><p>粘贴文本或打开 <code>.txt</code> / <code>.md</code>，自动识别 UTF-8 / GBK 编码与「第一章」「# 标题」等章节标题。</p></li>
+      <li class="glass"><span class="num">02</span><h3>AI 导演</h3><p>拆解场景、选背景与服装、写镜头与表演；多场并行生成，实时显示进度、调用次数与 token，可随时取消、断点续跑。</p></li>
+      <li class="glass"><span class="num">03</span><h3>手动精修</h3><p>在时间轴、分镜与属性面板里逐句调整；锁定满意的部分，只让 AI 重写一句或一个范围，并逐项审阅差异。</p></li>
+      <li class="glass"><span class="num">04</span><h3>放映 / 导出</h3><p>在内置播放器中放映，可切换 16:9 或 2.16:1 画幅并全屏，或导出项目文件与他人分享。</p></li>
+    </ol>
+    <header class="sec-head sub-head" id="editor"><p class="en">EDITOR</p><h2>编辑器亮点：AI 起草，你来定稿</h2><p class="sub">所有 AI 产出都是可审阅、可撤销、可局部重来的草稿。</p></header>
+    <div class="grid g3">
+      <div class="glass card sm"><h3>资源浏览器</h3><p>对外部素材库建立只读索引：模型、动作、表情、背景与音频一目了然，动作附带朝向统计。</p></div>
+      <div class="glass card sm"><h3>剧本与预览拖拽</h3><p>剧本逐句编辑；在预览中直接拖拽角色站位与镜头框，所见即所得。</p></div>
+      <div class="glass card sm"><h3>多轨时间轴与分镜</h3><p>角色、镜头、音频、特效、屏幕分轨编排，关键帧精确到每一拍；分镜视图纵览全场节奏。</p></div>
+      <div class="glass card sm"><h3>锁定 · 撤销 · 局部重生成</h3><p>按整句或单个字段锁定；只重生成选中的一句，或只重写镜头 / 表演 / 服装 / 站位 / 特效；一次生成即一步撤销。</p></div>
+      <div class="glass card sm"><h3>AI 差异审阅</h3><p>每个提议都按台词结构、镜头、表演、服装、站位、特效分组呈现前后对比，可全部接受、按范围接受或拒绝。</p></div>
+      <div class="glass card sm"><h3>连续性检查</h3><p>跨场景检查服装与角色状态，警告一键跳转到出问题的那一句。</p></div>
+    </div>
+  </div>
+</section>
 
-        <div class="bento">
-          <article class="card card-engine reveal">
-            <div class="card-ic ic-blue"><svg aria-hidden="true"><use href="#i-stage" /></svg></div>
-            <h3>Our Notes 风格演出引擎</h3>
-            <p>按原作演出语汇构图与剪辑：Live2D 上半身入画，中景、中近景、特写自由切换；角色真实转头、视线互看；同场景硬切、段落黑场眨眼；背景随景别放大虚化形成景深；换场时浮现地点标题条，情绪段落叠加特效。</p>
-            <div class="framing" aria-hidden="true">
-              <div class="fr"><div class="fr-box s-wide"><svg><use href="#fig" /></svg><svg><use href="#fig" /></svg></div><span>双人中景</span></div>
-              <div class="fr"><div class="fr-box s-mcu"><svg><use href="#fig" /></svg></div><span>中近景</span></div>
-              <div class="fr"><div class="fr-box s-cu"><svg><use href="#fig" /></svg></div><span>特写 · 景深</span></div>
-            </div>
-            <ul class="tags"><li>真实转头与视线</li><li>硬切 / 黑场</li><li>景深</li><li>地点标题条</li><li>情绪特效</li></ul>
-          </article>
+<!-- BANDS -->
+<section class="section" id="bands" aria-labelledby="bands-title">
+  <div class="wrap">
+    <header class="sec-head"><p class="en">BANDS</p><h2 id="bands-title">乐队</h2><p class="sub">AI 导演会按乐队与成员调度站位和背景。以下为原创的色块示意卡片，不含任何官方角色图像。</p></header>
+    <div class="band-wall">
+      <article class="band" style="--c:#3b8fc4;--t:#e4f2fb"><div class="av" aria-hidden="true"><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg></div><h3>MyGO!!!!!</h3><ul><li>高松灯 <small>Vo.</small></li><li>千早爱音 <small>Gt.</small></li><li>要乐奈 <small>Gt.</small></li><li>长崎爽世 <small>Ba.</small></li><li>椎名立希 <small>Dr.</small></li></ul></article>
+      <article class="band" style="--c:#a8325f;--t:#fbe6ee"><div class="av" aria-hidden="true"><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg></div><h3>Ave Mujica</h3><ul><li>三角初华 <small>Gt.&amp;Vo.</small></li><li>若叶睦 <small>Gt.</small></li><li>八幡海铃 <small>Ba.</small></li><li>祐天寺若麦 <small>Dr.</small></li><li>丰川祥子 <small>Key.</small></li></ul></article>
+      <article class="band" style="--c:#e0683f;--t:#fdebe3"><div class="av" aria-hidden="true"><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg></div><h3>梦限大MewType</h3><ul><li>仲町阿拉蕾 <small>Vo.</small></li><li>宫永野乃花 <small>Gt.</small></li><li>峰月律 <small>Gt.</small></li><li>藤都子 <small>Key.</small></li><li>千石由乃 <small>DJ&amp;Mp.</small></li></ul></article>
+      <article class="band" style="--c:#2a9d8f;--t:#e0f5f1"><div class="av" aria-hidden="true"><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg></div><h3>millsage</h3><ul><li>汐见萤 <small>Key.&amp;Vo.</small></li><li>伊泽枣 <small>Gt.</small></li><li>琴平凪 <small>Gt.</small></li><li>滨崎茉幌 <small>Ba.</small></li><li>和泉朋花 <small>Dr.</small></li></ul></article>
+      <article class="band" style="--c:#8a5cd6;--t:#efe8fb"><div class="av" aria-hidden="true"><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg><svg><use href="#fig"/></svg></div><h3>一家Dumb Rock!</h3><ul><li>须贺蕾叶 <small>Gt.&amp;Vo.</small></li><li>马桥心玖 <small>Gt.&amp;Vo.</small></li><li>矢仓蓬咲 <small>Ba.</small></li><li>梅里千樱梨 <small>Dr.</small></li><li>四宫宁月 <small>Key.</small></li></ul></article>
+    </div>
+    <p class="older-label">更多乐队（以乐队标注区分背景与站位）</p>
+    <ul class="older">
+      <li style="--c:#e8386d">Poppin'Party</li><li style="--c:#d6402f">Afterglow</li><li style="--c:#1fae98">Pastel*Palettes</li><li style="--c:#3a4fb5">Roselia</li><li style="--c:#d19a00">Hello, Happy World!</li><li style="--c:#2b8fd6">Morfonica</li><li style="--c:#12a3a8">RAISE A SUILEN</li>
+    </ul>
+  </div>
+</section>
 
-          <article class="card card-ai reveal">
-            <div class="card-ic ic-purple"><svg aria-hidden="true"><use href="#i-director" /></svg></div>
-            <h3>AI Director</h3>
-            <p>读完全文再下判断，而不是逐句瞎猜。</p>
-            <ul class="checks">
-              <li>全文拆解场景，选择背景与时间</li>
-              <li>调度情绪、动作、表情、镜头与节奏</li>
-              <li>服装连续性检查与合理换装</li>
-              <li>演出场景的乐队站位</li>
-              <li>只使用资源库中真实存在的模型、动作与背景</li>
-              <li>背景按乐队标注过滤，不串场</li>
-              <li>锁定的内容与你改过的内容永不被覆盖</li>
-            </ul>
-            <div class="runlog" aria-hidden="true">
-              <div class="rl-h"><span class="rl-dot"></span>示意 · 一键生成进行中<span class="rl-n">5 / 12 场</span></div>
-              <div class="rl-bar"><i></i></div>
-              <div class="rl-rows"><span>第 4 场 · 排练室</span><b class="ok">完成</b><span>第 5 场 · 回家路上</span><b class="run">导演中</b><span>第 6 场 · Live 会场</span><b>排队</b></div>
-            </div>
-          </article>
+<!-- PRIVACY -->
+<section class="section alt" id="privacy" aria-labelledby="privacy-title">
+  <div class="wrap two">
+    <header class="sec-head left"><p class="en">AI &amp; PRIVACY</p><h2 id="privacy-title">AI 与隐私</h2><p class="sub">用你的模型，留在你的电脑。OpeNotes Studio 不提供、也不经手任何 AI 服务。请求从你本机运行的服务端直接发往你选择的提供商，没有任何中转。</p>
+      <ul class="prov"><li><b>Claude</b><span>Anthropic API</span></li><li><b>OpenAI 兼容</b><span>vLLM 等任意兼容接口</span></li><li><b>DeepSeek</b><span>api.deepseek.com</span></li><li><b>LM Studio</b><span>本地模型，文本不出本机</span></li></ul>
+    </header>
+    <ul class="privacy">
+      <li class="glass"><h3>Key 只存本地</h3><p>写入本机 <code>data/settings.local.json</code>（已被 git 忽略），从不回传浏览器，界面只显示 <code>sk-…087b</code> 这样的掩码。</p></li>
+      <li class="glass"><h3>用户自带 Key</h3><p>费用与额度由你和提供商直接结算；也可以用环境变量或 <code>.env</code> 提供默认配置。</p></li>
+      <li class="glass"><h3>结果本地缓存</h3><p>按输入哈希缓存在 <code>data/llm-cache/</code>，同样的输入再次运行不会重复发送请求。</p></li>
+      <li class="glass"><h3>诚实标注来源</h3><p>每一处内容都标明来自 AI、规则还是手动；未配置 AI 时，AI 入口会直接说明缺少什么，绝不假装。</p></li>
+    </ul>
+  </div>
+</section>
 
-          <article class="card reveal">
-            <div class="card-ic ic-green"><svg aria-hidden="true"><use href="#i-editor" /></svg></div>
-            <h3>可视化编辑器</h3>
-            <p>资源浏览器、剧本、预览拖拽、多轨时间轴、分镜与属性面板——像剪片子一样打磨演出。</p>
-          </article>
-
-          <article class="card reveal">
-            <div class="card-ic ic-orange"><svg aria-hidden="true"><use href="#i-llm" /></svg></div>
-            <h3>多 LLM，自带 Key</h3>
-            <p>Claude、OpenAI 兼容接口、DeepSeek、本地 LM Studio 任选；Key 只保存在你自己的电脑上。</p>
-          </article>
-
-          <article class="card reveal">
-            <div class="card-ic ic-teal"><svg aria-hidden="true"><use href="#i-rule" /></svg></div>
-            <h3>规则导演 · 无需 Key</h3>
-            <p>没有 API Key 也能出片：按章节与时间词分场、按关键词匹配背景与服装、识别引号台词与说话人，并使用固定镜头节奏。产出一律标注「规则」，绝不冒充 AI。</p>
-          </article>
-
-          <article class="card reveal">
-            <div class="card-ic ic-gray"><svg aria-hidden="true"><use href="#i-save" /></svg></div>
-            <h3>项目保存与导入导出</h3>
-            <p>项目保存在本机 <code>data/</code> 目录；可导出为 <code>.openotes.json</code> 分享给他人。导出文件只记录资源 id，从不包含任何素材文件。</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ WORKFLOW ============ -->
-    <section class="section section-alt" id="workflow" aria-labelledby="workflow-title">
-      <div class="wrap">
-        <header class="sec-head reveal">
-          <p class="kicker"><span>02</span>工作流程</p>
-          <h2 id="workflow-title">四个乐章，一部作品</h2>
-          <p class="sec-lead">每一步都可以停下来、改一改、再继续。</p>
-        </header>
-
-        <ol class="flow">
-          <li class="step reveal">
-            <div class="step-time" aria-hidden="true">00:00</div>
-            <div class="step-ic"><svg aria-hidden="true"><use href="#i-book" /></svg></div>
-            <h3><span class="step-n">01</span>导入小说</h3>
-            <p>粘贴文本或打开 <code>.txt</code> / <code>.md</code>，自动识别 UTF-8 / GBK 编码与「第一章」「# 标题」等章节标题。</p>
-          </li>
-          <li class="step reveal">
-            <div class="step-time" aria-hidden="true">00:12</div>
-            <div class="step-ic"><svg aria-hidden="true"><use href="#i-director" /></svg></div>
-            <h3><span class="step-n">02</span>AI 导演</h3>
-            <p>拆解场景、选背景与服装、写镜头与表演；多场并行生成，实时显示进度、调用次数与 token，可随时取消、断点续跑。</p>
-          </li>
-          <li class="step reveal">
-            <div class="step-time" aria-hidden="true">00:48</div>
-            <div class="step-ic"><svg aria-hidden="true"><use href="#i-sliders" /></svg></div>
-            <h3><span class="step-n">03</span>手动精修</h3>
-            <p>在时间轴、分镜与属性面板里逐句调整；锁定满意的部分，只让 AI 重写一句或一个范围，并逐项审阅差异。</p>
-          </li>
-          <li class="step reveal">
-            <div class="step-time" aria-hidden="true">01:30</div>
-            <div class="step-ic"><svg aria-hidden="true"><use href="#i-screen" /></svg></div>
-            <h3><span class="step-n">04</span>放映 / 导出</h3>
-            <p>在内置播放器中放映，可切换 16:9 或 2.16:1 画幅并全屏，或导出项目文件与他人分享。</p>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ============ EDITOR ============ -->
-    <section class="section" id="editor" aria-labelledby="editor-title">
-      <div class="wrap">
-        <header class="sec-head reveal">
-          <p class="kicker"><span>03</span>编辑器亮点</p>
-          <h2 id="editor-title">AI 起草，你来定稿</h2>
-          <p class="sec-lead">所有 AI 产出都是可审阅、可撤销、可局部重来的草稿。下图为原创示意界面。</p>
-        </header>
-
-        <figure class="mock-wrap reveal">
-          <div class="mock" aria-hidden="true">
-            <div class="mk">
-              <div class="mk-bar">
-                <span class="mk-dots"><i></i><i></i><i></i></span>
-                <svg class="mk-logo"><use href="#logo" /></svg>
-                <b>示例演出</b><span class="mk-dim">/ 第 2 场 · 排练室</span>
-                <span class="mk-sp"></span>
-                <span class="mk-btn">撤销</span><span class="mk-btn">AI 导演</span><span class="mk-btn pri">▶ 放映</span>
-              </div>
-              <div class="mk-body">
-                <aside class="mk-left">
-                  <div class="mk-tabs"><span class="on">剧本</span><span>资源</span><span>AI 导演</span></div>
-                  <div class="mk-line"><em class="b-ai">AI</em><span><b>A</b>明天的排练，再试一次……</span></div>
-                  <div class="mk-line sel"><em class="b-user">手动</em><span><b>B</b>嗯。这次我来起头。</span><svg class="mk-lk"><use href="#i-lock" /></svg></div>
-                  <div class="mk-line"><em class="b-ai">AI</em><span><b>A</b>（她其实一直在等这句话）</span></div>
-                  <div class="mk-line"><em class="b-rule">规则</em><span><b>C</b>那就从副歌开始。</span></div>
-                  <div class="mk-line"><em class="b-ai">AI</em><span><b>B</b>……好。</span></div>
-                  <div class="mk-assets"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                </aside>
-                <div class="mk-center">
-                  <div class="mk-stage">
-                    <div class="st-bg blur"><div class="st-wall"></div><div class="st-window"><i></i><i></i><i></i><i></i></div><div class="st-floor"></div></div>
-                    <svg class="st-fig f1"><use href="#fig" /></svg>
-                    <div class="mk-selbox"><svg class="st-fig f2"><use href="#fig" /></svg><i></i><i></i><i></i><i></i></div>
-                    <div class="mk-safe"></div>
-                    <div class="st-dlg"><div class="st-name">角色 B</div><div class="st-line">嗯。这次我来起头。</div></div>
-                  </div>
-                  <div class="mk-sb">
-                    <div class="sb on"><span>#4 中近景</span></div><div class="sb"><span>#5 双人</span></div><div class="sb"><span>#6 特写</span></div><div class="sb"><span>#7 空镜</span></div>
-                  </div>
-                </div>
-                <aside class="mk-right">
-                  <div class="mk-h">属性 · 角色 B</div>
-                  <div class="mk-f"><span>景别</span><b>中近景</b></div>
-                  <div class="mk-f"><span>视线</span><b>看向 A</b></div>
-                  <div class="mk-f lk"><span>表情</span><b>微笑</b><svg><use href="#i-lock" /></svg></div>
-                  <div class="mk-f"><span>动作</span><b>手按胸口</b></div>
-                  <div class="mk-f"><span>服装</span><b>校服 · 冬</b></div>
-                  <div class="mk-f"><span>景深</span><b class="mk-slider"><i></i></b></div>
-                  <div class="mk-f"><span>转场</span><b>硬切</b></div>
-                </aside>
-              </div>
-              <div class="mk-tl">
-                <div class="tl-ruler"><span>0s</span><span>2s</span><span>4s</span><span>6s</span><span>8s</span><span>10s</span><span>12s</span></div>
-                <div class="tl-row"><span class="tl-name">角色 A</span><div class="tl-lane"><i class="clip t-actor" style="left:2%;width:30%"></i><i class="clip t-actor" style="left:56%;width:24%"></i><i class="kf" style="left:10%"></i><i class="kf" style="left:22%"></i><i class="kf" style="left:64%"></i></div></div>
-                <div class="tl-row"><span class="tl-name">角色 B</span><div class="tl-lane"><i class="clip t-actor2" style="left:30%;width:28%"></i><i class="clip t-actor2" style="left:80%;width:18%"></i><i class="kf lk" style="left:40%"></i><i class="kf" style="left:86%"></i></div></div>
-                <div class="tl-row"><span class="tl-name">镜头</span><div class="tl-lane"><i class="clip t-cam" style="left:0;width:31%"></i><i class="clip t-cam" style="left:31.5%;width:24%"></i><i class="clip t-cam" style="left:56%;width:42%"></i></div></div>
-                <div class="tl-row"><span class="tl-name">音频</span><div class="tl-lane"><i class="clip t-audio wave" style="left:4%;width:92%"></i></div></div>
-                <div class="tl-row"><span class="tl-name">特效</span><div class="tl-lane"><i class="clip t-fx" style="left:60%;width:20%"></i></div></div>
-                <div class="tl-row"><span class="tl-name">屏幕</span><div class="tl-lane"><i class="clip t-screen" style="left:29%;width:4%"></i><i class="clip t-screen" style="left:0;width:2%"></i></div></div>
-                <div class="tl-head"></div>
-              </div>
-            </div>
-            <div class="mk-diff">
-              <div class="df-h"><span class="df-badge">AI</span>差异审阅 · 第 2 场</div>
-              <div class="df-g"><span class="df-k">镜头</span><span class="df-old">中景</span><span class="df-ar">→</span><span class="df-new">中近景</span></div>
-              <div class="df-g"><span class="df-k">表演</span><span class="df-old">点头</span><span class="df-ar">→</span><span class="df-new">手按胸口</span></div>
-              <div class="df-g"><span class="df-k">服装</span><span class="df-old">便服</span><span class="df-ar">→</span><span class="df-new">校服 · 冬</span></div>
-              <div class="df-act"><span class="pri">全部接受</span><span>按范围</span><span>拒绝</span></div>
-            </div>
-          </div>
-          <figcaption>原创示意界面（抽象色块与剪影），非真实截图。左：剧本与来源标记；中：预览拖拽与分镜；右：属性与字段锁；下：多轨时间轴；浮层：AI 差异审阅。</figcaption>
-        </figure>
-
-        <div class="hl-grid">
-          <div class="hl reveal"><h3>资源浏览器</h3><p>对外部素材库建立只读索引：模型、动作、表情、背景与音频一目了然，动作附带朝向统计。</p></div>
-          <div class="hl reveal"><h3>剧本与预览拖拽</h3><p>剧本逐句编辑；在预览中直接拖拽角色站位与镜头框，所见即所得。</p></div>
-          <div class="hl reveal"><h3>多轨时间轴与分镜</h3><p>角色、镜头、音频、特效、屏幕分轨编排，关键帧精确到每一拍；分镜视图纵览全场节奏。</p></div>
-          <div class="hl reveal"><h3>锁定 · 撤销 · 局部重生成</h3><p>按整句或单个字段锁定；只重生成选中的一句，或只重写镜头 / 表演 / 服装 / 站位 / 特效；一次生成即一步撤销。</p></div>
-          <div class="hl reveal"><h3>AI 差异审阅</h3><p>每个提议都按台词结构、镜头、表演、服装、站位、特效分组呈现前后对比，可全部接受、按范围接受或拒绝。</p></div>
-          <div class="hl reveal"><h3>连续性检查</h3><p>跨场景检查服装与角色状态，警告一键跳转到出问题的那一句。</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ AI & PRIVACY ============ -->
-    <section class="section section-alt" id="ai" aria-labelledby="ai-title">
-      <div class="wrap ai-grid">
-        <header class="sec-head reveal">
-          <p class="kicker"><span>04</span>AI 提供商与隐私</p>
-          <h2 id="ai-title">用你的模型，留在你的电脑</h2>
-          <p class="sec-lead">OpeNotes Studio 不提供、也不经手任何 AI 服务。请求从你本机运行的服务端直接发往你选择的提供商，没有任何中转。</p>
-          <ul class="providers">
-            <li><b>Claude</b><span>Anthropic API</span></li>
-            <li><b>OpenAI 兼容</b><span>vLLM 等任意兼容接口</span></li>
-            <li><b>DeepSeek</b><span>api.deepseek.com</span></li>
-            <li><b>LM Studio</b><span>本地模型，文本不出本机</span></li>
-          </ul>
-        </header>
-        <ul class="privacy reveal">
-          <li><svg aria-hidden="true"><use href="#i-shield" /></svg><div><h3>Key 只存本地</h3><p>写入本机 <code>data/settings.local.json</code>（已被 git 忽略），从不回传浏览器，界面只显示 <code>sk-…087b</code> 这样的掩码。</p></div></li>
-          <li><svg aria-hidden="true"><use href="#i-shield" /></svg><div><h3>用户自带 Key</h3><p>费用与额度由你和提供商直接结算；也可以用环境变量或 <code>.env</code> 提供默认配置。</p></div></li>
-          <li><svg aria-hidden="true"><use href="#i-shield" /></svg><div><h3>结果本地缓存</h3><p>按输入哈希缓存在 <code>data/llm-cache/</code>，同样的输入再次运行不会重复发送请求。</p></div></li>
-          <li><svg aria-hidden="true"><use href="#i-shield" /></svg><div><h3>诚实标注来源</h3><p>每一处内容都标明来自 AI、规则还是手动；未配置 AI 时，AI 入口会直接说明缺少什么，绝不假装。</p></div></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- ============ QUICK START ============ -->
-    <section class="section" id="start" aria-labelledby="start-title">
-      <div class="wrap">
-        <header class="sec-head reveal">
-          <p class="kicker"><span>05</span>快速开始</p>
-          <h2 id="start-title">三条命令，开始排练</h2>
-          <p class="sec-lead">需要 Node.js 22 及以上（开发使用 24）。不想用命令行？从 <a href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）即可；下面是开发者方式。</p>
-        </header>
-
-        <div class="dl reveal">
-          <div><h3>最简单：下载 zip，双击开演</h3><p>从 Releases 下载最新 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）。</p></div>
-          <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-down" /></svg>下载最新版 v0.1.4</a>
-        </div>
-
-        <div class="qs">
-          <div class="qs-step reveal">
-            <div class="qs-h"><span class="step-n">1</span><div><h3>获取代码并安装依赖</h3><p>克隆仓库后安装 npm 依赖。</p></div></div>
-            <div class="code">
-              <button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true"><use href="#i-copy" /></svg><span>复制</span></button>
-<pre><code>git clone https://github.com/SKT0tto/OpeNotes-Studio.git openotes-studio
+<!-- HOW TO START -->
+<section class="section" id="start" aria-labelledby="start-title">
+  <div class="wrap">
+    <header class="sec-head"><p class="en">HOW TO START</p><h2 id="start-title">开始使用</h2><p class="sub">需要 Node.js 22 及以上（开发使用 24）。不想用命令行？从 <a href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）即可；下面是开发者方式。</p></header>
+    <div class="glass dl">
+      <div><h3>最简单：下载 zip，双击开演</h3><p>从 Releases 下载最新 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）。</p></div>
+      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载最新版 v0.1.4</a>
+    </div>
+    <div class="cmds">
+      <div class="cmd glass"><div class="cmd-h"><span class="n">1</span><div><h3>获取代码并安装依赖</h3><p>克隆仓库后安装 npm 依赖。</p></div></div><div class="code"><button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true" width="16" height="16"><use href="#i-copy"/></svg><span>复制</span></button><pre><code>git clone https://github.com/SKT0tto/OpeNotes-Studio.git openotes-studio
 cd openotes-studio
-npm install</code></pre>
-            </div>
-          </div>
-          <div class="qs-step reveal">
-            <div class="qs-h"><span class="step-n">2</span><div><h3>配置：Core、素材、AI</h3><p>首次打开后按首页的「配置向导」三步走；也可以用配置文件。Windows 用 <code>copy</code> 代替 <code>cp</code>。</p></div></div>
-            <div class="code">
-              <button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true"><use href="#i-copy" /></svg><span>复制</span></button>
-<pre><code><span class="c"># 可选：手动指定素材库（也可在向导里一键导入你自己的素材文件夹 / zip）</span>
+npm install</code></pre></div></div>
+      <div class="cmd glass"><div class="cmd-h"><span class="n">2</span><div><h3>配置：Core、素材、AI</h3><p>首次打开后按首页的「配置向导」三步走；也可以用配置文件。Windows 用 <code>copy</code> 代替 <code>cp</code>。</p></div></div><div class="code"><button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true" width="16" height="16"><use href="#i-copy"/></svg><span>复制</span></button><pre><code><span class="c"># 可选：手动指定素材库（也可在向导里一键导入你自己的素材文件夹 / zip）</span>
 cp studio.config.example.json studio.config.json
-<span class="c"># 或使用环境变量 / .env：ASSET_ROOT、AUDIO_ROOTS、CUBISM_CORE_URL</span></code></pre>
-            </div>
-          </div>
-          <div class="qs-step reveal">
-            <div class="qs-h"><span class="step-n">3</span><div><h3>启动</h3><p>浏览器打开后，首页会检查素材库、Cubism Core 与 AI 配置状态。</p></div></div>
-            <div class="code">
-              <button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true"><use href="#i-copy" /></svg><span>复制</span></button>
-<pre><code>npm run dev
-<span class="c"># 服务端 :5274，前端 :5273 —— 打开 http://127.0.0.1:5273</span></code></pre>
-            </div>
-          </div>
-        </div>
-        <p class="qs-note reveal"><b>Live2D Cubism Core</b> 默认在运行时从 Live2D 官方地址加载；向导里也可以一键保存一份到本机 <code>vendor/</code>（需确认 Live2D 许可协议）。素材不随本项目分发，请自行取得并导入。完整的图文步骤见 <a href="https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md" target="_blank" rel="noopener"><b>素材与配置教程</b></a>。之后在首页点「AI 设置」填入提供商与 Key，或直接使用规则导演。</p>
-      </div>
-    </section>
-
-    <!-- ============ FAQ ============ -->
-    <section class="section section-alt" id="faq" aria-labelledby="faq-title">
-      <div class="wrap faq-grid">
-        <header class="sec-head reveal">
-          <p class="kicker"><span>06</span>常见问题</p>
-          <h2 id="faq-title">FAQ</h2>
-          <p class="sec-lead">没找到答案？欢迎到作者的 bilibili 留言。</p>
-        </header>
-        <div class="faq reveal">
-          <details open>
-            <summary>素材从哪里来？</summary>
-            <p>本仓库<strong>不包含任何游戏素材，也不包含 Live2D Cubism Core</strong>。你需要自行准备合法获取、正确提取的素材库（<code>models/</code>、<code>backgrounds/</code>、<code>media/</code>），并遵守其相关条款；Cubism Core 请从 Live2D 官网获取并遵循 Live2D 的许可。素材库以只读方式使用，绝不会被复制进项目或被修改；导出的项目文件也只记录资源 id。</p>
-          </details>
-          <details>
-            <summary>这是官方项目吗？</summary>
-            <p>不是。OpeNotes Studio 是非官方同人项目，与 Bushiroad、Craft Egg 及其他权利方没有任何关联，也未获其认可。BanG Dream!、Our Notes 及相关角色、名称与素材均为其各自权利方所有。</p>
-          </details>
-          <details>
-            <summary>我的 API Key 安全吗？</summary>
-            <p>Key 只保存在你本机的 <code>data/settings.local.json</code>（已被 git 忽略），不会回传到浏览器，界面只显示掩码。请求由你本机运行的服务端直接发送给你选择的提供商，本项目不运营任何中转服务器。使用 LM Studio 等本地模型时，文本完全不离开你的电脑。</p>
-          </details>
-          <details>
-            <summary>没有 API Key 能用吗？</summary>
-            <p>可以。除 AI 功能外一切照常可用，并且可以选择「规则导演（非 AI）」：按章节与关键词分场、匹配背景与服装、识别台词与说话人。它的产出全部标注为「规则」。</p>
-          </details>
-          <details>
-            <summary>采用什么许可证？</summary>
-            <p><a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0-or-later</a>。你可以自由使用、学习、修改和再分发；分发修改版时须以相同许可开源并提供源代码。素材与 Cubism Core 不在本许可范围内，适用其各自条款。</p>
-          </details>
-          <details>
-            <summary>能导出视频吗？</summary>
-            <p>目前提供内置播放器放映（支持 16:9 与 2.16:1 画幅）以及项目文件（<code>.openotes.json</code>）的导入导出，便于分享与继续编辑。</p>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ AUTHOR ============ -->
-    <section class="section" id="credits" aria-labelledby="credits-title">
-      <div class="wrap credits">
-        <div class="author reveal">
-          <div class="avatar" aria-hidden="true"><svg><use href="#logo" /></svg></div>
-          <div>
-            <p class="kicker"><span>07</span>作者与致谢</p>
-            <h2 id="credits-title">羽丘魅魔高松灯</h2>
-            <p class="dim">OpeNotes Studio 的作者。为喜欢的故事做一场属于自己的演出。</p>
-            <a class="btn btn-ghost btn-sm" href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili 主页<span class="sr-only">（在新窗口打开）</span> ↗</a>
-          </div>
-        </div>
-        <div class="thanks reveal">
-          <h3>站在这些开源项目的肩膀上</h3>
-          <ul class="libs">
-            <li>React</li><li>Pixi.js</li><li>untitled-pixi-live2d-engine</li><li>Express</li><li>zod</li><li>zustand</li><li>immer</li><li>Vite</li>
-          </ul>
-          <p class="dim small">Live2D 渲染依赖 Live2D Inc. 的 Cubism Core（由用户自行获取）。演出样式笔记整理自对原作公开演出表现的观察，未使用任何游戏代码。</p>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <div class="penlights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-  <footer class="foot">
-    <div class="wrap">
-      <div class="foot-top">
-        <a class="brand" href="#top" aria-label="回到顶部">
-          <svg class="brand-logo" aria-hidden="true"><use href="#logo" /></svg>
-          <span>OpeNotes <b>Studio</b></span>
-        </a>
-        <nav class="foot-links" aria-label="页脚链接">
-          <a href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0</a>
-          <a href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili</a>
-          <a href="#top">回到顶部 ↑</a>
-        </nav>
-      </div>
-      <p class="disclaimer"><strong>免责声明：</strong>OpeNotes Studio 是非官方同人项目。BanG Dream!、Our Notes 及所有相关角色、名称与素材均为 Bushiroad、Craft Egg 及其他权利方的财产；本项目与其无任何关联，亦未获其认可。本项目不包含任何游戏素材与 Live2D Cubism Core，用户须自行准备合法获取的素材并遵守相应条款。本页所有界面与图形均为原创示意。</p>
-      <p class="copy-line">© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布</p>
+<span class="c"># 或使用环境变量 / .env：ASSET_ROOT、AUDIO_ROOTS、CUBISM_CORE_URL</span></code></pre></div></div>
+      <div class="cmd glass"><div class="cmd-h"><span class="n">3</span><div><h3>启动</h3><p>浏览器打开后，首页会检查素材库、Cubism Core 与 AI 配置状态。</p></div></div><div class="code"><button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true" width="16" height="16"><use href="#i-copy"/></svg><span>复制</span></button><pre><code>npm run dev <span class="c"># 服务端 :5274，前端 :5273 —— 打开 http://127.0.0.1:5273</span></code></pre></div></div>
     </div>
-  </footer>
+    <p class="note-p"><b>Live2D Cubism Core</b> 默认在运行时从 Live2D 官方地址加载；向导里也可以一键保存一份到本机 <code>vendor/</code>（需确认 Live2D 许可协议）。素材不随本项目分发，请自行取得并导入。完整的图文步骤见 <a href="https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md" target="_blank" rel="noopener"><b>素材与配置教程</b></a>。之后在首页点「AI 设置」填入提供商与 Key，或直接使用规则导演。</p>
+  </div>
+</section>
 
-  <div class="toast" role="status" aria-live="polite"></div>
-  <script src="main.js" defer></script>
+<!-- UPDATES -->
+<section class="section alt" id="updates" aria-labelledby="updates-title">
+  <div class="wrap narrow">
+    <header class="sec-head"><p class="en">UPDATES</p><h2 id="updates-title">更新</h2><p class="sub">完整记录见 <a href="https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG</a>。</p></header>
+    <ul class="news">
+      <li><span class="ver">v0.1.4</span><p>修复「部分角色不动」（Cubism 内存堆过小）并恢复贴近原作的多人合照构图。</p></li>
+      <li><span class="ver">v0.1.3</span><p>多人合照不再拥挤；新增 GitHub Releases 可直接运行的 zip 与生产模式启动。</p></li>
+      <li><span class="ver">v0.1.2</span><p>修复生成的演出中「若干角色完全不动」的问题。</p></li>
+      <li><span class="ver">v0.1.1</span><p>预览画幅保持项目比例，AI 设置状态更诚实，失败原因明确提示，换装不再闪黑屏。</p></li>
+      <li><span class="ver">v0.1.0</span><p>首次公开发布：素材索引、Live2D 舞台、时间轴编辑器、AI 导演与规则导演、差异审阅与一键生成。</p></li>
+    </ul>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" aria-labelledby="faq-title">
+  <div class="wrap narrow">
+    <header class="sec-head"><p class="en">FAQ</p><h2 id="faq-title">常见问题</h2><p class="sub">没找到答案？欢迎到作者的 bilibili 留言。</p></header>
+    <div class="faq">
+      <details class="glass" open><summary>素材从哪里来？</summary><p>本仓库<strong>不包含任何游戏素材，也不包含 Live2D Cubism Core</strong>。你需要自行准备合法获取、正确提取的素材库（<code>models/</code>、<code>backgrounds/</code>、<code>media/</code>），并遵守其相关条款；Cubism Core 请从 Live2D 官网获取并遵循 Live2D 的许可。素材库以只读方式使用，绝不会被复制进项目或被修改；导出的项目文件也只记录资源 id。</p></details>
+      <details class="glass"><summary>这是官方项目吗？</summary><p>不是。OpeNotes Studio 是非官方同人项目，与 Bushiroad、Craft Egg 及其他权利方没有任何关联，也未获其认可。BanG Dream!、Our Notes 及相关角色、名称与素材均为其各自权利方所有。</p></details>
+      <details class="glass"><summary>我的 API Key 安全吗？</summary><p>Key 只保存在你本机的 <code>data/settings.local.json</code>（已被 git 忽略），不会回传到浏览器，界面只显示掩码。请求由你本机运行的服务端直接发送给你选择的提供商，本项目不运营任何中转服务器。使用 LM Studio 等本地模型时，文本完全不离开你的电脑。</p></details>
+      <details class="glass"><summary>没有 API Key 能用吗？</summary><p>可以。除 AI 功能外一切照常可用，并且可以选择「规则导演（非 AI）」：按章节与关键词分场、匹配背景与服装、识别台词与说话人。它的产出全部标注为「规则」。</p></details>
+      <details class="glass"><summary>采用什么许可证？</summary><p><a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0-or-later</a>。你可以自由使用、学习、修改和再分发；分发修改版时须以相同许可开源并提供源代码。素材与 Cubism Core 不在本许可范围内，适用其各自条款。</p></details>
+      <details class="glass"><summary>能导出视频吗？</summary><p>目前提供内置播放器放映（支持 16:9 与 2.16:1 画幅）以及项目文件（<code>.openotes.json</code>）的导入导出，便于分享与继续编辑。</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CREDITS -->
+<section class="section alt" id="credits" aria-labelledby="credits-title">
+  <div class="wrap narrow">
+    <header class="sec-head"><p class="en">CREDITS</p><h2 id="credits-title">作者与致谢</h2></header>
+    <div class="glass author">
+      <div class="avatar" aria-hidden="true"><svg><use href="#fig"/></svg></div>
+      <div><h3>羽丘魅魔高松灯</h3><p>OpeNotes Studio 的作者。为喜欢的故事做一场属于自己的演出。</p>
+        <p class="links"><a class="btn btn-ghost" href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili 主页<span class="sr">（在新窗口打开）</span> ↗</a><a class="btn btn-ghost" href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub ↗</a></p></div>
+    </div>
+    <h3 class="thx">站在这些开源项目的肩膀上</h3>
+    <ul class="chips light"><li>React</li><li>Pixi.js</li><li>untitled-pixi-live2d-engine</li><li>Express</li><li>zod</li><li>zustand</li><li>immer</li><li>Vite</li></ul>
+    <p class="note-p">Live2D 渲染依赖 Live2D Inc. 的 Cubism Core（由用户自行获取）。演出样式笔记整理自对原作公开演出表现的观察，未使用任何游戏代码。</p>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="brand" href="#top" aria-label="回到顶部"><svg aria-hidden="true" width="30" height="30"><use href="#logo"/></svg><span>OpeNotes <b>Studio</b></span></a>
+      <nav aria-label="页脚链接"><a href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub</a><a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0</a><a href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili</a><a href="#top">回到顶部 ↑</a></nav>
+    </div>
+    <p><strong>免责声明：</strong>OpeNotes Studio 是非官方同人项目。BanG Dream!、Our Notes 及所有相关角色、名称与素材均为 Bushiroad、Craft Egg 及其他权利方的财产；本项目与其无任何关联，亦未获其认可。本项目不包含任何游戏素材与 Live2D Cubism Core，用户须自行准备合法获取的素材并遵守相应条款。本页所有界面与图形均为原创示意。</p>
+    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v0.1.4</p>
+  </div>
+</footer>
+<div class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
