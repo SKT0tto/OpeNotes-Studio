@@ -7,7 +7,7 @@
   <meta name="description" content="OpeNotes Studio 是基于 Live2D 的 AI 剧情演出导演与制作平台：一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出，并可在时间轴编辑器里精细手调每个细节。开源、GPL-3.0、非官方同人项目。" />
   <meta name="keywords" content="OpeNotes Studio, Live2D, AI 导演, 剧情演出, 小说转演出, BanG Dream, Our Notes, 时间轴编辑器, 同人, 开源" />
   <meta name="author" content="羽丘魅魔高松灯" />
-  <meta name="theme-color" content="#0b0c0f" />
+  <meta name="theme-color" content="#0a0b22" />
   <meta name="color-scheme" content="dark" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -27,6 +27,7 @@
   <meta name="twitter:image" content="https://skt0tto.github.io/OpeNotes-Studio/og.png" />
 
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="theme.css" />
   <script>document.documentElement.classList.add('js');</script>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"SoftwareApplication","name":"OpeNotes Studio","applicationCategory":"MultimediaApplication","operatingSystem":"Windows, macOS, Linux (Node.js 22+)","license":"https://www.gnu.org/licenses/gpl-3.0.html","softwareVersion":"0.1.4","author":{"@type":"Person","name":"羽丘魅魔高松灯","url":"https://space.bilibili.com/358479834"},"offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}
@@ -51,6 +52,8 @@
         <ellipse cx="100" cy="100" rx="43" ry="49" />
         <path d="M50 116c-8-56 22-80 54-80 38 2 58 30 50 84-2 22-6 42-12 54 0-26 2-56-10-78-18-12-48-12-66 0-10 24-6 54-8 76-6-14-8-36-8-56z" />
       </symbol>
+      <symbol id="spark" viewBox="0 0 24 24"><path d="M12 0c1 7 4 10 12 12-8 2-11 5-12 12-1-7-4-10-12-12 8-2 11-5 12-12z" fill="currentColor"/></symbol>
+      <symbol id="pick" viewBox="0 0 24 28"><path d="M12 1C5 1 1 5 1 11c0 8 8 14 11 16 3-2 11-8 11-16C23 5 19 1 12 1z" fill="currentColor"/><path d="M12 8v8m-3-4h6" stroke="#0a0b22" stroke-width="1.6" stroke-linecap="round" opacity=".35"/></symbol>
       <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></symbol>
       <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></symbol>
@@ -97,6 +100,17 @@
       <div class="hero-bg" aria-hidden="true">
         <div class="glow g1"></div><div class="glow g2"></div>
         <div class="spot"></div>
+        <div class="beams"><i class="bm b1"></i><i class="bm b2"></i><i class="bm b3"></i><i class="bm b4"></i></div>
+        <div class="deco">
+          <svg class="tw" style="--x:6%;--y:14%;--z:22px;--c:var(--yellow);--d:0s"><use href="#spark" /></svg>
+          <svg class="tw" style="--x:46%;--y:8%;--z:16px;--c:var(--cyan);--d:.7s"><use href="#spark" /></svg>
+          <svg class="tw" style="--x:90%;--y:20%;--z:26px;--c:var(--pink);--d:1.3s"><use href="#spark" /></svg>
+          <svg class="tw" style="--x:12%;--y:72%;--z:14px;--c:var(--purple);--d:.4s"><use href="#spark" /></svg>
+          <svg class="tw" style="--x:55%;--y:86%;--z:20px;--c:var(--orange);--d:1.9s"><use href="#spark" /></svg>
+          <svg class="pk" style="--x:3%;--y:44%;--z:30px;--c:var(--pink);--r:-18deg"><use href="#pick" /></svg>
+          <svg class="pk" style="--x:94%;--y:56%;--z:34px;--c:var(--cyan);--r:22deg"><use href="#pick" /></svg>
+          <svg class="pk" style="--x:48%;--y:94%;--z:24px;--c:var(--yellow);--r:8deg"><use href="#pick" /></svg>
+        </div>
         <svg class="staff" viewBox="0 0 1440 220" preserveAspectRatio="none">
           <g stroke="currentColor" stroke-width="1" fill="none">
             <path d="M0 60C360 20 720 120 1080 70s300-10 360 0" /><path d="M0 80C360 40 720 140 1080 90s300-10 360 0" /><path d="M0 100C360 60 720 160 1080 110s300-10 360 0" /><path d="M0 120C360 80 720 180 1080 130s300-10 360 0" /><path d="M0 140C360 100 720 200 1080 150s300-10 360 0" />
@@ -110,13 +124,12 @@
       <div class="wrap hero-in">
         <div class="hero-copy">
           <p class="eyebrow"><span class="pill">开源 · GPL-3.0</span><span class="sep" aria-hidden="true"></span>非官方同人项目 · v0.1.4</p>
-          <h1 id="hero-title" class="hero-title">Ope<span class="grad">Notes</span> Studio</h1>
-          <p class="hero-tag"><span class="nw">把小说，</span><span class="nw">演成一场 Live2D 剧情演出。</span></p>
+          <h1 id="hero-title" class="hero-title">Ope<span class="grad">Notes</span> Studio<svg class="h1-spark" aria-hidden="true"><use href="#spark" /></svg></h1>
+          <p class="hero-tag"><span class="nw">把小说，</span><span class="nw">演成一场 <em class="live">Live</em>。</span></p>
           <p class="hero-lead">基于 Live2D 的 AI 剧情演出导演与制作平台。一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出——分场、选景、换装、镜头与表演由 AI 导演完成，每一句、每一帧仍由你精细手调。</p>
           <div class="cta">
             <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-github" /></svg>在 GitHub 查看</a>
             <a class="btn btn-ghost" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-down" /></svg>下载</a>
-            <a class="btn btn-text" href="#" data-soon="演示视频即将发布"><svg aria-hidden="true"><use href="#i-play" /></svg>观看演示</a>
           </div>
           <ul class="hero-meta" aria-label="支持的 AI 提供商">
             <li>Claude</li><li>OpenAI 兼容</li><li>DeepSeek</li><li>LM Studio</li><li>规则导演（非 AI）</li>
@@ -152,6 +165,10 @@
         </figure>
       </div>
     </section>
+
+    <div class="ticker" aria-label="特性关键词">
+      <div class="tk-track"><div class="tk-set"><span>AI 导演</span><i aria-hidden="true"></i><span>Live2D 演出</span><i aria-hidden="true"></i><span>时间轴编辑器</span><i aria-hidden="true"></i><span>一键成片</span><i aria-hidden="true"></i><span>多 LLM</span><i aria-hidden="true"></i><span>规则导演</span><i aria-hidden="true"></i><span>景深镜头</span><i aria-hidden="true"></i><span>差异审阅</span><i aria-hidden="true"></i><span>开源 GPL-3.0</span><i aria-hidden="true"></i><span>自带 Key</span><i aria-hidden="true"></i></div><div class="tk-set" aria-hidden="true"><span>AI 导演</span><i aria-hidden="true"></i><span>Live2D 演出</span><i aria-hidden="true"></i><span>时间轴编辑器</span><i aria-hidden="true"></i><span>一键成片</span><i aria-hidden="true"></i><span>多 LLM</span><i aria-hidden="true"></i><span>规则导演</span><i aria-hidden="true"></i><span>景深镜头</span><i aria-hidden="true"></i><span>差异审阅</span><i aria-hidden="true"></i><span>开源 GPL-3.0</span><i aria-hidden="true"></i><span>自带 Key</span><i aria-hidden="true"></i></div></div>
+    </div>
 
     <!-- ============ FEATURES ============ -->
     <section class="section" id="features" aria-labelledby="features-title">
@@ -377,6 +394,11 @@
           <p class="sec-lead">需要 Node.js 22 及以上（开发使用 24）。不想用命令行？从 <a href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）即可；下面是开发者方式。</p>
         </header>
 
+        <div class="dl reveal">
+          <div><h3>最简单：下载 zip，双击开演</h3><p>从 Releases 下载最新 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）。</p></div>
+          <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-down" /></svg>下载最新版 v0.1.4</a>
+        </div>
+
         <div class="qs">
           <div class="qs-step reveal">
             <div class="qs-h"><span class="step-n">1</span><div><h3>获取代码并安装依赖</h3><p>克隆仓库后安装 npm 依赖。</p></div></div>
@@ -469,6 +491,7 @@ cp studio.config.example.json studio.config.json
     </section>
   </main>
 
+  <div class="penlights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <footer class="foot">
     <div class="wrap">
       <div class="foot-top">
