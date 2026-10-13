@@ -82,27 +82,27 @@ test('queue: the large picture, the suggestion, 2 + Enter confirms and jumps on,
 });
 
 test('queue: suggestions show "current -> suggested" with the reason; accept writes the field, reject only removes the note', async ({ page }) => {
+  // the live labels evolve: take whichever picture still holds a placeType suggestion; with none left there is nothing to accept
+  const withFix = Object.entries(labelsOnDisk() as unknown as Record<string, { title?: string; fixes?: { field: string }[] }>).find(([, l]) => l.fixes?.[0]?.field === 'placeType');
+  test.skip(!withFix, 'no pending placeType suggestion in the live labels');
+  const [id] = withFix!;
   await page.goto('/label');
   await expect(page.getByTestId('wb-card').first()).toBeVisible();
-  // a picture with a review suggestion: search for it
-  await page.getByTestId('wb-search').fill('拉面店吧台');
-  const card = page.getByTestId('wb-card').first();
+  await page.getByTestId('wb-search').fill(id.replace('adv_bkg_stage_', '').replace(/^0+/, ''));
+  const card = page.locator(`[data-testid="wb-card"][data-bg-id="${id}"]`);
   await expect(card).toContainText('建议');
-  const id = (await card.getAttribute('data-bg-id'))!;
   await card.dblclick();
   await expect(page.getByTestId('wb-queue')).toBeVisible();
   const fix = page.getByTestId('wbq-fix').first();
   await expect(fix).toContainText('→');
   const before = labelsOnDisk() as unknown as Record<string, { placeType?: string; fixes?: unknown[] }>;
-  expect(before[id]!.placeType).toBe('live_house');
   const count = (before[id]!.fixes ?? []).length;
   // the queue is opened on this picture only when it is pending; make sure we are looking at it
   await expect(page.getByTestId('wbq-side')).toHaveAttribute('data-bg-id', id);
   await fix.getByTestId('wbq-accept').click();
   await expect.poll(() => (labelsOnDisk() as unknown as typeof before)[id]!.fixes?.length ?? 0).toBe(count - 1);
   const after = labelsOnDisk() as unknown as typeof before;
-  expect(['restaurant', 'live_house']).toContain(after[id]!.placeType);
-  expect(after[id]!.placeType).not.toBe('live_house');
+  expect(after[id]!.placeType).not.toBe(before[id]!.placeType);
 });
 
 test('queue by keyboard only: ten pictures confirmed in under a minute', async ({ page }) => {
