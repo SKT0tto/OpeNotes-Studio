@@ -28,9 +28,3 @@ GPL-3.0, unofficial fan project. Repo: https://github.com/SKT0tto/OpeNotes-Studi
 - Commits end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`; git identity is the SKT0tto noreply address (don't change it).
 - Releases: bump `package.json` + `CHANGELOG.md` + the version badge in `site/index.html`, push to `main`, then push tag `vX.Y.Z` (must equal package.json) — `.github/workflows/release.yml` builds the zip. Website deploys from `site/` via `.github/workflows/pages.yml`.
 - Reply to the maintainer in Chinese.
-
-## Roadmap
-- 0.1.6: playback dialogue log + skip, dialogue box / lighting polish, model preloading, an "ai-review" label source in the workbench.
-- 0.2.0: MP4 export (offline frame stepping + WebCodecs H.264 + MP4 muxer + OfflineAudioContext AAC), adjustable output resolution. Blockers: dialogue/HUD are DOM overlays (redraw in canvas), Pixi filter resolution, 2.16:1 4K exceeds H.264 limits. Details in `dev-notes/EXPORT_FEASIBILITY.md` (local).
-- Later: BGM/SE/voice import + lip-sync, Vega (Haneoka) export, 4K / image sequence.
-- English UI is postponed; unfinished work is parked on local branch `wip/i18n-and-group-spacing` (do not push).
