@@ -46,6 +46,7 @@ test('grid: select three pictures, one click on 「Ave Mujica」 sets them all, 
   // Ctrl+Z undoes the whole batch, and the file follows
   await expect(page.getByTestId('wb-undo')).toBeDisabled(); // a fresh page has nothing to undo
   await page.locator(`[data-testid="wb-card"][data-bg-id="${ids[0]}"]`).click();
+  await page.locator(`[data-testid="wb-card"][data-bg-id="${ids[1]}"]`).click({ modifiers: ['Control'] }); // one card shows the detail editor, two keep the batch chips
   await page.getByTestId('chip-band-generic').click();
   await expect(page.locator(`[data-testid="wb-card"][data-bg-id="${ids[0]}"]`).getByTestId('bg-band')).toHaveText('通用');
   await page.keyboard.press('Control+z');
@@ -140,4 +141,35 @@ test('without an asset library: the banner, the import link, and every card stil
   await expect(page.getByTestId('wbq-title')).not.toHaveValue('');
   await expect(page.getByTestId('wbq-desc')).not.toBeEmpty();
   await expect(page.getByTestId('wb-queue').getByTestId('bg-thumb')).toHaveAttribute('data-thumb', /^(sheet|none)$/, { timeout: 20_000 });
+});
+
+test('detail editor: select one card, set the owner 初华 by search, edit title + description, save, reload: it is all still there and the asset browser shows the title', async ({ page }) => {
+  await page.goto('/label');
+  const cards = page.getByTestId('wb-card');
+  await expect(cards.first()).toBeVisible();
+  const id = (await cards.nth(3).getAttribute('data-bg-id'))!;
+  await cards.nth(3).click();
+  await expect(page.getByTestId('wbd')).toBeVisible();
+  await expect(page.getByTestId('wbd-state')).toHaveText('已保存');
+  if (await page.getByTestId('wbd-no-owner').count()) await page.getByTestId('wbd-no-owner').click(); // replace whoever is there
+  await page.getByTestId('wbd-char-search').fill('初华');
+  await page.getByTestId('wbd-add-006').click();
+  await page.getByTestId('wbd-title').fill('初华家阁楼·测试');
+  await page.getByTestId('wbd-desc').fill('在初华家的阁楼里，测试用描述。');
+  await expect(page.getByTestId('wbd-state')).toContainText('未保存');
+  await page.getByTestId('wbd-desc').press('Control+Enter');
+  await expect.poll(() => (labelsOnDisk()[id] as unknown as { title?: string; description?: string; ownerKey?: string; residents?: string[] }).title).toBe('初华家阁楼·测试');
+  const saved = labelsOnDisk()[id] as unknown as { description: string; ownerKey: string; owner: string; residents: string[]; source: string; confidence: string };
+  expect(saved).toMatchObject({ description: '在初华家的阁楼里，测试用描述。', ownerKey: '006', owner: '三角初华', residents: ['006'], source: 'user', confidence: 'confirmed' });
+  await page.reload();
+  await page.getByTestId('wb-search').fill('初华家阁楼·测试');
+  await page.getByTestId('wb-card').first().click();
+  await expect(page.getByTestId('wbd-title')).toHaveValue('初华家阁楼·测试');
+  await expect(page.getByTestId('wbd-desc')).toHaveValue('在初华家的阁楼里，测试用描述。');
+  await expect(page.getByTestId('wbd-res-006')).toBeVisible();
+  // the asset browser (catalog reloaded by the server) shows the new title
+  await page.goto('/assets');
+  await page.getByRole('tab', { name: /背景/ }).click();
+  await page.getByLabel('搜索背景').fill('初华家阁楼·测试');
+  await expect(page.getByTestId('bg-card').first().getByTestId('bg-title')).toContainText('初华家阁楼·测试');
 });

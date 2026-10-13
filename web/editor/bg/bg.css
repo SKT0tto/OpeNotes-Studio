@@ -163,3 +163,16 @@ button.bgx-badge { cursor: pointer; }
 .bgseg-thumb { display: block; width: 32px; height: 100%; flex: none; margin-right: 5px; background: var(--bgthumb) center / cover #0b0c0f; border-right: 1px solid rgba(255, 255, 255, 0.18); }
 .tl-block.bgseg.first { border-style: dashed; cursor: pointer; }
 .tl-block.bgseg.sel { outline: 1px solid var(--accent); outline-offset: 1px; }
+
+/* detail editor */
+.wbd { display: flex; flex-direction: column; gap: 10px; }
+.wbd-head { display: flex; align-items: center; justify-content: space-between; }
+.wbd-state { font-size: 11px; color: var(--text-3); }
+.wbd-state.dirty { color: #e6b450; font-weight: 600; }
+.wbd-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.wbd-field > span:first-child { font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: 0.06em; }
+.wbd input:not([type='checkbox']), .wbd textarea { width: 100%; box-sizing: border-box; background: var(--bg-3); border: 1px solid var(--line); border-radius: 6px; color: var(--text-1); padding: 6px 8px; font: inherit; font-size: 12px; }
+.wbd textarea { resize: vertical; }
+.wbd-row { display: flex; gap: 6px; }
+.wbd-check { display: flex; gap: 6px; align-items: center; font-size: 12px; margin-top: 6px; }
+.wbd-actions { display: flex; gap: 8px; position: sticky; bottom: -30px; padding: 8px 0; background: var(--bg-2); }
