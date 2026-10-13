@@ -5,9 +5,11 @@
 import type { BgLabel, LabelRules } from '../schema/assetLabels';
 import type { Project, Scene } from '../schema/project';
 import { bandText, bgFit, sceneBands } from './bandFit';
+import { bgCategoryOf } from './bgCategory';
+import { MAX_BG_SWITCHES } from './vocab';
 
 export interface ContinuityWarning {
-  kind: 'costume_change' | 'speaker_absent' | 'speaks_after_exit' | 'live_outside_performance' | 'adv_in_performance' | 'formation' | 'time_mismatch' | 'undirected' | 'bg_band_conflict' | 'bg_unknown_owner' | 'bg_not_stage';
+  kind: 'costume_change' | 'speaker_absent' | 'speaks_after_exit' | 'live_outside_performance' | 'adv_in_performance' | 'formation' | 'time_mismatch' | 'undirected' | 'bg_band_conflict' | 'bg_unknown_owner' | 'bg_not_stage' | 'bg_switch_decor' | 'bg_switch_band_conflict' | 'bg_switch_too_many' | 'bg_start_category';
   sceneId: string;
   beatId?: string;
   message: string;
@@ -20,6 +22,8 @@ export interface ContinuityLookups {
   roleOf?: (characterKey: string) => string | null | undefined;
   /** background asset id -> time ("夜间" ...). */
   bgTime?: (assetId: string) => string | null | undefined;
+  /** background asset id -> category (scene / insert / decor / event). */
+  bgCategory?: (assetId: string) => string | undefined;
   /** background asset id -> its label. */
   bgLabel?: (assetId: string) => BgLabel | undefined;
   /** characterKey -> band / sub flag. */
@@ -29,12 +33,13 @@ export interface ContinuityLookups {
 }
 
 /** Lookups for checkContinuity from a catalog (client and server share this). */
-export function catalogLookups(cat: { models: Array<{ id: string; mode: 'adv' | 'live' }>; characters: Array<{ key: string; role: string | null; bandKey: string | null; isSub: boolean }>; backgrounds: Array<{ id: string; time: string | null; labels?: BgLabel | undefined }>; bands: Array<{ key: string; name: string }>; labelRules?: LabelRules | undefined } | null): ContinuityLookups {
+export function catalogLookups(cat: { models: Array<{ id: string; mode: 'adv' | 'live' }>; characters: Array<{ key: string; role: string | null; bandKey: string | null; isSub: boolean }>; backgrounds: Array<{ id: string; time: string | null; kind?: string | null; labels?: BgLabel | undefined }>; bands: Array<{ key: string; name: string }>; labelRules?: LabelRules | undefined } | null): ContinuityLookups {
   return {
     modeOf: (id) => cat?.models.find((m) => m.id === id)?.mode,
     roleOf: (key) => cat?.characters.find((c) => c.key === key)?.role,
     bgTime: (id) => cat?.backgrounds.find((b) => b.id === id)?.time,
     bgLabel: (id) => cat?.backgrounds.find((b) => b.id === id)?.labels,
+    bgCategory: (id) => { const b = cat?.backgrounds.find((x) => x.id === id); return b ? bgCategoryOf({ id: b.id, kind: b.kind ?? null, labels: b.labels }) : undefined; },
     charInfo: (key) => cat?.characters.find((c) => c.key === key),
     bandName: (k) => cat?.bands.find((b) => b.key === k)?.name ?? k,
     ...(cat?.labelRules ? { rules: cat.labelRules } : {}),
@@ -100,6 +105,26 @@ export function checkContinuity(project: Project, lk: ContinuityLookups = {}): C
       if (fit === 'no') out.push({ kind: 'bg_band_conflict', sceneId: scene.id, message: `${t}：背景属于 ${bandText(label, bn)}，与出场角色冲突` });
       else if (fit === 'fallback') out.push({ kind: 'bg_unknown_owner', sceneId: scene.id, message: `${t}：背景的主人/归属不明（仅作兜底），请确认是否合适` });
       if (performance && !label.stage) out.push({ kind: 'bg_not_stage', sceneId: scene.id, message: `${t}：这是正式演出，背景却不是舞台` });
+    }
+
+    // the start background is a story background
+    const startCat = lk.bgCategory?.(scene.background.assetId);
+    if (startCat === 'decor' || startCat === 'insert') out.push({ kind: 'bg_start_category', sceneId: scene.id, message: `${t}：开场背景是${startCat === 'decor' ? '装饰素材（logo / 纯色 / 界面）' : '插入镜头素材'}，建议换成剧情背景` });
+
+    // background switches inside the scene (P20)
+    const switches = scene.tracks.filter((tr) => tr.channel === 'background').flatMap((tr) => tr.keys);
+    if (switches.length > MAX_BG_SWITCHES) out.push({ kind: 'bg_switch_too_many', sceneId: scene.id, message: `${t}：一个场景里换了 ${switches.length} 次背景（超过 ${MAX_BG_SWITCHES} 次），观感会很碎` });
+    for (const k of switches) {
+      const v = k.value as { assetId: string; purpose?: string };
+      if (lk.bgCategory?.(v.assetId) === 'decor') out.push({ kind: 'bg_switch_decor', sceneId: scene.id, beatId: k.at.beatId, message: `${t}：背景切换用了装饰素材 ${v.assetId}（手动选择的话请确认）` });
+      const lab = lk.bgLabel?.(v.assetId);
+      if (lab && lk.charInfo && v.purpose !== 'insert') {
+        const keys = Object.keys(scene.wardrobe).map(keyOf).filter(Boolean);
+        const infos = new Map(keys.flatMap((kk) => { const i = lk.charInfo!(kk); return i ? [[kk, i] as const] : []; }));
+        if (bgFit(lab, { bands: sceneBands(infos, keys), cast: keys, guestOf: scene.brief?.guestOf ?? null, mood: scene.brief?.mood, text: `${scene.title} ${scene.brief?.mood ?? ''}` }, lk.rules) === 'no') {
+          out.push({ kind: 'bg_switch_band_conflict', sceneId: scene.id, beatId: k.at.beatId, message: `${t}：切换后的背景属于 ${bandText(lab, lk.bandName ?? ((x: string) => x))}，与出场角色冲突` });
+        }
+      }
     }
 
     // speakers: on stage, and not after leaving

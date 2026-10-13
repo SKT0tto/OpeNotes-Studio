@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { costumeLabelZh } from '@shared/catalog/labels';
-import { distinct, filterBackgrounds } from '@shared/catalog/search';
-import type { CharacterEntry, CompactCatalog, CompactModel, ModelEntry } from '@shared/schema/assets';
+import { CATEGORY_LABEL, reviewOf, searchBackgrounds } from '@shared/catalog/bgUi';
+import { distinct } from '@shared/catalog/search';
+import { bgCategoryOf } from '@shared/director/bgCategory';
+import type { BgCategory } from '@shared/schema/assetLabels';
+import type { BackgroundEntry, CharacterEntry, CompactCatalog, CompactModel, ModelEntry } from '@shared/schema/assets';
 import { fetchCatalog, fetchModel } from '../../api';
-import { resetCatalogCache } from '../useCatalog';
-import { LabelBadges, LabelEditor } from './BgLabelUi';
+import { BgCard } from '../bg/BgCard';
+import { useShowDecor } from '../bg/useShowDecor';
 
 type Tab = 'characters' | 'backgrounds' | 'audio';
-const KIND_LABEL: Record<string, string> = { scene: '场景', insert: '插图', decorative: '装饰' };
 const PAGE = 60;
 
 export function AssetBrowser() {
@@ -37,7 +39,7 @@ export function AssetBrowser() {
         ))}
       </nav>
       {tab === 'characters' && <CharactersTab catalog={catalog} />}
-      {tab === 'backgrounds' && <BackgroundsTab catalog={catalog} onChanged={async () => { resetCatalogCache(); setCatalog(await fetchCatalog()); }} />}
+      {tab === 'backgrounds' && <BackgroundsTab catalog={catalog} />}
       {tab === 'audio' && <AudioTab catalog={catalog} />}
     </section>
   );
@@ -185,9 +187,9 @@ function ModelDetail({ id }: { id: string }) {
   );
 }
 
-function BackgroundsTab({ catalog, onChanged }: { catalog: CompactCatalog; onChanged: () => Promise<void> }) {
+function BackgroundsTab({ catalog }: { catalog: CompactCatalog }) {
   const [query, setQuery] = useState('');
-  const [kind, setKind] = useState('');
+  const [cat, setCat] = useState<'' | BgCategory>('');
   const [setting, setSetting] = useState('');
   const [time, setTime] = useState('');
   const [limit, setLimit] = useState(PAGE);
@@ -196,111 +198,107 @@ function BackgroundsTab({ catalog, onChanged }: { catalog: CompactCatalog; onCha
   const [conf, setConf] = useState('');
   const [onlyStage, setOnlyStage] = useState(false);
   const [onlyUnknown, setOnlyUnknown] = useState(false);
-  const [sel, setSel] = useState<string[]>([]);
-  const [anchor, setAnchor] = useState<string | null>(null);
+  const [showDecor, setShowDecor] = useShowDecor();
+  const [unfoldAll, setUnfoldAll] = useState(false);
+  const [unfolded, setUnfolded] = useState<string[]>([]);
 
   const places = useMemo(() => distinct(catalog.backgrounds.map((b) => b.labels?.placeName ?? b.labels?.location ?? null)), [catalog.backgrounds]);
-  const kinds = useMemo(() => distinct(catalog.backgrounds.map((b) => b.kind)), [catalog.backgrounds]);
-  const settings = useMemo(() => distinct(catalog.backgrounds.map((b) => b.setting)), [catalog.backgrounds]);
-  const times = useMemo(() => distinct(catalog.backgrounds.map((b) => b.time)), [catalog.backgrounds]);
-  const hits = useMemo(
-    () => filterBackgrounds(catalog.backgrounds, { query, kind, setting, time }).filter((b) => {
+  const copiesOf = useMemo(() => {
+    const m = new Map<string, BackgroundEntry[]>();
+    for (const b of catalog.backgrounds) {
+      const d = b.labels?.duplicateOf;
+      if (d) m.set(d, [...(m.get(d) ?? []), b]);
+    }
+    return m;
+  }, [catalog.backgrounds]);
+  const base = useMemo(
+    () => searchBackgrounds(catalog.backgrounds, query).filter((b) => {
       const l = b.labels;
+      const c = bgCategoryOf(b);
+      if (c === 'decor' && !showDecor && cat !== 'decor') return false;
+      if (cat && c !== cat) return false;
+      if (setting && b.setting !== setting) return false;
+      if (time && b.time !== time) return false;
       if (band === '__unknown') { if (l && l.bands.length > 0) return false; } else if (band && !(l?.bands.includes(band))) return false;
       if (place && (l?.placeName ?? l?.location) !== place) return false;
       if (conf && l?.confidence !== conf) return false;
       if (onlyStage && !l?.stage) return false;
-      if (onlyUnknown && !(l?.confidence === 'unknown' || (l && l.bands.length === 0))) return false;
+      if (onlyUnknown && reviewOf(b) === 'confirmed') return false;
       return true;
     }),
-    [catalog.backgrounds, query, kind, setting, time, band, place, conf, onlyStage, onlyUnknown],
+    [catalog.backgrounds, query, cat, setting, time, band, place, conf, onlyStage, onlyUnknown, showDecor],
   );
-  const selected = useMemo(() => catalog.backgrounds.filter((b) => sel.includes(b.id)), [catalog.backgrounds, sel]);
-  const click = (e: React.MouseEvent, id: string) => {
-    if (e.shiftKey && anchor) {
-      const ids = hits.map((b) => b.id);
-      const [a, z] = [ids.indexOf(anchor), ids.indexOf(id)];
-      if (a >= 0 && z >= 0) return setSel([...new Set([...sel, ...ids.slice(Math.min(a, z), Math.max(a, z) + 1)])]);
+  // a duplicate copy is folded behind its master ("同一画面 ×N") unless unfolded; a copy whose master is filtered out is shown on its own
+  const hits = useMemo(() => {
+    const ids = new Set(base.map((b) => b.id));
+    const out: BackgroundEntry[] = [];
+    for (const b of base) {
+      const master = b.labels?.duplicateOf;
+      if (master && ids.has(master) && !unfoldAll && !unfolded.includes(master)) continue;
+      out.push(b);
     }
-    setAnchor(id);
-    if (e.ctrlKey || e.metaKey) setSel(sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id]);
-    else setSel(sel.length === 1 && sel[0] === id ? [] : [id]);
-  };
-  const samePlace = () => {
-    const p = selected[0]?.labels?.placeName ?? selected[0]?.labels?.location;
-    if (p) setSel(catalog.backgrounds.filter((b) => (b.labels?.placeName ?? b.labels?.location) === p).map((b) => b.id));
-  };
-
+    return out;
+  }, [base, unfoldAll, unfolded]);
   const reset = (fn: (v: string) => void) => (e: { target: { value: string } }) => { fn(e.target.value); setLimit(PAGE); };
+  const chips = <T extends string>(label: string, value: T | '', set: (v: T | '') => void, options: Array<[T, string]>, testid: string) => (
+    <div className="bgx-chiprow" role="group" aria-label={label} data-testid={testid}>
+      <span className="bgx-chiplabel">{label}</span>
+      <button type="button" className={`bgx-chip ${value === '' ? 'on' : ''}`} onClick={() => { set(''); setLimit(PAGE); }}>全部</button>
+      {options.map(([k, text]) => (
+        <button key={k} type="button" className={`bgx-chip ${value === k ? 'on' : ''}`} onClick={() => { set(value === k ? '' : k); setLimit(PAGE); }} data-chip={k}>{text}</button>
+      ))}
+    </div>
+  );
+  const catOptions: Array<[BgCategory, string]> = [['scene', CATEGORY_LABEL.scene], ['insert', CATEGORY_LABEL.insert], ['event', CATEGORY_LABEL.event], ...(showDecor ? ([['decor', CATEGORY_LABEL.decor]] as Array<[BgCategory, string]>) : [])];
+  const timeOptions = distinct(catalog.backgrounds.map((b) => b.time)).map((t) => [t, t] as [string, string]);
   return (
     <div className="content full">
-      <div className="filters">
-        <input type="search" placeholder="搜索名称 / 别名 / 描述，多个词用空格（如 RiNG 夜间）" value={query} onChange={reset(setQuery)} aria-label="搜索背景" />
-        <Select label="类型" value={kind} onChange={reset(setKind)} options={kinds} render={(k) => KIND_LABEL[k] ?? k} />
-        <Select label="场所" value={setting} onChange={reset(setSetting)} options={settings} />
-        <Select label="时间" value={time} onChange={reset(setTime)} options={times} />
-        <label className="sel">乐队
-          <select value={band} onChange={reset(setBand)} data-testid="bg-filter-band">
-            <option value="">全部</option>
-            <option value="generic">通用</option>
-            {catalog.bands.map((b) => <option key={b.key} value={b.key}>{b.name}</option>)}
-            <option value="__unknown">未知</option>
-          </select>
-        </label>
-        <Select label="地点" value={place} onChange={reset(setPlace)} options={places} />
-        <label className="sel">置信度
-          <select value={conf} onChange={reset(setConf)} data-testid="bg-filter-conf"><option value="">全部</option><option value="confirmed">已确认</option><option value="likely">推测</option><option value="unknown">待确认</option></select>
-        </label>
-        <label className="sel"><input type="checkbox" checked={onlyStage} onChange={(e) => { setOnlyStage(e.target.checked); setLimit(PAGE); }} data-testid="bg-filter-stage" />仅舞台</label>
-        <label className="sel"><input type="checkbox" checked={onlyUnknown} onChange={(e) => { setOnlyUnknown(e.target.checked); setLimit(PAGE); }} data-testid="bg-filter-unknown" />仅未知/待确认</label>
+      <div className="filters bgx-filters">
+        <input type="search" placeholder="搜索标题 / 描述 / 标签 / 地点，多个词用空格（如 夜 卧室）" value={query} onChange={reset(setQuery)} aria-label="搜索背景" data-testid="bg-search" />
+        <label className="sel"><input type="checkbox" checked={showDecor} onChange={(e) => { setShowDecor(e.target.checked); setLimit(PAGE); }} data-testid="bg-show-decor" />显示装饰素材</label>
+        <label className="sel"><input type="checkbox" checked={unfoldAll} onChange={(e) => setUnfoldAll(e.target.checked)} data-testid="bg-unfold" />展开重复素材</label>
         <span className="hint" data-testid="bg-count">命中 {hits.length} / {catalog.backgrounds.length}</span>
       </div>
-      {selected.length > 0 && (
-        <div className="label-bar">
-          <LabelEditor key={sel.join(',')} catalog={catalog} selected={selected} onChanged={onChanged} />
-          <div className="row-actions">
-            <button className="btn" onClick={samePlace} data-testid="le-same-place">选中同一地点的全部变体</button>
-            <button className="btn" onClick={() => setSel(hits.map((b) => b.id))} data-testid="le-select-hits">选中全部命中（{hits.length}）</button>
-            <button className="btn" onClick={() => setSel([])}>取消选择</button>
-          </div>
+      <div className="bgx-filterbox">
+        {chips('类别', cat, setCat, catOptions, 'bg-chips-category')}
+        {chips('时段', time, setTime, timeOptions, 'bg-chips-time')}
+        {chips('室内外', setting, setSetting, distinct(catalog.backgrounds.map((b) => b.setting)).map((t) => [t, t] as [string, string]), 'bg-chips-setting')}
+        <div className="bgx-chiprow">
+          <label className="sel">乐队
+            <select value={band} onChange={reset(setBand)} data-testid="bg-filter-band">
+              <option value="">全部</option>
+              <option value="generic">通用</option>
+              {catalog.bands.map((b) => <option key={b.key} value={b.key}>{b.name}</option>)}
+              <option value="__unknown">未知</option>
+            </select>
+          </label>
+          <label className="sel">地点
+            <select value={place} onChange={reset(setPlace)} aria-label="地点"><option value="">全部</option>{places.map((o) => <option key={o} value={o}>{o}</option>)}</select>
+          </label>
+          <label className="sel">置信度
+            <select value={conf} onChange={reset(setConf)} data-testid="bg-filter-conf"><option value="">全部</option><option value="confirmed">已确认</option><option value="likely">推测</option><option value="unknown">待确认</option></select>
+          </label>
+          <label className="sel"><input type="checkbox" checked={onlyStage} onChange={(e) => { setOnlyStage(e.target.checked); setLimit(PAGE); }} data-testid="bg-filter-stage" />仅舞台</label>
+          <label className="sel"><input type="checkbox" checked={onlyUnknown} onChange={(e) => { setOnlyUnknown(e.target.checked); setLimit(PAGE); }} data-testid="bg-filter-unknown" />仅待确认</label>
         </div>
-      )}
-      <div className="cards bg" data-testid="bg-cards">
-        {hits.slice(0, limit).map((b) => (
-          <figure key={b.id} className={`card bgcard${sel.includes(b.id) ? ' selected' : ''}`} data-testid="bg-card" data-bg-id={b.id} data-selected={sel.includes(b.id)} title={b.description ?? undefined} onClick={(e) => click(e, b.id)}>
-            <div className="thumb wide"><img src={b.url} loading="lazy" decoding="async" alt={b.name} /></div>
-            <figcaption className="meta">
-              <div className="mid">{b.name}</div>
-              <div className="label">#{b.id} · {b.width}×{b.height}</div>
-              <div className="badges">
-                {b.kind && <span className="badge">{KIND_LABEL[b.kind] ?? b.kind}</span>}
-                {b.setting && <span className="badge">{b.setting}</span>}
-                {b.time && <span className="badge">{b.time}</span>}
-                <LabelBadges label={b.labels} catalog={catalog} />
-              </div>
-            </figcaption>
-          </figure>
-        ))}
+      </div>
+      <div className="bgx-grid browser" data-testid="bg-cards">
+        {hits.slice(0, limit).map((b) => {
+          const copies = copiesOf.get(b.id) ?? [];
+          const shownCopies = unfoldAll || unfolded.includes(b.id);
+          return (
+            <BgCard
+              key={b.id} bg={b} copies={copies.length}
+              {...(copies.length > 0 && !unfoldAll ? { onCopies: () => setUnfolded(shownCopies ? unfolded.filter((x) => x !== b.id) : [...unfolded, b.id]) } : {})}
+            />
+          );
+        })}
       </div>
       {hits.length > limit && (
         <button className="more" onClick={() => setLimit(limit + PAGE)}>显示更多（还有 {hits.length - limit} 张）</button>
       )}
       {hits.length === 0 && <p className="empty">没有匹配的背景。</p>}
     </div>
-  );
-}
-
-function Select(props: {
-  label: string; value: string; options: string[]; onChange: (e: { target: { value: string } }) => void; render?: (v: string) => string;
-}) {
-  return (
-    <label className="sel">
-      {props.label}
-      <select value={props.value} onChange={props.onChange}>
-        <option value="">全部</option>
-        {props.options.map((o) => <option key={o} value={o}>{props.render?.(o) ?? o}</option>)}
-      </select>
-    </label>
   );
 }
 

@@ -3,6 +3,7 @@ import type { ModelEntry } from '../schema/assets';
 import { depthNameOf, slotNameOf } from './vocab';
 import { lookup, modelLabel, rankBackgrounds, selectable, type DirectorCatalog } from './resources';
 import { bandText, isUnknownLabel } from './bandFit';
+import { autoSelectable, bgCategoryOf } from './bgCategory';
 
 const roleWord = (r: string | null) => r ?? '—';
 
@@ -37,12 +38,24 @@ export function breakdownDigest(cat: DirectorCatalog, opts: DigestOptions = {}):
   }
 
   // backgrounds of unknown ownership (and rarely-used ones) are never offered by default
-  const offered = cat.backgrounds.filter((b) => !b.labels || (!(isUnknownLabel(b.labels) && (cat.labelRules?.unknownPolicy ?? 'avoid') !== 'allow') && !b.labels.usage));
+  const usable = (b: (typeof cat.backgrounds)[number]) => !b.labels || (!(isUnknownLabel(b.labels) && (cat.labelRules?.unknownPolicy ?? 'avoid') !== 'allow') && !b.labels.usage);
+  const offered = cat.backgrounds.filter((b) => autoSelectable(b, 'scene') && usable(b));
   const bgs = opts.backgroundLimit && opts.text ? rankBackgrounds(offered, opts.text).slice(0, opts.backgroundLimit) : [...offered];
   const bandName = (k: string) => cat.bands.find((b) => b.key === k)?.name ?? k;
-  lines.push('', '## 背景（id｜名称｜地点｜室内外｜时间｜乐队｜舞台｜简述）');
+  lines.push('', '## 背景（id｜标题｜地点｜室内外｜时间｜乐队｜舞台｜画面内容）');
   for (const b of bgs.sort((a, c) => (a.id < c.id ? -1 : 1))) {
-    lines.push(`${b.id}｜${b.name}｜${b.location ?? ''}｜${b.setting ?? ''}｜${b.time ?? ''}｜${bandText(b.labels, bandName)}｜${b.labels?.stage ? '是' : '否'}｜${(b.description ?? '').slice(0, 24)}`);
+    lines.push(`${b.id}｜${b.name}｜${b.location ?? ''}｜${b.setting ?? ''}｜${b.time ?? ''}｜${bandText(b.labels, bandName)}｜${b.labels?.stage ? '是' : '否'}｜${(b.description ?? '').slice(0, 40)}`);
+  }
+  const byId = (a: { id: string }, c: { id: string }) => (a.id < c.id ? -1 : 1);
+  const inserts = cat.backgrounds.filter((b) => autoSelectable(b, 'insert') && bgCategoryOf(b) === 'insert').sort(byId);
+  if (inserts.length > 0) {
+    lines.push('', '## 插入镜头候选（只能用在无人物的插入/空镜头 beat，id｜标题）');
+    for (const b of inserts) lines.push(`${b.id}｜${b.name}`);
+  }
+  const events = cat.backgrounds.filter((b) => autoSelectable(b, 'event') && bgCategoryOf(b) === 'event' && !b.labels?.stage).sort(byId);
+  if (events.length > 0) {
+    lines.push('', '## 特殊画面（仅当原文有梦境、回忆、虚拟空间等明确线索时才可使用，id｜标题）');
+    for (const b of events) lines.push(`${b.id}｜${b.name}`);
   }
   return lines.join('\n');
 }

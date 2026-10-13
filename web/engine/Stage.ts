@@ -27,6 +27,8 @@ const hexToRgb01 = (hex: string): [number, number, number] => {
 /** What the stage needs to know about the scene on screen. */
 export interface StageScene {
   bgAssetId: string;
+  /** Every background the scene shows (start background and background-track keys); all are loaded before the scene is shown. */
+  bgAssetIds: string[];
   bg: BgInfo;
   modelIds: string[];
   /** Motion names each model will play (warmed before the scene is shown). */
@@ -55,6 +57,7 @@ export function stageSceneOf(s: CompiledScene): StageScene {
   const flat = (m: Record<string, Set<string>>) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k, [...v]]));
   return {
     bgAssetId: s.bgAssetId,
+    bgAssetIds: [...new Set(s.bgSegments.map((g) => g.assetId))],
     bg: s.bg,
     modelIds: [...ids],
     motions: flat(motions),
@@ -85,6 +88,8 @@ export class Stage {
   readonly sceneRoot = new Container();
   readonly camera: Camera;
   private readonly bgLayer: BackgroundLayer;
+  /** Textures of the backgrounds of the prepared scenes (filled by `prepare`, read by `apply`). */
+  private readonly bgTextures = new Map<string, import('pixi.js').Texture>();
   get bgViewZoom(): number {
     return this.bgLayer.viewZoom;
   }
@@ -153,7 +158,7 @@ export class Stage {
   async prepare(scene: StageScene): Promise<void> {
     this.library.pin([...(this.scene?.modelIds ?? []), ...scene.modelIds]);
     await Promise.all([
-      this.library.backgroundTexture(scene.bgAssetId),
+      ...scene.bgAssetIds.map(async (id) => void this.bgTextures.set(id, await this.library.backgroundTexture(id))),
       ...scene.modelIds.map(async (id) => {
         const actor = await this.library.acquire(id);
         await Promise.all([actor.preloadMotions(scene.motions[id] ?? []), actor.preloadExpressions(scene.expressions[id] ?? [])]);
@@ -168,7 +173,6 @@ export class Stage {
     for (const slot of this.slots.values()) this.dropSlot(slot);
     this.slots.clear();
     this.scene = scene;
-    this.bgLayer.setTexture(scene.bgAssetId, await this.library.backgroundTexture(scene.bgAssetId));
     this.camera.bg = scene.bg;
   }
 
@@ -201,7 +205,16 @@ export class Stage {
     this.actorLayer.scale.set(lt.scale);
     this.actorLayer.position.set(lt.x, lt.y);
     const px = this.height / 720;
-    this.bgLayer.apply(scene.bg, state.camera, state.background.framing, state.background.blur * px);
+    const bgState = state.background;
+    const main = this.bgTextures.get(bgState.assetId);
+    if (main) {
+      const nx = bgState.next ? this.bgTextures.get(bgState.next.assetId) : undefined;
+      this.bgLayer.apply(
+        scene.bg, state.camera, bgState.blur * px,
+        { assetId: bgState.assetId, texture: main, framing: bgState.framing, src: bgState.src },
+        bgState.next && nx ? { assetId: bgState.next.assetId, texture: nx, framing: bgState.next.framing, src: bgState.next.src, alpha: bgState.next.alpha } : undefined,
+      );
+    }
 
     const present = new Set(state.actors.map((a) => a.castId));
     for (const [id, slot] of this.slots) {

@@ -1,15 +1,16 @@
 /** Right-hand inspector: every value of the selected project / scene / beat is a field you can edit by hand. */
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Draft } from 'immer';
 import { EMOTION_LABEL, costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
-import { filterBackgrounds } from '@shared/catalog/search';
-import { bandText, bgFit, sceneBands } from '@shared/director/bandFit';
-import type { BackgroundEntry, CompactCatalog } from '@shared/schema/assets';
+import { bandText } from '@shared/director/bandFit';
+import { bgSwitchValue } from '@shared/director/bgKeys';
+import { bgCategoryOf } from '@shared/director/bgCategory';
+import type { CompactCatalog } from '@shared/schema/assets';
 import { resolveStyle } from '@shared/style/ournotes';
 import type { Beat, Project, Scene } from '@shared/schema/project';
 import { EMOTION_TAGS } from '@shared/timeline/compile';
 import type { CompiledProject, RenderState } from '@shared/timeline/types';
-import { addCast, selectActor, toggleActorInScene } from '../../store/actions';
+import { addCast, addKeyAt, selectActor, toggleActorInScene } from '../../store/actions';
 import { defaultModelOf } from '../castModel';
 import { touch, useProject } from '../../store/projectStore';
 import { useUi, type InspectorTab } from '../../store/uiStore';
@@ -17,7 +18,10 @@ import { FieldLock, NumField, Row, Section, SliderField, setFieldLock } from '..
 import { ActorControls } from './ActorFields';
 import { KeyFields } from './KeyFields';
 import { ShotFields } from './ShotFields';
-import { LabelBadges } from './BgLabelUi';
+import { BgBadges } from '../bg/BgCard';
+import { useSceneFit } from '../bg/bgFit';
+import { BgPicker } from '../bg/BgPicker';
+import { BgThumb } from '../bg/BgThumb';
 import { StyleSection } from './StyleFields';
 
 const TRANSITIONS: Array<[Scene['transitionIn']['kind'], string]> = [
@@ -50,7 +54,7 @@ export function Inspector({ catalog, compiled, state, t }: { catalog: CompactCat
         ))}
       </nav>
       {tab === 'project' && <ProjectFields project={project} catalog={catalog} />}
-      {tab === 'scene' && (scene ? <SceneFields project={project} scene={scene} catalog={catalog} /> : need('选择一个场景后，这里显示它的转场、背景、站位与音乐。'))}
+      {tab === 'scene' && (scene ? <SceneFields project={project} scene={scene} catalog={catalog} compiled={compiled ?? null} t={t} /> : need('选择一个场景后，这里显示它的转场、背景、站位与音乐。'))}
       {tab === 'beat' && (scene && beat ? <BeatFields project={project} scene={scene} beat={beat} compiled={compiled ?? null} /> : need('在左侧剧本里选择一句台词后，这里编辑它。'))}
       {tab === 'actor' && (scene ? <ActorTab project={project} scene={scene} castId={castId} catalog={catalog} state={state} t={t} /> : need('选择场景后可以编辑其中的角色。'))}
       {tab === 'shot' && (scene && beat ? <Section title="镜头" hint={beat.id} testid="insp-shot-section"><ShotFields project={project} scene={scene} beat={beat} compiled={compiled ?? null} /></Section> : need('选择一句台词后，这里编辑它的镜头。'))}
@@ -132,7 +136,7 @@ function ProjectFields({ project, catalog }: { project: Project; catalog: Compac
   );
 }
 
-function SceneFields({ project, scene, catalog }: { project: Project; scene: Scene; catalog: CompactCatalog | null }) {
+function SceneFields({ project, scene, catalog, compiled, t }: { project: Project; scene: Scene; catalog: CompactCatalog | null; compiled: CompiledProject | null; t: number }) {
   const { applyEdit, seal } = useEdit();
   const up = (label: string, fn: (s: Draft<Scene>) => void, coalesce?: string) =>
     applyEdit((d) => {
@@ -167,7 +171,7 @@ function SceneFields({ project, scene, catalog }: { project: Project; scene: Sce
         </Row>
       </Section>
       <Section title="背景" testid="insp-background">
-        <BackgroundPicker project={project} scene={scene} catalog={catalog} onPick={(id) => up('更换背景', (s) => { s.background.assetId = id; touch(s.background.meta); })} lock={lock((s) => s.background.meta)} />
+        <BackgroundSection project={project} scene={scene} catalog={catalog} compiled={compiled} t={t} onPick={(id) => up('更换背景', (s) => { s.background.assetId = id; touch(s.background.meta); })} lock={lock((s) => s.background.meta)} />
         <Row label="取景缩放"><SliderField value={scene.background.framing.zoom} min={1} max={3} step={0.01} testid="insp-bg-zoom" onChange={(v) => up('背景取景', (s) => { s.background.framing.zoom = v; touch(s.background.meta); }, 'bgzoom')} onCommit={seal} /></Row>
         <Row label="取景 X"><NumField value={scene.background.framing.offsetX} step={5} digits={0} unit="px" onChange={(v) => up('背景取景', (s) => { s.background.framing.offsetX = v; touch(s.background.meta); }, 'bgx')} onCommit={seal} /></Row>
         <Row label="取景 Y"><NumField value={scene.background.framing.offsetY} step={5} digits={0} unit="px" onChange={(v) => up('背景取景', (s) => { s.background.framing.offsetY = v; touch(s.background.meta); }, 'bgy')} onCommit={seal} /></Row>
@@ -251,38 +255,65 @@ function SceneFields({ project, scene, catalog }: { project: Project; scene: Sce
   );
 }
 
-function BackgroundPicker({ project, scene, catalog, onPick, lock }: { project: Project; scene: Scene; catalog: CompactCatalog | null; onPick: (id: string) => void; lock: (l: boolean) => void }) {
-  const [query, setQuery] = useState('');
+const PURPOSE_LABEL: Record<string, string> = { move: '换地点', insert: '插入镜头', time: '换时段' };
+const BG_TRANS_LABEL: Record<string, string> = { cut: '硬切', dip_black: '黑场', crossfade: '叠化' };
+
+/** The scene's backgrounds: the start picture, the switches along the timeline, and "switch here" at the playhead. */
+function BackgroundSection({ project, scene, catalog, compiled, t, onPick, lock }: { project: Project; scene: Scene; catalog: CompactCatalog | null; compiled: CompiledProject | null; t: number; onPick: (id: string) => void; lock: (l: boolean) => void }) {
+  const [picker, setPicker] = useState<'start' | 'switch' | null>(null);
+  const fit = useSceneFit(project, scene, catalog);
   const current = catalog?.backgrounds.find((b) => b.id === scene.background.assetId);
-  const results = useMemo(() => (catalog ? filterBackgrounds(catalog.backgrounds, { query }).slice(0, 80) : []), [catalog, query]);
-  // who is on stage decides which backgrounds fit; a manual choice is always allowed, but flagged
-  const keys = Object.keys(scene.wardrobe).map((id) => project.cast.find((c) => c.id === id)?.characterKey ?? '').filter(Boolean);
-  const who = (() => {
-    const infos = new Map((catalog?.characters ?? []).map((c) => [c.key, c] as const));
-    return { bands: sceneBands(infos, keys), cast: keys, guestOf: scene.brief?.guestOf ?? null, mood: scene.brief?.mood, text: `${scene.title} ${scene.brief?.mood ?? ''}` };
-  })();
   const bandName = (k: string) => catalog?.bands.find((b) => b.key === k)?.name ?? k;
-  const fitOf = (b: BackgroundEntry | undefined) => bgFit(b?.labels, who, catalog?.labelRules);
-  const mark = (b: BackgroundEntry) => (fitOf(b) === 'no' ? '⚠ ' : fitOf(b) === 'fallback' ? '？ ' : '') + b.name + (b.labels ? ` 〔${bandText(b.labels, bandName)}${b.labels.stage ? '·舞台' : ''}〕` : '');
-  const curFit = current ? fitOf(current) : 'ok';
+  const curFit = current ? fit(current) : null;
   const notStage = scene.brief?.isPerformance === true && current?.labels && !current.labels.stage;
+  const cScene = compiled?.scenes.find((x) => x.id === scene.id);
+  const segs = cScene?.bgSegments ?? [];
+  const nowIdx = segs.reduce((acc, g, i) => (g.start <= t + 1e-6 ? i : acc), 0);
+  const nameOf = (id: string) => catalog?.backgrounds.find((b) => b.id === id)?.name ?? id;
+  const doSwitch = (id: string) => {
+    setPicker(null);
+    const at = Math.max(t, cScene?.contentStart ?? 0);
+    const keyId = addKeyAt(scene.id, { kind: 'stage' }, 'background', bgSwitchValue(id, 'cut', 'move'), at, 0);
+    if (keyId) useUi.getState().set({ keySel: [keyId], inspectorTab: 'key' });
+  };
   return (
     <>
-      <Row label="背景" meta={scene.background.meta} onLock={lock}>
-        <select value={scene.background.assetId} data-testid="insp-bg" onChange={(e) => onPick(e.target.value)}>
-          {!current && <option value={scene.background.assetId}>{scene.background.assetId}（素材库中缺失）</option>}
-          {current && !results.includes(current) && <option value={current.id}>{mark(current)}</option>}
-          {results.map((b) => <option key={b.id} value={b.id} title={b.id}>{mark(b)}</option>)}
-        </select>
+      <Row label="开场背景" meta={scene.background.meta} onLock={lock}>
+        <button type="button" className="btn-s" data-testid="insp-bg" onClick={() => setPicker('start')}>更换…</button>
       </Row>
-      {current?.labels && <div className="badges" data-testid="insp-bg-label"><LabelBadges label={current.labels} catalog={catalog!} /></div>}
-      {curFit === 'no' && <p className="bg-warn" data-testid="insp-bg-warn">⚠ 这个背景属于 {bandText(current!.labels, bandName)}，与场景里的出场角色不符（手动选择仍然有效）。</p>}
-      {curFit === 'fallback' && <p className="bg-warn" data-testid="insp-bg-warn">？ 这个背景的主人/归属不明，请确认是否合适。</p>}
+      <div className="bgx-cur" data-testid="insp-bg-card">
+        {current ? <BgThumb bg={current} w={240} /> : <div className="bgx-thumb"><div className="bgx-ph"><strong>{scene.background.assetId}</strong><span>素材库中缺失</span></div></div>}
+        <div className="t">
+          <strong data-testid="insp-bg-title">{current?.name ?? scene.background.assetId}</strong>
+          <small>{current?.description ?? ''}</small>
+          {current && <BgBadges bg={current} />}
+        </div>
+      </div>
+      {curFit?.level === 'no' && <p className="bg-warn" data-testid="insp-bg-warn">⚠ {current?.labels && bgCategoryOf(current) === 'scene' ? `这个背景属于 ${bandText(current.labels, bandName)}，与场景里的出场角色不符` : curFit.reason}（手动选择仍然有效）。</p>}
+      {curFit?.level === 'fallback' && <p className="bg-warn" data-testid="insp-bg-warn">？ 这个背景的主人/归属不明，请确认是否合适。</p>}
       {notStage && <p className="bg-warn" data-testid="insp-bg-warn-stage">⚠ 这是正式演出，但这个背景不是舞台。</p>}
-      <Row label="搜索">
-        <input className="text" type="search" placeholder="名称 / 地点 / 时间，多个词用空格" value={query} onChange={(e) => setQuery(e.target.value)} data-testid="insp-bg-search" />
+      <Row label="切换">
+        <button type="button" className="btn-s" data-testid="insp-bg-switch" onClick={() => setPicker('switch')} title="在播放头位置给这个场景添加一次背景切换">在此处切换背景…</button>
       </Row>
-      {current && <img className="bg-thumb" src={current.url} alt={current.name} loading="lazy" />}
+      {segs.length > 1 && (
+        <div className="bgx-segs" data-testid="insp-bg-segs">
+          {segs.map((g, i) => (
+            <div key={`${g.start}:${g.assetId}`} className={`bgx-seg${i === nowIdx ? ' now' : ''}`} data-testid="insp-bg-seg">
+              <span className="time">{g.start.toFixed(1)}s</span>
+              <span className="t" title={nameOf(g.assetId)}>{nameOf(g.assetId)}</span>
+              <span className="dim">{i === 0 ? '开场' : `${PURPOSE_LABEL[g.purpose]} · ${BG_TRANS_LABEL[g.transition]}`}</span>
+              {g.keyId && <button type="button" className="btn-s" onClick={() => useUi.getState().set({ keySel: [g.keyId!], inspectorTab: 'key' })}>编辑</button>}
+            </div>
+          ))}
+        </div>
+      )}
+      {picker && catalog && (
+        <BgPicker
+          backgrounds={catalog.backgrounds} current={picker === 'start' ? scene.background.assetId : (segs[nowIdx]?.assetId ?? null)}
+          title={picker === 'start' ? '选择开场背景' : `在 ${t.toFixed(1)}s 处切换到…`} fit={fit}
+          onPick={(id) => { if (picker === 'start') { setPicker(null); onPick(id); } else doSwitch(id); }} onClose={() => setPicker(null)}
+        />
+      )}
     </>
   );
 }

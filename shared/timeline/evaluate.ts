@@ -35,6 +35,26 @@ export function sceneIndexAt(c: CompiledProject, t: number): number {
   return idx;
 }
 
+const smooth = (x: number) => x * x * (3 - 2 * x);
+const srcOf = (b: { width: number; height: number }) => ({ width: b.width, height: b.height });
+
+/** The picture(s) on screen at `t`: a hard cut (or a dip, which rides on the fade channel) shows one; a crossfade shows the old one with the new on top. */
+export function backgroundAt(s: CompiledScene, t: number): RenderState['background'] {
+  const segs = s.bgSegments;
+  let i = 0;
+  segs.forEach((sg, k) => {
+    if (sg.start <= t + 1e-9) i = k;
+  });
+  const cur = segs[i]!;
+  const blur = dofBlur(sampleNum(s.dof, t, 0));
+  const prev = segs[i - 1];
+  if (prev && cur.transition === 'crossfade' && cur.transitionSeconds > 0 && t < cur.start + cur.transitionSeconds) {
+    const alpha = smooth(clamp((t - cur.start) / cur.transitionSeconds, 0, 1));
+    return { assetId: prev.assetId, framing: prev.framing, blur, src: srcOf(prev.bg), next: { assetId: cur.assetId, framing: cur.framing, alpha, src: srcOf(cur.bg) } };
+  }
+  return { assetId: cur.assetId, framing: cur.framing, blur, src: srcOf(cur.bg) };
+}
+
 function evalActor(s: CompiledScene, a: CompiledActor, t: number, ctxBeat: SceneBeat): ActorRender {
   const model = lastBefore(a.models, t)?.modelId ?? a.initialModelId;
   const pos = sampleKeys(a.position, t, a.initialPos, (k) => ({ slot: k.slot, depth: k.depth }), (p, q, e) => ({ slot: lerp(p.slot, q.slot, e), depth: lerp(p.depth, q.depth, e) }));
@@ -142,7 +162,7 @@ export function evaluate(c: CompiledProject, tIn: number): RenderState {
     t,
     sceneIndex: si,
     sceneId: s.id,
-    background: { assetId: s.bgAssetId, framing: s.framing, blur: dofBlur(sampleNum(s.dof, t, 0)) },
+    background: backgroundAt(s, t),
     camera: { x, y, zoom: cam.zoom, ...(cam.bgZoom !== undefined ? { bgZoom: cam.bgZoom } : {}) },
     actors: s.actors.map((a) => evalActor(s, a, t, { beat })),
     subtitle,

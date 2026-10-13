@@ -1,7 +1,7 @@
 import type { Paragraph } from '../../../shared/director/paragraphs';
 
 /** Bump when the prompt text changes: it is part of the cache key. */
-export const BREAKDOWN_PROMPT_VERSION = 'breakdown-2';
+export const BREAKDOWN_PROMPT_VERSION = 'breakdown-3';
 
 export const BREAKDOWN_SYSTEM = `你是 BanG Dream! 同人故事的「演出拆解」助手。读者给你一篇带段落编号的小说，请把它拆成若干场景，并为每个场景选择背景、在场角色和服装。你只输出 JSON，不输出任何解释。
 
@@ -18,6 +18,9 @@ export const BREAKDOWN_SYSTEM = `你是 BanG Dream! 同人故事的「演出拆�
 
 10. 背景的「乐队」列：写「通用」的任何人可用；写乐队名（如「Ave Mujica专属」）的只有该乐队成员在场时才能用；写「若叶家（Ave Mujica）」这类私人住宅的，必须是住户本人或其乐队在场（住户在场）才能用。本场景全部出场乐队必须被背景的乐队列包含，私人住宅/专属练习室绝不能给其他乐队。如果原文明确写某人去某人家做客，在 location.guestOf 填写主人的 characterKey，否则填 null。
 11. isPerformance=true 的场景（正式演出）必须选「舞台」列为「是」的背景，且乐队列要符合该乐队。
+
+12. 背景目录分三张表：「背景」是剧情背景；「插入镜头候选」只给后面的演出指导做空镜头用，**这里绝不能选**；「特殊画面」只有原文出现梦境、回忆、虚拟空间等明确线索时才可选。logo、纯色、网页界面之类的装饰素材不在目录里，也不要自己编。
+13. 场景内的地点移动 moves：同一个场景里，原文明确写到人物换了地方（「走出校门」「来到车站前」「回到房间里」「爬上天台」）或时间发生跳变（「到了傍晚」）时，把每次移动写进 moves：{ paragraph（发生移动的段落号）, backgroundId（新地点的背景，必须出自「背景」表且符合第 10、11 条的乐队/住户规则）, reason（引用原文依据）, transition }。location.backgroundId 是场景一开始的地点。只有原文明确写到才填，没有就输出空数组 []；一个场景最多 3 次；同一段落只写一次；不要把地点移动拆成新场景，除非时间或在场人物也变了。正式演出场景不能中途换成非舞台背景。transition：同时段的移动用 cut，时段跳变用 dip_black，缓慢过渡用 crossfade。
 
 # 输出
 严格输出一个 JSON 对象：{ cast: [...], scenes: [...] }，字段完全按给定 JSON Schema。`;

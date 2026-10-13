@@ -20,6 +20,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "纯黑底",
+   "description": "全黑纯色画面，无任何物件或文字",
+   "tags": [
+    "纯色",
+    "黑",
+    "装饰"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -39,6 +47,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "黑板（木框）",
+   "description": "木框墨绿色黑板正面满屏，无字，名片装饰底图",
+   "tags": [
+    "黑板",
+    "装饰",
+    "纹理"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -58,6 +74,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "横线笔记本纸",
+   "description": "白底浅灰横线的笔记本内页纹理，无内容",
+   "tags": [
+    "纸张",
+    "纹理",
+    "白",
+    "装饰"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -77,6 +102,15 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "MyGO!!!!! logo·蓝渐变",
+   "description": "蓝色渐变底上的 MyGO!!!!! 手写体 logo",
+   "tags": [
+    "logo",
+    "MyGO",
+    "乐队主题",
+    "蓝"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -96,6 +130,15 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "Ave Mujica logo·酒红",
+   "description": "酒红暗色渐变底上的 Ave Mujica 花体 logo",
+   "tags": [
+    "logo",
+    "AveMujica",
+    "乐队主题",
+    "红"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -115,6 +158,15 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "梦限大 logo·粉色",
+   "description": "粉色渐变底上的「夢限大みゅーたいぷ」logo",
+   "tags": [
+    "logo",
+    "MewType",
+    "乐队主题",
+    "粉"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -134,6 +186,15 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "millsage logo·紫色",
+   "description": "紫色渐变底上的 millsage 衬线 logo 与星形",
+   "tags": [
+    "logo",
+    "millsage",
+    "乐队主题",
+    "紫"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -153,6 +214,15 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "一家Dumb Rock! logo·橙",
+   "description": "橙色渐变底上的黄色立体 Dumb Rock! logo",
+   "tags": [
+    "logo",
+    "DumbRock",
+    "乐队主题",
+    "橙"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -172,6 +242,16 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "MyGO 主题笔刷底·蓝",
+   "description": "白底上斜向蓝色水彩笔刷块，名片装饰底",
+   "tags": [
+    "装饰",
+    "MyGO",
+    "乐队主题",
+    "蓝",
+    "笔刷"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -191,6 +271,16 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "Ave Mujica 主题笔刷底·紫红",
+   "description": "白底上斜向紫红格纹笔刷块与齿轮纹样",
+   "tags": [
+    "装饰",
+    "AveMujica",
+    "乐队主题",
+    "紫红",
+    "笔刷"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -210,6 +300,16 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "MewType 主题笔刷底·粉",
+   "description": "白底上斜向粉色网格像素笔刷块，带黄色闪电",
+   "tags": [
+    "装饰",
+    "MewType",
+    "乐队主题",
+    "粉",
+    "笔刷"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -229,6 +329,16 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "millsage 主题笔刷底·紫",
+   "description": "白底上斜向淡紫菱形碎片笔刷块",
+   "tags": [
+    "装饰",
+    "millsage",
+    "乐队主题",
+    "紫",
+    "笔刷"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -248,6 +358,16 @@
    "owner": null,
    "exclusive": true,
    "homeBand": null,
+   "title": "Dumb Rock 主题笔刷底·橙",
+   "description": "白底上斜向橙黄砖墙纹笔刷块",
+   "tags": [
+    "装饰",
+    "DumbRock",
+    "乐队主题",
+    "橙",
+    "笔刷"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -272,6 +392,18 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 咖啡厅·挑高全景（日）",
+   "description": "挑高木质咖啡厅，吧台座椅、绿植垂挂与大窗，明亮暖色，无人",
+   "tags": [
+    "咖啡厅",
+    "RiNG",
+    "室内",
+    "日",
+    "绿植",
+    "吧台"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000153",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -296,6 +428,18 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 录音室·木墙（鼓组）",
+   "description": "木质墙面录音棚，中央鼓组与音箱，顶灯照明，无人",
+   "tags": [
+    "录音室",
+    "练习室",
+    "RiNG",
+    "室内",
+    "鼓",
+    "木"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000177",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -320,6 +464,17 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 外观·正门（夜）",
+   "description": "夜色下 RiNG 大楼正门与招牌，两侧行道树，蓝调光",
+   "tags": [
+    "LiveHouse外观",
+    "RiNG",
+    "室外",
+    "夜",
+    "招牌"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000146",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -343,6 +498,19 @@
    ],
    "exclusive": true,
    "homeBand": null,
+   "title": "若叶家·地下录音室（沙发）",
+   "description": "暗色地下室，奶白皮沙发、钢琴与楼梯，筒灯暖光",
+   "tags": [
+    "录音室",
+    "若叶家",
+    "室内",
+    "地下室",
+    "沙发",
+    "钢琴",
+    "暗"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000072",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -364,6 +532,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答：Win-Wing-Production = Ave Mujica only",
+   "title": "WWP 会议室·玻璃隔断（日）",
+   "description": "白色长会议桌与黑椅、壁挂屏幕、玻璃隔断与百叶窗，日光",
+   "tags": [
+    "会议室",
+    "办公室",
+    "Win-Wing-Production",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000064",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -385,6 +564,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q7 p4 未提及",
+   "title": "台场剧场·喷泉广场（夜）",
+   "description": "夜晚剧场大楼前石板广场，两侧蓝色灯光喷泉，城市夜景",
+   "tags": [
+    "剧场外",
+    "台场",
+    "室外",
+    "夜",
+    "喷泉",
+    "广场"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000049",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -406,6 +597,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：MewType 专属",
+   "title": "VR Floor·粉蓝虚拟空间",
+   "description": "粉色天空网格穹顶下的青色圆台，梦幻虚拟空间",
+   "tags": [
+    "虚拟空间",
+    "MewType",
+    "VR",
+    "抽象",
+    "粉",
+    "蓝"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000257",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -430,6 +633,18 @@
    "students": [
     "仲町阿拉蕾（一年级）"
    ],
+   "title": "白八马学院·天台草坪（日）",
+   "description": "铁丝网围栏屋顶花园，草坪与两棵树、长椅，晴空",
+   "tags": [
+    "学校",
+    "天台",
+    "神田白八马学园",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000259",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -449,6 +664,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原站前·高楼路口（日）",
+   "description": "高楼间的站前路口与天桥楼梯，黄色盲道线，晴天",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "车站前",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000277",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -470,6 +697,19 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q6 p1–p4=millsage's practice room",
+   "title": "车库练习室·阁楼楼梯（日）",
+   "description": "白色吸音墙车库练习室，钢琴、鼓组、音箱与上阁楼铁梯，日光",
+   "tags": [
+    "练习室",
+    "车库",
+    "millsage",
+    "室内",
+    "日",
+    "钢琴",
+    "鼓"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000001",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -489,6 +729,19 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "台场海滨·彩虹桥沙滩（日）",
+   "description": "海滨步道远眺沙滩、海面与白色吊桥城市天际线，晴空",
+   "tags": [
+    "海滨",
+    "台场",
+    "室外",
+    "日",
+    "晴",
+    "桥",
+    "沙滩"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000004",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -508,6 +761,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "街头钢琴大厅·落地窗（日）",
+   "description": "大理石地面玻璃幕墙大厅中摆一架黑色立式钢琴，日光",
+   "tags": [
+    "大厅",
+    "街头钢琴",
+    "室内",
+    "日",
+    "钢琴"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000010",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -537,6 +801,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p1–p3=Raika's house 'Peace之家'",
+   "title": "Peace之家·外观转角（日）",
+   "description": "住宅街转角处粉墙两层日式住宅与围墙，晴天绿树",
+   "tags": [
+    "住宅外观",
+    "Peace之家",
+    "宿舍",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000027",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -561,6 +837,18 @@
    "exclusive": false,
    "homeBand": "dumbrock",
    "answer": "user R2：Roarin' Nest 主场一家Dumb Rock!（软偏好），任何乐队可用",
+   "title": "Roarin' Nest·入口楼梯（日）",
+   "description": "红砖楼梯通往地下 live house 入口，海报立牌与路锥",
+   "tags": [
+    "LiveHouse外观",
+    "Roarin'Nest",
+    "入口",
+    "楼梯",
+    "室外",
+    "日"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000024",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -585,6 +873,17 @@
    "exclusive": false,
    "homeBand": "dumbrock",
    "answer": "user R2：Roarin' Nest 主场一家Dumb Rock!（软偏好），任何乐队可用",
+   "title": "Roarin' Nest·舞台与吧台",
+   "description": "暗色小型 live house，串灯舞台区与贴满贴纸的吧台",
+   "tags": [
+    "LiveHouse",
+    "Roarin'Nest",
+    "室内",
+    "舞台",
+    "吧台",
+    "暖光"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -606,6 +905,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q6 p1–p4=millsage's practice room",
+   "title": "车库练习室·阁楼楼梯（日）B",
+   "description": "与 23 同构图的车库练习室，日光，钢琴鼓组铁梯",
+   "tags": [
+    "练习室",
+    "车库",
+    "millsage",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -627,6 +936,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q6 p1–p4=millsage's practice room",
+   "title": "车库练习室·夕照（傍晚）",
+   "description": "车库练习室被橙色夕阳斜照，窗影落在地板与楼梯",
+   "tags": [
+    "练习室",
+    "车库",
+    "millsage",
+    "室内",
+    "傍晚",
+    "夕阳"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -648,6 +968,15 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q6 p1–p4=millsage's practice room",
+   "title": "车库练习室·阁楼楼梯（无时段）",
+   "description": "车库练习室标准光照版本，钢琴、鼓组与铁梯",
+   "tags": [
+    "练习室",
+    "车库",
+    "millsage",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -667,6 +996,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "台场海滨·彩虹桥沙滩（日）B",
+   "description": "与 24 同构图，海滨步道远眺吊桥与沙滩，晴天",
+   "tags": [
+    "海滨",
+    "台场",
+    "室外",
+    "日",
+    "晴",
+    "桥"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -686,6 +1026,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "台场海滨·彩虹桥夜景",
+   "description": "夜晚海滨步道，远处吊桥与高楼灯光倒映海面",
+   "tags": [
+    "海滨",
+    "台场",
+    "室外",
+    "夜",
+    "夜景",
+    "桥"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -705,6 +1056,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "大型 Live House·暖白射灯舞台",
+   "description": "黑色桁架大舞台，鼓组与音箱，暖白射灯交错，台下空",
+   "tags": [
+    "LiveHouse",
+    "舞台",
+    "室内",
+    "演出",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -724,6 +1085,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "金属灯架舞台·彩色灯光",
+   "description": "低矮金属护栏舞台，粉蓝彩色射灯打亮，演出氛围",
+   "tags": [
+    "LiveHouse",
+    "舞台",
+    "室内",
+    "演出",
+    "彩灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -743,6 +1114,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "后台休息室·储物柜长桌",
+   "description": "日光灯下灰色储物柜与白色长桌圆凳，墙贴海报",
+   "tags": [
+    "后台",
+    "休息室",
+    "储物柜",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -762,6 +1142,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "舞台侧翼·蓝光幕缝",
+   "description": "昏暗舞台侧翼，器材箱与音箱，幕缝透出蓝光",
+   "tags": [
+    "后台",
+    "舞台侧翼",
+    "室内",
+    "暗",
+    "蓝"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -781,6 +1171,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "街头钢琴大厅·落地窗（日）B",
+   "description": "与 25 相近，玻璃幕墙大厅与黑色立式钢琴，日光斜照",
+   "tags": [
+    "大厅",
+    "街头钢琴",
+    "室内",
+    "日",
+    "钢琴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -800,6 +1200,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "街头钢琴大厅·夕照（傍晚）",
+   "description": "同一钢琴大厅被橙金色夕阳染色",
+   "tags": [
+    "大厅",
+    "街头钢琴",
+    "室内",
+    "傍晚",
+    "钢琴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -818,6 +1228,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "薄荷绿墙卧室·铁艺床",
+   "description": "薄荷绿壁纸卧室，白铁艺床、书桌、吊灯与绿植",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "绿",
+    "铁艺床"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -836,6 +1256,26 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "灰白卧室·电脑桌（夜）",
+   "description": "灰白简约卧室，白色电脑桌、深灰床，窗外城市夜景",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "夜",
+    "电脑",
+    "简约"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "电脑与乐器卧室 · 夜间",
+     "suggest": "灰白卧室·电脑桌（夜）",
+     "reason": "画面只有电脑桌、床和墙上相框，看不到乐器"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -854,6 +1294,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "浅蓝云朵卧室·圆地毯",
+   "description": "浅蓝云朵墙纸卧室，蓝床、矮桌与紫色坐垫，可爱风",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "蓝",
+    "可爱"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -873,6 +1323,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "蓝顶教室·白板（日）",
+   "description": "蓝色天花板的现代教室，整齐课桌与白板，日光",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日",
+    "白板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -900,6 +1360,17 @@
     "滨崎茉幌（高二A）",
     "和泉朋花（高一B）"
    ],
+   "title": "水濑女子·校门前广场（日）",
+   "description": "砖铺广场与绿篱、校名石碑，后方白色校舍，晴天",
+   "tags": [
+    "学校",
+    "校门",
+    "水濑女子学园",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "nameOverride": "水瀬女子学園 校门前 · 日间 · 晴天",
    "descriptionOverride": "水瀬女子学園的玻璃校舍、步道和绿树（立柱刻校名）",
    "source": "draft",
@@ -921,6 +1392,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "车站高架连廊（日）",
+   "description": "有顶棚的高架人行连廊，两侧玻璃护栏，远处高楼晴空",
+   "tags": [
+    "车站",
+    "连廊",
+    "室外",
+    "日",
+    "晴",
+    "城市"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -945,6 +1427,26 @@
    "students": [
     "汐见萤（初三·音乐科）"
    ],
+   "title": "都立艺术学院·校舍台阶（日）",
+   "description": "红砖步道与大台阶通往米色校舍，竖幅校名牌，晴天",
+   "tags": [
+    "学校",
+    "校舍",
+    "都立艺术学院中学",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "nameOverride/descriptionOverride",
+     "current": "都立芸術学院中学校 剧场外观 / 两层剧场建筑",
+     "suggest": "都立芸術学院中学校 校舍台阶 · 日间 · 晴天 / 米色校舍、大台阶与竖幅校名牌",
+     "reason": "画面是带柱廊的普通校舍和大台阶，evidence 本身也写 catalog 把它误标成了剧场，但 nameOverride 仍写剧场，自相矛盾（学校归属不变，R2-8 仍待答）"
+    }
+   ],
+   "fixesImported": true,
    "nameOverride": "都立芸術学院中学校 剧场外观 · 日间 · 晴天",
    "descriptionOverride": "都立芸術学院中学校的两层剧场建筑、入口台阶和玻璃门",
    "source": "draft",
@@ -966,6 +1468,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "玻璃天棚咖啡厅·绿椅（日）",
+   "description": "钢架玻璃天棚咖啡厅，绿色座椅木桌与书架，窗外树",
+   "tags": [
+    "咖啡厅",
+    "食堂",
+    "室内",
+    "日",
+    "绿椅"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -985,6 +1497,17 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q6 p5,p6,p9=unknown",
+   "title": "绿墙排练室·鼓组（日）",
+   "description": "墨绿隔音墙排练室，木地板与鼓组，窗外楼群，日光",
+   "tags": [
+    "练习室",
+    "排练室",
+    "室内",
+    "日",
+    "鼓",
+    "绿"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1004,6 +1527,16 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q6 p5,p6,p9=unknown",
+   "title": "绿墙排练室·鼓组（无时段）",
+   "description": "与 020 同一墨绿隔音排练室，木地板鼓组，室内灯光",
+   "tags": [
+    "练习室",
+    "排练室",
+    "室内",
+    "鼓",
+    "绿"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1028,6 +1561,16 @@
    "exclusive": false,
    "homeBand": "dumbrock",
    "answer": "user R2：Roarin' Nest 主场一家Dumb Rock!（软偏好），任何乐队可用",
+   "title": "Roarin' Nest·舞台（暖串灯）",
+   "description": "小型 live house 舞台被暖黄串灯照亮，左侧贴纸吧台",
+   "tags": [
+    "LiveHouse",
+    "Roarin'Nest",
+    "室内",
+    "舞台",
+    "暖光"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -1052,6 +1595,17 @@
    "exclusive": false,
    "homeBand": "dumbrock",
    "answer": "R1 Q7 p8–p10=Roarin' Nest, usually 一家Dumb Rock!",
+   "title": "Roarin' Nest·舞台（彩色射灯）",
+   "description": "同一小舞台打开彩色射灯与光束，演出中氛围",
+   "tags": [
+    "LiveHouse",
+    "Roarin'Nest",
+    "室内",
+    "舞台",
+    "演出",
+    "彩灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1076,6 +1630,16 @@
    "exclusive": false,
    "homeBand": "dumbrock",
    "answer": "R1 Q7 p8–p10=Roarin' Nest, usually 一家Dumb Rock!",
+   "title": "Roarin' Nest·入口楼梯（日）B",
+   "description": "与 27 同构图，红砖楼梯通往店门，立牌与路锥，日光",
+   "tags": [
+    "LiveHouse外观",
+    "Roarin'Nest",
+    "入口",
+    "室外",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1100,6 +1664,16 @@
    "exclusive": false,
    "homeBand": "dumbrock",
    "answer": "R1 Q7 p8–p10=Roarin' Nest, usually 一家Dumb Rock!",
+   "title": "Roarin' Nest·入口楼梯（夜）",
+   "description": "夜色中蓝调的楼梯入口，店门灯与海报立牌",
+   "tags": [
+    "LiveHouse外观",
+    "Roarin'Nest",
+    "入口",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1119,6 +1693,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "后台走廊·尽头透光",
+   "description": "昏暗后台走廊，收纳箱与架子，尽头门口透出舞台红光",
+   "tags": [
+    "后台",
+    "走廊",
+    "室内",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1148,6 +1731,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p1–p3=Raika's house 'Peace之家'",
+   "title": "Peace之家·外观转角（日）B",
+   "description": "与 26 同构图粉墙两层住宅转角，晴天",
+   "tags": [
+    "住宅外观",
+    "Peace之家",
+    "宿舍",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1177,6 +1771,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p1–p3=Raika's house 'Peace之家'",
+   "title": "Peace之家·外观转角（傍晚）",
+   "description": "同一住宅转角被橙色夕阳笼罩",
+   "tags": [
+    "住宅外观",
+    "Peace之家",
+    "宿舍",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1206,6 +1810,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p1=玄关 in Raika's house 'Peace之家'",
+   "title": "Peace之家·玄关（傍晚）",
+   "description": "木地板日式玄关，格子拉门透入夕光，伞架与地垫",
+   "tags": [
+    "玄关",
+    "Peace之家",
+    "住宅",
+    "室内",
+    "傍晚",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1235,6 +1850,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p2–p5=餐厅（030–032 画面为客厅），归属未答",
+   "title": "Peace之家·和室客厅（日）",
+   "description": "和室客厅，绿色沙发、矮桌、坐垫与电视柜，日光",
+   "tags": [
+    "客厅",
+    "Peace之家",
+    "住宅",
+    "室内",
+    "日",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1264,6 +1890,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p2–p5=餐厅（030–032 画面为客厅），归属未答",
+   "title": "Peace之家·和室客厅（傍晚）",
+   "description": "同一和室客厅被夕阳染成橙色",
+   "tags": [
+    "客厅",
+    "Peace之家",
+    "住宅",
+    "室内",
+    "傍晚",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1293,6 +1930,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p2–p5=餐厅（030–032 画面为客厅），归属未答",
+   "title": "Peace之家·和室客厅（无时段）",
+   "description": "同一和室客厅室内灯光版，绿沙发与彩色坐垫",
+   "tags": [
+    "客厅",
+    "Peace之家",
+    "住宅",
+    "室内",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1322,6 +1969,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p2–p5=餐厅（030–032 画面为客厅），归属未答",
+   "title": "Peace之家·餐厅（粉桌布）",
+   "description": "和式餐厅，粉桌布方桌、吊灯与碗柜，隔壁可见厨房",
+   "tags": [
+    "餐厅",
+    "Peace之家",
+    "住宅",
+    "室内",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1351,6 +2008,15 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p6,p11=厨房，归属未答",
+   "title": "Peace之家·厨房（浅蓝冰箱）",
+   "description": "老式家庭厨房，木柜、浅蓝冰箱与中岛木桌",
+   "tags": [
+    "厨房",
+    "Peace之家",
+    "住宅",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1376,6 +2042,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p7,p10=miku's room",
+   "title": "心玖的房间·蓝墙（吉他）",
+   "description": "淡蓝墙纸卧室，蓝床、白吉他与衣柜、纸灯笼吊灯",
+   "tags": [
+    "卧室",
+    "心玖",
+    "DumbRock",
+    "室内",
+    "吉他",
+    "蓝"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1397,6 +2074,16 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q7 p11–p13,p23=can be used by any",
+   "title": "剧场会议厅·投影排椅（日）",
+   "description": "木墙会议厅整齐白色排椅面向投影幕，落地窗日光",
+   "tags": [
+    "会议厅",
+    "剧场",
+    "室内",
+    "日",
+    "投影"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1418,6 +2105,16 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q7 p11–p13,p23=can be used by any",
+   "title": "剧场化妆室·长镜台",
+   "description": "暖光化妆室，一排镜台与圆凳，空调出风口",
+   "tags": [
+    "化妆室",
+    "后台",
+    "剧场",
+    "室内",
+    "镜子"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1439,6 +2136,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q7 p11–p13,p23=can be used by any",
+   "title": "剧场大厅走廊·木门",
+   "description": "白灰格纹地毯走廊，木质墙板与双开门，远处休息椅",
+   "tags": [
+    "走廊",
+    "剧场",
+    "大厅",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1458,6 +2164,31 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "房产中介·白椅柜台",
+   "description": "白色圆椅接待柜台、墙上房源展示与绿色候客沙发，明亮",
+   "tags": [
+    "房产中介",
+    "柜台",
+    "店铺",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "cafe",
+     "suggest": "real_estate_agency（房产中介）",
+     "reason": "原图确认：墙上是房源图片展示架、海报带房屋图标，白色圆椅接待柜台加候客沙发，是房产中介门店，不是咖啡厅"
+    },
+    {
+     "field": "name",
+     "current": "咖啡厅吧台",
+     "suggest": "房产中介·白椅柜台",
+     "reason": "同上"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1477,6 +2208,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "车站入口·蓝柱（日）",
+   "description": "车站入口广场，蓝色立柱、自动扶梯与红砖地，晴天",
+   "tags": [
+    "车站",
+    "入口",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1496,6 +2237,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "有顶商店街·灯笼招牌（日）",
+   "description": "拱顶商店街，两侧日式店铺招牌与灯笼，暖色调",
+   "tags": [
+    "商店街",
+    "街道",
+    "有顶",
+    "日",
+    "日式",
+    "店铺"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1515,6 +2267,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校木地板走廊·公告板（日）",
+   "description": "木地板学校走廊，左侧绿色公告板教室门，右侧窗户",
+   "tags": [
+    "学校",
+    "走廊",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1534,6 +2295,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "小餐馆·墙贴菜单",
+   "description": "大众食堂，墙上贴满手写菜单，红凳吧台与木桌",
+   "tags": [
+    "餐馆",
+    "食堂",
+    "室内",
+    "日式",
+    "吧台"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1553,6 +2324,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "灰墙会议室·长桌电视",
+   "description": "灰地毯会议室，长会议桌、黑椅与壁挂电视，木墙",
+   "tags": [
+    "会议室",
+    "办公室",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1572,6 +2351,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "酒店客房·暖灯双床",
+   "description": "暖色台灯照明的酒店客房，大床、沙发与书桌",
+   "tags": [
+    "酒店",
+    "客房",
+    "室内",
+    "夜",
+    "暖光"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1597,6 +2386,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：046=祥子家（Ave Mujica）",
+   "title": "祥子家·榻榻米和室",
+   "description": "简朴榻榻米房间，圆矮桌与坐垫、绿窗帘、小电视",
+   "tags": [
+    "和室",
+    "祥子家",
+    "住宅",
+    "室内",
+    "日式",
+    "简朴"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -1618,6 +2418,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q7 p14,p15,p17=Ave Mujica only",
+   "title": "Ave Mujica 剧场·舞台（紫灯）",
+   "description": "哥特式布景舞台，四盏水晶吊灯，紫红幕布灯光，台下黑暗",
+   "tags": [
+    "舞台",
+    "AveMujica",
+    "剧场",
+    "室内",
+    "演出",
+    "紫"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1639,6 +2450,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q7 p14,p15,p17=Ave Mujica only",
+   "title": "Ave Mujica 剧场·舞台（白灯）",
+   "description": "同一哥特舞台以白色工作灯照亮，水晶吊灯与红幕",
+   "tags": [
+    "舞台",
+    "AveMujica",
+    "剧场",
+    "室内",
+    "白光"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1660,6 +2481,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q7 p16=Ave Mujica only",
+   "title": "台场剧场·喷泉广场（夜）B",
+   "description": "与 19 同构图，夜晚剧场前蓝色灯光喷泉",
+   "tags": [
+    "剧场外",
+    "台场",
+    "室外",
+    "夜",
+    "喷泉"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1679,6 +2510,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "旅馆门前·停车场（夜）",
+   "description": "夜晚旅馆建筑与竖招牌，门前停着两辆车",
+   "tags": [
+    "旅馆",
+    "酒店外观",
+    "室外",
+    "夜",
+    "停车"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1698,6 +2539,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "住宅街·电线杆小路（夜）",
+   "description": "夜色中狭窄住宅街，电线杆、民宅与路灯",
+   "tags": [
+    "住宅街",
+    "街道",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1723,6 +2573,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q3=Saki's house",
+   "title": "祥子家·老旧公寓走廊",
+   "description": "昏暗绿灰色公寓内走廊，木门与壁灯，陈旧氛围",
+   "tags": [
+    "走廊",
+    "公寓",
+    "祥子家",
+    "室内",
+    "暗",
+    "陈旧"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1748,6 +2609,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q3=Saki's house",
+   "title": "祥子家·老旧客厅（灯光）",
+   "description": "老旧住宅室内，深色木框推拉门通往里间，昏黄灯光",
+   "tags": [
+    "客厅",
+    "祥子家",
+    "住宅",
+    "室内",
+    "陈旧",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1773,6 +2645,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q3=Saki's house",
+   "title": "祥子家·老旧客厅（夜）",
+   "description": "同一老旧客厅关灯后的蓝暗夜色",
+   "tags": [
+    "客厅",
+    "祥子家",
+    "住宅",
+    "室内",
+    "夜",
+    "陈旧"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1798,6 +2681,27 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·撞球钢琴厅（日）",
+   "description": "洋馆大厅，水晶吊灯、两张台球桌与三角钢琴，日光",
+   "tags": [
+    "洋馆",
+    "丰川家",
+    "室内",
+    "日",
+    "钢琴",
+    "台球",
+    "豪华"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "洋馆钢琴室 · 日间",
+     "suggest": "丰川家·撞球钢琴厅（日）",
+     "reason": "画面主体是两张台球桌，钢琴在后方，旧名不利于人工辨认（归属不变）"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1823,6 +2727,27 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·撞球钢琴厅（夜）",
+   "description": "同一洋馆大厅关灯，月光蓝色斜照台球桌",
+   "tags": [
+    "洋馆",
+    "丰川家",
+    "室内",
+    "夜",
+    "钢琴",
+    "台球",
+    "豪华"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "洋馆钢琴室 · 夜间",
+     "suggest": "丰川家·撞球钢琴厅（夜）",
+     "reason": "同 055"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1842,6 +2767,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "黑色小舞台·白工作灯",
+   "description": "黑色调小型演出舞台，一排白色顶灯与鼓组，台下空",
+   "tags": [
+    "LiveHouse",
+    "舞台",
+    "室内",
+    "暗",
+    "白光"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1861,6 +2796,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "黑色小舞台·彩色射灯",
+   "description": "同一黑色小舞台打出蓝黄彩色射灯光束",
+   "tags": [
+    "LiveHouse",
+    "舞台",
+    "室内",
+    "演出",
+    "彩灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1886,6 +2831,26 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·洋馆书房（夜）",
+   "description": "昏暗洋馆房间，凸窗前一张大书桌，吊灯与暗红窗帘",
+   "tags": [
+    "洋馆",
+    "丰川家",
+    "书房",
+    "室内",
+    "夜",
+    "豪华"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "洋馆门厅 · 夜间",
+     "suggest": "丰川家·洋馆书房（夜）",
+     "reason": "凸窗前摆一张大书桌，是书房/办公室，不是门厅（归属不变）"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1905,6 +2870,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校园花架长椅·绿墙（日）",
+   "description": "红砖校舍旁绿植墙与花架，石板地与花坛，晴天",
+   "tags": [
+    "学校",
+    "花坛",
+    "室外",
+    "日",
+    "晴",
+    "花"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1926,6 +2902,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "轿车后座·车内（日）",
+   "description": "从后方看黑色真皮轿车后排座椅，车窗外街景日光",
+   "tags": [
+    "车内",
+    "轿车",
+    "交通工具",
+    "日"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -1947,6 +2932,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "轿车后座·车内（夜）",
+   "description": "同一轿车后排，车窗外夜色城市",
+   "tags": [
+    "车内",
+    "轿车",
+    "交通工具",
+    "夜"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -1966,6 +2960,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校木平台中庭（日）",
+   "description": "现代校舍间的木甲板中庭，树木花坛与水池，晴天",
+   "tags": [
+    "学校",
+    "中庭",
+    "室外",
+    "日",
+    "晴",
+    "树"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -1987,6 +2992,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答：Win-Wing-Production = Ave Mujica only",
+   "title": "WWP 会议室·玻璃隔断（日）B",
+   "description": "与 18 同构图的会议室，白长桌黑椅与屏幕，日光",
+   "tags": [
+    "会议室",
+    "办公室",
+    "Win-Wing-Production",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2008,6 +3023,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答：Win-Wing-Production = Ave Mujica only",
+   "title": "WWP 会议室·玻璃隔断（夜）",
+   "description": "同一会议室夜间，室内暗蓝，仅墙面绿植灯",
+   "tags": [
+    "会议室",
+    "办公室",
+    "Win-Wing-Production",
+    "室内",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2033,6 +3058,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·外观车库门（傍晚）",
+   "description": "灰色现代豪宅外观与车库门、门前绿篱，夕阳粉橙",
+   "tags": [
+    "住宅外观",
+    "若叶家",
+    "豪宅",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2058,6 +3093,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·外观车库门（日）",
+   "description": "同一现代豪宅外观，晴天蓝天",
+   "tags": [
+    "住宅外观",
+    "若叶家",
+    "豪宅",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2083,6 +3129,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·外观车库门（雨）",
+   "description": "同一现代豪宅外观，阴天下雨",
+   "tags": [
+    "住宅外观",
+    "若叶家",
+    "豪宅",
+    "室外",
+    "日",
+    "雨"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2108,6 +3165,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·外观车库门（夜）",
+   "description": "同一现代豪宅夜景，庭院树木灯光照亮",
+   "tags": [
+    "住宅外观",
+    "若叶家",
+    "豪宅",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2133,6 +3200,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·挑高客厅餐桌（日）",
+   "description": "白色挑高客厅，长餐桌、悬空楼梯与书柜，明亮日光",
+   "tags": [
+    "客厅",
+    "若叶家",
+    "豪宅",
+    "室内",
+    "日",
+    "楼梯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2158,6 +3236,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·挑高客厅餐桌（灯）",
+   "description": "同一挑高客厅暖色室内灯光版",
+   "tags": [
+    "客厅",
+    "若叶家",
+    "豪宅",
+    "室内",
+    "楼梯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2181,6 +3269,17 @@
    ],
    "exclusive": true,
    "homeBand": null,
+   "title": "若叶家·地下录音室（沙发）B",
+   "description": "与 17 同构图的地下室，奶白沙发、钢琴、楼梯",
+   "tags": [
+    "录音室",
+    "若叶家",
+    "室内",
+    "地下室",
+    "沙发",
+    "钢琴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2204,6 +3303,16 @@
    ],
    "exclusive": true,
    "homeBand": null,
+   "title": "若叶家·地下录音室（暖灯）",
+   "description": "同一地下室，筒灯暖光略亮，沙发与鼓组",
+   "tags": [
+    "录音室",
+    "若叶家",
+    "室内",
+    "地下室",
+    "沙发"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2227,6 +3336,17 @@
    ],
    "exclusive": true,
    "homeBand": null,
+   "title": "若叶家·地下录音室（夜）",
+   "description": "同一地下室关灯后蓝暗色调",
+   "tags": [
+    "录音室",
+    "若叶家",
+    "室内",
+    "地下室",
+    "夜",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2252,6 +3372,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·白色卧室（夜）",
+   "description": "宽敞白色卧室，帷幔床、白沙发，月光蓝色斜照",
+   "tags": [
+    "卧室",
+    "若叶家",
+    "睦",
+    "室内",
+    "夜",
+    "白"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2277,6 +3408,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·白色卧室（日）",
+   "description": "同一白色卧室日间，帷幔床与白沙发，明亮整洁",
+   "tags": [
+    "卧室",
+    "若叶家",
+    "睦",
+    "室内",
+    "日",
+    "白"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2302,6 +3444,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·白卧室·满地玩偶（夜）",
+   "description": "白色卧室地上散落大量玩偶与纸张，夜色蓝光",
+   "tags": [
+    "卧室",
+    "若叶家",
+    "睦",
+    "室内",
+    "夜",
+    "玩偶",
+    "凌乱"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2327,6 +3481,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·白卧室·满地玩偶（日）",
+   "description": "白色卧室地上散落大量玩偶与纸张，日光",
+   "tags": [
+    "卧室",
+    "若叶家",
+    "睦",
+    "室内",
+    "日",
+    "玩偶",
+    "凌乱"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2346,6 +3512,26 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "电视台演播厅·粉紫舞台",
+   "description": "带摄像机的电视演播厅，粉紫大屏与灯光舞台",
+   "tags": [
+    "演播厅",
+    "电视台",
+    "舞台",
+    "室内",
+    "粉紫",
+    "摄像机"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "stage",
+     "suggest": "tv_studio",
+     "reason": "画面前景有两台摄像机与监视器，是电视台演播厅；作为乐队 live 舞台会穿帮"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2365,6 +3551,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "摄影棚·白色无缝背景",
+   "description": "混凝土墙摄影棚，白色无缝背景纸、柔光箱与灯架",
+   "tags": [
+    "摄影棚",
+    "室内",
+    "白",
+    "工作"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2390,6 +3585,26 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p4–p8=anon's house",
+   "title": "爱音家·阁楼卧室（夜）",
+   "description": "斜顶水泥阁楼，地铺被褥、小圆桌与行李箱，昏暗",
+   "tags": [
+    "卧室",
+    "阁楼",
+    "爱音家",
+    "室内",
+    "夜",
+    "简朴"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "owner（疑问，不改）",
+     "current": "爱音家（用户 R1 Q5 答复）",
+     "question": "081/082 是水泥斜顶阁楼、地铺加行李箱，155–157 是木斜顶的完整卧室，两套都标为爱音家卧室。是否一套是爱音回国前后的不同房间？还是其中一套属于别人（例如借住处）？",
+     "reason": "同一角色两套风格迥异的卧室，AI 会随机混用"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2415,6 +3630,25 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p4–p8=anon's house",
+   "title": "爱音家·阁楼卧室（灯）",
+   "description": "同一斜顶阁楼开灯，地铺、圆桌与行李箱",
+   "tags": [
+    "卧室",
+    "阁楼",
+    "爱音家",
+    "室内",
+    "简朴"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "owner（疑问，不改）",
+     "current": "爱音家（用户 R1 Q5 答复）",
+     "question": "同 081",
+     "reason": "同 081"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2434,6 +3668,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "住宅区路口·斑马线（日）",
+   "description": "住宅区十字路口，斑马线、电线杆与行道树，晴天",
+   "tags": [
+    "住宅街",
+    "路口",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2453,6 +3697,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "住宅区路口·斑马线（夜）",
+   "description": "同一住宅区路口夜景，路灯照亮",
+   "tags": [
+    "住宅街",
+    "路口",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2471,6 +3724,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "梳妆台卧室·环形补光灯（灯）",
+   "description": "木地板卧室，单人床、书架、白色梳妆桌与环形补光灯，室内灯",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "梳妆台",
+    "补光灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2489,6 +3752,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "梳妆台卧室·环形补光灯（日）",
+   "description": "同一卧室日间，阳台窗透入日光",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "日",
+    "梳妆台",
+    "补光灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2508,6 +3782,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "车站候车室·橙色长椅",
+   "description": "车站室内候车区，橙色连排椅、自动售货机与垃圾箱",
+   "tags": [
+    "车站",
+    "候车室",
+    "室内",
+    "长椅",
+    "售货机"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2529,6 +3813,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q7 p14,p15,p17=Ave Mujica only",
+   "title": "Ave Mujica 剧场·舞台（红灯）",
+   "description": "红粉色灯光舞台，镜面立柱与两盏水晶吊灯，鼓组",
+   "tags": [
+    "舞台",
+    "AveMujica",
+    "剧场",
+    "室内",
+    "演出",
+    "红"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2547,6 +3842,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木窗框旧式教室（日）",
+   "description": "深色木窗框的老式教室，木课桌椅与黑板，日光",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日",
+    "复古",
+    "黑板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2565,6 +3871,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "洋式校舍走廊·拱窗（日）",
+   "description": "深色木墙裙与拱形窗的西洋风学校走廊，日光",
+   "tags": [
+    "学校",
+    "走廊",
+    "室内",
+    "日",
+    "复古",
+    "洋风"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2584,6 +3901,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "花园拱门小桥（日）",
+   "description": "绿植拱门下的小拱桥与木步道，花丛环绕，晴天",
+   "tags": [
+    "公园",
+    "花园",
+    "桥",
+    "室外",
+    "日",
+    "晴",
+    "花"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2603,6 +3932,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "车站前广场·穹顶站房（夜）",
+   "description": "夜晚空旷石板广场，远处穹顶车站建筑与路灯",
+   "tags": [
+    "车站",
+    "广场",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2622,6 +3960,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "暗红复古酒店套房",
+   "description": "暖红木墙套房，吊灯、复古沙发与床，昏暗",
+   "tags": [
+    "酒店",
+    "客房",
+    "室内",
+    "复古",
+    "红",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2641,6 +3990,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "书架休息区·橙色椅",
+   "description": "石砖墙休息区，橙色扶手椅圆桌、书架与玻璃隔断",
+   "tags": [
+    "休息区",
+    "办公室",
+    "图书",
+    "室内",
+    "橙"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2662,6 +4021,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "豪华车后座（傍晚）",
+   "description": "豪华保姆车米色真皮航空座椅，天窗与车窗外夕阳",
+   "tags": [
+    "车内",
+    "豪华车",
+    "交通工具",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -2683,6 +4051,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "豪华车后座（夜）",
+   "description": "同一豪华保姆车内部，窗外夜色",
+   "tags": [
+    "车内",
+    "豪华车",
+    "交通工具",
+    "夜"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -2708,6 +4085,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·华丽洋馆卧室（日）",
+   "description": "欧式宫廷卧室，红地毯、吊灯、梳妆镜与帷幔床，日光",
+   "tags": [
+    "卧室",
+    "丰川家",
+    "洋馆",
+    "室内",
+    "日",
+    "豪华"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2733,6 +4121,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·华丽洋馆卧室（夜）",
+   "description": "同一欧式卧室夜间，暗蓝色调",
+   "tags": [
+    "卧室",
+    "丰川家",
+    "洋馆",
+    "室内",
+    "夜",
+    "豪华"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2757,6 +4156,17 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q6 p7,p8=live house RiNG, usually MyGO",
+   "title": "RiNG 室内中庭·studio（傍晚）",
+   "description": "室内中庭，studio 与 counter 招牌、楼梯与花槽，夕光",
+   "tags": [
+    "RiNG",
+    "中庭",
+    "练习室楼",
+    "室内",
+    "傍晚",
+    "花"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2781,6 +4191,16 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q6 p7,p8=live house RiNG, usually MyGO",
+   "title": "RiNG 室内中庭·studio（灯）",
+   "description": "同一 RiNG 室内中庭，室内灯光，楼梯与花槽",
+   "tags": [
+    "RiNG",
+    "中庭",
+    "练习室楼",
+    "室内",
+    "花"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2800,6 +4220,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "露天停车场·绿灯牌（夜）",
+   "description": "夜晚小型露天停车场，发光 PARKING 价目牌与车位线",
+   "tags": [
+    "停车场",
+    "街道",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2819,6 +4248,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "电视墙暗室·新月装置",
+   "description": "黑暗房间堆满老式显像管电视，中间一轮新月装置",
+   "tags": [
+    "装置艺术",
+    "电视",
+    "暗",
+    "超现实",
+    "舞台布景"
+   ],
+   "category": "event",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "insert",
+     "suggest": "art_installation（category=event）",
+     "reason": "堆满显像管电视与新月装置的暗室，是超现实布景，不是可泛用的插入镜头"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2838,6 +4286,31 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "拉面店吧台·红凳",
+   "description": "红色吧台与红凳、开放厨房、墙上菜单与券售机",
+   "tags": [
+    "餐馆",
+    "拉面店",
+    "吧台",
+    "室内",
+    "红"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "live_house",
+     "suggest": "restaurant（拉面店）",
+     "reason": "右侧有餐券售票机，墙上是带碗面照片的菜单，红凳吧台后是开放厨房，像拉面店而非 live house 酒吧（已看原图确认）"
+    },
+    {
+     "field": "name",
+     "current": "Live House 酒吧",
+     "suggest": "拉面店吧台·红凳",
+     "reason": "同上"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2863,6 +4336,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q1=A",
+   "title": "若叶家·二楼走廊（日）",
+   "description": "白墙木地板二楼走廊，白门与玻璃栏杆，明亮",
+   "tags": [
+    "走廊",
+    "若叶家",
+    "豪宅",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2882,6 +4365,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "深蓝星点·夜空",
+   "description": "深蓝暗底上散布白色星点光粒，无地平线",
+   "tags": [
+    "星空",
+    "夜",
+    "抽象",
+    "蓝",
+    "插入"
+   ],
+   "category": "insert",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "[插入镜头] 星空与银河 · 夜间",
+     "suggest": "深蓝星点·夜空",
+     "reason": "画面只有深蓝底上的白色光点，没有银河（124 才是银河），两张同名会混淆"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2901,6 +4403,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "旅馆前台·黑白格地板",
+   "description": "木墙旅馆大堂，黑白格地板与前台柜台",
+   "tags": [
+    "旅馆",
+    "前台",
+    "大堂",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2920,6 +4431,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "演出人员休息室·白长桌",
+   "description": "白墙休息室，白色长桌、红色饮料机，墙上海报",
+   "tags": [
+    "后台",
+    "休息室",
+    "室内",
+    "海报"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2938,6 +4458,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "水泥墙卧室·吉他音箱",
+   "description": "清水混凝土墙卧室，深绿床、电吉他、音箱与纸箱",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "吉他",
+    "水泥墙"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2957,6 +4487,24 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "商场中庭走廊（日）",
+   "description": "商场挑高中庭，玻璃栏杆走廊、店铺与绿植，明亮",
+   "tags": [
+    "商场",
+    "购物",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "street",
+     "suggest": "mall",
+     "reason": "室内商场挑高中庭，不是街道"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2976,6 +4524,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "红椅咖啡厅·书柜墙",
+   "description": "深灰墙咖啡厅，红色扶手椅与圆桌、书柜与吊灯",
+   "tags": [
+    "咖啡厅",
+    "室内",
+    "红椅"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -2997,6 +4553,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "电车车厢·蓝座（傍晚）",
+   "description": "通勤电车车厢内，蓝色长座椅与吊环，夕阳斜照",
+   "tags": [
+    "电车",
+    "车内",
+    "交通工具",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -3018,6 +4583,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "电车车厢·蓝座（日）",
+   "description": "同一通勤电车车厢，日光明亮",
+   "tags": [
+    "电车",
+    "车内",
+    "交通工具",
+    "日"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -3037,6 +4611,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "玻璃幕墙学校食堂（日）",
+   "description": "大落地窗食堂，木桌椅排列，窗外树木日光",
+   "tags": [
+    "学校",
+    "食堂",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3056,6 +4639,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "空旷会议室·折叠桌",
+   "description": "深蓝地毯空房间，一排折叠桌与蓝椅，窗外高楼",
+   "tags": [
+    "会议室",
+    "办公室",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3075,6 +4666,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "薄荷绿事务所走廊",
+   "description": "淡绿色墙面长走廊，深色地毯与白门，日光灯",
+   "tags": [
+    "走廊",
+    "办公室",
+    "事务所",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3094,6 +4694,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校舍旁砖道长椅（日）",
+   "description": "校舍外砖铺步道，木长椅与花坛，晴天绿树",
+   "tags": [
+    "学校",
+    "校舍",
+    "长椅",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3117,6 +4728,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": "mygo",
+   "title": "天文馆·观众席星空穹顶",
+   "description": "天文馆内部，成排座椅与中央投影仪，穹顶满天星空",
+   "tags": [
+    "天文馆",
+    "室内",
+    "夜",
+    "星空",
+    "座椅"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType/name",
+     "current": "planetarium / [插入镜头] 天文馆 · 夜间",
+     "suggest": "planetarium / 天文馆·观众席星空穹顶（category=scene）",
+     "reason": "画面有成排座椅与投影仪，人物可以坐在里面演出，不只是插入镜头"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3136,6 +4766,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "夜景高楼·天台边缘视角",
+   "description": "天台边缘望向对面亮灯的办公楼群，深蓝夜色",
+   "tags": [
+    "天台",
+    "城市",
+    "夜景",
+    "室外",
+    "夜",
+    "高楼"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3161,6 +4802,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·宅邸铁门（傍晚）",
+   "description": "砖墙门柱与铁栅大门，门后树林，夕阳暖色",
+   "tags": [
+    "宅邸",
+    "门口",
+    "丰川家",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3181,6 +4832,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "玫瑰园·白色凉亭（日）",
+   "description": "彩色玫瑰花丛间石板小径通往白色圆顶凉亭，晴天",
+   "tags": [
+    "公园",
+    "花园",
+    "玫瑰",
+    "凉亭",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3200,6 +4863,27 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "渡轮码头停车场（日）",
+   "description": "港口码头停车区，靠岸白色渡轮与红白塔楼，晴天",
+   "tags": [
+    "码头",
+    "港口",
+    "渡轮",
+    "停车场",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "transit",
+     "suggest": "port（码头）",
+     "reason": "nameOverride 已改为码头，但 placeType 仍是 transit；画面有靠岸的渡轮"
+    }
+   ],
+   "fixesImported": true,
    "nameOverride": "码头停车区 · 日间 · 晴天",
    "descriptionOverride": "码头旁的停车区，高台设施、车辆与山景",
    "source": "draft",
@@ -3221,6 +4905,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "公园大草地（傍晚）",
+   "description": "开阔草地与远处树林、长椅，橙粉色晚霞",
+   "tags": [
+    "公园",
+    "草地",
+    "室外",
+    "傍晚",
+    "晚霞"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3240,6 +4934,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "公园大草地（夜）",
+   "description": "同一开阔草地夜色，深蓝天空与树影",
+   "tags": [
+    "公园",
+    "草地",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3259,6 +4962,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "紫色银河星空",
+   "description": "满屏紫粉色银河与星点，无地平线",
+   "tags": [
+    "星空",
+    "银河",
+    "夜",
+    "插入",
+    "紫"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3278,6 +4991,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "机场停机坪·私人飞机（雨）",
+   "description": "雨中停机坪，小型喷气机与登机廊桥，阴天",
+   "tags": [
+    "机场",
+    "停机坪",
+    "飞机",
+    "室外",
+    "日",
+    "雨"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3297,6 +5021,25 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q6 p5,p6,p9=unknown",
+   "title": "仓库内玻璃隔间·绿地板",
+   "description": "大型室内空间中一座玻璃墙隔间与铁楼梯，绿地板",
+   "tags": [
+    "室内",
+    "隔间",
+    "仓库",
+    "工厂",
+    "玻璃"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "recording_studio",
+     "suggest": "warehouse / hall（待确认）",
+     "reason": "大型室内空间里的一座玻璃墙隔间与铁楼梯，绿色地坪，没有录音设备，不像录音隔间"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3316,6 +5059,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木屋别墅客厅（傍晚）",
+   "description": "挑高木屋客厅，壁炉、沙发与木楼梯，夕阳从窗射入",
+   "tags": [
+    "木屋",
+    "别墅",
+    "客厅",
+    "室内",
+    "傍晚",
+    "壁炉"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3337,6 +5091,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "夜行列车·蓝座车厢（夜）",
+   "description": "蓝色窗帘与蓝座椅的特急列车车厢，夜色昏暗",
+   "tags": [
+    "列车",
+    "车内",
+    "交通工具",
+    "夜"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -3362,6 +5125,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q2=A",
+   "title": "丰川家·洋馆花园（日）",
+   "description": "红砖洋馆旁修剪整齐的花园，白色凉亭与草坪，晴天",
+   "tags": [
+    "洋馆",
+    "花园",
+    "丰川家",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3381,6 +5155,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "红幕剧场舞台·金饰台口",
+   "description": "金色雕花台口下垂着红色大幕，木地板舞台",
+   "tags": [
+    "剧场",
+    "舞台",
+    "红幕",
+    "室内",
+    "复古"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3401,6 +5185,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "舞会大厅·水晶吊灯（灯）",
+   "description": "多层包厢的欧式舞厅，水晶吊灯与棋盘格地板，暖光",
+   "tags": [
+    "舞厅",
+    "大厅",
+    "室内",
+    "豪华",
+    "吊灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3421,6 +5215,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "舞会大厅·水晶吊灯（夜）",
+   "description": "同一欧式舞厅暗蓝夜色",
+   "tags": [
+    "舞厅",
+    "大厅",
+    "室内",
+    "夜",
+    "豪华"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3440,6 +5244,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "邮轮甲板（夜）",
+   "description": "夜晚邮轮木甲板，地灯点点，左侧白色船楼",
+   "tags": [
+    "邮轮",
+    "甲板",
+    "海上",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType/name",
+     "current": "seaside / 海边木平台 · 夜间",
+     "suggest": "ship_deck / 邮轮甲板（夜）",
+     "reason": "左侧是白色多层船楼，地面是甲板木板与地灯，是邮轮甲板而不是岸边平台"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3459,6 +5282,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "普通教室·黑板（日）",
+   "description": "标准日式教室，黑色课桌整齐排列与黑板，日光",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日",
+    "黑板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3478,6 +5311,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "普通教室·黑板（傍晚）",
+   "description": "同一教室被橙色夕阳照满",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "傍晚",
+    "黑板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3497,6 +5340,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "白色学校走廊·长窗（日）",
+   "description": "长直学校走廊，左侧窗户与扶手，明亮白色",
+   "tags": [
+    "学校",
+    "走廊",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3516,6 +5368,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校音乐教室·三角钢琴（日）",
+   "description": "阶梯座椅音乐教室，三角钢琴、黑板与白板",
+   "tags": [
+    "学校",
+    "音乐教室",
+    "室内",
+    "日",
+    "钢琴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3535,6 +5397,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校部室·望远镜书架（日）",
+   "description": "狭小社团活动室，书架、绿沙发、望远镜与折叠椅",
+   "tags": [
+    "学校",
+    "部室",
+    "社团",
+    "室内",
+    "日",
+    "望远镜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3555,6 +5428,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校园蓝顶凉亭花园（日）",
+   "description": "洋风校舍前花坛与蓝绿圆顶凉亭，晴天",
+   "tags": [
+    "学校",
+    "花园",
+    "凉亭",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3574,6 +5458,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "水族馆海洋步廊（傍晚）",
+   "description": "天花板绘有鱼群的半室外步廊，粉紫夕光",
+   "tags": [
+    "水族馆",
+    "步廊",
+    "室外",
+    "傍晚",
+    "海洋"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "seaside",
+     "suggest": "aquarium（户外步廊）",
+     "reason": "天花板绘有鱼群，是水族馆的半室外步廊"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3593,6 +5496,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "繁华街口·药妆店（日）",
+   "description": "商业街十字路口，药妆店与卡拉OK招牌，晴天",
+   "tags": [
+    "街道",
+    "商业街",
+    "路口",
+    "室外",
+    "日",
+    "晴",
+    "招牌"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3612,6 +5527,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "繁华街口·药妆店（雨）",
+   "description": "同一商业街路口下雨阴天，地面湿润",
+   "tags": [
+    "街道",
+    "商业街",
+    "路口",
+    "室外",
+    "日",
+    "雨"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3631,6 +5557,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "繁华街口·药妆店（傍晚）",
+   "description": "同一商业街路口被夕阳染橙",
+   "tags": [
+    "街道",
+    "商业街",
+    "路口",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3650,6 +5586,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "繁华街口·药妆店（夜）",
+   "description": "同一商业街路口夜晚，招牌亮灯",
+   "tags": [
+    "街道",
+    "商业街",
+    "路口",
+    "室外",
+    "夜",
+    "霓虹"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3674,6 +5621,16 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 外观·正门（傍晚）",
+   "description": "RiNG 大楼正门与招牌，行道树，夕阳暖色",
+   "tags": [
+    "LiveHouse外观",
+    "RiNG",
+    "室外",
+    "傍晚",
+    "招牌"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3698,6 +5655,16 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 外观·正门（夜）B",
+   "description": "与 16 同构图，RiNG 正门夜景",
+   "tags": [
+    "LiveHouse外观",
+    "RiNG",
+    "室外",
+    "夜",
+    "招牌"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3717,6 +5684,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "卡拉OK包间·红沙发A",
+   "description": "条纹墙小包间，红色L形沙发、茶几与壁挂屏幕",
+   "tags": [
+    "卡拉OK",
+    "包间",
+    "室内",
+    "红沙发"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3736,6 +5712,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校鞋柜玄关（日）",
+   "description": "蓝灰鞋柜排列的学校玄关大厅，玻璃门外日光",
+   "tags": [
+    "学校",
+    "鞋柜",
+    "玄关",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3755,6 +5741,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校鞋柜玄关（傍晚）",
+   "description": "同一学校鞋柜玄关被夕阳染成橙粉色",
+   "tags": [
+    "学校",
+    "鞋柜",
+    "玄关",
+    "室内",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3785,6 +5781,17 @@
     "须贺蕾叶（高二A）",
     "梅里千樱梨（高一A）"
    ],
+   "title": "羽丘女子·校门拱架（日）",
+   "description": "绿藤拱架校门与「羽丘女子」校名墙，后方玻璃校舍，晴天",
+   "tags": [
+    "学校",
+    "校门",
+    "羽丘女子学园",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3815,6 +5822,16 @@
     "须贺蕾叶（高二A）",
     "梅里千樱梨（高一A）"
    ],
+   "title": "羽丘女子·校门拱架（傍晚）",
+   "description": "同一羽丘校门拱架与校名墙，夕阳暖色",
+   "tags": [
+    "学校",
+    "校门",
+    "羽丘女子学园",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3834,6 +5851,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木墙大厅休息区（傍晚）",
+   "description": "木墙大厅，棕色皮沙发、楼梯与玻璃窗，昏暗夕光",
+   "tags": [
+    "大厅",
+    "休息区",
+    "旅馆",
+    "室内",
+    "傍晚",
+    "木"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3858,6 +5886,16 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 咖啡厅·挑高全景（日）B",
+   "description": "与 14 同构图，挑高木质咖啡厅，绿植与吧台，日光",
+   "tags": [
+    "咖啡厅",
+    "RiNG",
+    "室内",
+    "日",
+    "绿植"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3882,6 +5920,16 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 咖啡厅·挑高全景（傍晚）",
+   "description": "同一 RiNG 咖啡厅被夕阳染成金橙色",
+   "tags": [
+    "咖啡厅",
+    "RiNG",
+    "室内",
+    "傍晚",
+    "绿植"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3907,6 +5955,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p4–p8=anon's house",
+   "title": "爱音家·斜顶卧室（日）",
+   "description": "木斜顶天窗卧室，白衣柜、书架、矮桌与双人沙发，日光",
+   "tags": [
+    "卧室",
+    "爱音家",
+    "室内",
+    "日",
+    "天窗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3932,6 +5990,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p4–p8=anon's house",
+   "title": "爱音家·斜顶卧室（傍晚）",
+   "description": "同一斜顶天窗卧室，夕阳橙色",
+   "tags": [
+    "卧室",
+    "爱音家",
+    "室内",
+    "傍晚",
+    "天窗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3957,6 +6025,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q5 p8=anon's house",
+   "title": "爱音家·斜顶卧室（夜）",
+   "description": "同一斜顶天窗卧室，夜间室内灯光",
+   "tags": [
+    "卧室",
+    "爱音家",
+    "室内",
+    "夜",
+    "天窗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3975,6 +6053,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "高层落地窗卧室（傍晚）",
+   "description": "大落地窗卧室，双人床、沙发与矮桌，窗外晚霞城市",
+   "tags": [
+    "卧室",
+    "高层公寓",
+    "室内",
+    "傍晚",
+    "落地窗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -3993,6 +6081,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "高层落地窗卧室（灯·夜景）",
+   "description": "同一落地窗卧室开灯，窗外城市夜景",
+   "tags": [
+    "卧室",
+    "高层公寓",
+    "室内",
+    "夜",
+    "落地窗",
+    "夜景"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4011,6 +6110,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "高层落地窗卧室（夜·关灯）",
+   "description": "同一落地窗卧室关灯，暗蓝色调，窗外夜景",
+   "tags": [
+    "卧室",
+    "高层公寓",
+    "室内",
+    "夜",
+    "落地窗",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4036,6 +6146,26 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
+   "title": "爽世家·挑高餐厅（傍晚）",
+   "description": "挑高复式公寓，白椅长餐桌与花瓶，夕阳金光",
+   "tags": [
+    "餐厅",
+    "爽世家",
+    "公寓",
+    "室内",
+    "傍晚",
+    "挑高"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "dorm",
+     "suggest": "home（高级公寓）",
+     "reason": "爽世家是私人公寓不是宿舍；contact sheet 旧名「宿舍共用餐厅」会误导（归属不变）"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4061,6 +6191,26 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
+   "title": "爽世家·挑高餐厅（夜）",
+   "description": "同一复式公寓餐厅，夜间冷白色调",
+   "tags": [
+    "餐厅",
+    "爽世家",
+    "公寓",
+    "室内",
+    "夜",
+    "挑高"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "dorm",
+     "suggest": "home",
+     "reason": "同 161"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4086,6 +6236,25 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
+   "title": "爽世家·挑高餐厅（灯）",
+   "description": "同一复式公寓餐厅，室内暖灯",
+   "tags": [
+    "餐厅",
+    "爽世家",
+    "公寓",
+    "室内",
+    "挑高"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "dorm",
+     "suggest": "home",
+     "reason": "同 161"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4111,6 +6280,25 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
+   "title": "木梁餐厅·吧台长桌（日）",
+   "description": "木梁天花板的餐厅，木桌椅与后方吧台厨房，明亮",
+   "tags": [
+    "餐厅",
+    "食堂",
+    "室内",
+    "日",
+    "木"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "owner（疑问，不改）",
+     "current": "爽世家（用户 R1 Q5 答复）",
+     "question": "画面是木梁天花板、十几张木桌和后方吧台厨房，更像餐馆/宿舍食堂，与 161–163 的复式公寓风格完全不同。是否确认属于爽世家？若不是，建议改为通用餐厅",
+     "reason": "用户确认过的归属，只提疑问"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4136,6 +6324,25 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
+   "title": "木梁餐厅·吧台长桌（傍晚）",
+   "description": "同一木梁餐厅，夕阳橙光",
+   "tags": [
+    "餐厅",
+    "食堂",
+    "室内",
+    "傍晚",
+    "木"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "owner（疑问，不改）",
+     "current": "爽世家（用户 R1 Q5 答复）",
+     "question": "同 164",
+     "reason": "用户确认过的归属，只提疑问"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4155,6 +6362,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "城市广场台阶·花坛（夜）",
+   "description": "宽阔石阶中央花坛与路灯，侧边玻璃建筑，夜色",
+   "tags": [
+    "广场",
+    "台阶",
+    "城市",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4174,6 +6391,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "城市广场台阶·花坛（日）",
+   "description": "同一石阶广场晴天，花坛与绿树",
+   "tags": [
+    "广场",
+    "台阶",
+    "城市",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4192,6 +6420,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校铁拱门入口（日）",
+   "description": "铁艺拱门与红砖门柱，后方欧式校舍尖塔，晴天",
+   "tags": [
+    "学校",
+    "校门",
+    "洋风",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4211,6 +6450,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "公园石栏观景台·高楼（日）",
+   "description": "石栏杆观景台眺望绿树与高楼群，晴天",
+   "tags": [
+    "公园",
+    "观景台",
+    "城市",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4229,6 +6479,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "望远镜卧室·高架床（日）",
+   "description": "木质高架床下书桌、天文望远镜与绿窗帘，日光",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "日",
+    "望远镜",
+    "高架床"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4247,6 +6508,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "望远镜卧室·高架床（夜）",
+   "description": "同一卧室夜间，只有台灯亮着",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "夜",
+    "望远镜",
+    "台灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4266,6 +6538,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "露天电车站台（日）",
+   "description": "小型露天站台与铁轨、站棚，后方红砖建筑，晴天",
+   "tags": [
+    "车站",
+    "站台",
+    "铁轨",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4285,6 +6568,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "绿公告板教室（日）",
+   "description": "木课桌教室，后墙绿色公告板贴满纸张，窗外日光",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日",
+    "公告板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4304,6 +6597,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "绿公告板教室（傍晚）",
+   "description": "同一教室被夕阳染橙",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "傍晚",
+    "公告板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4323,6 +6626,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "公园双树广场（傍晚）",
+   "description": "两棵大树围树坛的公园广场，夕阳树影斑驳",
+   "tags": [
+    "公园",
+    "广场",
+    "树",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4342,6 +6655,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "人行天桥·住宅楼旁（夜）",
+   "description": "夜晚铁栏人行天桥，路灯与两侧公寓楼",
+   "tags": [
+    "天桥",
+    "街道",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4366,6 +6688,17 @@
    "exclusive": false,
    "homeBand": "mygo",
    "answer": "R1 Q7 p1–p3,p18–p22=RiNG（主场 MyGO 据 Q6 回答）",
+   "title": "RiNG 录音室·木墙（鼓组）B",
+   "description": "与 15 同构图的 RiNG 录音室，木墙与鼓组",
+   "tags": [
+    "录音室",
+    "练习室",
+    "RiNG",
+    "室内",
+    "鼓",
+    "木"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4385,6 +6718,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "楼顶钢楼梯·广告牌（夜）",
+   "description": "建筑外部钢楼梯平台，对面发光广告牌与高楼夜景",
+   "tags": [
+    "楼梯",
+    "天台",
+    "城市",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4403,6 +6746,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "深色书柜卧室（夜·屏亮）",
+   "description": "深色调卧室，金属书架、单人床，书桌电脑屏亮着",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "夜",
+    "电脑",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4421,6 +6775,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "深色书柜卧室（夜·屏关）",
+   "description": "与 179 相同的深色卧室，电脑屏熄灭，全暗",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "夜",
+    "电脑",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4450,6 +6815,16 @@
     "八幡海铃（高一）",
     "马桥心玖（高二B）"
    ],
+   "title": "花咲川·红砖校门（傍晚）",
+   "description": "红砖门柱与校名牌、伸缩铁门，后方校舍与大树，夕阳",
+   "tags": [
+    "学校",
+    "校门",
+    "花咲川女子学园",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "nameOverride": "花咲川女子学園 校门 · 傍晚 · 晴天",
    "source": "draft",
    "updatedAt": "2026-10-10"
@@ -4480,6 +6855,16 @@
     "八幡海铃（高一）",
     "马桥心玖（高二B）"
    ],
+   "title": "花咲川·红砖校门（夜）",
+   "description": "同一红砖校门夜景，校舍窗户熄灯",
+   "tags": [
+    "学校",
+    "校门",
+    "花咲川女子学园",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "nameOverride": "花咲川女子学園 校门 · 夜间",
    "source": "draft",
    "updatedAt": "2026-10-10"
@@ -4500,6 +6885,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校木地板走廊·公告板（傍晚）",
+   "description": "与 042 同一木地板走廊，被夕阳染橙",
+   "tags": [
+    "学校",
+    "走廊",
+    "室内",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4519,6 +6913,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校木地板走廊·公告板（灯）",
+   "description": "同一木地板走廊，室内日光灯版",
+   "tags": [
+    "学校",
+    "走廊",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4538,6 +6940,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校园中庭步道·长椅（傍晚）",
+   "description": "校舍间红砖步道两侧草坪长椅，远处体育馆，夕阳",
+   "tags": [
+    "学校",
+    "中庭",
+    "步道",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4557,6 +6969,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校园中庭步道·长椅（夜）",
+   "description": "同一校园步道夜景，路灯与校舍灯光",
+   "tags": [
+    "学校",
+    "中庭",
+    "步道",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4576,6 +6998,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校园自动售货机旁（日）",
+   "description": "校舍外墙一排三台自动售货机，旁边绿树草坪，晴天",
+   "tags": [
+    "学校",
+    "售货机",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4595,6 +7027,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "后台休息房·衣帽架",
+   "description": "暖棕墙小房间，衣帽架、黑皮沙发、木桌椅",
+   "tags": [
+    "后台",
+    "休息室",
+    "室内",
+    "衣帽架"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4614,6 +7055,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "后台货运通道·货梯",
+   "description": "灰暗混凝土通道，货运电梯与金属斜坡扶手",
+   "tags": [
+    "后台",
+    "通道",
+    "货梯",
+    "室内",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4633,6 +7084,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "夜间小公园·石块路灯",
+   "description": "夜晚小公园，路灯照亮沙地与石块，树丛环绕",
+   "tags": [
+    "公园",
+    "室外",
+    "夜",
+    "路灯"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4654,6 +7114,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q7 p11–p13,p23=can be used by any",
+   "title": "剧场大厅·宽木阶梯",
+   "description": "浅色墙大厅中一段宽木阶梯，指示牌与地面立牌",
+   "tags": [
+    "剧场",
+    "大厅",
+    "楼梯",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4673,6 +7142,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校天台·砖墙楼梯间（日）",
+   "description": "水泥地天台，护栏外城市远景，右侧砖墙楼梯间，晴天",
+   "tags": [
+    "学校",
+    "天台",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4691,6 +7170,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "屋顶露台沙发（夜）",
+   "description": "夜晚屋顶露台，嵌入式L形沙发与地灯，星空",
+   "tags": [
+    "露台",
+    "天台",
+    "沙发",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4710,6 +7199,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "家庭餐厅·饮料吧",
+   "description": "家庭餐厅卡座与 DRINK BAR 饮料台，木格窗",
+   "tags": [
+    "家庭餐厅",
+    "餐馆",
+    "室内",
+    "饮料吧",
+    "卡座"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4729,6 +7228,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "天空·蓝天白云（日）",
+   "description": "满屏蓝天与白色积云，无地面",
+   "tags": [
+    "天空",
+    "日",
+    "晴",
+    "插入",
+    "蓝"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4748,6 +7257,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "天空·晚霞（傍晚）",
+   "description": "满屏橙红晚霞云彩，无地面",
+   "tags": [
+    "天空",
+    "傍晚",
+    "晚霞",
+    "插入",
+    "橙"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4767,6 +7286,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "天空·夜云明月",
+   "description": "深蓝夜空，云间一轮小月亮",
+   "tags": [
+    "天空",
+    "夜",
+    "月亮",
+    "插入",
+    "蓝"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4786,6 +7315,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "天空·雨夜月光",
+   "description": "雨丝笼罩的深蓝夜空，云中透出月光",
+   "tags": [
+    "天空",
+    "夜",
+    "雨",
+    "月亮",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4805,6 +7344,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "天空·阴雨（日）",
+   "description": "灰蓝阴云与雨丝的白天天空",
+   "tags": [
+    "天空",
+    "日",
+    "雨",
+    "阴天",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4824,6 +7373,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "斑马线脚边·盲道（日）",
+   "description": "低角度斑马线、黄色盲道砖与草丛，晴天",
+   "tags": [
+    "斑马线",
+    "路口",
+    "特写",
+    "室外",
+    "日",
+    "晴",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4843,6 +7404,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "斑马线脚边·盲道（傍晚）",
+   "description": "同一斑马线低角度特写，夕阳橙色",
+   "tags": [
+    "斑马线",
+    "路口",
+    "特写",
+    "室外",
+    "傍晚",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4862,6 +7434,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "斑马线脚边·盲道（夜）",
+   "description": "同一斑马线低角度特写，夜色蓝调",
+   "tags": [
+    "斑马线",
+    "路口",
+    "特写",
+    "室外",
+    "夜",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4881,6 +7464,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "斑马线脚边·盲道（雨）",
+   "description": "同一斑马线低角度特写，下雨湿地面",
+   "tags": [
+    "斑马线",
+    "路口",
+    "特写",
+    "室外",
+    "日",
+    "雨",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4900,6 +7495,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·绿灯（日）",
+   "description": "仰拍行人信号灯亮绿灯与「步行者专用」牌，蓝天",
+   "tags": [
+    "信号灯",
+    "绿灯",
+    "特写",
+    "室外",
+    "日",
+    "晴",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4919,6 +7526,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·绿灯（傍晚）",
+   "description": "仰拍行人绿灯，橙色晚霞",
+   "tags": [
+    "信号灯",
+    "绿灯",
+    "特写",
+    "室外",
+    "傍晚",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4938,6 +7556,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·绿灯（夜）",
+   "description": "仰拍行人绿灯，深蓝夜空",
+   "tags": [
+    "信号灯",
+    "绿灯",
+    "特写",
+    "室外",
+    "夜",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4957,6 +7586,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·绿灯（雨）",
+   "description": "仰拍行人绿灯，阴雨天",
+   "tags": [
+    "信号灯",
+    "绿灯",
+    "特写",
+    "室外",
+    "日",
+    "雨",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4976,6 +7617,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·红灯（日）",
+   "description": "仰拍行人信号灯亮红灯，蓝天白云",
+   "tags": [
+    "信号灯",
+    "红灯",
+    "特写",
+    "室外",
+    "日",
+    "晴",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -4995,6 +7648,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·红灯（傍晚）",
+   "description": "仰拍行人红灯，橙色晚霞",
+   "tags": [
+    "信号灯",
+    "红灯",
+    "特写",
+    "室外",
+    "傍晚",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5014,6 +7678,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·红灯（夜）",
+   "description": "仰拍行人红灯，深蓝夜空",
+   "tags": [
+    "信号灯",
+    "红灯",
+    "特写",
+    "室外",
+    "夜",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5033,6 +7708,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行人信号灯·红灯（雨）",
+   "description": "仰拍行人红灯，阴雨天",
+   "tags": [
+    "信号灯",
+    "红灯",
+    "特写",
+    "室外",
+    "日",
+    "雨",
+    "插入"
+   ],
+   "category": "insert",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5052,6 +7739,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·白底社交动态列表",
+   "description": "白底网页界面，左侧一列头像与短文字帖子",
+   "tags": [
+    "UI",
+    "网页",
+    "社交网络",
+    "白",
+    "屏幕"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5071,6 +7768,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·美食网站页面",
+   "description": "浅灰网页界面，料理图片与密集小字链接的美食站",
+   "tags": [
+    "UI",
+    "网页",
+    "美食",
+    "屏幕"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5090,6 +7796,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·搜索结果网页",
+   "description": "白底搜索引擎结果页，条目列表与缩略图",
+   "tags": [
+    "UI",
+    "网页",
+    "搜索",
+    "屏幕"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5109,6 +7824,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·深色社交动态",
+   "description": "深灰底社交应用界面，顶部圆形头像与风景图帖子",
+   "tags": [
+    "UI",
+    "社交网络",
+    "屏幕",
+    "深色"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5128,6 +7852,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·手机聊天白底",
+   "description": "白底窄屏聊天界面，左侧头像气泡消息",
+   "tags": [
+    "UI",
+    "聊天",
+    "手机",
+    "屏幕",
+    "白"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5147,6 +7881,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "纯白画面A",
+   "description": "全白纯色画面，无任何内容",
+   "tags": [
+    "纯色",
+    "白",
+    "闪白"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5166,6 +7908,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "纯黑画面",
+   "description": "全黑纯色画面，无任何内容",
+   "tags": [
+    "纯色",
+    "黑",
+    "黑场"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5185,6 +7935,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "卡拉OK包间·红沙发B",
+   "description": "与 147 同一包间，屏幕亮白光，较暗",
+   "tags": [
+    "卡拉OK",
+    "包间",
+    "室内",
+    "红沙发",
+    "暗"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000147",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5214,6 +7975,17 @@
     "八幡海铃（高一）",
     "马桥心玖（高二B）"
    ],
+   "title": "花咲川·红砖校门（日）",
+   "description": "红砖门柱与校名牌、伸缩铁门，后方校舍大树，晴天",
+   "tags": [
+    "学校",
+    "校门",
+    "花咲川女子学园",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "nameOverride": "花咲川女子学園 校门 · 日间 · 晴天",
    "source": "draft",
    "updatedAt": "2026-10-10"
@@ -5234,6 +8006,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "有顶商店街·灯笼招牌（夜）",
+   "description": "与 041 同一拱顶商店街，夜间灯光",
+   "tags": [
+    "商店街",
+    "街道",
+    "有顶",
+    "夜",
+    "日式",
+    "店铺"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5263,6 +8046,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p8,p9=庭院，归属未答",
+   "title": "Peace之家·庭院檐廊（夜）",
+   "description": "老式木屋檐廊与小庭院草地，夜色蓝调",
+   "tags": [
+    "庭院",
+    "Peace之家",
+    "住宅",
+    "室外",
+    "夜",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5292,6 +8086,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p8,p9=庭院，归属未答",
+   "title": "Peace之家·庭院檐廊（日）",
+   "description": "同一老式木屋檐廊与庭院，晴天绿树",
+   "tags": [
+    "庭院",
+    "Peace之家",
+    "住宅",
+    "室外",
+    "日",
+    "晴",
+    "日式"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5317,6 +8123,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p7,p10=miku's room",
+   "title": "心玖的房间·蓝墙（日）",
+   "description": "同 035 淡蓝墙纸卧室，日光窗户，吉他与蓝床",
+   "tags": [
+    "卧室",
+    "心玖",
+    "DumbRock",
+    "室内",
+    "日",
+    "吉他",
+    "蓝"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5336,6 +8154,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "现代教室·投影白板（日）",
+   "description": "蓝灰地毯现代教室，课桌排列、白板与显示器，日光",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日",
+    "现代"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5355,6 +8183,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "高架铁路站台（日）",
+   "description": "有顶棚的站台与屏蔽护栏，长椅，城市建筑，晴天",
+   "tags": [
+    "车站",
+    "站台",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5374,6 +8212,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "金属灯架舞台·白工作灯",
+   "description": "木墙小型 live house，金属护栏前空舞台，白色灯光",
+   "tags": [
+    "LiveHouse",
+    "舞台",
+    "室内",
+    "白光"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5393,6 +8240,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "黑色烟雾纹理",
+   "description": "深黑底上暗灰烟雾纹理，无具体物件",
+   "tags": [
+    "抽象",
+    "烟雾",
+    "黑",
+    "压抑",
+    "纹理"
+   ],
+   "category": "event",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5422,6 +8279,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q4 p6,p11=厨房，归属未答",
+   "title": "Peace之家·厨房（夜）",
+   "description": "同 034 老式家庭厨房，夜间仅顶灯昏暗",
+   "tags": [
+    "厨房",
+    "Peace之家",
+    "住宅",
+    "室内",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5441,6 +8308,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "校园中庭步道·长椅（日）",
+   "description": "与 185 同构图的校园红砖步道与长椅，晴天",
+   "tags": [
+    "学校",
+    "中庭",
+    "步道",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5459,6 +8337,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "明亮北欧风客厅（日）",
+   "description": "浅木家具客厅，灰色沙发、电视、餐桌与绿窗帘，明亮",
+   "tags": [
+    "客厅",
+    "住宅",
+    "室内",
+    "日",
+    "北欧"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5478,6 +8366,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "Live House 海报走廊",
+   "description": "黑墙长走廊两侧贴满演出海报，日光灯",
+   "tags": [
+    "LiveHouse",
+    "走廊",
+    "后台",
+    "室内",
+    "海报"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5497,6 +8395,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "蓝幕后台通道·木地板",
+   "description": "两侧垂挂深蓝幕布的木地板通道，顶灯",
+   "tags": [
+    "后台",
+    "舞台侧",
+    "幕布",
+    "室内",
+    "蓝"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5516,6 +8424,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校体育馆·舞台幕（日）",
+   "description": "木地板体育馆，绿墙板与正面带横幅的舞台",
+   "tags": [
+    "学校",
+    "体育馆",
+    "室内",
+    "日",
+    "舞台"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5535,6 +8453,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "车站高架连廊（夜）",
+   "description": "同 017 高架连廊夜景，远处高楼灯火",
+   "tags": [
+    "车站",
+    "连廊",
+    "室外",
+    "夜",
+    "城市"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5554,6 +8482,32 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木折门车库外观（日）",
+   "description": "木质折叠门加绿色小门的车库正面，旁边是公寓楼，晴天",
+   "tags": [
+    "车库",
+    "住宅外观",
+    "街道",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType/name",
+     "current": "street / 街边小店 · 日间 · 晴天",
+     "suggest": "garage_exterior / 木折门车库外观（日）",
+     "reason": "原图是住宅车库的木质折叠门加绿色小门，不是店铺；与新增 361（夜）是同一建筑，新增 357 是从室内看同一道折叠门"
+    },
+    {
+     "field": "location（疑问）",
+     "current": "无",
+     "question": "253/361/357 这间车库是否就是 millsage 练习室（23/001–003）的外观与另一角度？若是，应归 millsage 并 exclusive",
+     "reason": "357 后墙的木折门与 253 正面一致，但 357 室内是空的且有篮球架，与 millsage 练习室的陈设不同，可能是改造前或另一处车库"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5573,6 +8527,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "站前商店街入口·树坛（日）",
+   "description": "车站前广场，圆形树坛、雨棚与商店街入口，晴天",
+   "tags": [
+    "商店街",
+    "车站前",
+    "街道",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5591,6 +8556,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "薄荷绿墙卧室·铁艺床（日）",
+   "description": "与 012 同一绿墙卧室，日光窗户",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "日",
+    "绿",
+    "铁艺床"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5610,6 +8586,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "浅色彩虹散景",
+   "description": "白底上柔和彩虹色光斑散景，无具体物件",
+   "tags": [
+    "散景",
+    "抽象",
+    "梦幻",
+    "明亮",
+    "回忆"
+   ],
+   "category": "event",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5631,6 +8617,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：MewType 专属",
+   "title": "VR Floor·粉蓝虚拟空间B",
+   "description": "与 20 同构图的粉色网格穹顶虚拟空间",
+   "tags": [
+    "虚拟空间",
+    "MewType",
+    "VR",
+    "抽象",
+    "粉",
+    "蓝"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -5650,6 +8647,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "现代电梯大厅（日）",
+   "description": "玻璃幕墙的空旷大厅，电梯门与青色立柱，日光",
+   "tags": [
+    "大厅",
+    "办公楼",
+    "电梯",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5674,6 +8681,17 @@
    "students": [
     "仲町阿拉蕾（一年级）"
    ],
+   "title": "白八马学院·天台草坪（日）B",
+   "description": "与 21 同构图的屋顶花园，铁丝网与草坪，晴天",
+   "tags": [
+    "学校",
+    "天台",
+    "神田白八马学园",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5693,6 +8711,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "青绿地面教室·黑板（日）",
+   "description": "青绿色地板教室，粉色椅课桌、黑板与电视，日光",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5712,6 +8739,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "宽木地板走廊·绿植槽（日）",
+   "description": "宽阔木地板走廊，中央绿植花槽，窗外日光",
+   "tags": [
+    "走廊",
+    "公共建筑",
+    "室内",
+    "日",
+    "绿植"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5737,6 +8774,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：gaming room=yuno",
+   "title": "由乃的房间·电竞机箱（暗）",
+   "description": "暗房间里紫粉 RGB 灯的电竞桌、双屏、麦克风与电竞椅",
+   "tags": [
+    "卧室",
+    "由乃",
+    "MewType",
+    "室内",
+    "电竞",
+    "霓虹",
+    "暗"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5756,6 +8805,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "台场海滨·彩虹桥（傍晚）",
+   "description": "海滨步道远眺吊桥与城市，整体橙金色夕阳",
+   "tags": [
+    "海滨",
+    "台场",
+    "室外",
+    "傍晚",
+    "桥"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5775,6 +8834,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木墙小咖啡馆·挂画（日）",
+   "description": "深色木墙小咖啡馆，挂画、圆桌与绿植，玻璃门日光",
+   "tags": [
+    "咖啡厅",
+    "室内",
+    "日",
+    "复古",
+    "木"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5794,6 +8863,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木墙小咖啡馆·挂画（傍晚）",
+   "description": "同一木墙小咖啡馆，夕阳从玻璃门射入",
+   "tags": [
+    "咖啡厅",
+    "室内",
+    "傍晚",
+    "复古",
+    "木"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5813,6 +8892,26 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：266 不属于律，主人不明（按 R2-9 处理）",
+   "title": "粉色少女卧室·拍摄三脚架",
+   "description": "淡紫墙卧室，粉沙发、挂画、三脚架与蕾丝床",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "粉",
+    "拍摄",
+    "可爱"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "律的房间 · 拍摄灯少女卧室",
+     "suggest": "粉色少女卧室·拍摄三脚架",
+     "reason": "用户已答复 266 不属于律，名称仍带「律的房间」会误导人和 AI"
+    }
+   ],
+   "fixesImported": true,
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -5852,6 +8951,27 @@
     "activity": "singing",
     "rarity": "rare"
    },
+   "title": "阿拉蕾·衣柜暗室（麦克风）",
+   "description": "漆黑衣柜内挂满衣服，中间立着麦克风架",
+   "tags": [
+    "衣柜",
+    "阿拉蕾",
+    "MewType",
+    "室内",
+    "夜",
+    "暗",
+    "麦克风"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "律的房间 · 衣柜暗室 · 夜间",
+     "suggest": "阿拉蕾·衣柜暗室（麦克风）",
+     "reason": "用户已答复 267 属于阿拉蕾，名称仍写「律的房间」"
+    }
+   ],
+   "fixesImported": true,
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -5871,6 +8991,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "木墙小会议室·白板",
+   "description": "小会议室，木墙前白板、黄椅与木会议桌",
+   "tags": [
+    "会议室",
+    "办公室",
+    "室内",
+    "白板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5890,6 +9019,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "城市钢拱雕塑广场（日）",
+   "description": "高楼前石板广场与银色交叉拱形雕塑，晴天",
+   "tags": [
+    "广场",
+    "城市",
+    "雕塑",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5909,6 +9049,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "黄墙会议室·圆桌",
+   "description": "亮黄色墙面会议室，圆桌黑椅、白板与显示器",
+   "tags": [
+    "会议室",
+    "办公室",
+    "室内",
+    "黄"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5928,6 +9077,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "玻璃办公楼·人行道（日）",
+   "description": "蓝绿玻璃办公楼底层与绿篱护栏人行道，晴天",
+   "tags": [
+    "办公楼",
+    "街道",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5947,6 +9106,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "高楼间窄巷（日）",
+   "description": "两栋大楼之间的狭窄通道，尽头透光，冷蓝色调",
+   "tags": [
+    "小巷",
+    "街道",
+    "室外",
+    "日",
+    "城市"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5966,6 +9135,14 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "车站检票口",
+   "description": "车站内自动检票闸机、站务室窗口与橙色标识",
+   "tags": [
+    "车站",
+    "检票口",
+    "室内"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -5985,6 +9162,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "住宅区路口·斑马线（傍晚）",
+   "description": "与 083 同一住宅区路口，夕阳暖橙",
+   "tags": [
+    "住宅街",
+    "路口",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6004,6 +9190,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "办公区人行道·行道树（日）",
+   "description": "大楼间宽人行道与绿化带，晴天",
+   "tags": [
+    "街道",
+    "办公区",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6025,6 +9221,16 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "电车车厢·蓝座（日）B",
+   "description": "与 112 同构图的通勤电车车厢，日光",
+   "tags": [
+    "电车",
+    "车内",
+    "交通工具",
+    "日"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000112",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -6044,6 +9250,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原站前·高楼路口（日）B",
+   "description": "与 22 同构图的站前路口，晴天",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "车站前",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6063,6 +9280,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原站前·高楼路口（傍晚）",
+   "description": "同一站前路口，夕阳从楼间射入",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "车站前",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6082,6 +9309,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原站前·高楼路口（夜）",
+   "description": "同一站前路口夜景，大楼灯光",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "车站前",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6101,6 +9338,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "室内活动舞台·樱花幕",
+   "description": "大型展厅内的活动舞台，粉色樱花背景板与花篮",
+   "tags": [
+    "活动",
+    "展会",
+    "舞台",
+    "室内",
+    "粉",
+    "樱花"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6120,6 +9368,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "户外临时舞台·桁架（日）",
+   "description": "高楼间广场上的钢桁架临时舞台与蓝色台面，晴天",
+   "tags": [
+    "活动",
+    "舞台",
+    "户外",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6139,6 +9398,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "活动展厅·海报花篮",
+   "description": "展厅立柱上贴满海报，中央大立牌与祝贺花篮",
+   "tags": [
+    "活动",
+    "展会",
+    "室内",
+    "海报",
+    "花篮"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6158,6 +9427,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "活动帐篷休息区",
+   "description": "白色帐篷内的折叠桌椅、白板、矿泉水与纸箱",
+   "tags": [
+    "活动",
+    "后台",
+    "帐篷",
+    "休息室"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6177,6 +9455,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "明亮教室·木地板黑板（日）",
+   "description": "木地板教室，木课桌椅、黑板与公告板，窗外蓝天",
+   "tags": [
+    "学校",
+    "教室",
+    "室内",
+    "日",
+    "黑板"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6196,6 +9484,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "红砖小咖啡馆外观（夜）",
+   "description": "夜晚红砖楼底的小咖啡馆门面，门口盆栽与立牌",
+   "tags": [
+    "咖啡厅外观",
+    "街道",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6215,6 +9512,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "红砖小咖啡馆外观（傍晚）",
+   "description": "同一红砖小咖啡馆门面，夕阳斜照",
+   "tags": [
+    "咖啡厅外观",
+    "街道",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6234,6 +9540,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "窗边长桌休息区（日）",
+   "description": "格子地板空间，沿窗木长桌与绿色长凳，窗外楼群",
+   "tags": [
+    "学校",
+    "休息区",
+    "窗边",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "音乐教室窗边 · 日间",
+     "suggest": "窗边长桌休息区（日）",
+     "reason": "画面只有沿窗长木桌、绿色长凳和格子地板，没有乐器或谱架，不像音乐教室"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6253,6 +9578,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校图书室（日）",
+   "description": "高书架与玻璃书柜间的阅读桌与折叠椅，日光",
+   "tags": [
+    "学校",
+    "图书室",
+    "室内",
+    "日",
+    "书架"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6278,6 +9613,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：balloon one=nonoka",
+   "title": "野乃花的房间·气球（灯）",
+   "description": "粉色瓷砖墙卧室，粉气球、帐篷、兔耳椅与电脑桌",
+   "tags": [
+    "卧室",
+    "野乃花",
+    "MewType",
+    "室内",
+    "粉",
+    "气球"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6303,6 +9649,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：balloon one=nonoka",
+   "title": "野乃花的房间·气球（日）",
+   "description": "同一粉色气球卧室日间版",
+   "tags": [
+    "卧室",
+    "野乃花",
+    "MewType",
+    "室内",
+    "日",
+    "粉",
+    "气球"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6322,6 +9680,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校入口前广场（日）",
+   "description": "方砖铺装的学校前广场，围栏与校舍入口，晴天",
+   "tags": [
+    "学校",
+    "广场",
+    "入口",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6341,6 +9710,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "学校入口前广场（傍晚）",
+   "description": "同一学校前广场被夕阳染橙",
+   "tags": [
+    "学校",
+    "广场",
+    "入口",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6360,6 +9739,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "社区儿童公园·滑梯（日）",
+   "description": "小公园内黄色滑梯、攀爬架与沙池，绿树环绕",
+   "tags": [
+    "公园",
+    "儿童公园",
+    "滑梯",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6379,6 +9769,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "商业小街·招牌路锥（日）",
+   "description": "窄商业街两侧小店招牌与电线杆，路锥，远处天桥，晴天",
+   "tags": [
+    "街道",
+    "商业街",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6398,6 +9798,18 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原·模型店路口（日）",
+   "description": "大路口对面橙色招牌模型店大楼，护栏与斑马线，晴天",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "模型店",
+    "路口",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6417,6 +9829,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "高架桥下柱廊通道",
+   "description": "高架下的长柱廊通道，两侧店面与地灯，昏暗",
+   "tags": [
+    "高架下",
+    "街道",
+    "柱廊",
+    "半室外",
+    "暗"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType/indoor",
+     "current": "cafe / indoor",
+     "suggest": "street（高架下通道）/ outdoor",
+     "reason": "是高架桥下的长柱廊通道，没有咖啡厅陈设"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6436,6 +9867,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "超市「肉はハヤブサ」门前",
+   "description": "黄色招牌的超市肉店门口，门前蔬果摊与格子地面",
+   "tags": [
+    "超市",
+    "商店",
+    "街道",
+    "室外",
+    "购物"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6455,6 +9896,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "河畔砖拱桥步道（夜）",
+   "description": "河边石板步道，红砖拱廊建筑与尖塔，高楼夜景",
+   "tags": [
+    "河边",
+    "步道",
+    "城市",
+    "室外",
+    "夜",
+    "砖拱"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6474,6 +9926,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "拱廊餐厅露台·城市夜景（夜）",
+   "description": "拱顶隧道式餐厅露台，木桌椅，拱口外霓虹高楼",
+   "tags": [
+    "餐厅",
+    "露台",
+    "城市",
+    "夜",
+    "夜景"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6493,6 +9955,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "行道树宽街道（日）",
+   "description": "宽阔人行道与整排行道树，护栏，对街店铺招牌，晴天",
+   "tags": [
+    "街道",
+    "城市",
+    "行道树",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6512,6 +9985,24 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "室内楼梯间·绿扶手",
+   "description": "灰绿色墙面楼梯间，扶手与盲道，冷色昏暗",
+   "tags": [
+    "楼梯间",
+    "室内",
+    "建筑内",
+    "暗"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "street",
+     "suggest": "building_interior（楼梯间）",
+     "reason": "室内楼梯间，不是街道"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6531,6 +10022,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "水族馆·大水槽",
+   "description": "巨大弧形水槽中鱼群游动，蓝色光线铺满地面",
+   "tags": [
+    "水族馆",
+    "室内",
+    "蓝",
+    "鱼",
+    "约会"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "seaside",
+     "suggest": "aquarium",
+     "reason": "室内水族馆大水槽"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6550,6 +10060,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "书店·漫画书架",
+   "description": "明亮书店，漫画书架与平台陈列、促销立牌",
+   "tags": [
+    "书店",
+    "商店",
+    "室内",
+    "书架",
+    "购物"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "street",
+     "suggest": "bookstore",
+     "reason": "室内书店"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6571,6 +10100,15 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "user R2：车辆通用，任何人可用",
+   "title": "电车车厢·绿座（日）",
+   "description": "绿色座椅的通勤电车车厢，日光",
+   "tags": [
+    "电车",
+    "车内",
+    "交通工具",
+    "日"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -6596,6 +10134,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：idol one=arale",
+   "title": "阿拉蕾的房间·偶像海报（傍晚）",
+   "description": "贴偶像海报的卧室，电脑桌、单人床与衣柜，夕光",
+   "tags": [
+    "卧室",
+    "阿拉蕾",
+    "MewType",
+    "室内",
+    "傍晚",
+    "海报",
+    "偶像"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6621,6 +10171,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：idol one=arale",
+   "title": "阿拉蕾的房间·偶像海报（日）",
+   "description": "同一偶像海报卧室日间，窗外日光",
+   "tags": [
+    "卧室",
+    "阿拉蕾",
+    "MewType",
+    "室内",
+    "日",
+    "海报",
+    "偶像"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6646,6 +10208,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：idol one=arale",
+   "title": "阿拉蕾的房间·偶像海报（灯）",
+   "description": "同一偶像海报卧室，室内灯光",
+   "tags": [
+    "卧室",
+    "阿拉蕾",
+    "MewType",
+    "室内",
+    "海报",
+    "偶像"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6671,6 +10244,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：idol one=arale",
+   "title": "阿拉蕾的房间·偶像海报（夜）",
+   "description": "同一偶像海报卧室夜间暗蓝，电脑屏发光",
+   "tags": [
+    "卧室",
+    "阿拉蕾",
+    "MewType",
+    "室内",
+    "夜",
+    "海报",
+    "偶像"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6696,6 +10281,18 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：purple one=miyako",
+   "title": "都子的房间·紫色收藏（灯）",
+   "description": "紫墙卧室，哥特帷幔、书柜与手办收藏柜",
+   "tags": [
+    "卧室",
+    "都子",
+    "MewType",
+    "室内",
+    "紫",
+    "收藏",
+    "手办"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6721,6 +10318,19 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 追答 Q8 房间：purple one=miyako",
+   "title": "都子的房间·紫色收藏B",
+   "description": "与 311 几乎相同的紫色收藏卧室",
+   "tags": [
+    "卧室",
+    "都子",
+    "MewType",
+    "室内",
+    "紫",
+    "收藏",
+    "手办"
+   ],
+   "category": "scene",
+   "duplicateOf": "adv_bkg_stage_000311",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6746,6 +10356,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：律的房间只有 313/314",
+   "title": "律的房间·直播桌环形灯",
+   "description": "蓝格窗帘与灰墙房间，电竞椅、双屏与环形补光灯",
+   "tags": [
+    "卧室",
+    "律",
+    "MewType",
+    "室内",
+    "直播",
+    "补光灯"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -6771,6 +10392,17 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：律的房间只有 313/314",
+   "title": "律的房间·地图书桌",
+   "description": "同一蓝格窗帘房间，书桌、墙上地图与小书柜玩偶",
+   "tags": [
+    "卧室",
+    "律",
+    "MewType",
+    "室内",
+    "书桌",
+    "地图"
+   ],
+   "category": "scene",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -6790,6 +10422,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "夜间花田·远处高塔（夜）",
+   "description": "夜色下大片红黄花田，远处发光高塔与树林",
+   "tags": [
+    "花田",
+    "公园",
+    "室外",
+    "夜",
+    "花"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6809,6 +10451,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "沙滩篝火·夕阳海面（傍晚）",
+   "description": "沙滩上的篝火架与浮木，海面夕阳橙红",
+   "tags": [
+    "海边",
+    "沙滩",
+    "篝火",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6828,6 +10480,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "沙滩篝火·星空（夜）",
+   "description": "同一沙滩篝火夜景，星空与深蓝海面",
+   "tags": [
+    "海边",
+    "沙滩",
+    "篝火",
+    "室外",
+    "夜",
+    "星空"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6847,6 +10510,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·问答网站页面",
+   "description": "白底问答/百科网页界面，正文与右侧粉色信息框",
+   "tags": [
+    "UI",
+    "网页",
+    "屏幕",
+    "白"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6866,6 +10538,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "UI·电脑邮件/聊天列表",
+   "description": "浅色桌面应用界面，左侧菜单与右侧消息列表",
+   "tags": [
+    "UI",
+    "电脑",
+    "聊天",
+    "屏幕"
+   ],
+   "category": "decor",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6887,6 +10568,16 @@
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：MewType 专属",
+   "title": "蓝色方块虚拟舞台",
+   "description": "青蓝色方块穹顶与发光地面网格的虚拟演出空间",
+   "tags": [
+    "虚拟空间",
+    "MewType",
+    "舞台",
+    "蓝",
+    "抽象"
+   ],
+   "category": "event",
    "source": "user",
    "updatedAt": "2026-10-10"
   },
@@ -6906,6 +10597,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "大型音乐场馆入口（日）",
+   "description": "弧形玻璃大楼入口与宽台阶，石板广场，晴天",
+   "tags": [
+    "音乐场馆",
+    "入口",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6925,6 +10626,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原·模型店路口（傍晚）",
+   "description": "同 296 模型店路口，夕阳暖橙",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "模型店",
+    "路口",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6946,6 +10658,16 @@
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q7 p24=can be used by any",
+   "title": "Music Venue 门口（夜）",
+   "description": "夜晚霓虹「Music Venue」招牌的 live house 门面，行道树",
+   "tags": [
+    "LiveHouse外观",
+    "MusicVenue",
+    "室外",
+    "夜",
+    "霓虹"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6965,6 +10687,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "长吧台咖啡厅·黑板菜单",
+   "description": "长木吧台与高脚凳的咖啡厅，黑板菜单立牌",
+   "tags": [
+    "咖啡厅",
+    "室内",
+    "吧台",
+    "木"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -6984,6 +10715,17 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "秋叶原站前·高楼路口（雨）",
+   "description": "同 22 站前路口，阴雨天地面湿润",
+   "tags": [
+    "街道",
+    "秋叶原",
+    "车站前",
+    "室外",
+    "日",
+    "雨"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7003,6 +10745,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "粉色闪光散景",
+   "description": "粉白色泡泡光斑与星形闪光，无具体物件",
+   "tags": [
+    "散景",
+    "抽象",
+    "粉",
+    "梦幻",
+    "可爱"
+   ],
+   "category": "event",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7022,6 +10774,25 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "远塔大草坪（日）",
+   "description": "一望无际的绿草坪与远处树林、高塔，晴天",
+   "tags": [
+    "公园",
+    "草地",
+    "室外",
+    "日",
+    "晴"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "摩天轮公园草坪 · 日间 · 晴天",
+     "suggest": "远塔大草坪（日）",
+     "reason": "画面里没有摩天轮，远处是一座格构高塔"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7041,6 +10812,24 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "远塔大草坪（傍晚）",
+   "description": "同一大草坪与远塔，晚霞金黄",
+   "tags": [
+    "公园",
+    "草地",
+    "室外",
+    "傍晚"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "name",
+     "current": "摩天轮公园草坪 · 傍晚 · 晴天",
+     "suggest": "远塔大草坪（傍晚）",
+     "reason": "同 328"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7060,6 +10849,15 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "摩天轮轿厢内（傍晚）",
+   "description": "红框摩天轮轿厢内，两侧长座椅，窗外夕阳",
+   "tags": [
+    "摩天轮",
+    "车内",
+    "约会",
+    "傍晚"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7078,6 +10876,16 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "小公寓客厅·六角书架",
+   "description": "水泥墙小客厅，米色沙发、六角木架、电视与吧台椅",
+   "tags": [
+    "客厅",
+    "公寓",
+    "住宅",
+    "室内",
+    "暖光"
+   ],
+   "category": "scene",
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7097,6 +10905,26 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "小型座席音乐厅·大屏",
+   "description": "地毯座席的小型音乐会场，舞台大屏与紫蓝灯光",
+   "tags": [
+    "音乐厅",
+    "LiveHouse",
+    "舞台",
+    "室内",
+    "座席",
+    "紫"
+   ],
+   "category": "scene",
+   "fixes": [
+    {
+     "field": "placeType",
+     "current": "live_house",
+     "suggest": "concert_hall",
+     "reason": "地毯排椅的小型座席会场，带大屏，不是站立式 live house"
+    }
+   ],
+   "fixesImported": true,
    "source": "draft",
    "updatedAt": "2026-10-10"
   },
@@ -7116,8 +10944,241 @@
    "owner": null,
    "exclusive": false,
    "homeBand": null,
+   "title": "纯白画面B",
+   "description": "全白纯色画面，无任何内容",
+   "tags": [
+    "纯色",
+    "白",
+    "闪白"
+   ],
+   "category": "decor",
+   "duplicateOf": "adv_bkg_stage_000217",
    "source": "draft",
    "updatedAt": "2026-10-10"
+  },
+  "adv_bkg_stage_000357": {
+   "bands": [],
+   "access": "private",
+   "placeType": "garage",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "unspecified",
+   "stage": false,
+   "confidence": "unknown",
+   "evidence": "空车库内部，后墙木折门与 253/361 外观一致；可能与 millsage 车库练习室相关，待用户确认",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "空车库内部·篮球架（灯）",
+   "description": "空旷木地板车库，左侧楼梯、篮球架与篮球，后方木折门",
+   "tags": [
+    "车库",
+    "室内",
+    "篮球",
+    "空旷",
+    "射灯"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000358": {
+   "bands": [],
+   "access": "private",
+   "placeType": "home",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "unspecified",
+   "stage": false,
+   "confidence": "unknown",
+   "evidence": "私宅客厅（红砖电视墙、唱片收藏），主人不明",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "红沙发砖墙客厅（拉帘）",
+   "description": "红砖电视墙前大红沙发，墙上唱片与挂画，窗帘拉上",
+   "tags": [
+    "客厅",
+    "住宅",
+    "室内",
+    "红沙发",
+    "砖墙",
+    "唱片"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000359": {
+   "bands": [],
+   "access": "private",
+   "placeType": "bedroom",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "night",
+   "stage": false,
+   "confidence": "unknown",
+   "evidence": "贴乐队/电影海报的卧室，窗帘拉上开灯（按夜间），主人不明",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "海报卧室·蓝窗帘（拉帘）",
+   "description": "白墙卧室，乐队海报、蓝沙发、双人床与电视，窗帘拉上",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "海报",
+    "蓝"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000360": {
+   "bands": [
+    "generic"
+   ],
+   "access": "school",
+   "placeType": "gym",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "day",
+   "stage": false,
+   "confidence": "likely",
+   "evidence": "体育馆二层看台，学校或公共体育馆均可",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "体育馆看台·黄座椅（日）",
+   "description": "室内体育馆二层看台，黄色长条座椅与栏杆，窗外蓝天",
+   "tags": [
+    "体育馆",
+    "看台",
+    "学校",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000361": {
+   "bands": [],
+   "access": "private",
+   "placeType": "garage_exterior",
+   "placeName": null,
+   "indoor": "outdoor",
+   "time": "night",
+   "stage": false,
+   "confidence": "unknown",
+   "evidence": "与 253 同一车库外观（夜），可能与 millsage 相关，待确认",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "木折门车库外观（夜）",
+   "description": "同 253 车库正面夜景，门旁壁灯照亮，四周高楼灯火",
+   "tags": [
+    "车库",
+    "住宅外观",
+    "街道",
+    "室外",
+    "夜"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000362": {
+   "bands": [],
+   "access": "private",
+   "placeType": "bedroom",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "day",
+   "stage": false,
+   "confidence": "unknown",
+   "evidence": "同 359 卧室日间版，主人不明",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "海报卧室·蓝窗帘（日）",
+   "description": "同 359 海报卧室，窗帘拉开，窗外绿树日光",
+   "tags": [
+    "卧室",
+    "住宅",
+    "室内",
+    "日",
+    "海报",
+    "蓝"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000363": {
+   "bands": [
+    "generic"
+   ],
+   "access": "public",
+   "placeType": "multipurpose_room",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "day",
+   "stage": false,
+   "confidence": "likely",
+   "evidence": "白长桌蓝椅的多功能室/食堂，学校或公共设施",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "多功能室·蓝椅白桌（日）",
+   "description": "浅木地板大房间，白色长桌与蓝塑料椅，绿色卷帘与大窗",
+   "tags": [
+    "多功能室",
+    "食堂",
+    "学校",
+    "室内",
+    "日"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
+  },
+  "adv_bkg_stage_000364": {
+   "bands": [],
+   "access": "private",
+   "placeType": "home",
+   "placeName": null,
+   "indoor": "indoor",
+   "time": "day",
+   "stage": false,
+   "confidence": "unknown",
+   "evidence": "同 358 客厅日间版，主人不明",
+   "location": null,
+   "owner": null,
+   "exclusive": false,
+   "homeBand": null,
+   "title": "红沙发砖墙客厅（日）",
+   "description": "同 358 红砖电视墙客厅，窗帘拉开，日光",
+   "tags": [
+    "客厅",
+    "住宅",
+    "室内",
+    "日",
+    "红沙发",
+    "砖墙",
+    "唱片"
+   ],
+   "category": "scene",
+   "source": "draft",
+   "updatedAt": "2026-10-13"
   }
  }
 }

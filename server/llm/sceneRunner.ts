@@ -5,6 +5,7 @@ import { mergeLocks, type MergeConflict, type MergeReport } from '../../shared/d
 import type { Paragraph } from '../../shared/director/paragraphs';
 import { splitParagraphs } from '../../shared/director/paragraphs';
 import { lookup } from '../../shared/director/resources';
+import { autoSelectable, bgCategoryOf } from '../../shared/director/bgCategory';
 import type { ScopeName } from '../../shared/director/scope';
 import { validateDirection } from '../../shared/director/validate';
 import { SceneDirectionSchema, type SceneDirection } from '../../shared/schema/ai';
@@ -76,6 +77,16 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
     return a;
   });
   const bg = L.backgrounds.get(scene.background.assetId);
+  // P20: the backgrounds this scene may switch between: the start, Pass 1's moves, and the cut-away candidates (never in a performance)
+  const titleOf = (id: string) => L.backgrounds.get(id)?.name ?? id;
+  const moves = (scene.brief?.moves ?? []).filter((m) => L.backgrounds.has(m.backgroundId));
+  const insertBgs = scene.brief?.isPerformance ? [] : d.catalog.backgrounds.filter((b) => bgCategoryOf(b) === 'insert' && autoSelectable(b, 'insert')).sort((a, c) => (a.id < c.id ? -1 : 1));
+  const bgSet = {
+    start: { id: scene.background.assetId, title: titleOf(scene.background.assetId) },
+    moves: moves.map((m) => ({ paragraph: m.paragraph, id: m.backgroundId, title: titleOf(m.backgroundId) })),
+    inserts: insertBgs.map((b) => ({ id: b.id, title: b.name })),
+  };
+  const bgAllowed = new Set([bgSet.start.id, ...bgSet.moves.map((m) => m.id), ...bgSet.inserts.map((b) => b.id)]);
   const structure = req.scopes.includes('scene') && !req.beatIds;
   const fixed: Beat[] = structure ? scene.beats.filter((b) => protectedBeat(b, overwrite)) : req.beatIds ? scene.beats.filter((b) => req.beatIds!.includes(b.id)) : scene.beats;
   const paraOfBeat = (b: Beat): number => paragraphs.find((p) => b.sourceOffset !== undefined && b.sourceOffset >= p.start && b.sourceOffset <= p.end)?.index ?? inScene[0]!.index;
@@ -91,7 +102,7 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
       scene: {
         title: scene.title, mood: scene.brief?.mood ?? '', timeOfDay: scene.brief?.timeOfDay ?? '',
         location: bg ? `${bg.name}${bg.location ? `（${bg.location}）` : ''}` : scene.background.assetId,
-        isPerformance: !!scene.brief?.isPerformance, band: scene.brief?.band ?? null, paragraphRange: [paras[0]!.index, paras.at(-1)!.index],
+        isPerformance: !!scene.brief?.isPerformance, band: scene.brief?.band ?? null, paragraphRange: [paras[0]!.index, paras.at(-1)!.index], backgrounds: bgSet,
       },
       cast,
       paragraphs: paras.map((p) => ({ i: p.index, text: p.text })),
@@ -109,6 +120,10 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
         const v = validateDirection(dir, {
           catalog: d.catalog, cast: cast.map((c) => ({ castId: c.castId, characterKey: c.characterKey, modelId: c.modelId })), paragraphs, range,
           isPerformance: !!scene.brief?.isPerformance, fixedBeatIds: fixedIds,
+          backgrounds: {
+            start: scene.background.assetId, allowed: bgAllowed,
+            scope: { title: scene.title, reason: '', mood: scene.brief?.mood ?? '', timeOfDay: scene.brief?.timeOfDay ?? '', isPerformance: !!scene.brief?.isPerformance, presentCast: cast.map((c) => c.characterKey), guestOf: scene.brief?.guestOf ?? null },
+          },
         });
         if (!structure) {
           const got = new Set(v.value.beats.map((b) => b.keepId));
@@ -180,7 +195,7 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
     if (!m || m.mode !== 'live') return null;
     return [...new Set(m.motions.map((x) => x.family))].filter((f) => f.startsWith('play')).sort()[0] ?? null;
   };
-  const { scene: fresh, warnings: expandWarnings } = expandScene({ base: scene, direction: dir, paragraphs, genId, now, playMotionOf, decisions: isModelAi(d.provider) ? 'ai' : 'rule' });
+  const { scene: fresh, warnings: expandWarnings } = expandScene({ base: scene, direction: dir, paragraphs, genId, now, playMotionOf, isInsertBg: (id) => { const b = L.backgrounds.get(id); return !!b && bgCategoryOf(b) === 'insert'; }, decisions: isModelAi(d.provider) ? 'ai' : 'rule' });
   const merged = mergeLocks(scene, fresh, { scopes: req.scopes, beatIds: req.beatIds, overwriteUser: overwrite });
   const warnings = [...runs.flatMap((r) => r.warnings), ...expandWarnings, ...merged.conflicts.map((c) => `锁定冲突：${c.label}`)];
   return { sceneId: scene.id, scene: merged.scene, applied: merged.applied, conflicts: merged.conflicts, report: merged.report, direction: dir, warnings, runs };

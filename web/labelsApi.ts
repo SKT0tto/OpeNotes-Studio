@@ -17,3 +17,13 @@ export const putLabel = (id: string, label: BgLabel) => {
   delete rest.updatedAt;
   return send('PUT', `/api/asset-labels/backgrounds/${encodeURIComponent(id)}`, rest);
 };
+
+/** Put labels back exactly as they were (`null` = no label); used by the workbench's undo. */
+export const restoreLabels = (entries: Record<string, BgLabel | null>) => send('POST', '/api/asset-labels/backgrounds/restore', { entries });
+
+export interface LabelFileJson { version: 1; rules: { unknownPolicy: string }; labels: Record<string, BgLabel> }
+export async function fetchLabelFile(): Promise<LabelFileJson> {
+  const res = await fetch('/api/asset-labels/backgrounds');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as LabelFileJson;
+}

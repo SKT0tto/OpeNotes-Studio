@@ -10,6 +10,7 @@ import type { Beat, Meta, Scene, Track } from '../schema/project';
 import { aiMeta, ruleMeta } from './fromBreakdown';
 import { offsetInParagraph, type Paragraph } from './paragraphs';
 import { DEPTH_Y, INSERT_BOX, SLOT_X } from './vocab';
+import { anchorMoves, bgSwitchValue, type BgTransition } from './bgKeys';
 
 export interface ExpandInput {
   base: Scene;
@@ -21,6 +22,8 @@ export interface ExpandInput {
   /** Source stamped on the model's decisions (`rule` for the test-only replay provider). */
   decisions?: 'ai' | 'rule' | undefined;
   playMotionOf?: ((castId: string) => string | null) | undefined;
+  /** Is this background a cut-away (category insert)? Its key is a cut-away that returns at the next beat. */
+  isInsertBg?: ((assetId: string) => boolean) | undefined;
 }
 
 type AnyTrack = Track & { keys: Array<{ id: string; at: { beatId: string; offset: number }; value: unknown; duration: number; ease: string; meta: Meta }> };
@@ -128,7 +131,7 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
     return t;
   };
   const key = (castId: string | null, channel: Track['channel'], beatIndex: number, offset: number, value: unknown, meta: Meta, duration = 0, ease = 'inOutQuad') => {
-    const target = castId === null ? (channel === 'fx' || channel === 'fade' ? { kind: 'screen' as const } : { kind: 'camera' as const }) : { kind: 'actor' as const, castId };
+    const target = castId === null ? (channel === 'fx' || channel === 'fade' ? { kind: 'screen' as const } : channel === 'background' ? { kind: 'stage' as const } : { kind: 'camera' as const }) : { kind: 'actor' as const, castId };
     const tr = trackOf(target as Track['target'], channel);
     const id = nextId('k', usedKey, holder);
     usedKey.add(id);
@@ -203,6 +206,37 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
     }
   });
   if (lastFx !== 'none') key(null, 'fx', d.beats.length - 1, 4, { fx: lastFx, strength: 0, roll: 0 }, ai(), 0.6);
+
+  // ---- background track (P20): the beats' own switches, then the place changes Pass 1 stated that no beat repeated; a cut-away goes back at the next beat
+  {
+    const wanted: Array<{ index: number; assetId: string; transition: BgTransition; purpose: 'move' | 'insert'; reason: string }> = [];
+    d.beats.forEach((b, i) => {
+      if (!b.bg) return;
+      const insert = (inp.isInsertBg ?? (() => false))(b.bg.backgroundId);
+      wanted.push({ index: i, assetId: b.bg.backgroundId, transition: b.bg.transition, purpose: insert ? 'insert' : 'move', reason: b.reason });
+    });
+    const have = new Set(wanted.map((w) => w.assetId));
+    for (const { move, index } of anchorMoves((base.brief?.moves ?? []).filter((m) => !have.has(m.backgroundId)), d.beats.map((b) => b.paragraph))) {
+      wanted.push({ index, assetId: move.backgroundId, transition: move.transition, purpose: 'move', reason: move.reason });
+    }
+    wanted.sort((a, b) => a.index - b.index);
+    let cur = base.background.assetId;
+    const queue: typeof wanted = [];
+    for (const w of wanted) {
+      if (queue.some((q) => q.index === w.index)) continue;
+      queue.push(w);
+    }
+    for (let q = 0; q < queue.length; q++) {
+      const w = queue[q]!;
+      if (w.assetId !== cur) key(null, 'background', w.index, 0, bgSwitchValue(w.assetId, w.transition, w.purpose), ai(w.reason));
+      const back = cur;
+      if (w.purpose === 'insert') {
+        // the cut-away lasts one beat: the next beat returns to the place it left (unless a switch of its own is there)
+        const nextIdx = w.index + 1;
+        if (nextIdx < d.beats.length && !queue.some((x) => x.index === nextIdx)) key(null, 'background', nextIdx, 0, bgSwitchValue(back, 'cut', 'move'), rule('插入镜头结束，切回'));
+      } else cur = w.assetId;
+    }
+  }
 
   for (const c of d.costumeChanges) key(c.castId, 'costume', c.beatIndex, 0, { modelId: c.modelId }, ai(c.reason));
 

@@ -13,6 +13,8 @@ import { EMOTION_EXPR, EMOTION_GESTURE } from '../timeline/compile';
 import { detectChapters, isHeading, type Paragraph } from './paragraphs';
 export { detectChapters, isHeading };
 import { allowedBackgrounds, sceneBands } from './bandFit';
+import { autoSelectable } from './bgCategory';
+import { detectMoves } from './ruleMoves';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog } from './resources';
 
 // ---- names -----------------------------------------------------------------------------------------------------
@@ -186,16 +188,19 @@ export function ruleBreakdown(cat: DirectorCatalog, paras: readonly Paragraph[],
     const school = SCHOOL_RE.test(text) && !CASUAL_RE.test(text) && !perf;
     const lead = slice.filter((q, qi) => slice.slice(0, qi + 1).every((x) => isHeading(x.text)));
     const heading = lead.length > 0 ? lead.at(-1)!.text.replace(/^#+\s*/, '').trim() : '';
-    const all = cat.backgrounds.filter((b) => b.kind !== 'decorative');
+    const all = cat.backgrounds.filter((b) => autoSelectable(b, 'scene'));
     const who = { bands: sceneBands(L.characters, present), cast: present, mood: emotionOf(text), text };
     // only backgrounds that fit the bands on stage (and stages for a performance); never unknown ones, generic as the last resort
-    const fits = (pool: typeof all, performance: boolean) => allowedBackgrounds(pool, who, { performance, rules: cat.labelRules }).ok;
+    const fits = (_pool: typeof all, performance: boolean) => allowedBackgrounds(cat.backgrounds, who, { performance, rules: cat.labelRules }).ok;
     let pool = fits(all, perf);
     if (pool.length === 0) pool = fits(all, false);
     if (pool.length === 0) pool = all.filter((b) => !b.labels || b.labels.bands.includes('generic'));
     const bgs = pool;
     const ranked = rankBackgrounds(bgs.length > 0 ? bgs : cat.backgrounds, `${heading} ${text}`, { setting: /室外|街|路|天台|公园|河|海/.test(text) ? '室外' : '室内', time: BG_TIME[tod] ?? '日间' });
-    const bg = ranked[0]!;
+    let bg = ranked[0]!;
+    // place changes inside the scene (not in a performance): "走出校门，来到车站前" -> one scene, several backgrounds
+    const found = perf ? null : detectMoves(bgs.length > 0 ? bgs : ranked, slice, bg, BG_TIME[tod] ?? '日间');
+    if (found?.start) bg = found.start;
     const bandOf = perf ? majorityBand(cat, present) : null;
 
     const wardrobe = present.map((k) => {
@@ -214,6 +219,7 @@ export function ruleBreakdown(cat: DirectorCatalog, paras: readonly Paragraph[],
       startParagraph: r.start,
       endParagraph: r.end,
       location: { backgroundId: bg.id, reason: `关键词匹配：${bg.name}（${tod}）` },
+      ...(found && found.moves.length > 0 ? { moves: found.moves } : {}),
       timeOfDay: tod,
       presentCast: wardrobe.map((w) => w.characterKey),
       wardrobe,

@@ -2,7 +2,7 @@ import type { ActorResources } from '../../../shared/director/catalogDigest';
 import type { Paragraph } from '../../../shared/director/paragraphs';
 import { AI_FX, AI_MOVES, AI_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../../../shared/director/vocab';
 
-export const SCENE_PROMPT_VERSION = 'scene-2';
+export const SCENE_PROMPT_VERSION = 'scene-3';
 
 export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导」。你会拿到一个场景的原文段落、在场角色（含该服装真实可用的动作与表情清单）和上一场景的结束状态，请把这个场景一次性导成一组节拍（beats），只输出 JSON。
 
@@ -37,6 +37,12 @@ export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导�
 - 服装在拆解阶段已定。只有场景中途确实换衣服（原文写到）时才写 costumeChanges（beatIndex 是 beats 数组下标；modelId 只能取该角色 outfits 里的）。否则 costumeChanges 为空数组。
 - 正式演出场景：演奏用 live-mode 服装，动作用 play*/action*/finish* 系，不要有表情。
 
+# 场景内换背景 bg
+- 输入 scene.backgrounds 给出本场景的背景集合：start（开场背景）、moves（拆解阶段已判定的场景内地点移动，每项有 paragraph 和背景）、inserts（可用于插入镜头的背景）。**只能**用这个集合里的 id，不得新增地点，也不得使用其他背景。
+- 某个 beat 开始时地点换了，在该 beat 填 bg: { backgroundId, transition }（transition：cut / dip_black / crossfade）；多数 beat 的 bg 填 null。moves 里的移动要落在对应 paragraph 的第一个 beat 上，原文没有写到的移动不要自己加。同一个 beat 只能切一次；不要连续两次切到同一个背景。
+- 插入镜头（空镜头）：想给天空、信号灯、斑马线之类的画面时，用 inserts 里的背景，同时该 beat 的 shot 必须是 type=insert、insertTarget=scene、focus=[]（画面里没有人物，人物会暂时隐藏）；下一个 beat 程序会自动切回原来的背景。整个场景最多 1–2 个。
+- 正式演出（isPerformance）的场景不要换背景。
+
 # 固定节拍
 输入里的 fixedBeats 是已被人锁定/人工编写的节拍：必须在对应位置原样重现（keepId 填它的 id，paragraph/kind/speaker/text 原样复制）。局部重新生成（mode.focusBeatIds 存在）时，fixedBeats 就是要重做的那几个节拍：beats 只输出这些节拍，与 fixedBeats 一一对应、顺序和 text 完全一致，你只改变 mode.scopes 要求的那一方面。paragraphs 里的其他段落只是上下文，不要为它们输出任何节拍。输出要尽量紧凑（reason 不超过 10 个字）。
 
@@ -44,7 +50,11 @@ export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导�
 严格输出符合 JSON Schema 的一个 JSON 对象。`;
 
 export interface SceneDirectionInput {
-  scene: { title: string; mood: string; timeOfDay: string; location: string; isPerformance: boolean; band: string | null; paragraphRange: [number, number] };
+  scene: {
+    title: string; mood: string; timeOfDay: string; location: string; isPerformance: boolean; band: string | null; paragraphRange: [number, number];
+    /** Backgrounds this scene may use: where it starts, the place changes Pass 1 found, and cut-away candidates. */
+    backgrounds: { start: { id: string; title: string }; moves: Array<{ paragraph: number; id: string; title: string }>; inserts: Array<{ id: string; title: string }> };
+  };
   cast: ActorResources[];
   paragraphs: Array<{ i: number; text: string }>;
   previousScene: { title: string; endSummary: string } | null;

@@ -35,7 +35,7 @@ const CHANNEL_SCOPE = new Map<string, Exclude<ScopeName, 'scene'>>();
 for (const [scope, spec] of Object.entries(SCOPES)) for (const c of spec.tracks) CHANNEL_SCOPE.set(c, scope as Exclude<ScopeName, 'scene'>);
 
 const CHANNEL_LABEL: Record<string, string> = {
-  motion: '动作', expression: '表情', head: '头部朝向', body: '身体朝向', gaze: '视线', position: '走位', opacity: '出入场', costume: '换装', camera: '镜头', fade: '黑场', fx: '特效',
+  motion: '动作', expression: '表情', head: '头部朝向', body: '身体朝向', gaze: '视线', position: '走位', opacity: '出入场', costume: '换装', camera: '镜头', fade: '黑场', fx: '特效', background: '背景切换',
 };
 
 type AnyKey = { at: { beatId: string; offset: number }; value: unknown; meta: { source: string } };
@@ -55,6 +55,7 @@ const shortOf = (channel: string, v: unknown, modelName: (id: string) => string,
   if (name !== null && channel === 'expression') return expressionLabel(name);
   if (o && typeof o === 'object' && typeof o.modelId === 'string') return modelName(o.modelId);
   if (channel === 'camera' && o && typeof o === 'object') return '镜头';
+  if (channel === 'background' && o && typeof o === 'object' && typeof o.assetId === 'string') return `背景 ${o.assetId}`;
   if (channel === 'gaze' && o && typeof o === 'object' && typeof o.target === 'string') return GAZE_TARGET[o.target] ?? `看${castName(o.target)}`;
   return short(v);
 };

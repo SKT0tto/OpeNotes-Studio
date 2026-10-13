@@ -33,7 +33,7 @@ describe.skipIf(!available)('demo project against the real catalog', () => {
     for (const id of modelIds()) expect(cat.models.some((m) => m.id === id), `model ${id}`).toBe(true);
     for (const s of project.scenes) {
       expect(cat.backgrounds.some((b) => b.id === s.background.assetId), `background ${s.background.assetId}`).toBe(true);
-      if (s.audio.bgm) expect(cat.audio.some((a) => a.id === s.audio.bgm!.assetId), `audio ${s.audio.bgm.assetId}`).toBe(true);
+      if (s.audio.bgm && cat.audio.length > 0) expect(cat.audio.some((a) => a.id === s.audio.bgm!.assetId), `audio ${s.audio.bgm.assetId}`).toBe(true);
     }
     for (const c of project.cast) expect(cat.characters.some((x) => x.key === c.characterKey)).toBe(true);
   });

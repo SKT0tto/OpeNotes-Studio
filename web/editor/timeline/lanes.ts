@@ -7,7 +7,7 @@ import type { CompiledScene, RuleKey } from '@shared/timeline/types';
 
 export const CHANNEL_LABEL: Record<Channel, string> = {
   motion: '动作', expression: '表情', head: '头部', body: '身体', gaze: '视线', position: '位置', opacity: '透明度', costume: '服装',
-  camera: '镜头关键帧', bgm: 'BGM', se: '音效', fade: '黑/白场', fx: '特效',
+  camera: '镜头关键帧', bgm: 'BGM', se: '音效', fade: '黑/白场', fx: '特效', background: '背景',
 };
 export const ACTOR_CHANNELS: Channel[] = ['motion', 'expression', 'head', 'body', 'gaze', 'position', 'opacity', 'costume'];
 
@@ -30,7 +30,7 @@ export interface Lane {
   /** Lanes backed by a track (keys can be added / dragged). */
   track?: { target: TrackTarget; channel: Channel; trackId: string | null; locked: boolean };
   keys: LaneKey[];
-  kind: 'keys' | 'beats' | 'shots' | 'transition' | 'banner';
+  kind: 'keys' | 'beats' | 'shots' | 'transition' | 'banner' | 'background';
 }
 
 export interface Group {
@@ -45,7 +45,7 @@ const FX_LABEL: Record<string, string> = { vignette_anxiety: '暗角', memory_gl
 const SPECIAL_TARGET: Record<string, string> = { camera: '镜头', away: '移开', down: '低头' };
 
 /** Short Chinese text of a key value for the lane (the raw ids are only in the tooltip). */
-const makeValueLabel = (nameOf: (castId: string) => string, audioName: (id: string) => string) => (channel: Channel, v: unknown): string => {
+const makeValueLabel = (nameOf: (castId: string) => string, audioName: (id: string) => string, bgName: (id: string) => string) => (channel: Channel, v: unknown): string => {
   const o = v as Record<string, unknown>;
   const who = (t: unknown) => SPECIAL_TARGET[String(t)] ?? nameOf(String(t));
   switch (channel) {
@@ -64,11 +64,12 @@ const makeValueLabel = (nameOf: (castId: string) => string, audioName: (id: stri
     case 'bgm': case 'se': return o.assetId ? audioName(String(o.assetId)) : '停';
     case 'fade': return `${o.color === 'white' ? '白' : '黑'} ${Number(o.alpha).toFixed(1)}`;
     case 'fx': return `${FX_LABEL[String(o.fx)] ?? String(o.fx)} ${Number(o.strength).toFixed(1)}`;
+    case 'background': return `${o.purpose === 'insert' ? '插入 ' : ''}${bgName(String(o.assetId))}`;
   }
 };
 
-export function buildGroups(project: Project, scene: Scene, sceneIndex: number, compiled: CompiledScene | undefined, audioName: (id: string) => string = (id) => id): Group[] {
-  const valueLabel = makeValueLabel((id) => project.cast.find((c) => c.id === id)?.displayName ?? id, audioName);
+export function buildGroups(project: Project, scene: Scene, sceneIndex: number, compiled: CompiledScene | undefined, audioName: (id: string) => string = (id) => id, bgName: (id: string) => string = (id) => id): Group[] {
+  const valueLabel = makeValueLabel((id) => project.cast.find((c) => c.id === id)?.displayName ?? id, audioName, bgName);
   const beats = storedBeatTimes(project, sceneIndex);
   const keysOf = (target: TrackTarget, channel: Channel, ghosts: LaneKey[] = []): { keys: LaneKey[]; trackId: string | null; locked: boolean } => {
     const tr = scene.tracks.find((t) => t.channel === channel && t.target.kind === target.kind && (target.kind !== 'actor' || (t.target.kind === 'actor' && t.target.castId === target.castId)));
@@ -80,15 +81,16 @@ export function buildGroups(project: Project, scene: Scene, sceneIndex: number, 
     }
     return { keys: [...keys, ...ghosts].sort((a, b) => a.at - b.at), trackId: tr?.id ?? null, locked: tr?.meta.locked ?? false };
   };
-  const lane = (id: string, label: string, group: string, color: string, target: TrackTarget, channel: Channel, ghosts: LaneKey[] = []): Lane => {
+  const lane = (id: string, label: string, group: string, color: string, target: TrackTarget, channel: Channel, ghosts: LaneKey[] = [], kind: Lane['kind'] = 'keys'): Lane => {
     const k = keysOf(target, channel, ghosts);
-    return { id, label, group, color, kind: 'keys', track: { target, channel, trackId: k.trackId, locked: k.locked }, keys: k.keys };
+    return { id, label, group, color, kind, track: { target, channel, trackId: k.trackId, locked: k.locked }, keys: k.keys };
   };
 
   const groups: Group[] = [];
   groups.push({
     id: 'script', label: '剧本与镜头', color: 'var(--track-screen)',
     lanes: [
+      lane('bg', '背景', 'script', 'var(--track-bg)', { kind: 'stage' }, 'background', [], 'background'),
       { id: 'beats', label: '对白', group: 'script', color: 'var(--track-screen)', kind: 'beats', keys: [] },
       { id: 'trans', label: '转场', group: 'script', color: 'var(--track-screen)', kind: 'transition', keys: [] },
       { id: 'shots', label: '镜头', group: 'script', color: 'var(--track-camera)', kind: 'shots', track: { target: { kind: 'camera' }, channel: 'camera', trackId: scene.tracks.find((t) => t.channel === 'camera')?.id ?? null, locked: scene.tracks.find((t) => t.channel === 'camera')?.meta.locked ?? false }, keys: keysOf({ kind: 'camera' }, 'camera').keys },

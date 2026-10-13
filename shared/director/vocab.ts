@@ -29,12 +29,18 @@ export function depthNameOf(d: number): DepthName {
 }
 
 /** What an `insert` shot is aimed at (maps to a target box relative to the person; an insert never shows an empty torso). */
-export const INSERT_TARGETS = ['hands', 'instrument', 'face_lower'] as const;
+/** `scene` = no person: a cut-away to a sky / signal / crossing background (the people are hidden for it). */
+export const INSERT_TARGETS = ['hands', 'instrument', 'face_lower', 'scene'] as const;
 export type InsertTarget = (typeof INSERT_TARGETS)[number];
 export const INSERT_BOX: Record<InsertTarget, { x: number; y: number; w: number; h: number }> = {
   hands: { x: 0.12, y: 0.4, w: 0.76, h: 0.26 },
   instrument: { x: 0.08, y: 0.34, w: 0.84, h: 0.34 },
   face_lower: { x: 0.18, y: 0.08, w: 0.64, h: 0.3 },
+  scene: { x: 0.15, y: 0.26, w: 0.7, h: 0.26 },
 };
+export const AI_BG_TRANSITIONS = ['cut', 'dip_black', 'crossfade'] as const;
+/** Most background moves one scene may have (Pass 1), and the most switches the continuity check tolerates. */
+export const MAX_BG_MOVES = 3;
+export const MAX_BG_SWITCHES = 6;
 /** Text that gives an insert something to show (hands, gestures, props, instruments). */
 export const INSERT_HINT = /手|指|掌|拳|握|攥|拿|捏|抱着|琴|吉他|贝斯|鼓|键盘|话筒|麦克风|拨片|琴弦|琴键|杯|书|笔|信|手机|票|门把|纸|耳机|线缆|乐谱/;
