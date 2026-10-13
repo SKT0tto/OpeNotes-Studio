@@ -18,7 +18,7 @@ describe('live label file invariants', () => {
     for (const b of pendingQueue(entries)) expect(bgCategoryOf(b)).not.toBe('decor');
   });
   it('user-sourced confirmed entries carry no pending fixes except explicit ownership doubts', () => {
-    for (const [id, l] of Object.entries(LIVE.labels)) if (l.source === 'user' && l.confidence === 'confirmed') expect(l.fixes ?? [], id).toHaveLength(0);
+    for (const [id, l] of Object.entries(LIVE.labels)) if (l.source === 'user' && l.confidence === 'confirmed') expect((l.fixes ?? []).filter((f) => !f.field.startsWith('owner')), id).toHaveLength(0);
   });
   it('the queue holds only entries that genuinely need the user, and stays small', () => {
     const q = pendingQueue(entries);
