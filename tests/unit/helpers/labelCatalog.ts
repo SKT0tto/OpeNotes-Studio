@@ -5,7 +5,7 @@ import type { DirectorCatalog } from '../../../shared/director/resources';
 import { bgCategoryOf } from '../../../shared/director/bgCategory';
 import { fixtureCatalog } from './directorCatalog';
 
-export const LABEL_FILE = LabelFileSchema.parse(JSON.parse(fs.readFileSync('asset-labels/backgrounds.json', 'utf8')));
+export const LABEL_FILE = LabelFileSchema.parse(JSON.parse(fs.readFileSync('tests/fixtures/backgrounds.labels.fixture.json', 'utf8')));
 export const stage = (n: number) => `adv_bkg_stage_${String(n).padStart(6, '0')}`;
 const TIME: Record<string, string> = { day: '日间', dusk: '傍晚', night: '夜间' };
 

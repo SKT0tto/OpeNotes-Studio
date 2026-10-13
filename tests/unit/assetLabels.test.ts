@@ -14,7 +14,7 @@ import type { Breakdown } from '../../shared/schema/ai';
 import { BgLabelSchema, LabelFileSchema, type BgLabel, type LabelRules } from '../../shared/schema/assetLabels';
 import type { BackgroundEntry } from '../../shared/schema/assets';
 
-const FILE = LabelFileSchema.parse(JSON.parse(fs.readFileSync('asset-labels/backgrounds.json', 'utf8')));
+const FILE = LabelFileSchema.parse(JSON.parse(fs.readFileSync('tests/fixtures/backgrounds.labels.fixture.json', 'utf8')));
 const stage = (n: number) => `adv_bkg_stage_${String(n).padStart(6, '0')}`;
 
 const bg = (id: string, label: BgLabel): BackgroundEntry => ({
