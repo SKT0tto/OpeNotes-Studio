@@ -122,7 +122,7 @@ shared/    schemas, staging maths, timeline compiler, director logic (used by se
 web/       React editor, Pixi/Live2D engine, player, labs
 tests/     unit, integration, e2e, synthetic fixtures (no real assets)
 examples/  sample novel (original text)
-docs/      plan, research, acceptance records
+docs/      user guide (GUIDE_ASSETS) and staging style reference
 ```
 
 ## Acknowledgements

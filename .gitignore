@@ -34,3 +34,6 @@ dev-notes/
 
 # release package output (npm run package-release)
 /release/
+
+# personal Claude Code notes
+CLAUDE.local.md
