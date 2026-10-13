@@ -15,6 +15,7 @@ import { fetchCatalog, type Health } from '../../api';
 import { fetchLabelFile, patchLabels, restoreLabels } from '../../labelsApi';
 import { BANDS, BgCard, CHARACTERS, bandNameOfKey } from '../bg/BgCard';
 import { BgThumb } from '../bg/BgThumb';
+import { DetailEditor } from './DetailEditor';
 
 type View = 'grid' | 'queue';
 type GroupBy = 'place' | 'band' | 'category' | 'review';
@@ -353,6 +354,10 @@ export function LabelWorkbench({ health }: { health: Health | null }) {
               <button type="button" className="wb-btn" onClick={() => setSel(visible.map((b) => b.id))}>全选当前</button>
               <button type="button" className="wb-btn" onClick={() => setSel([])} disabled={sel.length === 0}>取消选择</button>
             </div>
+            {selected.length === 1 && selected[0]!.labels ? (
+              <DetailEditor key={`${selected[0]!.id}:${JSON.stringify(selected[0]!.labels)}`} bg={selected[0]!} places={places} onSave={(patch, desc) => void apply([selected[0]!.id], patch, desc)} />
+            ) : (
+              <>
             <section>
               <h3>乐队</h3>
               <div className="wb-chips" data-testid="chips-band">
@@ -400,6 +405,8 @@ export function LabelWorkbench({ health }: { health: Health | null }) {
             <section>
               <button type="button" className="wb-btn good" disabled={selected.length === 0} onClick={() => void apply(sel, { confidence: 'confirmed' }, `确认 ${sel.length} 张`)} data-testid="wb-confirm-sel">把所选标为「已确认」</button>
             </section>
+              </>
+            )}
           </aside>
         </div>
       )}
@@ -454,6 +461,12 @@ export function LabelWorkbench({ health }: { health: Health | null }) {
                   <h3>类别</h3>
                   <div className="wb-chips">{BG_CATEGORIES.map((c) => <button key={c} type="button" className={`wb-chip ${(cur.labels?.category ?? 'scene') === c ? 'on' : ''}`} style={{ ['--c' as string]: CATEGORY_COLOR[c] }} onClick={() => void apply([cur.id], { category: c }, `类别 → ${CATEGORY_LABEL[c]}`)}>{CATEGORY_LABEL[c]}</button>)}</div>
                 </section>
+                {cur.labels && (
+                  <details className="wbq-detail" data-testid="wbq-detail">
+                    <summary>详细编辑（标题 / 描述 / 地点 / 主人…）</summary>
+                    <DetailEditor key={`${cur.id}:${JSON.stringify(cur.labels)}`} bg={cur} places={places} onSave={(patch, desc) => void apply([cur.id], patch, desc)} />
+                  </details>
+                )}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="button" className="wb-btn good" onClick={confirmCurrent} data-testid="wbq-confirm">Enter · 确认并下一张</button>
                   <button type="button" className="wb-btn" onClick={() => setPos(Math.min(queue.length - 1, pos + 1))}>跳过</button>
@@ -469,7 +482,7 @@ export function LabelWorkbench({ health }: { health: Health | null }) {
       <footer className="wb-keys" data-testid="wb-keys">
         {view === 'queue'
           ? <><span><kbd>1</kbd>–<kbd>5</kbd> 选乐队</span><span><kbd>0</kbd> 通用</span><span><kbd>?</kbd> 未知</span><span><kbd>Enter</kbd> 确认并下一张</span><span><kbd>E</kbd> 改标题</span><span><kbd>←</kbd><kbd>→</kbd> 切换</span><span><kbd>Space</kbd> 放大</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销</span><span><kbd>Esc</kbd> 回网格</span></>
-          : <><span>点选 / <kbd>Ctrl</kbd> 多选 / <kbd>Shift</kbd> 连选 / 拖框框选</span><span>双击进入大图审阅</span><span><kbd>Ctrl</kbd>+<kbd>A</kbd> 全选</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销</span><span>改动立即保存到 asset-labels/backgrounds.json</span></>}
+          : <><span>点选 / <kbd>Ctrl</kbd> 多选 / <kbd>Shift</kbd> 连选 / 拖框框选</span><span>单选一张即可在右侧详细编辑；双击进入大图审阅</span><span><kbd>Ctrl</kbd>+<kbd>A</kbd> 全选</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> 撤销</span><span>改动立即保存到 asset-labels/backgrounds.json</span></>}
       </footer>
       {zoom && cur && <div className="wb-zoom" onClick={() => setZoom(false)} data-testid="wb-zoom"><BgThumb bg={cur} w={1024} /></div>}
       {toast && <div className={`wb-toast ${toast.kind}`} role="status" data-testid="wb-toast">{toast.text}</div>}
