@@ -893,14 +893,14 @@
    ],
    "access": "band",
    "placeType": "practice_room",
-   "placeName": "millsage 练习室",
+   "placeName": "琴平凪家车库",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「ガレージ」；挑高阁楼+钢琴/鼓组/音箱+篮球架的私人车库练习室，所属乐队不明",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10452「Happy End」、anotherstory_10453「在幸福之中」、anotherstory_10963「anesthetic」、eventstory_7_01「阴霾」 等34篇；场景出场：萤、茉幌、枣、凪、朋花；millsage_004_1_04「那些日子」中凪说明这个车库「以前是我姐练篮球用的」，eventstory_7_03 凪家客厅妈妈问姐姐树「今天不用车库吗」→ millsage 练习室即琴平凪家车库",
    "question": null,
-   "location": "millsage 练习室",
+   "location": "琴平凪家车库",
    "owner": null,
    "exclusive": true,
    "homeBand": null,
@@ -915,8 +915,8 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000002": {
    "bands": [
@@ -924,14 +924,14 @@
    ],
    "access": "band",
    "placeType": "practice_room",
-   "placeName": "millsage 练习室",
+   "placeName": "琴平凪家车库",
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「ガレージ」；挑高阁楼+钢琴/鼓组/音箱+篮球架的私人车库练习室，所属乐队不明",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10453「在幸福之中」、eventstory_7_04「背过身去」、millsage_004_1_13「送到天空那头」、millsage_004_1_15「各自的夜晚」 等5篇；场景出场：萤、茉幌、凪、朋花、枣；millsage_004_1_04「那些日子」中凪说明这个车库「以前是我姐练篮球用的」，eventstory_7_03 凪家客厅妈妈问姐姐树「今天不用车库吗」→ millsage 练习室即琴平凪家车库",
    "question": null,
-   "location": "millsage 练习室",
+   "location": "琴平凪家车库",
    "owner": null,
    "exclusive": true,
    "homeBand": null,
@@ -947,8 +947,8 @@
     "夕阳"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000003": {
    "bands": [
@@ -956,14 +956,14 @@
    ],
    "access": "band",
    "placeType": "practice_room",
-   "placeName": "millsage 练习室",
+   "placeName": "琴平凪家车库",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「ガレージ」；挑高阁楼+钢琴/鼓组/音箱+篮球架的私人车库练习室，所属乐队不明",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：eventstory_7_07「等待羽化」、millsage_004_1_07「用我的音乐」、millsage_004_1_14「凡人与天才」；场景出场：凪、茉幌、朋花；millsage_004_1_04「那些日子」中凪说明这个车库「以前是我姐练篮球用的」，eventstory_7_03 凪家客厅妈妈问姐姐树「今天不用车库吗」→ millsage 练习室即琴平凪家车库",
    "question": null,
-   "location": "millsage 练习室",
+   "location": "琴平凪家车库",
    "owner": null,
    "exclusive": true,
    "homeBand": null,
@@ -977,8 +977,8 @@
     "室内"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000004": {
    "bands": [
@@ -990,7 +990,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "台场海滨步道（官方名片名「海沿いの道」），公共场所",
    "location": "台场",
    "owner": null,
@@ -1007,8 +1007,9 @@
     "桥"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000005": {
    "bands": [
@@ -1020,7 +1021,7 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "台场海滨步道（官方名片名「海沿いの道」），公共场所",
    "location": "台场",
    "owner": null,
@@ -1037,8 +1038,9 @@
     "桥"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000006": {
    "bands": [
@@ -1050,7 +1052,7 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
    "location": null,
    "owner": null,
@@ -1066,8 +1068,9 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000007": {
    "bands": [
@@ -1079,8 +1082,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
-   "evidence": "无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识演出舞台，通用｜无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1096,7 +1100,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000008": {
    "bands": [
@@ -1108,8 +1112,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1124,7 +1129,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000009": {
    "bands": [
@@ -1136,7 +1141,7 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
    "location": null,
    "owner": null,
@@ -1152,8 +1157,9 @@
     "蓝"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000010": {
    "bands": [
@@ -1165,8 +1171,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "街头钢琴大厅（官方名片名「ストリートピアノ」），公共场所",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街头钢琴大厅，公共场所｜街头钢琴大厅（官方名片名「ストリートピアノ」），公共场所",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1182,7 +1189,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000011": {
    "bands": [
@@ -1194,8 +1201,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "街头钢琴大厅（官方名片名「ストリートピアノ」），公共场所",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街头钢琴大厅，公共场所｜街头钢琴大厅（官方名片名「ストリートピアノ」），公共场所",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1211,24 +1219,30 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000012": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "汐见萤家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
    "location": null,
-   "owner": null,
-   "exclusive": false,
+   "owner": "汐见萤",
+   "ownerKey": "016",
+   "residents": [
+    "016"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "薄荷绿墙卧室·铁艺床",
+   "title": "汐见萤家",
    "description": "薄荷绿壁纸卧室，白铁艺床、书桌、吊灯与绿植",
    "tags": [
     "卧室",
@@ -1238,25 +1252,32 @@
     "铁艺床"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000013": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "伊泽枣家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） millsage_004_1_07「用我的音乐」、1_09「竭尽全力」两场均为枣独处的夜间独白（不再碰吉他、懊恼不认可萤），出场者只有枣",
+   "question": null,
+   "location": "伊泽枣家",
+   "owner": "伊泽枣",
+   "ownerKey": "017",
+   "residents": [
+    "017"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "灰白卧室·电脑桌（夜）",
+   "title": "伊泽枣家·卧室（夜·电脑桌）",
    "description": "灰白简约卧室，白色电脑桌、深灰床，窗外城市夜景",
    "tags": [
     "卧室",
@@ -1267,34 +1288,33 @@
     "简约"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "电脑与乐器卧室 · 夜间",
-     "suggest": "灰白卧室·电脑桌（夜）",
-     "reason": "画面只有电脑桌、床和墙上相框，看不到乐器"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000014": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "茉幌家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） anotherstory_10452「Happy End」茉幌晚饭后在此房间为作词发愁并睡着（中间为梦境回忆）；另见 millsage_004_1_13「送到天空那头」、eventstory_7_05，均为茉幌独处",
+   "question": null,
+   "location": "茉幌家",
+   "owner": "滨崎茉幌",
+   "ownerKey": "019",
+   "residents": [
+    "019"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "浅蓝云朵卧室·圆地毯",
+   "title": "茉幌家·卧室（浅蓝云朵）",
    "description": "浅蓝云朵墙纸卧室，蓝床、矮桌与紫色坐垫，可爱风",
    "tags": [
     "卧室",
@@ -1304,8 +1324,9 @@
     "可爱"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000015": {
    "bands": [
@@ -1317,8 +1338,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1334,7 +1356,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000016": {
    "bands": [
@@ -1386,8 +1408,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1404,7 +1427,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000018": {
    "bands": [
@@ -1438,19 +1461,12 @@
     "晴"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "nameOverride/descriptionOverride",
-     "current": "都立芸術学院中学校 剧场外观 / 两层剧场建筑",
-     "suggest": "都立芸術学院中学校 校舍台阶 · 日间 · 晴天 / 米色校舍、大台阶与竖幅校名牌",
-     "reason": "画面是带柱廊的普通校舍和大台阶，evidence 本身也写 catalog 把它误标成了剧场，但 nameOverride 仍写剧场，自相矛盾（学校归属不变，R2-8 仍待答）"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "nameOverride": "都立芸術学院中学校 剧场外观 · 日间 · 晴天",
-   "descriptionOverride": "都立芸術学院中学校的两层剧场建筑、入口台阶和玻璃门",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "nameOverride": "都立芸術学院中学校 校舍台阶 · 日间 · 晴天",
+   "descriptionOverride": "米色校舍、大台阶与竖幅校名牌",
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000019": {
    "bands": [
@@ -1462,8 +1478,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1479,19 +1496,21 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000020": {
-   "bands": [],
-   "access": "band",
+   "bands": [
+    "generic"
+   ],
+   "access": "public",
    "placeType": "practice_room",
    "placeName": null,
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "绿色隔音墙排练室（鼓组、窗外楼群），可能是出租排练室（则通用）或某乐队固定练习室",
-   "question": "R2-2",
+   "confidence": "confirmed",
+   "evidence": "AI复核：商用排练室陈设，各乐队练习处已另有｜绿色隔音墙排练室（鼓组、窗外楼群），可能是出租排练室（则通用）或某乐队固定练习室",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1509,19 +1528,21 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000021": {
-   "bands": [],
-   "access": "band",
+   "bands": [
+    "generic"
+   ],
+   "access": "public",
    "placeType": "practice_room",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "绿色隔音墙排练室（鼓组、窗外楼群），可能是出租排练室（则通用）或某乐队固定练习室",
-   "question": "R2-2",
+   "confidence": "confirmed",
+   "evidence": "AI复核：商用排练室陈设，各乐队练习处已另有｜绿色隔音墙排练室（鼓组、窗外楼群），可能是出租排练室（则通用）或某乐队固定练习室",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1538,7 +1559,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000022": {
    "bands": [
@@ -1687,8 +1708,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -1703,7 +1725,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000027": {
    "bands": [
@@ -1716,7 +1738,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「学生寮『Peace之家』」；所住乐队/角色不明（候选：一家Dumb Rock!，\"一家\"=同住一个屋檐下？）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10454「一家Dumb Rock!」、kadan_005_1_07「绝不交出『Home』！！」、kadan_005_1_10「虽然没变但正在进化！！」、kadan_005_1_11「既可以出石头，也可以出布！！」；场景出场：蕾叶、心玖、蕾叶奶奶、千樱梨、nanny",
    "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
@@ -1742,8 +1764,8 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000028": {
    "bands": [
@@ -1756,7 +1778,7 @@
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「学生寮『Peace之家』」；所住乐队/角色不明（候选：一家Dumb Rock!，\"一家\"=同住一个屋檐下？）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10455「一家Dumb Rock!」、kadan_005_1_03「绝对办不到！！」、miku_yomogi_linkstory_1「心玖&蓬咲 1」；场景出场：蕾叶、心玖、千樱梨、蓬咲",
    "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
@@ -1781,8 +1803,8 @@
     "傍晚"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000029": {
    "bands": [
@@ -1795,7 +1817,7 @@
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "同一日式家庭（玄关、挂「家族平安」匾的和室客厅、餐厅、绿橱柜厨房、木廊庭院、蓝窗帘+红色电吉他卧室）；主人不明",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：kadan_005_1_03「绝对办不到！！」、yomogi_chieri_linkstory_2「蓬咲&千樱梨 2」、yomogi_shizuku_linkstory_2「蓬咲&宁月 2」；场景出场：蓬咲、千樱梨、心玖、蕾叶、宁月",
    "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
@@ -1821,8 +1843,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000030": {
    "bands": [
@@ -1834,9 +1856,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10457「一家Dumb Rock!」、chieri_shizuku_linkstory_1「千樱梨&宁月 1」、chieri_shizuku_linkstory_3「千樱梨&宁月 3」、kadan_005_1_01「真谛在于乐队！！」 等17篇；场景出场：千樱梨、蓬咲、蕾叶、宁月、心玖",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -1861,8 +1883,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000031": {
    "bands": [
@@ -1874,9 +1896,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10455「一家Dumb Rock!」、anotherstory_10456「绝对不让这份热情熄灭！！」、chieri_shizuku_linkstory_1「千樱梨&宁月 1」、kadan_005_1_04「Peace的笨蛋『家人』！！」 等9篇；场景出场：千樱梨、蓬咲、心玖、蕾叶、宁月",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -1901,8 +1923,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000032": {
    "bands": [
@@ -1914,9 +1936,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10454「一家Dumb Rock!」、anotherstory_10456「绝对不让这份热情熄灭！！」、kadan_005_1_01「真谛在于乐队！！」、kadan_005_1_08「Family和睦相处！！」 等15篇；场景出场：蓬咲、蕾叶、千樱梨、宁月、心玖",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -1940,8 +1962,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000033": {
    "bands": [
@@ -1953,9 +1975,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10457「一家Dumb Rock!」、chieri_shizuku_linkstory_1「千樱梨&宁月 1」、kadan_005_1_05「倾注了满满感情！！」、kadan_005_1_07「绝不交出『Home』！！」 等6篇；场景出场：千樱梨、蕾叶、蓬咲、心玖、宁月",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -1979,8 +2001,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000034": {
    "bands": [
@@ -1992,9 +2014,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10457「一家Dumb Rock!」、kadan_005_1_05「倾注了满满感情！！」、kadan_005_1_15「过家家到此为止！！」、kadan_005_1_16「直觉！！」 等8篇；场景出场：心玖、宁月、千樱梨、蕾叶、蓬咲",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -2017,8 +2039,8 @@
     "室内"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000035": {
    "bands": [
@@ -2031,7 +2053,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户确认为 miku（马桥心玖）的房间；马桥心玖属一家Dumb Rock!（shared/data/characters.json 022，萌娘百科 https://zh.moegirl.org.cn/马桥心玖）。所在建筑（Peace之家内 / 心玖自家）未定，见 R2-4b",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10455「一家Dumb Rock!」、kadan_005_1_05「倾注了满满感情！！」、kadan_005_1_13「陪你到最后！！」、miku_chieri_linkstory_3「心玖&千樱梨 3」 等5篇；场景出场：心玖、千樱梨、蕾叶、宁月、蓬咲",
    "question": "R2-4b",
    "location": "心玖的房间",
    "owner": "马桥心玖",
@@ -2053,8 +2075,8 @@
     "蓝"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000036": {
    "bands": [
@@ -2153,13 +2175,14 @@
     "generic"
    ],
    "access": "public",
-   "placeType": "cafe",
+   "placeType": "real_estate_agency",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：房源展示墙，房产中介｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2169,28 +2192,14 @@
    "tags": [
     "房产中介",
     "柜台",
-    "店铺",
     "室内",
-    "日"
+    "明亮"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "cafe",
-     "suggest": "real_estate_agency（房产中介）",
-     "reason": "原图确认：墙上是房源图片展示架、海报带房屋图标，白色圆椅接待柜台加候客沙发，是房产中介门店，不是咖啡厅"
-    },
-    {
-     "field": "name",
-     "current": "咖啡厅吧台",
-     "suggest": "房产中介·白椅柜台",
-     "reason": "同上"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000040": {
    "bands": [
@@ -2202,8 +2211,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2219,7 +2229,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000041": {
    "bands": [
@@ -2231,8 +2241,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2249,7 +2260,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000042": {
    "bands": [
@@ -2261,8 +2272,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "学校走廊；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜学校走廊；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2277,7 +2289,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000043": {
    "bands": [
@@ -2289,7 +2301,7 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "餐馆/家庭餐厅/餐厅露台，无店名",
    "location": null,
    "owner": null,
@@ -2305,8 +2317,9 @@
     "吧台"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000044": {
    "bands": [
@@ -2318,8 +2331,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2333,7 +2347,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000045": {
    "bands": [
@@ -2345,8 +2359,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "酒店客房/门前/旅馆前台，公共住宿",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：酒店/旅馆，公共住宿｜酒店客房/门前/旅馆前台，公共住宿",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2362,31 +2377,31 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000046": {
    "bands": [
-    "avemujica"
+    "dumbrock"
    ],
    "access": "private",
    "placeType": "home",
-   "placeName": "祥子家",
+   "placeName": "心玖家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "简朴榻榻米房，墙上摇滚海报、吉他、收录机、纸箱（像刚搬入）；主人不明；R1 用户答 Q3「Saki's house」未单列 046，且画面明亮、有摇滚海报/吉他，与 053/054 昏暗旧居装修不一致 → 保持 unknown，见 R2-3",
+   "evidence": "证据：kadan_005_1_05/12 心玖童年的家（心玖妈妈与生父在场）；用户确认改为心玖家",
    "question": null,
-   "location": "祥子家",
-   "owner": "丰川祥子",
-   "ownerKey": "010",
+   "location": "心玖家",
+   "owner": "马桥心玖",
+   "ownerKey": "022",
    "residents": [
-    "010"
+    "022"
    ],
    "exclusive": true,
    "homeBand": null,
    "answer": "user R2：046=祥子家（Ave Mujica）",
-   "title": "祥子家·榻榻米和室",
+   "title": "心玖家·榻榻米和室（童年）",
    "description": "简朴榻榻米房间，圆矮桌与坐垫、绿窗帘、小电视",
    "tags": [
     "和室",
@@ -2397,8 +2412,9 @@
     "简朴"
    ],
    "category": "scene",
+   "fixes": [],
    "source": "user",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000047": {
    "bands": [
@@ -2411,7 +2427,7 @@
    "time": "unspecified",
    "stage": true,
    "confidence": "confirmed",
-   "evidence": "哥特吊灯+拱形布景的剧场舞台，风格与 Ave Mujica 演出一致（现有名称含 Ave Mujica 但非官方命名）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10442「In paradisum.」、mujica_002_1_01「Unica via.」、mujica_002_1_02「Sub lumine exponeris.」、mujica_002_1_04「Iterum frangetur.」 等11篇；场景出场：Oblivionis、祥子、doloris、amoris、timoris",
    "question": null,
    "location": "Ave Mujica 剧场",
    "owner": null,
@@ -2429,8 +2445,8 @@
     "紫"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000048": {
    "bands": [
@@ -2443,7 +2459,7 @@
    "time": "unspecified",
    "stage": true,
    "confidence": "confirmed",
-   "evidence": "哥特吊灯+拱形布景的剧场舞台，风格与 Ave Mujica 演出一致（现有名称含 Ave Mujica 但非官方命名）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_04「Iterum frangetur.」、mujica_002_1_05「Omnia apparent.」、mujica_002_1_06「Solus factus.」；场景出场：若麦、祥子、睦、staff、mutsumi_maybe",
    "question": null,
    "location": "Ave Mujica 剧场",
    "owner": null,
@@ -2460,8 +2476,8 @@
     "白光"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000049": {
    "bands": [
@@ -2499,29 +2515,30 @@
     "generic"
    ],
    "access": "public",
-   "placeType": "hotel",
+   "placeType": "police_station",
    "placeName": null,
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "酒店客房/门前/旅馆前台，公共住宿",
+   "confidence": "confirmed",
+   "evidence": "AI复核：原图有警车与防诈竖幅，是警察署｜酒店客房/门前/旅馆前台，公共住宿",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "旅馆门前·停车场（夜）",
-   "description": "夜晚旅馆建筑与竖招牌，门前停着两辆车",
+   "title": "警察署门前·警车（夜）",
+   "description": "夜晚警察署门前停着警车与白色轿车，墙上「特殊詐欺根絶」竖幅",
    "tags": [
-    "旅馆",
-    "酒店外观",
+    "警察署",
+    "警车",
     "室外",
     "夜",
     "停车"
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000051": {
    "bands": [
@@ -2533,8 +2550,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "住宅区街道/路口，公共道路",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：住宅区公共道路，通用｜住宅区街道/路口，公共道路",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2549,7 +2567,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000052": {
    "bands": [
@@ -2562,7 +2580,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "老旧公寓走廊+昏暗旧客厅（推拉门、小厨房）；与动画中丰川祥子和父亲同住的旧公寓相似，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_01「Unica via.」、mujica_002_1_06「Solus factus.」、mujica_002_1_09「Quod nescio.」；场景出场：祥子、爽世、祥子父亲",
    "question": null,
    "location": "祥子家",
    "owner": "丰川祥子",
@@ -2584,8 +2602,8 @@
     "陈旧"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000053": {
    "bands": [
@@ -2598,7 +2616,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "老旧公寓走廊+昏暗旧客厅（推拉门、小厨房）；与动画中丰川祥子和父亲同住的旧公寓相似，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_01「Unica via.」、mujica_002_1_02「Sub lumine exponeris.」；场景出场：祥子、storemanager_tel、祥子父亲",
    "question": null,
    "location": "祥子家",
    "owner": "丰川祥子",
@@ -2620,8 +2638,8 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000054": {
    "bands": [
@@ -2634,7 +2652,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "老旧公寓走廊+昏暗旧客厅（推拉门、小厨房）；与动画中丰川祥子和父亲同住的旧公寓相似，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_01「Unica via.」、mujica_002_1_06「Solus factus.」、mujica_002_1_18「Te videre volui.」；场景出场：祥子、祥子父亲、emcee2、若麦、初华",
    "question": null,
    "location": "祥子家",
    "owner": "丰川祥子",
@@ -2656,8 +2674,8 @@
     "陈旧"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000055": {
    "bands": [
@@ -2670,7 +2688,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_01「Unica via.」、mujica_002_1_06「Solus factus.」、mujica_002_1_07「Remedium non est.」、mujica_002_exstory_1_02「Saltans cum Diabolo.」 等6篇；场景出场：祥子、灯、爱音、thegirl、睦",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -2693,17 +2711,10 @@
     "豪华"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "洋馆钢琴室 · 日间",
-     "suggest": "丰川家·撞球钢琴厅（日）",
-     "reason": "画面主体是两张台球桌，钢琴在后方，旧名不利于人工辨认（归属不变）"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000056": {
    "bands": [
@@ -2716,7 +2727,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_17「Somnium abiit.」；场景出场：祥子",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -2739,17 +2750,10 @@
     "豪华"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "洋馆钢琴室 · 夜间",
-     "suggest": "丰川家·撞球钢琴厅（夜）",
-     "reason": "同 055"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000057": {
    "bands": [
@@ -2761,8 +2765,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
-   "evidence": "无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识演出舞台，通用｜无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2778,7 +2783,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000058": {
    "bands": [
@@ -2790,8 +2795,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
-   "evidence": "无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识演出舞台，通用｜无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2807,7 +2813,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000059": {
    "bands": [
@@ -2820,7 +2826,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_01「Unica via.」、mujica_002_1_18「Te videre volui.」；场景出场：祥子祖父、祥子、祥子父亲",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -2842,17 +2848,10 @@
     "豪华"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "洋馆门厅 · 夜间",
-     "suggest": "丰川家·洋馆书房（夜）",
-     "reason": "凸窗前摆一张大书桌，是书房/办公室，不是门厅（归属不变）"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000060": {
    "bands": [
@@ -2860,17 +2859,17 @@
    ],
    "access": "school",
    "placeType": "school",
-   "placeName": null,
+   "placeName": "月之森女子学园",
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "校园花架长椅·绿墙（日）",
+   "title": "月之森女子学园·花园（日间）",
    "description": "红砖校舍旁绿植墙与花架，石板地与花坛，晴天",
    "tags": [
     "学校",
@@ -2881,8 +2880,9 @@
     "花"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000061": {
    "bands": [
@@ -2954,8 +2954,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -2972,7 +2973,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000064": {
    "bands": [
@@ -2985,7 +2986,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「Win-Wing-Production 会議室」；用户确认为 Ave Mujica 专属（exclusive）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_03「Post finem, initium.」、mujica_002_1_05「Omnia apparent.」、mujica_002_1_14「Noli abire.」、mujica_002_1_18「Te videre volui.」 等15篇；场景出场：海铃、祥子、初华、若麦、睦",
    "question": null,
    "location": "Win-Wing-Production",
    "owner": null,
@@ -3002,8 +3003,8 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000065": {
    "bands": [
@@ -3016,7 +3017,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「Win-Wing-Production 会議室」；用户确认为 Ave Mujica 专属（exclusive）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10443「In paradisum.」、mujica_002_1_03「Post finem, initium.」、nyamu_sakiko_linkstory_2「若麦&祥子 2」；场景出场：祥子、睦、初华、若麦",
    "question": null,
    "location": "Win-Wing-Production",
    "owner": null,
@@ -3033,8 +3034,8 @@
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000066": {
    "bands": [
@@ -3047,7 +3048,7 @@
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "方正现代独栋（宽车库门）与挑高现代客厅/二楼走廊，混凝土+白墙风格与若叶家地下室相近，疑为若叶家，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_07「Remedium non est.」、mujica_002_1_10「Hominem fieri.」；场景内无对白角色",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3068,8 +3069,8 @@
     "傍晚"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000067": {
    "bands": [
@@ -3082,7 +3083,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "方正现代独栋（宽车库门）与挑高现代客厅/二楼走廊，混凝土+白墙风格与若叶家地下室相近，疑为若叶家，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_03「Post finem, initium.」、mujica_002_1_08「Tutus in cavea.」、mujica_002_1_09「Quod nescio.」、mujica_002_1_10「Hominem fieri.」 等8篇；场景出场：祥子、管家、立希、爽世、睦",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3104,8 +3105,8 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000068": {
    "bands": [
@@ -3118,7 +3119,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "方正现代独栋（宽车库门）与挑高现代客厅/二楼走廊，混凝土+白墙风格与若叶家地下室相近，疑为若叶家，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_10「Hominem fieri.」；场景内无对白角色",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3140,8 +3141,8 @@
     "雨"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000069": {
    "bands": [
@@ -3154,7 +3155,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "方正现代独栋（宽车库门）与挑高现代客厅/二楼走廊，混凝土+白墙风格与若叶家地下室相近，疑为若叶家，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_03「Post finem, initium.」、mujica_002_1_04「Iterum frangetur.」、mujica_002_1_10「Hominem fieri.」、mujica_002_1_15「Sine vita, nihil.」 等6篇；场景出场：睦、Mortis(睦)、祥子",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3175,8 +3176,8 @@
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000070": {
    "bands": [
@@ -3189,7 +3190,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "方正现代独栋（宽车库门）与挑高现代客厅/二楼走廊，混凝土+白墙风格与若叶家地下室相近，疑为若叶家，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_02「Sub lumine exponeris.」、mujica_002_1_03「Post finem, initium.」、mujica_002_1_17「Somnium abiit.」；场景出场：祥子、睦、若麦、minami、初华",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3211,8 +3212,8 @@
     "楼梯"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000071": {
    "bands": [
@@ -3260,7 +3261,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「若葉家 地下スタジオ」；若叶睦（Ave Mujica）家的私人地下录音室。他队成员只应以访客身份出现",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10442「In paradisum.」、mujica_002_1_04「Iterum frangetur.」、mujica_002_1_05「Omnia apparent.」、mujica_002_1_17「Somnium abiit.」 等6篇；场景出场：若麦、睦、祥子、海铃、初华",
    "location": "若叶家",
    "owner": "若叶睦",
    "ownerKey": "007",
@@ -3280,8 +3281,8 @@
     "钢琴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000073": {
    "bands": [
@@ -3294,7 +3295,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「若葉家 地下スタジオ」；若叶睦（Ave Mujica）家的私人地下录音室。他队成员只应以访客身份出现",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_03「Post finem, initium.」、mutsumi_sakiko_linkstory_3「睦&祥子 3」；场景出场：睦、祥子、minami、若麦、海铃",
    "location": "若叶家",
    "owner": "若叶睦",
    "ownerKey": "007",
@@ -3313,8 +3314,8 @@
     "沙发"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000074": {
    "bands": [
@@ -3327,7 +3328,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "官方名片名「若葉家 地下スタジオ」；若叶睦（Ave Mujica）家的私人地下录音室。他队成员只应以访客身份出现",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_03「Post finem, initium.」、mujica_002_1_04「Iterum frangetur.」、mujica_002_1_14「Noli abire.」；场景出场：睦、Mortis(睦)",
    "location": "若叶家",
    "owner": "若叶睦",
    "ownerKey": "007",
@@ -3347,8 +3348,8 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000075": {
    "bands": [
@@ -3361,7 +3362,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "空旷纯白大卧室（帐幔床、白沙发），77/78 地上散落大量玩偶；疑为若叶睦房间，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10440「In paradisum.」、mujica_002_1_15「Sine vita, nihil.」、mujica_002_1_16「Timeo et trahor.」；场景出场：Mortis(睦)、祥子、睦、管家",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3383,8 +3384,8 @@
     "白"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000076": {
    "bands": [
@@ -3397,7 +3398,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "空旷纯白大卧室（帐幔床、白沙发），77/78 地上散落大量玩偶；疑为若叶睦房间，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_12「Monstrum.」、mujica_002_1_17「Somnium abiit.」；场景出场：祥子、睦、海铃、Mortis(睦)",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3419,8 +3420,8 @@
     "白"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000077": {
    "bands": [
@@ -3433,7 +3434,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "空旷纯白大卧室（帐幔床、白沙发），77/78 地上散落大量玩偶；疑为若叶睦房间，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_07「Remedium non est.」、mujica_002_1_08「Tutus in cavea.」、mujica_002_1_10「Hominem fieri.」；场景出场：Mortis(睦)、爽世、睦",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3456,8 +3457,8 @@
     "凌乱"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000078": {
    "bands": [
@@ -3470,7 +3471,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "空旷纯白大卧室（帐幔床、白沙发），77/78 地上散落大量玩偶；疑为若叶睦房间，未证实",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10440「In paradisum.」、mujica_002_1_09「Quod nescio.」、mujica_002_1_10「Hominem fieri.」、mujica_002_1_11「Non obliviscor.」 等5篇；场景出场：爽世、Mortis(睦)、祥子、爱音、睦",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -3493,20 +3494,20 @@
     "凌乱"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000079": {
    "bands": [
-    "generic"
+    "avemujica"
    ],
    "access": "public",
-   "placeType": "stage",
+   "placeType": "tv_studio",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "电视台/大型彩灯舞台（摄像机、紫色 LED），无标识",
    "location": null,
    "owner": null,
@@ -3523,17 +3524,10 @@
     "摄像机"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "stage",
-     "suggest": "tv_studio",
-     "reason": "画面前景有两台摄像机与监视器，是电视台演播厅；作为乐队 live 舞台会穿帮"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000080": {
    "bands": [
@@ -3545,8 +3539,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "摄影棚，无标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：摄影棚，无标识，通用｜摄影棚，无标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3561,60 +3556,52 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000081": {
    "bands": [
-    "mygo"
+    "avemujica"
    ],
    "access": "private",
    "placeType": "bedroom",
-   "placeName": "爱音家",
+   "placeName": "初华家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
    "evidence": "阁楼卧室（行李箱、地铺，像刚入住）与斜木顶单人卧室；可能是宿舍个人房，无标识",
    "question": null,
-   "location": "爱音家",
-   "owner": "千早爱音",
-   "ownerKey": "002",
+   "location": "初华家",
+   "owner": "三角初华",
+   "ownerKey": "006",
    "residents": [
-    "002"
+    "006"
    ],
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p4–p8=anon's house",
-   "title": "爱音家·阁楼卧室（夜）",
+   "title": "初华家·阁楼（夜间）",
    "description": "斜顶水泥阁楼，地铺被褥、小圆桌与行李箱，昏暗",
    "tags": [
     "卧室",
     "阁楼",
-    "爱音家",
     "室内",
     "夜",
     "简朴"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "owner（疑问，不改）",
-     "current": "爱音家（用户 R1 Q5 答复）",
-     "question": "081/082 是水泥斜顶阁楼、地铺加行李箱，155–157 是木斜顶的完整卧室，两套都标为爱音家卧室。是否一套是爱音回国前后的不同房间？还是其中一套属于别人（例如借住处）？",
-     "reason": "同一角色两套风格迥异的卧室，AI 会随机混用"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000082": {
    "bands": [
-    "mygo"
+    "avemujica"
    ],
    "access": "private",
    "placeType": "bedroom",
-   "placeName": "爱音家",
+   "placeName": "初华家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
@@ -3622,35 +3609,28 @@
    "evidence": "阁楼卧室（行李箱、地铺，像刚入住）与斜木顶单人卧室；可能是宿舍个人房，无标识",
    "question": null,
    "location": "爱音家",
-   "owner": "千早爱音",
-   "ownerKey": "002",
+   "owner": "三角初华",
+   "ownerKey": "006",
    "residents": [
-    "002"
+    "006",
+    "010"
    ],
    "exclusive": true,
    "homeBand": null,
    "answer": "R1 Q5 p4–p8=anon's house",
-   "title": "爱音家·阁楼卧室（灯）",
+   "title": "初华家·阁楼卧室（灯）",
    "description": "同一斜顶阁楼开灯，地铺、圆桌与行李箱",
    "tags": [
     "卧室",
     "阁楼",
-    "爱音家",
     "室内",
     "简朴"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "owner（疑问，不改）",
-     "current": "爱音家（用户 R1 Q5 答复）",
-     "question": "同 081",
-     "reason": "同 081"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000083": {
    "bands": [
@@ -3662,8 +3642,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "住宅区街道/路口，公共道路",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：住宅区公共道路，通用｜住宅区街道/路口，公共道路",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3679,7 +3660,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000084": {
    "bands": [
@@ -3691,8 +3672,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "住宅区街道/路口，公共道路",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：住宅区公共道路，通用｜住宅区街道/路口，公共道路",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3707,24 +3689,30 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000085": {
-   "bands": [],
+   "bands": [
+    "avemujica"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "若麦家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） mujica_002_1_05「Omnia apparent.」若麦独自在此房间喝拿铁并与妈妈、弟妹通电话；另见 mujica_002_1_04/06/15/16、anotherstory_10441，出场者均只有若麦；085/086 为同一房间不同光照",
+   "question": null,
+   "location": "若麦家",
+   "owner": "祐天寺若麦",
+   "ownerKey": "009",
+   "residents": [
+    "009"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "梳妆台卧室·环形补光灯（灯）",
+   "title": "若麦家·卧室（补光灯·灯）",
    "description": "木地板卧室，单人床、书架、白色梳妆桌与环形补光灯，室内灯",
    "tags": [
     "卧室",
@@ -3734,25 +3722,32 @@
     "补光灯"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000086": {
-   "bands": [],
+   "bands": [
+    "avemujica"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "若麦家",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） mujica_002_1_05「Omnia apparent.」若麦独自在此房间喝拿铁并与妈妈、弟妹通电话；另见 mujica_002_1_04/06/15/16、anotherstory_10441，出场者均只有若麦；085/086 为同一房间不同光照",
+   "question": null,
+   "location": "若麦家",
+   "owner": "祐天寺若麦",
+   "ownerKey": "009",
+   "residents": [
+    "009"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "梳妆台卧室·环形补光灯（日）",
+   "title": "若麦家·卧室（补光灯·日）",
    "description": "同一卧室日间，阳台窗透入日光",
    "tags": [
     "卧室",
@@ -3763,8 +3758,9 @@
     "补光灯"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000087": {
    "bands": [
@@ -3776,8 +3772,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3793,7 +3790,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000088": {
    "bands": [
@@ -3806,7 +3803,7 @@
    "time": "unspecified",
    "stage": true,
    "confidence": "confirmed",
-   "evidence": "哥特吊灯+拱形布景的剧场舞台，风格与 Ave Mujica 演出一致（现有名称含 Ave Mujica 但非官方命名）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_05「Omnia apparent.」；场景出场：若麦、emcee2、初华、mutsumi_maybe、nyamumother",
    "question": null,
    "location": "Ave Mujica 剧场",
    "owner": null,
@@ -3824,20 +3821,22 @@
     "红"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000089": {
-   "bands": [],
+   "bands": [
+    "generic"
+   ],
    "access": "school",
    "placeType": "school",
-   "placeName": null,
+   "placeName": "月之森女子学园",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "华丽砖柱金属拱门+洋风校舍、木窗框教室/拱窗木地板走廊；疑为月之森女子学园（洋风名门校），无校名可读。月之森在读（萌娘百科）：若叶睦、长崎爽世、四宫宁月（初二C）→ 若确认是月之森，则归 Ave Mujica / MyGO!!!!! / 一家Dumb Rock!；来源 https://zh.moegirl.org.cn/若叶睦 https://zh.moegirl.org.cn/四宫宁月",
-   "question": "R2-8",
+   "confidence": "confirmed",
+   "evidence": "AI复核：洋风校舍同060/139，按用户口径通用｜华丽砖柱金属拱门+洋风校舍、木窗框教室/拱窗木地板走廊；疑为月之森女子学园（洋风名门校），无校名可读。月之森在读（萌娘百科）：若叶睦、长崎爽世、四宫宁月（初二C）→ 若确认是月之森，则归 Ave Mujica / MyGO!!!!! / 一家Dumb Rock!；来源 https://zh.moegirl.org.cn/若叶睦 https://zh.moegirl.org.cn/四宫宁月",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3854,19 +3853,21 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000090": {
-   "bands": [],
+   "bands": [
+    "generic"
+   ],
    "access": "school",
    "placeType": "school",
-   "placeName": null,
+   "placeName": "月之森女子学园",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "华丽砖柱金属拱门+洋风校舍、木窗框教室/拱窗木地板走廊；疑为月之森女子学园（洋风名门校），无校名可读。月之森在读（萌娘百科）：若叶睦、长崎爽世、四宫宁月（初二C）→ 若确认是月之森，则归 Ave Mujica / MyGO!!!!! / 一家Dumb Rock!；来源 https://zh.moegirl.org.cn/若叶睦 https://zh.moegirl.org.cn/四宫宁月",
-   "question": "R2-8",
+   "confidence": "confirmed",
+   "evidence": "AI复核：洋风校舍同060/139，按用户口径通用｜华丽砖柱金属拱门+洋风校舍、木窗框教室/拱窗木地板走廊；疑为月之森女子学园（洋风名门校），无校名可读。月之森在读（萌娘百科）：若叶睦、长崎爽世、四宫宁月（初二C）→ 若确认是月之森，则归 Ave Mujica / MyGO!!!!! / 一家Dumb Rock!；来源 https://zh.moegirl.org.cn/若叶睦 https://zh.moegirl.org.cn/四宫宁月",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3883,7 +3884,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000091": {
    "bands": [
@@ -3895,8 +3896,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3914,7 +3916,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000092": {
    "bands": [
@@ -3926,8 +3928,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -3942,7 +3945,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000093": {
    "bands": [
@@ -3954,7 +3957,7 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "酒店客房/门前/旅馆前台，公共住宿",
    "location": null,
    "owner": null,
@@ -3971,8 +3974,9 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000094": {
    "bands": [
@@ -3984,8 +3988,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4001,7 +4006,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000095": {
    "bands": [
@@ -4074,7 +4079,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_04「Iterum frangetur.」、mujica_002_1_16「Timeo et trahor.」、mujica_002_1_17「Somnium abiit.」、mujica_002_1_18「Te videre volui.」；场景出场：祥子、若麦、初华、海铃",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -4096,8 +4101,8 @@
     "豪华"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000098": {
    "bands": [
@@ -4110,7 +4115,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_10「Hominem fieri.」、mujica_002_1_18「Te videre volui.」、mujica_002_1_19「Nihil est firmum.」、mujica_002_exstory_1_01「Convivium in nave.」；场景出场：祥子、初华、祥子祖父",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -4132,8 +4137,8 @@
     "豪华"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000099": {
    "bands": [
@@ -4214,8 +4219,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4230,19 +4236,19 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000102": {
    "bands": [
-    "generic"
+    "avemujica"
    ],
    "access": "abstract",
-   "placeType": "insert",
+   "placeType": "art_installation",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "旧电视堆+月牙装置的抽象暗室；气质接近 Ave Mujica 式心理描写但无标识，暂作通用插入",
    "location": null,
    "owner": null,
@@ -4258,30 +4264,24 @@
     "舞台布景"
    ],
    "category": "event",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "insert",
-     "suggest": "art_installation（category=event）",
-     "reason": "堆满显像管电视与新月装置的暗室，是超现实布景，不是可泛用的插入镜头"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000103": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "live_house",
+   "placeType": "restaurant",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "Live House 酒吧台，无店名",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：券售机+面碗菜单，拉面店｜Live House 酒吧台，无店名",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4289,30 +4289,16 @@
    "title": "拉面店吧台·红凳",
    "description": "红色吧台与红凳、开放厨房、墙上菜单与券售机",
    "tags": [
-    "餐馆",
     "拉面店",
+    "餐馆",
     "吧台",
-    "室内",
-    "红"
+    "室内"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "live_house",
-     "suggest": "restaurant（拉面店）",
-     "reason": "右侧有餐券售票机，墙上是带碗面照片的菜单，红凳吧台后是开放厨房，像拉面店而非 live house 酒吧（已看原图确认）"
-    },
-    {
-     "field": "name",
-     "current": "Live House 酒吧",
-     "suggest": "拉面店吧台·红凳",
-     "reason": "同上"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000104": {
    "bands": [
@@ -4325,7 +4311,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "方正现代独栋（宽车库门）与挑高现代客厅/二楼走廊，混凝土+白墙风格与若叶家地下室相近，疑为若叶家，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_11「Non obliviscor.」；场景出场：祥子、爽世、立希、Mortis(睦)",
    "question": null,
    "location": "若叶家",
    "owner": "若叶睦",
@@ -4346,8 +4332,8 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000105": {
    "bands": [
@@ -4356,36 +4342,29 @@
    "access": "abstract",
    "placeType": "insert",
    "placeName": null,
-   "indoor": "outdoor",
-   "time": "night",
+   "indoor": "abstract",
+   "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "插入镜头（天空/星空/斑马线/信号灯/纯色/散景/烟雾），无地点与乐队信息",
+   "evidence": "AI复核：原图是水下光束与气泡，非星空｜插入镜头（天空/星空/斑马线/信号灯/纯色/散景/烟雾），无地点与乐队信息",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "深蓝星点·夜空",
-   "description": "深蓝暗底上散布白色星点光粒，无地平线",
+   "title": "深蓝水中气泡·光束",
+   "description": "深蓝水下，上方透下的光束与漂浮气泡",
    "tags": [
-    "星空",
-    "夜",
-    "抽象",
-    "蓝",
-    "插入"
+    "插入镜头",
+    "水下",
+    "气泡",
+    "深蓝"
    ],
    "category": "insert",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "[插入镜头] 星空与银河 · 夜间",
-     "suggest": "深蓝星点·夜空",
-     "reason": "画面只有深蓝底上的白色光点，没有银河（124 才是银河），两张同名会混淆"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000106": {
    "bands": [
@@ -4397,8 +4376,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "酒店客房/门前/旅馆前台，公共住宿",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：酒店/旅馆，公共住宿｜酒店客房/门前/旅馆前台，公共住宿",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4413,7 +4393,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000107": {
    "bands": [
@@ -4425,8 +4405,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4441,24 +4422,30 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000108": {
-   "bands": [],
+   "bands": [
+    "avemujica"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "八幡海铃家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
    "location": null,
-   "owner": null,
-   "exclusive": false,
+   "owner": "八幡海铃",
+   "ownerKey": "008",
+   "residents": [
+    "008"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "水泥墙卧室·吉他音箱",
+   "title": "八幡海铃家",
    "description": "清水混凝土墙卧室，深绿床、电吉他、音箱与纸箱",
    "tags": [
     "卧室",
@@ -4468,21 +4455,23 @@
     "水泥墙"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000109": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "street",
+   "placeType": "mall",
    "placeName": null,
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：室内商场中庭，非街道｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4491,22 +4480,16 @@
    "description": "商场挑高中庭，玻璃栏杆走廊、店铺与绿植，明亮",
    "tags": [
     "商场",
-    "购物",
+    "中庭",
     "室内",
-    "日"
+    "日",
+    "购物"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "street",
-     "suggest": "mall",
-     "reason": "室内商场挑高中庭，不是街道"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000110": {
    "bands": [
@@ -4518,8 +4501,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4533,7 +4517,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000111": {
    "bands": [
@@ -4605,8 +4589,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "学校食堂/图书室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜学校食堂/图书室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4621,7 +4606,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000114": {
    "bands": [
@@ -4633,8 +4618,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4648,7 +4634,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000115": {
    "bands": [
@@ -4660,8 +4646,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4676,7 +4663,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000116": {
    "bands": [
@@ -4688,7 +4675,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
@@ -4705,8 +4692,9 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000117": {
    "bands": [
@@ -4722,7 +4710,7 @@
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "天文馆；与 MyGO!!!!!（灯与祥子的回忆）有关联但属公共场所",
    "location": null,
    "owner": null,
@@ -4738,17 +4726,10 @@
     "座椅"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType/name",
-     "current": "planetarium / [插入镜头] 天文馆 · 夜间",
-     "suggest": "planetarium / 天文馆·观众席星空穹顶（category=scene）",
-     "reason": "画面有成排座椅与投影仪，人物可以坐在里面演出，不只是插入镜头"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000118": {
    "bands": [
@@ -4760,8 +4741,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4778,7 +4760,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000119": {
    "bands": [
@@ -4791,7 +4773,7 @@
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_07「Remedium non est.」、mujica_002_1_16「Timeo et trahor.」；场景出场：若麦、初华、管家、祥子祖父",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -4812,52 +4794,57 @@
     "傍晚"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000120": {
    "bands": [
-    "generic"
+    "avemujica"
    ],
-   "access": "public",
-   "placeType": "park",
-   "placeName": null,
+   "access": "private",
+   "placeType": "home",
+   "placeName": "丰川家",
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "玫瑰园/蓝顶花园亭，像公园或校园花园；若属洋馆庭院需改私宅",
-   "question": "R2-6",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_18「Te videre volui.」、mujica_002_1_19「Nihil est firmum.」；场景出场：初华、mizuho_voice、kiyotsugu_voice、sakiko_child_voice、sakiko_child",
+   "question": null,
+   "location": "丰川家",
+   "owner": "丰川祥子",
+   "ownerKey": "010",
+   "residents": [
+    "010"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "玫瑰园·白色凉亭（日）",
+   "title": "丰川家·玫瑰园白凉亭（日）",
    "description": "彩色玫瑰花丛间石板小径通往白色圆顶凉亭，晴天",
    "tags": [
-    "公园",
+    "洋馆",
     "花园",
     "玫瑰",
     "凉亭",
+    "丰川家",
     "室外",
     "日",
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000121": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "transit",
+   "placeType": "port",
    "placeName": null,
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "码头/游乐设施旁停车区（画面像渡轮码头），公共场所",
    "location": null,
    "owner": null,
@@ -4875,19 +4862,12 @@
     "晴"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "transit",
-     "suggest": "port（码头）",
-     "reason": "nameOverride 已改为码头，但 placeType 仍是 transit；画面有靠岸的渡轮"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "nameOverride": "码头停车区 · 日间 · 晴天",
    "descriptionOverride": "码头旁的停车区，高台设施、车辆与山景",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000122": {
    "bands": [
@@ -4899,8 +4879,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4916,7 +4897,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000123": {
    "bands": [
@@ -4928,8 +4909,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -4944,7 +4926,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000124": {
    "bands": [
@@ -4985,8 +4967,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "机场停机坪",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：机场停机坪，公共场所｜机场停机坪",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5003,45 +4986,40 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000126": {
-   "bands": [],
+   "bands": [
+    "generic"
+   ],
    "access": "public",
-   "placeType": "recording_studio",
+   "placeType": "ferry",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "玻璃隔音录音间+铁梯、绿色暗光；归属不明",
-   "question": "R2-2",
+   "confidence": "confirmed",
+   "evidence": "AI复核：原图为渡轮客舱；用户R2：交通工具通用｜玻璃隔音录音间+铁梯、绿色暗光；归属不明",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q6 p5,p6,p9=unknown",
-   "title": "仓库内玻璃隔间·绿地板",
-   "description": "大型室内空间中一座玻璃墙隔间与铁楼梯，绿地板",
+   "title": "渡轮船舱·蓝座客舱",
+   "description": "渡轮内部，玻璃窗客舱里成排蓝色座椅，旁有「关系者以外立入禁止」铁梯，绿地板",
    "tags": [
+    "渡轮",
+    "船舱",
+    "交通工具",
     "室内",
-    "隔间",
-    "仓库",
-    "工厂",
-    "玻璃"
+    "座椅"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "recording_studio",
-     "suggest": "warehouse / hall（待确认）",
-     "reason": "大型室内空间里的一座玻璃墙隔间与铁楼梯，绿色地坪，没有录音设备，不像录音隔间"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000127": {
    "bands": [
@@ -5053,8 +5031,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "木饰大厅休息区/木屋客厅，像旅馆或合宿别墅，无标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：木屋旅馆大厅，无标识，通用｜木饰大厅休息区/木屋客厅，像旅馆或合宿别墅，无标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5071,7 +5050,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000128": {
    "bands": [
@@ -5114,7 +5093,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "洋馆（三角钢琴+台球室、门厅、华丽卧室、砖柱栅门、带圆亭花园）；候选：丰川家（祥子/Ave Mujica）或须贺家（蕾叶/一家Dumb Rock!，有「蕾叶祖母」「蕾叶父亲秘书」子角色）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mujica_002_1_01「Unica via.」、mujica_002_1_18「Te videre volui.」、mujica_002_1_19「Nihil est firmum.」；场景出场：祥子、初华",
    "question": null,
    "location": "丰川家",
    "owner": "丰川祥子",
@@ -5136,8 +5115,8 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000130": {
    "bands": [
@@ -5149,8 +5128,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
-   "evidence": "金色雕花框+闭合红幕的剧场舞台，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识演出舞台，通用｜金色雕花框+闭合红幕的剧场舞台，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5166,26 +5146,26 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000131": {
    "bands": [
-    "generic"
+    "avemujica"
    ],
    "access": "public",
    "placeType": "hall",
-   "placeName": null,
+   "placeName": "丰川家邮轮",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "舞会大厅（水晶吊灯、棋盘地板），无标识；若属洋馆内部需改私宅",
    "question": "R2-6",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "舞会大厅·水晶吊灯（灯）",
+   "title": "丰川家邮轮家·舞会大厅",
    "description": "多层包厢的欧式舞厅，水晶吊灯与棋盘格地板，暖光",
    "tags": [
     "舞厅",
@@ -5195,27 +5175,28 @@
     "吊灯"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000132": {
    "bands": [
-    "generic"
+    "avemujica"
    ],
    "access": "public",
    "placeType": "hall",
-   "placeName": null,
+   "placeName": "丰川家邮轮",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "舞会大厅（水晶吊灯、棋盘地板），无标识；若属洋馆内部需改私宅",
    "question": "R2-6",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "舞会大厅·水晶吊灯（夜）",
+   "title": "丰川家邮轮家·舞会大厅（夜间）",
    "description": "同一欧式舞厅暗蓝夜色",
    "tags": [
     "舞厅",
@@ -5225,46 +5206,41 @@
     "豪华"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000133": {
    "bands": [
-    "generic"
+    "avemujica"
    ],
    "access": "public",
-   "placeType": "seaside",
-   "placeName": null,
+   "placeType": "ship_deck",
+   "placeName": "丰川家邮轮",
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "海边平台/水族馆/沙滩",
+   "confidence": "confirmed",
+   "evidence": "AI复核：邮轮甲板；用户已定丰川家邮轮(131)｜海边平台/水族馆/沙滩",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "邮轮甲板（夜）",
+   "title": "丰川家邮轮·甲板（夜）",
    "description": "夜晚邮轮木甲板，地灯点点，左侧白色船楼",
    "tags": [
     "邮轮",
     "甲板",
-    "海上",
     "室外",
-    "夜"
+    "夜",
+    "海"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType/name",
-     "current": "seaside / 海边木平台 · 夜间",
-     "suggest": "ship_deck / 邮轮甲板（夜）",
-     "reason": "左侧是白色多层船楼，地面是甲板木板与地灯，是邮轮甲板而不是岸边平台"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000134": {
    "bands": [
@@ -5276,8 +5252,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5293,7 +5270,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000135": {
    "bands": [
@@ -5305,8 +5282,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5322,7 +5300,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000136": {
    "bands": [
@@ -5334,7 +5312,7 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "学校走廊；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
@@ -5349,8 +5327,9 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000137": {
    "bands": [
@@ -5362,8 +5341,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "音乐教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜音乐教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5379,7 +5359,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000138": {
    "bands": [
@@ -5391,8 +5371,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "部室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜部室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5409,26 +5390,26 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000139": {
    "bands": [
     "generic"
    ],
-   "access": "public",
+   "access": "school",
    "placeType": "park",
-   "placeName": null,
+   "placeName": "月之森女子学园",
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "玫瑰园/蓝顶花园亭，像公园或校园花园；若属洋馆庭院需改私宅",
    "question": "R2-6",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "校园蓝顶凉亭花园（日）",
+   "title": "月之森女子学园花坛与蓝绿圆顶凉亭（日间）",
    "description": "洋风校舍前花坛与蓝绿圆顶凉亭，晴天",
    "tags": [
     "学校",
@@ -5439,20 +5420,21 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000140": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "seaside",
+   "placeType": "aquarium",
    "placeName": null,
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "海边平台/水族馆/沙滩",
    "location": null,
    "owner": null,
@@ -5468,17 +5450,10 @@
     "海洋"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "seaside",
-     "suggest": "aquarium（户外步廊）",
-     "reason": "天花板绘有鱼群，是水族馆的半室外步廊"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000141": {
    "bands": [
@@ -5490,7 +5465,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
    "location": null,
    "owner": null,
@@ -5508,8 +5483,9 @@
     "招牌"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000142": {
    "bands": [
@@ -5521,8 +5497,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：同路口141已由用户确认为通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5539,7 +5516,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000143": {
    "bands": [
@@ -5551,8 +5528,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：同路口141已由用户确认为通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5568,7 +5546,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000144": {
    "bands": [
@@ -5580,8 +5558,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：同路口141已由用户确认为通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5598,7 +5577,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000145": {
    "bands": [
@@ -5678,8 +5657,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "卡拉OK 包间",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：卡拉OK包间，公共场所｜卡拉OK 包间",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5694,7 +5674,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000148": {
    "bands": [
@@ -5706,8 +5686,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "鞋柜玄关；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜鞋柜玄关；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5723,7 +5704,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000149": {
    "bands": [
@@ -5735,8 +5716,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "鞋柜玄关；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜鞋柜玄关；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5752,7 +5734,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000150": {
    "bands": [
@@ -5845,8 +5827,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "木饰大厅休息区/木屋客厅，像旅馆或合宿别墅，无标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：木屋旅馆大厅，无标识，通用｜木饰大厅休息区/木屋客厅，像旅馆或合宿别墅，无标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -5863,7 +5846,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000153": {
    "bands": [
@@ -5979,7 +5962,7 @@
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "阁楼卧室（行李箱、地铺，像刚入住）与斜木顶单人卧室；可能是宿舍个人房，无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10435「歌」、mygo_001_1_01「要退出吗？」、mygo_001_1_09「互相错过」、mygo_001_1_19「无论跌倒几次，多么迷茫」；场景出场：爱音、若麦、灯、爽世、乐奈",
    "question": null,
    "location": "爱音家",
    "owner": "千早爱音",
@@ -6000,8 +5983,8 @@
     "天窗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000157": {
    "bands": [
@@ -6014,7 +5997,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "与 155/156 为同一房间（日/傍晚/夜三个版本），暂归爱音家；用户范围重叠，待确认",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10435「歌」、mygo_001_1_03「能重新开始了吗」、mygo_001_1_18「五个人一起」、mygo_001_1_19「无论跌倒几次，多么迷茫」 等5篇；场景出场：爱音、若麦、立希、爽世、乐奈",
    "question": null,
    "location": "爱音家",
    "owner": "千早爱音",
@@ -6035,25 +6018,31 @@
     "天窗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000158": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "爽世家",
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） 160 用于 mygo_001_1_03「能重新开始了吗」、1_14「我什么都愿意做」（独自等消息已读）、1_15「是啊」（雨夜回家后独白）、anotherstory_10437，出场者只有爽世；158/159 为同一房间不同时段",
+   "question": null,
+   "location": "爽世家",
+   "owner": "长崎爽世",
+   "ownerKey": "004",
+   "residents": [
+    "004"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "高层落地窗卧室（傍晚）",
+   "title": "爽世家·卧室（傍晚）",
    "description": "大落地窗卧室，双人床、沙发与矮桌，窗外晚霞城市",
    "tags": [
     "卧室",
@@ -6063,25 +6052,32 @@
     "落地窗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000159": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "爽世家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） 160 用于 mygo_001_1_03「能重新开始了吗」、1_14「我什么都愿意做」（独自等消息已读）、1_15「是啊」（雨夜回家后独白）、anotherstory_10437，出场者只有爽世；158/159 为同一房间不同时段",
+   "question": null,
+   "location": "爽世家",
+   "owner": "长崎爽世",
+   "ownerKey": "004",
+   "residents": [
+    "004"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "高层落地窗卧室（灯·夜景）",
+   "title": "爽世家·卧室（夜景·开灯）",
    "description": "同一落地窗卧室开灯，窗外城市夜景",
    "tags": [
     "卧室",
@@ -6092,25 +6088,32 @@
     "夜景"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000160": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "爽世家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） 160 用于 mygo_001_1_03「能重新开始了吗」、1_14「我什么都愿意做」（独自等消息已读）、1_15「是啊」（雨夜回家后独白）、anotherstory_10437，出场者只有爽世；158/159 为同一房间不同时段",
+   "question": null,
+   "location": "爽世家",
+   "owner": "长崎爽世",
+   "ownerKey": "004",
+   "residents": [
+    "004"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "高层落地窗卧室（夜·关灯）",
+   "title": "爽世家·卧室（夜·关灯）",
    "description": "同一落地窗卧室关灯，暗蓝色调，窗外夜景",
    "tags": [
     "卧室",
@@ -6121,21 +6124,22 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000161": {
    "bands": [
     "mygo"
    ],
    "access": "private",
-   "placeType": "dorm",
+   "placeType": "home",
    "placeName": "爽世家",
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "宿舍共用餐厅/公共休息厅，按名称与 Peace之家同一建筑的可能性高，但无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mygo_001_1_17「组一辈子乐队」、mygo_001_1_18「五个人一起」；场景出场：爱音、爽世、乐奈",
    "question": null,
    "location": "爽世家",
    "owner": "长崎爽世",
@@ -6157,30 +6161,23 @@
     "挑高"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "dorm",
-     "suggest": "home（高级公寓）",
-     "reason": "爽世家是私人公寓不是宿舍；contact sheet 旧名「宿舍共用餐厅」会误导（归属不变）"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000162": {
    "bands": [
     "mygo"
    ],
    "access": "private",
-   "placeType": "dorm",
+   "placeType": "home",
    "placeName": "爽世家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "宿舍共用餐厅/公共休息厅，按名称与 Peace之家同一建筑的可能性高，但无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10437「MyGO!!!!!」、mygo_001_1_19「无论跌倒几次，多么迷茫」；场景出场：爽世、爱音、立希、灯、乐奈",
    "question": null,
    "location": "爽世家",
    "owner": "长崎爽世",
@@ -6202,30 +6199,23 @@
     "挑高"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "dorm",
-     "suggest": "home",
-     "reason": "同 161"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000163": {
    "bands": [
     "mygo"
    ],
    "access": "private",
-   "placeType": "dorm",
+   "placeType": "home",
    "placeName": "爽世家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "宿舍共用餐厅/公共休息厅，按名称与 Peace之家同一建筑的可能性高，但无标识",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：mygo_001_1_18「五个人一起」；场景出场：爱音、立希、灯、乐奈、爽世",
    "question": null,
    "location": "爽世家",
    "owner": "长崎爽世",
@@ -6246,41 +6236,32 @@
     "挑高"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "dorm",
-     "suggest": "home",
-     "reason": "同 161"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000164": {
    "bands": [
-    "mygo"
+    "generic"
    ],
-   "access": "private",
-   "placeType": "dorm",
-   "placeName": "爽世家",
+   "access": "public",
+   "placeType": "cafe",
+   "placeName": "羽泽咖啡店",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
    "evidence": "宿舍共用餐厅/公共休息厅，按名称与 Peace之家同一建筑的可能性高，但无标识",
    "question": null,
-   "location": "爽世家",
-   "owner": "长崎爽世",
-   "ownerKey": "004",
-   "residents": [
-    "004"
-   ],
-   "exclusive": true,
+   "location": "羽泽咖啡店",
+   "owner": null,
+   "ownerKey": null,
+   "residents": [],
+   "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
-   "title": "木梁餐厅·吧台长桌（日）",
+   "title": "羽泽咖啡店·吧台长桌（日）",
    "description": "木梁天花板的餐厅，木桌椅与后方吧台厨房，明亮",
    "tags": [
     "餐厅",
@@ -6290,41 +6271,32 @@
     "木"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "owner（疑问，不改）",
-     "current": "爽世家（用户 R1 Q5 答复）",
-     "question": "画面是木梁天花板、十几张木桌和后方吧台厨房，更像餐馆/宿舍食堂，与 161–163 的复式公寓风格完全不同。是否确认属于爽世家？若不是，建议改为通用餐厅",
-     "reason": "用户确认过的归属，只提疑问"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000165": {
    "bands": [
-    "mygo"
+    "generic"
    ],
-   "access": "private",
-   "placeType": "dorm",
-   "placeName": "爽世家",
+   "access": "public",
+   "placeType": "cafe",
+   "placeName": "羽泽咖啡店",
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
    "evidence": "宿舍共用餐厅/公共休息厅，按名称与 Peace之家同一建筑的可能性高，但无标识",
    "question": null,
-   "location": "爽世家",
-   "owner": "长崎爽世",
-   "ownerKey": "004",
-   "residents": [
-    "004"
-   ],
-   "exclusive": true,
+   "location": "羽泽咖啡店",
+   "owner": null,
+   "ownerKey": null,
+   "residents": [],
+   "exclusive": false,
    "homeBand": null,
    "answer": "R1 Q5 p9–p13=soyo's house",
-   "title": "木梁餐厅·吧台长桌（傍晚）",
+   "title": "羽泽咖啡店（傍晚）",
    "description": "同一木梁餐厅，夕阳橙光",
    "tags": [
     "餐厅",
@@ -6334,17 +6306,10 @@
     "木"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "owner（疑问，不改）",
-     "current": "爽世家（用户 R1 Q5 答复）",
-     "question": "同 164",
-     "reason": "用户确认过的归属，只提疑问"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000166": {
    "bands": [
@@ -6356,7 +6321,7 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
    "location": null,
    "owner": null,
@@ -6372,8 +6337,9 @@
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000167": {
    "bands": [
@@ -6385,7 +6351,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
    "location": null,
    "owner": null,
@@ -6402,20 +6368,23 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000168": {
-   "bands": [],
+   "bands": [
+    "generic"
+   ],
    "access": "school",
    "placeType": "school",
-   "placeName": null,
+   "placeName": "月之森女子学园",
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "华丽砖柱金属拱门+洋风校舍、木窗框教室/拱窗木地板走廊；疑为月之森女子学园（洋风名门校），无校名可读。月之森在读（萌娘百科）：若叶睦、长崎爽世、四宫宁月（初二C）→ 若确认是月之森，则归 Ave Mujica / MyGO!!!!! / 一家Dumb Rock!；来源 https://zh.moegirl.org.cn/若叶睦 https://zh.moegirl.org.cn/四宫宁月",
-   "question": "R2-8",
+   "confidence": "confirmed",
+   "evidence": "AI复核：洋风校舍同060/139，按用户口径通用｜华丽砖柱金属拱门+洋风校舍、木窗框教室/拱窗木地板走廊；疑为月之森女子学园（洋风名门校），无校名可读。月之森在读（萌娘百科）：若叶睦、长崎爽世、四宫宁月（初二C）→ 若确认是月之森，则归 Ave Mujica / MyGO!!!!! / 一家Dumb Rock!；来源 https://zh.moegirl.org.cn/若叶睦 https://zh.moegirl.org.cn/四宫宁月",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6432,7 +6401,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000169": {
    "bands": [
@@ -6444,8 +6413,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6462,24 +6432,30 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000170": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "高松灯家",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
    "location": null,
-   "owner": null,
-   "exclusive": false,
+   "owner": "高松灯",
+   "ownerKey": "001",
+   "residents": [
+    "001"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "望远镜卧室·高架床（日）",
+   "title": "高松灯家（日间）",
    "description": "木质高架床下书桌、天文望远镜与绿窗帘，日光",
    "tags": [
     "卧室",
@@ -6490,25 +6466,31 @@
     "高架床"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000171": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "高松灯家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
    "location": null,
-   "owner": null,
-   "exclusive": false,
+   "owner": "高松灯",
+   "ownerKey": "001",
+   "residents": [
+    "001"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "望远镜卧室·高架床（夜）",
+   "title": "高松灯家（夜间）",
    "description": "同一卧室夜间，只有台灯亮着",
    "tags": [
     "卧室",
@@ -6519,8 +6501,8 @@
     "台灯"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000172": {
    "bands": [
@@ -6532,8 +6514,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6550,7 +6533,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000173": {
    "bands": [
@@ -6562,8 +6545,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6579,7 +6563,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000174": {
    "bands": [
@@ -6591,8 +6575,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6608,7 +6593,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000175": {
    "bands": [
@@ -6620,8 +6605,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6637,7 +6623,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000176": {
    "bands": [
@@ -6649,8 +6635,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6665,7 +6652,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000177": {
    "bands": [
@@ -6712,8 +6699,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6729,24 +6717,30 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000179": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "立希家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "location": "立希家",
+   "owner": "椎名立希",
+   "ownerKey": "005",
+   "residents": [
+    "005"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "深色书柜卧室（夜·屏亮）",
+   "title": "立希家·卧室（夜·屏亮）",
    "description": "深色调卧室，金属书架、单人床，书桌电脑屏亮着",
    "tags": [
     "卧室",
@@ -6757,25 +6751,32 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000180": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "立希家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "location": "立希家",
+   "owner": "椎名立希",
+   "ownerKey": "005",
+   "residents": [
+    "005"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "深色书柜卧室（夜·屏关）",
+   "title": "立希家·卧室（夜·屏关）",
    "description": "与 179 相同的深色卧室，电脑屏熄灭，全暗",
    "tags": [
     "卧室",
@@ -6786,8 +6787,9 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000181": {
    "bands": [
@@ -6879,8 +6881,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "学校走廊；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜学校走廊；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6895,7 +6898,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000184": {
    "bands": [
@@ -6907,8 +6910,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "学校走廊；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜学校走廊；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -6922,7 +6926,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000185": {
    "bands": [
@@ -6934,7 +6938,7 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
@@ -6950,8 +6954,9 @@
     "傍晚"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000186": {
    "bands": [
@@ -6963,7 +6968,7 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
@@ -6979,8 +6984,9 @@
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000187": {
    "bands": [
@@ -6992,8 +6998,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -7009,7 +7016,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000188": {
    "bands": [
@@ -7021,8 +7028,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -7037,7 +7045,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000189": {
    "bands": [
@@ -7049,8 +7057,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -7066,7 +7075,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000190": {
    "bands": [
@@ -7078,8 +7087,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -7094,7 +7104,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000191": {
    "bands": [
@@ -7136,8 +7146,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "学校天台；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜学校天台；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -7153,17 +7164,19 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000193": {
-   "bands": [],
+   "bands": [
+    "mygo"
+   ],
    "access": "private",
    "placeType": "home",
    "placeName": null,
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "高层住宅露台沙发夜景，主人不明",
    "question": "R2-9",
    "location": null,
@@ -7180,8 +7193,9 @@
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000194": {
    "bands": [
@@ -7193,8 +7207,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "餐馆/家庭餐厅/餐厅露台，无店名",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：餐厅，无店名，通用｜餐馆/家庭餐厅/餐厅露台，无店名",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -7210,7 +7225,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000195": {
    "bands": [
@@ -8000,8 +8015,9 @@
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8018,7 +8034,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000222": {
    "bands": [
@@ -8030,9 +8046,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：kadan_005_1_15「过家家到此为止！！」、miku_yomogi_linkstory_2「心玖&蓬咲 2」、yomogi_shizuku_linkstory_1「蓬咲&宁月 1」；场景出场：蓬咲、心玖、宁月、蕾叶、千樱梨",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -8057,8 +8073,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000223": {
    "bands": [
@@ -8070,9 +8086,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：kadan_005_1_20「一家Dumb Rock!」、miku_shizuku_linkstory_3「心玖&宁月 3」；场景出场：心玖、蕾叶、千樱梨、蓬咲、宁月",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -8098,8 +8114,8 @@
     "日式"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000224": {
    "bands": [
@@ -8112,7 +8128,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户确认为 miku（马桥心玖）的房间；马桥心玖属一家Dumb Rock!（shared/data/characters.json 022，萌娘百科 https://zh.moegirl.org.cn/马桥心玖）。所在建筑（Peace之家内 / 心玖自家）未定，见 R2-4b",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：kadan_005_1_05「倾注了满满感情！！」、kadan_005_1_07「绝不交出『Home』！！」、kadan_005_1_10「虽然没变但正在进化！！」、kadan_005_1_16「直觉！！」 等6篇；场景出场：心玖、蕾叶、suzuki、宁月",
    "question": "R2-4b",
    "location": "心玖的房间",
    "owner": "马桥心玖",
@@ -8135,8 +8151,8 @@
     "蓝"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000226": {
    "bands": [
@@ -8148,7 +8164,7 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
@@ -8164,8 +8180,9 @@
     "现代"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000228": {
    "bands": [
@@ -8177,8 +8194,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8194,7 +8212,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000241": {
    "bands": [
@@ -8206,8 +8224,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
-   "evidence": "无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识演出舞台，通用｜无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8222,7 +8241,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000243": {
    "bands": [
@@ -8263,9 +8282,9 @@
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "推断 Peace之家（置信约 0.8）：①用户确认同组 p1 玄关属 Peace之家；②223 庭院中的房屋为橙粉色外墙+木栏阳台，与 Peace之家外观 26/027/028 一致；③客厅匾额「家族平安」与「Peace」呼应；④客厅/餐厅/厨房为同一套和式装修。反证：素材有「心玖的父亲/母亲」子角色，心玖家可能单独出场。补充：心玖（马桥心玖）与 Raika（须贺蕾叶）同属一家Dumb Rock!，所以无论这些房间属于 Peace之家还是心玖家，乐队都是 dumbrock；未定的只是具体地点",
-   "question": "R2-4a",
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：kadan_005_1_12「希望大家都能笑着！！」；场景出场：心玖",
+   "question": null,
    "location": "Peace之家",
    "owner": "须贺蕾叶（Raika）",
    "ownerKey": "021",
@@ -8289,8 +8308,8 @@
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000247": {
    "bands": [
@@ -8302,7 +8321,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
@@ -8319,25 +8338,32 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000248": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "汐见萤家",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
-   "question": "R2-9",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） millsage_004_1_01「彩虹色的光芒」萤妈妈在此客厅给幼年萤读绘本、钢琴老师来访建议参赛，出场者为萤与萤妈妈",
+   "question": null,
+   "location": "汐见萤家",
+   "owner": "汐见萤",
+   "ownerKey": "016",
+   "residents": [
+    "016"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "明亮北欧风客厅（日）",
+   "title": "汐见萤家·客厅（明亮北欧风）",
    "description": "浅木家具客厅，灰色沙发、电视、餐桌与绿窗帘，明亮",
    "tags": [
     "客厅",
@@ -8347,8 +8373,9 @@
     "北欧"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000249": {
    "bands": [
@@ -8360,8 +8387,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8377,7 +8405,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000250": {
    "bands": [
@@ -8389,8 +8417,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8406,7 +8435,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000251": {
    "bands": [
@@ -8418,8 +8447,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "体育馆（有讲台舞台，不作正式演出）；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜体育馆（有讲台舞台，不作正式演出）；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8435,7 +8465,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000252": {
    "bands": [
@@ -8447,8 +8477,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8464,52 +8495,40 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000253": {
    "bands": [
-    "generic"
+    "millsage"
    ],
-   "access": "public",
-   "placeType": "street",
-   "placeName": null,
+   "access": "band",
+   "placeType": "garage_exterior",
+   "placeName": "琴平凪家车库",
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
-   "location": null,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：eventstory_7_07「等待羽化」、hotaru_natsume_linkstory_2「萤&枣 2」、millsage_004_1_14「凡人与天才」、natsume_houka_linkstory_2「枣&朋花 2」 等5篇；场景出场：朋花、茉幌、枣、萤、凪；millsage_004_1_04「那些日子」中凪说明这个车库「以前是我姐练篮球用的」，eventstory_7_03 凪家客厅妈妈问姐姐树「今天不用车库吗」→ millsage 练习室即琴平凪家车库",
+   "question": null,
+   "location": "琴平凪家车库",
    "owner": null,
-   "exclusive": false,
+   "exclusive": true,
    "homeBand": null,
-   "title": "木折门车库外观（日）",
+   "title": "millsage 车库·木折门外观（日）",
    "description": "木质折叠门加绿色小门的车库正面，旁边是公寓楼，晴天",
    "tags": [
     "车库",
-    "住宅外观",
-    "街道",
+    "millsage",
+    "外观",
     "室外",
     "日",
     "晴"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType/name",
-     "current": "street / 街边小店 · 日间 · 晴天",
-     "suggest": "garage_exterior / 木折门车库外观（日）",
-     "reason": "原图是住宅车库的木质折叠门加绿色小门，不是店铺；与新增 361（夜）是同一建筑，新增 357 是从室内看同一道折叠门"
-    },
-    {
-     "field": "location（疑问）",
-     "current": "无",
-     "question": "253/361/357 这间车库是否就是 millsage 练习室（23/001–003）的外观与另一角度？若是，应归 millsage 并 exclusive",
-     "reason": "357 后墙的木折门与 253 正面一致，但 357 室内是空的且有篮球架，与 millsage 练习室的陈设不同，可能是改造前或另一处车库"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000254": {
    "bands": [
@@ -8521,8 +8540,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8539,24 +8559,30 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000255": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "汐见萤家",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
    "location": null,
-   "owner": null,
-   "exclusive": false,
+   "owner": "汐见萤",
+   "ownerKey": "016",
+   "residents": [
+    "016"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "薄荷绿墙卧室·铁艺床（日）",
+   "title": "汐见萤家（日间）",
    "description": "与 012 同一绿墙卧室，日光窗户",
    "tags": [
     "卧室",
@@ -8567,8 +8593,9 @@
     "铁艺床"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000256": {
    "bands": [
@@ -8637,17 +8664,17 @@
    ],
    "access": "public",
    "placeType": "office",
-   "placeName": null,
+   "placeName": "医院",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "无公司名的会议室/办公楼/大厅",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "现代电梯大厅（日）",
+   "title": "医院（日间）",
    "description": "玻璃幕墙的空旷大厅，电梯门与青色立柱，日光",
    "tags": [
     "大厅",
@@ -8657,8 +8684,9 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000259": {
    "bands": [
@@ -8705,8 +8733,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8721,7 +8750,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000261": {
    "bands": [
@@ -8733,8 +8762,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8750,7 +8780,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000262": {
    "bands": [
@@ -8763,7 +8793,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10448「可能性梦限大」、eventstory_6_01「新曲」、eventstory_6_02「慢慢来」、eventstory_6_03「指南针」 等14篇；场景出场：由乃、野乃花、koharu、manager",
    "question": null,
    "location": "由乃的房间",
    "owner": "千石由乃",
@@ -8786,8 +8816,8 @@
     "暗"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000263": {
    "bands": [
@@ -8799,7 +8829,7 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "台场海滨步道（官方名片名「海沿いの道」），公共场所",
    "location": "台场",
    "owner": null,
@@ -8815,8 +8845,9 @@
     "桥"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000264": {
    "bands": [
@@ -8828,8 +8859,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8845,7 +8877,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000265": {
    "bands": [
@@ -8857,8 +8889,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -8874,7 +8907,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000266": {
    "bands": [],
@@ -8903,17 +8936,10 @@
     "可爱"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "律的房间 · 拍摄灯少女卧室",
-     "suggest": "粉色少女卧室·拍摄三脚架",
-     "reason": "用户已答复 266 不属于律，名称仍带「律的房间」会误导人和 AI"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "user",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000267": {
    "bands": [
@@ -8951,7 +8977,7 @@
     "activity": "singing",
     "rarity": "rare"
    },
-   "title": "阿拉蕾·衣柜暗室（麦克风）",
+   "title": "阿拉蕾·衣柜暗室",
    "description": "漆黑衣柜内挂满衣服，中间立着麦克风架",
    "tags": [
     "衣柜",
@@ -8963,17 +8989,10 @@
     "麦克风"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "律的房间 · 衣柜暗室 · 夜间",
-     "suggest": "阿拉蕾·衣柜暗室（麦克风）",
-     "reason": "用户已答复 267 属于阿拉蕾，名称仍写「律的房间」"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "user",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000268": {
    "bands": [
@@ -8985,8 +9004,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9001,7 +9021,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000269": {
    "bands": [
@@ -9013,8 +9033,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9031,7 +9052,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000270": {
    "bands": [
@@ -9043,8 +9064,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9059,7 +9081,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000271": {
    "bands": [
@@ -9071,8 +9093,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无公司名的会议室/办公楼/大厅",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无公司名办公空间，通用｜无公司名的会议室/办公楼/大厅",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9088,7 +9111,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000272": {
    "bands": [
@@ -9100,8 +9123,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9117,7 +9141,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000273": {
    "bands": [
@@ -9129,8 +9153,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "车站入口/站台/闸机/候车厅/高架连廊",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：车站/站前公共空间，通用｜车站入口/站台/闸机/候车厅/高架连廊",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9144,7 +9169,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000274": {
    "bands": [
@@ -9156,8 +9181,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "住宅区街道/路口，公共道路",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：住宅区公共道路，通用｜住宅区街道/路口，公共道路",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9172,7 +9198,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000275": {
    "bands": [
@@ -9184,7 +9210,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
    "location": null,
    "owner": null,
@@ -9200,8 +9226,9 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000276": {
    "bands": [
@@ -9244,8 +9271,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：秋叶原街区，公共场所｜秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "question": null,
    "location": "秋叶原",
    "owner": null,
    "exclusive": false,
@@ -9262,7 +9290,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000278": {
    "bands": [
@@ -9274,8 +9302,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：秋叶原街区，公共场所｜秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "question": null,
    "location": "秋叶原",
    "owner": null,
    "exclusive": false,
@@ -9291,7 +9320,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000279": {
    "bands": [
@@ -9303,8 +9332,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：秋叶原街区，公共场所｜秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "question": null,
    "location": "秋叶原",
    "owner": null,
    "exclusive": false,
@@ -9320,7 +9350,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000280": {
    "bands": [
@@ -9332,8 +9362,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
-   "evidence": "室内活动舞台/户外临时舞台，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：活动会场，人物模糊无乐队，通用｜室内活动舞台/户外临时舞台，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9350,11 +9381,11 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000281": {
    "bands": [
-    "generic"
+    "mewtype"
    ],
    "access": "public",
    "placeType": "event_stage",
@@ -9362,7 +9393,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": true,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "室内活动舞台/户外临时舞台，无乐队标识",
    "location": null,
    "owner": null,
@@ -9379,8 +9410,8 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000282": {
    "bands": [
@@ -9392,8 +9423,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "活动大厅外侧（宣传展板、花篮），展板人物模糊，无可辨乐队",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：活动会场，人物模糊无乐队，通用｜活动大厅外侧（宣传展板、花篮），展板人物模糊，无可辨乐队",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9409,7 +9441,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000283": {
    "bands": [
@@ -9421,8 +9453,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无标识后台/休息区，通用｜后台/休息室/侧台/货运通道/海报走廊，无乐队标识",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9437,7 +9470,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000284": {
    "bands": [
@@ -9449,8 +9482,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜普通教室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9466,7 +9500,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000286": {
    "bands": [
@@ -9478,8 +9512,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "临街小咖啡馆外观，无店名",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜临街小咖啡馆外观，无店名",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9494,7 +9529,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000287": {
    "bands": [
@@ -9506,8 +9541,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "临街小咖啡馆外观，无店名",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜临街小咖啡馆外观，无店名",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9522,7 +9558,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000288": {
    "bands": [
@@ -9534,13 +9570,13 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "音乐教室；无校名标识，暂作通用校园（具体学校不明）",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "窗边长桌休息区（日）",
+   "title": "窗边长桌休息区",
    "description": "格子地板空间，沿窗木长桌与绿色长凳，窗外楼群",
    "tags": [
     "学校",
@@ -9550,17 +9586,10 @@
     "日"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "音乐教室窗边 · 日间",
-     "suggest": "窗边长桌休息区（日）",
-     "reason": "画面只有沿窗长木桌、绿色长凳和格子地板，没有乐器或谱架，不像音乐教室"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000289": {
    "bands": [
@@ -9572,8 +9601,9 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "学校食堂/图书室；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜学校食堂/图书室；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9589,7 +9619,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000290": {
    "bands": [
@@ -9602,7 +9632,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：nonoka_yuno_linkstory_3「野乃花&由乃 3」、yumemita_003_1_12「讨厌」、yumemita_003_1_16「开始」；场景出场：野乃花、由乃",
    "question": null,
    "location": "野乃花的房间",
    "owner": "宫永野乃花",
@@ -9624,8 +9654,8 @@
     "气球"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000291": {
    "bands": [
@@ -9638,7 +9668,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：yumemita_003_1_03「治疗」、yumemita_003_1_14「想要了解」；场景出场：野乃花、野乃花家人",
    "question": null,
    "location": "野乃花的房间",
    "owner": "宫永野乃花",
@@ -9661,8 +9691,8 @@
     "气球"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000292": {
    "bands": [
@@ -9674,8 +9704,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9692,7 +9723,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000293": {
    "bands": [
@@ -9704,8 +9735,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：无校名校园；按用户通用校园口径｜校园户外（花架/中庭/长椅/售货机/入口广场）；无校名标识，暂作通用校园（具体学校不明）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9721,7 +9753,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000294": {
    "bands": [
@@ -9733,8 +9765,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：公园/绿地，公共场所｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9751,7 +9784,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000295": {
    "bands": [
@@ -9763,8 +9796,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9780,7 +9814,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000296": {
    "bands": [
@@ -9792,8 +9826,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "秋叶原模型店前（HOBBY SHOP 招牌），公共街区",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：秋叶原街区，公共场所｜秋叶原模型店前（HOBBY SHOP 招牌），公共街区",
+   "question": null,
    "location": "秋叶原",
    "owner": null,
    "exclusive": false,
@@ -9811,20 +9846,21 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000297": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "cafe",
+   "placeType": "street",
    "placeName": null,
-   "indoor": "indoor",
+   "indoor": "outdoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：高架下柱廊通道，非咖啡厅｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9833,23 +9869,15 @@
    "description": "高架下的长柱廊通道，两侧店面与地灯，昏暗",
    "tags": [
     "高架下",
-    "街道",
+    "通道",
     "柱廊",
-    "半室外",
-    "暗"
+    "昏暗"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType/indoor",
-     "current": "cafe / indoor",
-     "suggest": "street（高架下通道）/ outdoor",
-     "reason": "是高架桥下的长柱廊通道，没有咖啡厅陈设"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000298": {
    "bands": [
@@ -9861,8 +9889,9 @@
    "indoor": "outdoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9878,7 +9907,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000299": {
    "bands": [
@@ -9890,8 +9919,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9908,7 +9938,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000300": {
    "bands": [
@@ -9920,8 +9950,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "餐馆/家庭餐厅/餐厅露台，无店名",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：餐厅，无店名，通用｜餐馆/家庭餐厅/餐厅露台，无店名",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9937,7 +9968,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000301": {
    "bands": [
@@ -9949,8 +9980,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：街道/商业区公共空间，通用｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9967,20 +9999,21 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000303": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "street",
+   "placeType": "building_interior",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：室内楼梯间，非街道｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -9990,33 +10023,26 @@
    "tags": [
     "楼梯间",
     "室内",
-    "建筑内",
-    "暗"
+    "扶手",
+    "昏暗"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "street",
-     "suggest": "building_interior（楼梯间）",
-     "reason": "室内楼梯间，不是街道"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000304": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "seaside",
+   "placeType": "aquarium",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "海边平台/水族馆/沙滩",
    "location": null,
    "owner": null,
@@ -10032,30 +10058,24 @@
     "约会"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "seaside",
-     "suggest": "aquarium",
-     "reason": "室内水族馆大水槽"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000305": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "street",
+   "placeType": "bookstore",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：室内书店｜商店街/商业街/街道/广场/天桥/楼梯/停车场/天台等公共城市空间（298 肉店招牌「肉はハブサ」，非乐队相关）",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -10064,23 +10084,16 @@
    "description": "明亮书店，漫画书架与平台陈列、促销立牌",
    "tags": [
     "书店",
-    "商店",
-    "室内",
+    "漫画",
     "书架",
-    "购物"
+    "室内",
+    "明亮"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "street",
-     "suggest": "bookstore",
-     "reason": "室内书店"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000306": {
    "bands": [
@@ -10123,7 +10136,7 @@
    "time": "dusk",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：yumemita_003_1_01「MewType」、yumemita_003_1_03「治疗」、yumemita_003_1_05「还没结束」、yumemita_003_1_10「这次一定」；场景出场：阿拉蕾",
    "question": null,
    "location": "阿拉蕾的房间",
    "owner": "仲町阿拉蕾",
@@ -10146,8 +10159,8 @@
     "偶像"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000308": {
    "bands": [
@@ -10160,7 +10173,7 @@
    "time": "day",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：yumemita_003_1_16「开始」；场景出场：律、阿拉蕾、bota、raki",
    "question": null,
    "location": "阿拉蕾的房间",
    "owner": "仲町阿拉蕾",
@@ -10183,8 +10196,8 @@
     "偶像"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000309": {
    "bands": [
@@ -10197,7 +10210,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：yumemita_003_1_01「MewType」、yumemita_003_1_03「治疗」、yumemita_003_1_05「还没结束」、yumemita_003_1_08「要抗争」 等6篇；场景出场：阿拉蕾",
    "question": null,
    "location": "阿拉蕾的房间",
    "owner": "仲町阿拉蕾",
@@ -10219,8 +10232,8 @@
     "偶像"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000310": {
    "bands": [
@@ -10233,7 +10246,7 @@
    "time": "night",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：yumemita_003_1_02「另有隐情」、yumemita_003_1_07「不知道」；场景出场：阿拉蕾",
    "question": null,
    "location": "阿拉蕾的房间",
    "owner": "仲町阿拉蕾",
@@ -10256,8 +10269,8 @@
     "偶像"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000311": {
    "bands": [
@@ -10270,7 +10283,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：nonoka_miyako_linkstory_1「野乃花&都子 1」、yumemita_003_1_10「这次一定」、yumemita_003_1_12「讨厌」、yumemita_003_1_16「开始」；场景出场：都子、viola、editor、marukun",
    "question": null,
    "location": "都子的房间",
    "owner": "藤都子",
@@ -10293,8 +10306,8 @@
     "手办"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000312": {
    "bands": [
@@ -10307,7 +10320,7 @@
    "time": "unspecified",
    "stage": false,
    "confidence": "confirmed",
-   "evidence": "用户指认房间主人（角色→乐队据 shared/data/characters.json：千石由乃/藤都子/仲町阿拉蕾/宫永野乃花/峰月律 均为梦限大MewType）",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：anotherstory_10447「可能性梦限大」、yumemita_003_1_03「治疗」、yumemita_003_1_18「公开」；场景出场：都子、marukun、interviewer2",
    "question": null,
    "location": "都子的房间",
    "owner": "藤都子",
@@ -10331,8 +10344,8 @@
    ],
    "category": "scene",
    "duplicateOf": "adv_bkg_stage_000311",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000313": {
    "bands": [
@@ -10416,24 +10429,25 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：原图远处是摩天轮，非高塔｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "夜间花田·远处高塔（夜）",
-   "description": "夜色下大片红黄花田，远处发光高塔与树林",
+   "title": "夜间花田·远处摩天轮（夜）",
+   "description": "夜色下大片红黄花田，远处亮灯的摩天轮与树林",
    "tags": [
     "花田",
+    "摩天轮",
     "公园",
     "室外",
-    "夜",
-    "花"
+    "夜"
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000316": {
    "bands": [
@@ -10445,8 +10459,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "海边平台/水族馆/沙滩",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：海滩，公共场所｜海边平台/水族馆/沙滩",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -10462,7 +10477,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000317": {
    "bands": [
@@ -10474,8 +10489,9 @@
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "海边平台/水族馆/沙滩",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：海滩，公共场所｜海边平台/水族馆/沙滩",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -10492,7 +10508,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000318": {
    "bands": [
@@ -10591,7 +10607,7 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "大型音乐场馆入口，无标识",
    "location": null,
    "owner": null,
@@ -10607,8 +10623,9 @@
     "晴"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000322": {
    "bands": [
@@ -10620,8 +10637,9 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "秋叶原模型店前（HOBBY SHOP 招牌），公共街区",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：秋叶原街区，公共场所｜秋叶原模型店前（HOBBY SHOP 招牌），公共街区",
+   "question": null,
    "location": "秋叶原",
    "owner": null,
    "exclusive": false,
@@ -10638,7 +10656,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000323": {
    "bands": [
@@ -10681,8 +10699,9 @@
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "无店名咖啡厅/咖啡街",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：无店名咖啡馆，公共场所｜无店名咖啡厅/咖啡街",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -10697,7 +10716,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000326": {
    "bands": [
@@ -10709,8 +10728,9 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：秋叶原街区，公共场所｜秋叶原站前（官方名片名「秋葉原駅前」），公共街区",
+   "question": null,
    "location": "秋叶原",
    "owner": null,
    "exclusive": false,
@@ -10727,7 +10747,7 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000327": {
    "bands": [
@@ -10768,33 +10788,28 @@
    "indoor": "outdoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：原图有摩天轮，驳回「远塔」改名｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "远塔大草坪（日）",
-   "description": "一望无际的绿草坪与远处树林、高塔，晴天",
+   "title": "摩天轮公园大草坪（日）",
+   "description": "一望无际的绿草坪与树林，远处摩天轮，晴天",
    "tags": [
     "公园",
-    "草地",
+    "草坪",
+    "摩天轮",
     "室外",
     "日",
     "晴"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "摩天轮公园草坪 · 日间 · 晴天",
-     "suggest": "远塔大草坪（日）",
-     "reason": "画面里没有摩天轮，远处是一座格构高塔"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000329": {
    "bands": [
@@ -10806,32 +10821,27 @@
    "indoor": "outdoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "公园/花园/草地/儿童公园/花田",
+   "confidence": "confirmed",
+   "evidence": "AI复核：原图有摩天轮，驳回「远塔」改名｜公园/花园/草地/儿童公园/花田",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "远塔大草坪（傍晚）",
-   "description": "同一大草坪与远塔，晚霞金黄",
+   "title": "摩天轮公园大草坪（傍晚）",
+   "description": "同一大草坪与远处摩天轮，晚霞金黄",
    "tags": [
     "公园",
-    "草地",
+    "草坪",
+    "摩天轮",
     "室外",
     "傍晚"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "name",
-     "current": "摩天轮公园草坪 · 傍晚 · 晴天",
-     "suggest": "远塔大草坪（傍晚）",
-     "reason": "同 328"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000330": {
    "bands": [
@@ -10843,8 +10853,9 @@
    "indoor": "indoor",
    "time": "dusk",
    "stage": false,
-   "confidence": "likely",
-   "evidence": "摩天轮轿厢",
+   "confidence": "confirmed",
+   "evidence": "AI复核：看图：摩天轮轿厢，公共设施｜摩天轮轿厢",
+   "question": null,
    "location": null,
    "owner": null,
    "exclusive": false,
@@ -10859,24 +10870,26 @@
    ],
    "category": "scene",
    "source": "draft",
-   "updatedAt": "2026-10-10"
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000331": {
-   "bands": [],
+   "bands": [
+    "avemujica"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "初华家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
+   "confidence": "confirmed",
    "evidence": "无主人标识的私人卧室/客厅（绿色卧室、电脑卧室、蓝色可爱卧室、梳妆台卧室、混凝土墙吉他卧室、高层落地窗卧室、望远镜卧室、书柜卧室、明亮客厅、小公寓）",
    "question": "R2-9",
    "location": null,
    "owner": null,
    "exclusive": false,
    "homeBand": null,
-   "title": "小公寓客厅·六角书架",
+   "title": "初华家·一楼",
    "description": "水泥墙小客厅，米色沙发、六角木架、电视与吧台椅",
    "tags": [
     "客厅",
@@ -10886,20 +10899,21 @@
     "暖光"
    ],
    "category": "scene",
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "fixes": [],
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000332": {
    "bands": [
     "generic"
    ],
    "access": "public",
-   "placeType": "live_house",
+   "placeType": "concert_hall",
    "placeName": null,
    "indoor": "indoor",
    "time": "unspecified",
    "stage": true,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "无标识的 live house/演出厅舞台，可用于任意乐队正式演出",
    "location": null,
    "owner": null,
@@ -10916,17 +10930,10 @@
     "紫"
    ],
    "category": "scene",
-   "fixes": [
-    {
-     "field": "placeType",
-     "current": "live_house",
-     "suggest": "concert_hall",
-     "reason": "地毯排椅的小型座席会场，带大屏，不是站立式 live house"
-    }
-   ],
+   "fixes": [],
    "fixesImported": true,
-   "source": "draft",
-   "updatedAt": "2026-10-10"
+   "source": "user",
+   "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000333": {
    "bands": [
@@ -10957,47 +10964,58 @@
    "updatedAt": "2026-10-10"
   },
   "adv_bkg_stage_000357": {
-   "bands": [],
-   "access": "private",
-   "placeType": "garage",
-   "placeName": null,
+   "bands": [
+    "millsage"
+   ],
+   "access": "band",
+   "placeType": "practice_room",
+   "placeName": "琴平凪家车库",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "空车库内部，后墙木折门与 253/361 外观一致；可能与 millsage 车库练习室相关，待用户确认",
-   "location": null,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：eventstory_7_01「阴霾」、eventstory_7_03「所谓努力」、eventstory_7_04「背过身去」、eventstory_7_06「波涛逆卷」；场景出场：凪姐姐树、幼年凪、凪；millsage_004_1_04「那些日子」中凪说明这个车库「以前是我姐练篮球用的」，eventstory_7_03 凪家客厅妈妈问姐姐树「今天不用车库吗」→ millsage 练习室即琴平凪家车库",
+   "question": null,
+   "location": "琴平凪家车库",
    "owner": null,
-   "exclusive": false,
+   "exclusive": true,
    "homeBand": null,
-   "title": "空车库内部·篮球架（灯）",
-   "description": "空旷木地板车库，左侧楼梯、篮球架与篮球，后方木折门",
+   "title": "millsage 车库·空置内景（灯）",
+   "description": "搬入前的空车库：木地板、左侧楼梯、篮球架与篮球，后方木折门",
    "tags": [
     "车库",
+    "练习室",
+    "millsage",
     "室内",
-    "篮球",
     "空旷",
-    "射灯"
+    "篮球"
    ],
    "category": "scene",
-   "source": "draft",
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000358": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "琴平凪家",
    "indoor": "indoor",
    "time": "unspecified",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "私宅客厅（红砖电视墙、唱片收藏），主人不明",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） eventstory_7_02「4与1」凪回家说「我回来了」，姐姐树与凪妈妈在此客厅（「大沙发加上可爱的家人」）；另见 7_03「所谓努力」、7_04；364 为同一房间日间版",
+   "question": null,
+   "location": "琴平凪家",
+   "owner": "琴平凪",
+   "ownerKey": "018",
+   "residents": [
+    "018"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "红沙发砖墙客厅（拉帘）",
+   "title": "琴平凪家·客厅（红沙发·拉帘）",
    "description": "红砖电视墙前大红沙发，墙上唱片与挂画，窗帘拉上",
    "tags": [
     "客厅",
@@ -11008,24 +11026,32 @@
     "唱片"
    ],
    "category": "scene",
-   "source": "draft",
+   "fixes": [],
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000359": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
-   "placeType": "bedroom",
-   "placeName": null,
+   "placeType": "home",
+   "placeName": "琴平凪家",
    "indoor": "indoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "贴乐队/电影海报的卧室，窗帘拉上开灯（按夜间），主人不明",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） eventstory_7_02「4与1」凪回家见过姐姐后独自在此房间独白；7_05「无法看见」凪在此醒来（「昨天就那样睡着了吗」）；另见 7_04/7_07；359/362 为同一房间",
+   "question": null,
+   "location": "琴平凪家",
+   "owner": "琴平凪",
+   "ownerKey": "018",
+   "residents": [
+    "018"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "海报卧室·蓝窗帘（拉帘）",
+   "title": "琴平凪家·凪的卧室（拉帘）",
    "description": "白墙卧室，乐队海报、蓝沙发、双人床与电视，窗帘拉上",
    "tags": [
     "卧室",
@@ -11035,7 +11061,8 @@
     "蓝"
    ],
    "category": "scene",
-   "source": "draft",
+   "fixes": [],
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000360": {
@@ -11048,7 +11075,7 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "体育馆二层看台，学校或公共体育馆均可",
    "location": null,
    "owner": null,
@@ -11064,51 +11091,62 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
+   "fixes": [],
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000361": {
-   "bands": [],
-   "access": "private",
+   "bands": [
+    "millsage"
+   ],
+   "access": "band",
    "placeType": "garage_exterior",
-   "placeName": null,
+   "placeName": "琴平凪家车库",
    "indoor": "outdoor",
    "time": "night",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "与 253 同一车库外观（夜），可能与 millsage 相关，待确认",
-   "location": null,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本使用此背景：eventstory_7_03「所谓努力」；场景出场：幼年凪、凪姐姐树；millsage_004_1_04「那些日子」中凪说明这个车库「以前是我姐练篮球用的」，eventstory_7_03 凪家客厅妈妈问姐姐树「今天不用车库吗」→ millsage 练习室即琴平凪家车库",
+   "question": null,
+   "location": "琴平凪家车库",
    "owner": null,
-   "exclusive": false,
+   "exclusive": true,
    "homeBand": null,
-   "title": "木折门车库外观（夜）",
+   "title": "millsage 车库·木折门外观（夜）",
    "description": "同 253 车库正面夜景，门旁壁灯照亮，四周高楼灯火",
    "tags": [
     "车库",
-    "住宅外观",
-    "街道",
+    "millsage",
+    "外观",
     "室外",
     "夜"
    ],
    "category": "scene",
-   "source": "draft",
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000362": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
-   "placeType": "bedroom",
-   "placeName": null,
+   "placeType": "home",
+   "placeName": "琴平凪家",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "同 359 卧室日间版，主人不明",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） eventstory_7_02「4与1」凪回家见过姐姐后独自在此房间独白；7_05「无法看见」凪在此醒来（「昨天就那样睡着了吗」）；另见 7_04/7_07；359/362 为同一房间",
+   "question": null,
+   "location": "琴平凪家",
+   "owner": "琴平凪",
+   "ownerKey": "018",
+   "residents": [
+    "018"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "海报卧室·蓝窗帘（日）",
+   "title": "琴平凪家·凪的卧室（日）",
    "description": "同 359 海报卧室，窗帘拉开，窗外绿树日光",
    "tags": [
     "卧室",
@@ -11119,7 +11157,8 @@
     "蓝"
    ],
    "category": "scene",
-   "source": "draft",
+   "fixes": [],
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000363": {
@@ -11132,7 +11171,7 @@
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "likely",
+   "confidence": "confirmed",
    "evidence": "白长桌蓝椅的多功能室/食堂，学校或公共设施",
    "location": null,
    "owner": null,
@@ -11148,24 +11187,32 @@
     "日"
    ],
    "category": "scene",
-   "source": "draft",
+   "fixes": [],
+   "source": "user",
    "updatedAt": "2026-10-13"
   },
   "adv_bkg_stage_000364": {
-   "bands": [],
+   "bands": [
+    "millsage"
+   ],
    "access": "private",
    "placeType": "home",
-   "placeName": null,
+   "placeName": "琴平凪家",
    "indoor": "indoor",
    "time": "day",
    "stage": false,
-   "confidence": "unknown",
-   "evidence": "同 358 客厅日间版，主人不明",
-   "location": null,
-   "owner": null,
-   "exclusive": false,
+   "confidence": "confirmed",
+   "evidence": "证据：Haneoka 公开剧情脚本（haneoka.org，intl） eventstory_7_02「4与1」凪回家说「我回来了」，姐姐树与凪妈妈在此客厅（「大沙发加上可爱的家人」）；另见 7_03「所谓努力」、7_04；364 为同一房间日间版",
+   "question": null,
+   "location": "琴平凪家",
+   "owner": "琴平凪",
+   "ownerKey": "018",
+   "residents": [
+    "018"
+   ],
+   "exclusive": true,
    "homeBand": null,
-   "title": "红沙发砖墙客厅（日）",
+   "title": "琴平凪家·客厅（红沙发·日）",
    "description": "同 358 红砖电视墙客厅，窗帘拉开，日光",
    "tags": [
     "客厅",
@@ -11177,7 +11224,8 @@
     "唱片"
    ],
    "category": "scene",
-   "source": "draft",
+   "fixes": [],
+   "source": "user",
    "updatedAt": "2026-10-13"
   }
  }
