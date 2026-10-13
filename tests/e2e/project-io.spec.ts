@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import type { Project } from '../../shared/schema/project';
+import { collectRefs } from '../../shared/project/exchange';
+import { ProjectSchema, type Project } from '../../shared/schema/project';
 import './helpers/studio';
 import { tab } from './helpers/ui';
 
@@ -98,6 +99,9 @@ test('changing a scene transition / text speed recompiles: the timeline length f
 });
 
 test('export, delete, import gives the identical project; a missing background is listed and can be replaced', async ({ page }, info) => {
+  // the example project's BGM lives in the audio library: a library without audio lists it as missing on import (that flow has its own test)
+  const catalog = (await (await page.request.get('/api/catalog')).json()) as { audio: Array<{ id: string }> };
+  test.skip(collectRefs(ProjectSchema.parse(JSON.parse(await fs.readFile('tests/fixtures/demo-project.json', 'utf8')))).audio.some((a) => !catalog.audio.some((x) => x.id === a)), 'the example project needs its BGM in the asset library');
   const id = await newFromDemo(page, '导出导入');
   await ready(page);
   const original = (await (await page.request.get(`/api/projects/${id}`)).json()) as Project;

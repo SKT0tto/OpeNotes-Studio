@@ -1,6 +1,7 @@
 /** Breakdown (Pass 1, validated) -> a project whose scenes have background, outfits, stage positions and the source text as plain narration. */
 import { blankProject } from '../project/blank';
-import { newBeat, newSceneId, nextCastId } from '../project/mutate';
+import { addKey, ensureTrack, newBeat, newSceneId, nextCastId } from '../project/mutate';
+import { anchorMoves, bgSwitchValue } from './bgKeys';
 import type { Breakdown } from '../schema/ai';
 import type { CastMember, Meta, Project, Scene } from '../schema/project';
 import { bandFormation, spreadEvenly } from './formation';
@@ -55,7 +56,7 @@ export function projectFromBreakdown(inp: FromBreakdownInput): Project {
       title: s.title,
       sourceSpan: { start: first?.start ?? 0, end: lastP?.end ?? 0 },
       meta: aiMeta(inp.genId, s.mood, now),
-      brief: { timeOfDay: s.timeOfDay, mood: s.mood, isPerformance: s.isPerformance, band: s.band, ...(s.location.guestOf ? { guestOf: s.location.guestOf } : {}) },
+      brief: { ...(s.moves && s.moves.length > 0 ? { moves: s.moves.map((m) => ({ paragraph: m.paragraph, backgroundId: m.backgroundId, reason: m.reason, transition: m.transition })) } : {}), timeOfDay: s.timeOfDay, mood: s.mood, isPerformance: s.isPerformance, band: s.band, ...(s.location.guestOf ? { guestOf: s.location.guestOf } : {}) },
       background: { assetId: s.location.backgroundId, framing: { zoom: 1, offsetX: 0, offsetY: 0 }, meta: aiMeta(inp.genId, s.location.reason, now) },
       wardrobe: Object.fromEntries(s.wardrobe.map((w) => [castOf.get(w.characterKey)!.id, { modelId: w.modelId, meta: aiMeta(inp.genId, w.reason, now) }])),
       blocking: Object.fromEntries(
@@ -76,6 +77,15 @@ export function projectFromBreakdown(inp: FromBreakdownInput): Project {
       beat.shot.meta = ruleMeta(inp.genId, undefined, now);
       beat.style.meta = ruleMeta(inp.genId, undefined, now);
       scene.beats.push(beat);
+    }
+    // place changes inside the scene stated by Pass 1: keys on the paragraph beats (Pass 2 rebuilds them from the same list)
+    if (s.moves && s.moves.length > 0) {
+      const track = ensureTrack(scene, { kind: 'stage' }, 'background');
+      track.meta = aiMeta(inp.genId, '场景内地点移动', now);
+      for (const { move, index } of anchorMoves(s.moves, scene.beats.map((_, i) => s.startParagraph + i))) {
+        const k = addKey(scene, track, { beatId: scene.beats[index]!.id, offset: 0 }, bgSwitchValue(move.backgroundId, move.transition, 'move'));
+        k.meta = aiMeta(inp.genId, move.reason, now);
+      }
     }
     project.scenes.push(scene);
   });

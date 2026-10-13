@@ -3,14 +3,15 @@
  * Nothing here trusts the model: every id must exist in the catalog / scene, otherwise it is repaired or dropped with a
  * warning. `errors` are what could not be repaired (the caller may spend one LLM repair call on them).
  */
-import type { Breakdown, DirectedBeat, SceneDirection } from '../schema/ai';
-import type { ModelEntry } from '../schema/assets';
+import type { BgMove, Breakdown, DirectedBeat, SceneDirection } from '../schema/ai';
+import type { BackgroundEntry, ModelEntry } from '../schema/assets';
 import { EMOTION_EXPR } from '../timeline/compile';
 import { canon, familyOfName, isIdleFamily, mapExpressionName, mapMotionFamily } from '../timeline/motionMap';
 import { traceability, type Paragraph } from './paragraphs';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
-import { INSERT_HINT, SPECIAL_ATTENTION } from './vocab';
+import { INSERT_HINT, MAX_BG_MOVES, SPECIAL_ATTENTION } from './vocab';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
+import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
 
 export interface Validated<T> {
   value: T;
@@ -60,7 +61,7 @@ export function validateBreakdown(input: Breakdown, ctx: { catalog: DirectorCata
   for (const s of b.scenes) {
     // background
     if (!L.backgrounds.has(s.location.backgroundId)) {
-      const best = rankBackgrounds(ctx.catalog.backgrounds, `${s.title} ${s.location.reason} ${s.location.backgroundId} ${s.mood}`, { time: s.timeOfDay })[0];
+      const best = rankBackgrounds(ctx.catalog.backgrounds.filter((b) => autoSelectable(b, 'scene')), `${s.title} ${s.location.reason} ${s.location.backgroundId} ${s.mood}`, { time: s.timeOfDay })[0];
       if (best) {
         warnings.push(`场景「${s.title}」的背景 ${s.location.backgroundId} 不存在，已换成最相近的 ${best.id}（${best.name}）`);
         s.location.backgroundId = best.id;
@@ -107,6 +108,7 @@ export function validateBreakdown(input: Breakdown, ctx: { catalog: DirectorCata
     s.presentCast = [...present];
     s.wardrobe = s.presentCast.map((k) => wardrobe.get(k)!);
     warnings.push(...repairBackground(s, ctx.catalog, L));
+    warnings.push(...repairMoves(s, ctx.catalog, L));
     if (s.band !== null && !ctx.catalog.bands.some((x) => x.key === s.band || x.name === s.band)) {
       warnings.push(`场景「${s.title}」的乐队 ${s.band} 不存在，已清除`);
       s.band = null;
@@ -115,25 +117,121 @@ export function validateBreakdown(input: Breakdown, ctx: { catalog: DirectorCata
   return { value: b, warnings, errors };
 }
 
-/** Band/stage fit of the chosen background; a conflicting one is replaced by the best compliant background (deterministic). Returns warnings. */
-export function repairBackground(s: Breakdown['scenes'][number], cat: DirectorCatalog, L: Lookup): string[] {
-  if (!cat.backgrounds.some((b) => b.labels)) return [];
-  const cur = L.backgrounds.get(s.location.backgroundId);
-  if (!cur) return [];
-  const who: SceneWho = { bands: sceneBands(L.characters, s.presentCast), cast: s.presentCast, guestOf: s.location.guestOf ?? null, mood: `${s.mood} ${s.timeOfDay}`, text: `${s.title} ${s.location.reason} ${s.mood}` };
+/** Why a background must not be chosen automatically for a scene (category rules), or null. */
+export function categoryProblem(b: BackgroundEntry, text: string, performance: boolean): string | null {
+  if (b.labels?.duplicateOf) return '同一画面的重复拷贝';
+  const c = bgCategoryOf(b);
+  if (c === 'decor') return '装饰素材';
+  if (c === 'insert') return '插入镜头素材';
+  if (c === 'event' && !(performance && b.labels?.stage) && !EVENT_CUE.test(text)) return '特殊画面（原文没有梦境、回忆等线索）';
+  return null;
+}
+
+export interface BgScope {
+  title: string;
+  reason: string;
+  mood: string;
+  timeOfDay: string;
+  isPerformance: boolean;
+  presentCast: readonly string[];
+  guestOf?: string | null | undefined;
+}
+
+/**
+ * Deterministic check of one background choice for a scene: category (decor / insert / event / duplicate), band and stage fit.
+ * Returns the id to use (the same one when it is fine), and the Chinese warning when it had to change. `label` names the place in the text.
+ */
+export function repairBgChoice(id: string, scope: BgScope, cat: DirectorCatalog, L: Lookup, label: string, extraText = ''): { id: string; warning: string | null } {
+  const cur = L.backgrounds.get(id);
+  if (!cur) return { id, warning: null };
+  const text = `${scope.title} ${scope.reason} ${scope.mood} ${extraText}`;
+  const catBad = categoryProblem(cur, text, scope.isPerformance);
+  if (!catBad && !cat.backgrounds.some((b) => b.labels)) return { id, warning: null };
+  const who: SceneWho = { bands: sceneBands(L.characters, [...scope.presentCast]), cast: scope.presentCast, guestOf: scope.guestOf ?? null, mood: `${scope.mood} ${scope.timeOfDay}`, text };
   const bandName = (k: string) => cat.bands.find((b) => b.key === k)?.name ?? k;
-  const stageBad = s.isPerformance && cur.labels !== undefined && !cur.labels.stage;
+  const stageBad = scope.isPerformance && cur.labels !== undefined && !cur.labels.stage;
   const fit = bgFit(cur.labels, who, cat.labelRules);
-  if (fit === 'ok' && !stageBad) return [];
-  if (fit === 'fallback' && !stageBad) return [`场景「${s.title}」的背景 ${cur.id}（${cur.name}）主人不明，仅作兜底使用，请确认`];
-  const { ok, fallback } = allowedBackgrounds(cat.backgrounds, who, { performance: s.isPerformance, rules: cat.labelRules });
+  if (!catBad && fit === 'ok' && !stageBad) return { id, warning: null };
+  if (!catBad && fit === 'fallback' && !stageBad) return { id, warning: `${label}的背景 ${cur.id}（${cur.name}）主人不明，仅作兜底使用，请确认` };
+  const { ok, fallback } = allowedBackgrounds(cat.backgrounds, who, { performance: scope.isPerformance, rules: cat.labelRules });
   const pool = ok.length > 0 ? ok : fallback;
-  const why = stageBad && fit !== 'no' ? '正式演出需要舞台背景' : `属于 ${bandText(cur.labels, bandName)}，与出场乐队冲突`;
-  const best = rankBackgrounds(pool, `${s.title} ${s.location.reason} ${cur.name} ${cur.location ?? ''}`, { ...(cur.setting ? { setting: cur.setting } : {}), time: s.timeOfDay })[0];
-  if (!best) return [`场景「${s.title}」的背景 ${cur.name} ${why}，但没有可替换的合规背景，已保留`];
-  s.location.backgroundId = best.id;
-  s.location.reason = `${s.location.reason}（已由 ${cur.id} 换成合规背景）`;
-  return [`场景「${s.title}」的背景 ${cur.id}（${cur.name}）${why}，已换成 ${best.id}（${best.name}）`];
+  const why = catBad ? `是${catBad}` : stageBad && fit !== 'no' ? '正式演出需要舞台背景' : `属于 ${bandText(cur.labels, bandName)}，与出场乐队冲突`;
+  // a duplicate copy goes back to its master when the master is fine
+  const master = cur.labels?.duplicateOf ? pool.find((b) => b.id === cur.labels!.duplicateOf) : undefined;
+  const best = master ?? rankBackgrounds(pool, `${scope.title} ${scope.reason} ${cur.name} ${cur.location ?? ''}`, { ...(cur.setting ? { setting: cur.setting } : {}), time: scope.timeOfDay })[0];
+  if (!best) return { id, warning: `${label}的背景 ${cur.name} ${why}，但没有可替换的合规背景，已保留` };
+  return { id: best.id, warning: `${label}的背景 ${cur.id}（${cur.name}）${why}，已换成 ${best.id}（${best.name}）` };
+}
+
+/** Band/stage/category fit of the chosen background; a conflicting one is replaced by the best compliant background (deterministic). Returns warnings. */
+export function repairBackground(s: Breakdown['scenes'][number], cat: DirectorCatalog, L: Lookup): string[] {
+  const r = repairBgChoice(s.location.backgroundId, { title: s.title, reason: s.location.reason, mood: s.mood, timeOfDay: s.timeOfDay, isPerformance: s.isPerformance, presentCast: s.presentCast, guestOf: s.location.guestOf ?? null }, cat, L, `场景「${s.title}」`);
+  if (r.id !== s.location.backgroundId) {
+    s.location.reason = `${s.location.reason}（已由 ${s.location.backgroundId} 换成合规背景）`;
+    s.location.backgroundId = r.id;
+  }
+  return r.warning ? [r.warning] : [];
+}
+
+/**
+ * Place changes inside a scene (Pass 1 `moves`): inside the scene's paragraphs, existing and compliant backgrounds only (same rules as the
+ * start background), several in one paragraph merge into the last, a move to the place already shown is dropped, at most MAX_BG_MOVES.
+ */
+export function repairMoves(s: Breakdown['scenes'][number], cat: DirectorCatalog, L: Lookup): string[] {
+  const warnings: string[] = [];
+  const moves = s.moves ?? [];
+  if (moves.length === 0) {
+    if (s.moves) delete s.moves;
+    return warnings;
+  }
+  const scope = (m: BgMove) => ({ title: s.title, reason: `${m.reason} ${s.location.reason}`, mood: s.mood, timeOfDay: s.timeOfDay, isPerformance: s.isPerformance, presentCast: s.presentCast, guestOf: s.location.guestOf ?? null });
+  let out: BgMove[] = [];
+  for (const m0 of moves) {
+    const m: BgMove = { ...m0 };
+    const where = `场景「${s.title}」第 ${m.paragraph} 段移动`;
+    const clamped = Math.min(s.endParagraph, Math.max(s.startParagraph, m.paragraph));
+    if (clamped !== m.paragraph) {
+      warnings.push(`${where}的段落号超出场景范围 ${s.startParagraph}–${s.endParagraph}，已改为 ${clamped}`);
+      m.paragraph = clamped;
+    }
+    if (!L.backgrounds.has(m.backgroundId)) {
+      const best = rankBackgrounds(cat.backgrounds.filter((b) => autoSelectable(b, 'scene')), `${m.reason} ${m.backgroundId} ${s.title}`, { time: s.timeOfDay })[0];
+      if (!best) {
+        warnings.push(`${where}到不存在的背景 ${m.backgroundId}，已忽略`);
+        continue;
+      }
+      warnings.push(`${where}到的背景 ${m.backgroundId} 不存在，已换成最相近的 ${best.id}（${best.name}）`);
+      m.backgroundId = best.id;
+    }
+    const r = repairBgChoice(m.backgroundId, scope(m), cat, L, where);
+    if (r.warning) warnings.push(r.warning);
+    m.backgroundId = r.id;
+    out.push(m);
+  }
+  // several moves at one paragraph = one switch (the last wins); order by paragraph
+  const byPara = new Map<number, BgMove>();
+  for (const m of out) {
+    if (byPara.has(m.paragraph)) warnings.push(`场景「${s.title}」第 ${m.paragraph} 段有多次背景切换，已合并为最后一次`);
+    byPara.set(m.paragraph, m);
+  }
+  out = [...byPara.values()].sort((a, b) => a.paragraph - b.paragraph);
+  // a switch to the place that is already shown does nothing
+  let cur = s.location.backgroundId;
+  out = out.filter((m) => {
+    if (m.backgroundId === cur) {
+      warnings.push(`场景「${s.title}」第 ${m.paragraph} 段切换到已经在用的背景 ${m.backgroundId}，已删除`);
+      return false;
+    }
+    cur = m.backgroundId;
+    return true;
+  });
+  if (out.length > MAX_BG_MOVES) {
+    warnings.push(`场景「${s.title}」的背景移动有 ${out.length} 次，超过上限 ${MAX_BG_MOVES}，只保留前 ${MAX_BG_MOVES} 次`);
+    out = out.slice(0, MAX_BG_MOVES);
+  }
+  if (out.length > 0) s.moves = out;
+  else delete s.moves;
+  return warnings;
 }
 
 // ---- Pass 2 ------------------------------------------------------------------------------------------------------
@@ -147,6 +245,8 @@ export interface DirectionContext {
   isPerformance: boolean;
   /** Ids of existing beats the model was told to keep (locked / hand-made / the beats of a partial regeneration). */
   fixedBeatIds?: Set<string>;
+  /** Backgrounds of this scene (P20): the start background, the ones Pass 1 moved to, and the cut-away candidates. Absent = background switches are not checked. */
+  backgrounds?: { start: string; allowed: ReadonlySet<string>; scope: BgScope };
 }
 
 export const familyOf = (name: string): string => familyOfName(name);
@@ -212,6 +312,36 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     return id ? L.models.get(id) : undefined;
   };
 
+  // ---- background switches of the beats (P20): the set of the scene, category rules, no repeats
+  let curBg = ctx.backgrounds?.start ?? '';
+  const sceneInserts = new Set<number>();
+  d.beats.forEach((b, bi) => {
+    if (!b.bg) {
+      if (b.bg === null) delete b.bg;
+      return;
+    }
+    const where = `第 ${bi + 1} 句的背景切换`;
+    const drop = (why: string) => {
+      warnings.push(`${where}：${why}，已忽略`);
+      delete b.bg;
+    };
+    if (!ctx.backgrounds) return drop('这个场景不接受背景切换');
+    const bg = L.backgrounds.get(b.bg.backgroundId);
+    if (!bg) return drop(`背景 ${b.bg.backgroundId} 不存在`);
+    const isInsert = bgCategoryOf(bg) === 'insert';
+    if (isInsert) {
+      if (!(b.shot.type === 'insert' && b.shot.insertTarget === 'scene')) return drop(`插入镜头背景 ${bg.id}（${bg.name}）只能用在没有人物焦点的插入镜头（shot.type=insert 且 insertTarget=scene）`);
+      if (!ctx.backgrounds.allowed.has(bg.id)) return drop(`背景 ${bg.id}（${bg.name}）不在本场景的背景集合里`);
+      sceneInserts.add(bi);
+      return;
+    }
+    const r = repairBgChoice(bg.id, ctx.backgrounds.scope, ctx.catalog, L, where);
+    if (r.warning) warnings.push(r.warning);
+    b.bg.backgroundId = r.id;
+    if (!ctx.backgrounds.allowed.has(r.id)) return drop(`背景 ${r.id} 不在本场景的背景集合里（不得新增地点）`);
+    if (r.id === curBg) return drop(`已经是背景 ${r.id}`);
+    curBg = r.id;
+  });
   const paraOf = (i: number) => ctx.paragraphs[i];
   const inRange = (i: number) => i >= ctx.range.start && i <= ctx.range.end;
   let dialogue = 0;
@@ -307,7 +437,20 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       if (a.attention === a.castId) a.attention = null;
     }
     // an insert only makes sense when there is something to show: a gesture, an instrument being played, a prop named in the text
-    if (b.shot.type === 'insert') {
+    if (b.shot.type === 'insert' && b.shot.insertTarget === 'scene') {
+      // a cut-away to a sky / signal / crossing: no person in it
+      if (sceneInserts.has(bi)) {
+        b.shot.type = 'group';
+        b.shot.focus = [];
+        b.shot.insertTarget = null;
+        b.shot.move = 'static';
+      } else {
+        warnings.push(`${where}的插入镜头没有合规的插入背景，已改为 cu`);
+        b.shot.type = 'cu';
+        b.shot.insertTarget = null;
+        if (b.shot.focus.length === 0) b.shot.focus = b.speaker ? [b.speaker] : ctx.cast.slice(0, 1).map((c) => c.castId);
+      }
+    } else if (b.shot.type === 'insert') {
       const who = b.shot.focus[0] ?? b.speaker ?? '';
       const playing = b.actors.some((a) => a.motion !== null && /^(play|action|finish)/.test(a.motion) && modelAt(a.castId, bi)?.mode === 'live');
       const hinted = INSERT_HINT.test(b.text);

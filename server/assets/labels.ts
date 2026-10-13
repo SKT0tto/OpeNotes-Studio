@@ -68,6 +68,15 @@ export function labelRoutes(store: LabelStore, catalog: CatalogService): Router 
   const json = express.json({ limit: '2mb' });
   const bad = (res: express.Response, msg: string) => void res.status(400).json({ error: msg });
 
+  /** The whole label file (the workbench works from it, so it also works when the asset library is missing). */
+  r.get('/api/asset-labels/backgrounds', async (_req, res) => {
+    try {
+      res.json(await store.read());
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  });
+
   r.get('/api/asset-labels/backgrounds/stats', async (_req, res) => {
     try {
       const cat = await catalog.get();
@@ -112,6 +121,24 @@ export function labelRoutes(store: LabelStore, catalog: CatalogService): Router 
       res.json({ ok: true, count: p.data.ids.length });
     } catch (e) {
       if (e instanceof z.ZodError) return bad(res, issues(e));
+      res.status(500).json({ error: (e as Error).message });
+    }
+  });
+
+  /** Put labels back exactly as they were (undo): `null` removes the entry, anything else is written as is (source and date included). */
+  r.post('/api/asset-labels/backgrounds/restore', json, async (req, res) => {
+    const p = z.object({ entries: z.record(z.string(), BgLabelSchema.nullable()) }).safeParse(req.body);
+    if (!p.success) return bad(res, issues(p.error));
+    try {
+      await store.update((f) => {
+        for (const [id, l] of Object.entries(p.data.entries)) {
+          if (l === null) delete f.labels[id];
+          else f.labels[id] = l;
+        }
+      });
+      await catalog.relabel();
+      res.json({ ok: true, count: Object.keys(p.data.entries).length });
+    } catch (e) {
       res.status(500).json({ error: (e as Error).message });
     }
   });

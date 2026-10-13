@@ -19,12 +19,13 @@ export const SCOPES = {
   costume: { sceneFields: ['wardrobe'], tracks: ['costume'] },
   staging: { sceneFields: ['blocking'], tracks: ['position', 'opacity'] },
   fx: { tracks: ['fx', 'fade'] },
+  background: { tracks: ['background'] },
 } as const satisfies Record<string, ScopeSpec>;
 
 /** `scene` = the whole direction of a scene, including the beat list itself (text, speakers, order), transition and music. */
 export type ScopeName = keyof typeof SCOPES | 'scene';
 export const SCOPE_NAMES: readonly ScopeName[] = ['scene', ...(Object.keys(SCOPES) as Array<keyof typeof SCOPES>)];
-export const SCOPE_LABEL: Record<ScopeName, string> = { scene: '整个场景', camera: '镜头', performance: '表演（动作·表情·视线）', costume: '服装', staging: '站位', fx: '特效' };
+export const SCOPE_LABEL: Record<ScopeName, string> = { scene: '整个场景', camera: '镜头', performance: '表演（动作·表情·视线）', costume: '服装', staging: '站位', fx: '特效', background: '场景内背景切换' };
 
 export interface ResolvedScope {
   /** Beat list / text / speaker / order / transition / bgm are regenerated too. */

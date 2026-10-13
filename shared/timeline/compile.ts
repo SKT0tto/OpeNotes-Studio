@@ -16,7 +16,7 @@ import { clipOverlaps, lastBefore, sampleKeys } from './sample';
 import type { StyleValues } from '../style/ournotes';
 import { EMPTY_KINDS, TEXT_KINDS, sceneTimes, type SceneTime } from './time';
 import type {
-  CameraKey, CompileContext, CompiledActor, CompiledBeat, CompiledProject, CompiledScene, ExprEvent, FadeKey, GazeKey, ModelKey, MotionEvent, NumKey, PosKey, RuleKey, UiStyle,
+  BgSegment, CameraKey, CompileContext, CompiledActor, CompiledBeat, CompiledProject, CompiledScene, ExprEvent, FadeKey, GazeKey, ModelKey, MotionEvent, NumKey, PosKey, RuleKey, UiStyle,
 } from './types';
 
 /** Glide length used when a beat asks for `transition: 'glide'` while the style's glideSeconds is 0. */
@@ -128,15 +128,43 @@ const mergeIntervals = (xs: Interval[]): Interval[] => {
 };
 
 function compileScene(project: Project, scene: Scene, index: number, st: SceneTime, ctx: CompileContext, warnings: string[], fadeOut: FadeKey[]): CompiledScene {
-  const bgRaw = ctx.backgrounds[scene.background.assetId];
-  if (!bgRaw) throw new Error(`scene ${scene.id}: unknown background "${scene.background.assetId}"`);
-  const bg: BgInfo = { width: bgRaw.width, height: bgRaw.height, ground: bgRaw.ground ?? defaultGround(bgRaw.width, bgRaw.height, bgRaw.setting) };
+  const bgInfoOf = (id: string): BgInfo | null => {
+    const raw = ctx.backgrounds[id];
+    return raw ? { width: raw.width, height: raw.height, ground: raw.ground ?? defaultGround(raw.width, raw.height, raw.setting) } : null;
+  };
+  if (!bgInfoOf(scene.background.assetId)) throw new Error(`scene ${scene.id}: unknown background "${scene.background.assetId}"`);
   const framing = scene.background.framing;
   const abs = absoluteTime(scene, st, warnings);
+
+  // ---- background track (P20): segments in time order -------------------------------------------------------
+  const bgSegments: BgSegment[] = [{ start: st.start, end: st.end, assetId: scene.background.assetId, bg: bgInfoOf(scene.background.assetId)!, framing, transition: 'cut', transitionSeconds: 0, purpose: 'move', keyId: null }];
+  for (const { k, at } of collect(scene, 'background', (t) => t.target.kind === 'stage', abs)) {
+    const info = bgInfoOf(k.value.assetId);
+    if (!info) {
+      warnings.push(`scene ${scene.id}: background key ${k.id} uses unknown background "${k.value.assetId}" (dropped)`);
+      continue;
+    }
+    const prev = bgSegments.at(-1)!;
+    const seg: BgSegment = {
+      start: Math.max(at, st.start), end: st.end, assetId: k.value.assetId, bg: info, framing: k.value.framing ?? framing,
+      transition: k.value.transition, transitionSeconds: k.value.transitionSeconds, purpose: k.value.purpose, keyId: k.id,
+    };
+    if (Math.abs(prev.start - seg.start) < 1e-6 && bgSegments.length > 1) bgSegments[bgSegments.length - 1] = seg; // two keys at one instant: the later wins
+    else if (Math.abs(prev.start - seg.start) < 1e-6) bgSegments[0] = { ...seg, transition: 'cut', transitionSeconds: 0, keyId: seg.keyId };
+    else bgSegments.push(seg);
+  }
+  bgSegments.forEach((sg, i) => { sg.end = bgSegments[i + 1]?.start ?? st.end; });
+  // The world (camera, ground, people) belongs to the first full-size background: a 256 px plain picture never decides the size of the stage,
+  // and a later background of another size is fitted over the same world, so nobody jumps when the picture changes.
+  const worldSeg = bgSegments.find((sg) => sg.bg.width >= 512) ?? bgSegments[0]!;
+  const bg: BgInfo = worldSeg.bg;
+  const bgAt = (t: number) => [...bgSegments].reverse().find((sg) => sg.start <= t + 1e-9) ?? bgSegments[0]!;
+  const lumaAt = (t: number) => ctx.backgrounds[bgAt(t).assetId]?.luma;
+  // cut-away shots show an empty stage: everybody fades out for the length of the segment
+  const insertRuns: Array<[number, number]> = bgSegments.filter((sg, i) => i > 0 && sg.purpose === 'insert').map((sg) => [sg.start, sg.end]);
   const list = st.list;
   const sceneV = st.sceneStyle.values;
   const beatIndex = new Map(list.map((b, i) => [b.id, i]));
-  const luma = bgRaw.luma;
 
   const calOf = (modelId: string): Calibration => {
     const c = ctx.calibrations[modelId];
@@ -145,7 +173,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   };
 
   // Spans of empty shots (establishing / empty beats): everybody fades out for the whole run.
-  const emptyRuns = mergeIntervals(list.flatMap((b, i): Interval[] => (EMPTY_KINDS.includes(b.kind) ? [[i === 0 ? st.start : st.beats[i]!.start, st.beats[i]!.end]] : [])));
+  const emptyRuns = mergeIntervals([...list.flatMap((b, i): Interval[] => (EMPTY_KINDS.includes(b.kind) ? [[i === 0 ? st.start : st.beats[i]!.start, st.beats[i]!.end]] : [])), ...insertRuns]);
   const presentAt = (w: { away: Interval[] }, t: number) => !w.away.some(([a, b]) => t >= a - 1e-9 && t < b - 1e-9);
 
   // ---- actors: model + position timelines ---------------------------------------------------------------
@@ -551,7 +579,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     }
 
     const dur = bt.end - bt.start;
-    const dofLevel = beat.shot.dof ?? Math.min(6, v.shots[type].dof + (type !== 'establishing' && luma !== undefined && luma < v.framing.darkLuma ? v.framing.darkDofBonus : 0));
+    const dofLevel = beat.shot.dof ?? Math.min(6, v.shots[type].dof + (type !== 'establishing' && lumaAt(bt.start) !== undefined && lumaAt(bt.start)! < v.framing.darkLuma ? v.framing.darkDofBonus : 0));
     beats.push({
       id: beat.id, kind: beat.kind, variant: beat.variant, coSpeakers: beat.coSpeakers, shotHeld: held, ui: uiOf(v),
       speakerId: beat.speakerId ?? null, text: beat.text, start: bt.start, end: bt.end, textEnd: bt.textEnd, cps: v.rhythm.textSpeedCps, focus: shotIds,
@@ -600,6 +628,14 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
       fadeOut.push({ at: st.contentStart, duration: 0, ease: 'linear', alpha: 1, color: 'black' }, { at: st.contentStart, duration: st.timing.fadeIn, ease: 'linear', alpha: 0, color: 'black' });
     }
   }
+  // background switches that dip through black ride on the project's fade channel (the picture changes at the darkest moment)
+  bgSegments.forEach((sg, i) => {
+    if (i === 0 || sg.transition !== 'dip_black' || sg.transitionSeconds <= 0) return;
+    const half = Math.min(sg.transitionSeconds / 2, Math.max(0, sg.start - st.start));
+    if (half <= 0) return;
+    fadeOut.push({ at: sg.start - half, duration: half, ease: 'inOutSine', alpha: 1, color: 'black' }, { at: sg.start, duration: sg.transitionSeconds / 2, ease: 'inOutSine', alpha: 0, color: 'black' });
+    hiddenDialog.push([sg.start - half, sg.start + sg.transitionSeconds / 2]);
+  });
   if (list.length === 0) camera.push({ at: st.start, duration: 0, ease: 'linear', pose: poseOf('establishing', [], st.start, sceneV) });
 
   for (const { k, at } of collect(scene, 'camera', (t) => t.target.kind === 'camera', abs)) {
@@ -612,7 +648,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
 
   return {
     index, id: scene.id, title: scene.title, start: st.start, contentStart: st.contentStart, end: st.end,
-    bgAssetId: scene.background.assetId, framing, bg, transitionIn: { kind: scene.transitionIn.kind, duration: scene.transitionIn.duration },
+    bgAssetId: scene.background.assetId, framing, bg, bgSegments, transitionIn: { kind: scene.transitionIn.kind, duration: scene.transitionIn.duration },
     timing: st.timing, ui: uiOf(sceneV), hiddenDialog, location,
     actors: actors.map((a) => {
       const k = shiftKeys.get(a.castId)!;

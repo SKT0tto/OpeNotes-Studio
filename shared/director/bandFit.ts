@@ -1,6 +1,7 @@
 /** Which backgrounds may a scene use? One pure function shared by the digest, the validator, the rule director, the continuity check and the editor. */
 import { GENERIC_BAND, type BgLabel, type LabelRules } from '../schema/assetLabels';
 import type { BackgroundEntry } from '../schema/assets';
+import { autoSelectable, type BgUse } from './bgCategory';
 
 export const DEFAULT_RULES: LabelRules = { unknownPolicy: 'avoid' };
 
@@ -65,10 +66,13 @@ export function sceneBands(chars: ReadonlyMap<string, { bandKey: string | null; 
 }
 
 /** Backgrounds usable for a scene, in two tiers (fallback = unknown ownership, to be used only when `ok` has nothing). */
-export function allowedBackgrounds(bgs: readonly BackgroundEntry[], who: SceneWho, opts: { performance?: boolean; rules?: LabelRules } = {}): { ok: BackgroundEntry[]; fallback: BackgroundEntry[] } {
+export function allowedBackgrounds(bgs: readonly BackgroundEntry[], who: SceneWho, opts: { performance?: boolean; rules?: LabelRules; use?: BgUse } = {}): { ok: BackgroundEntry[]; fallback: BackgroundEntry[] } {
   const ok: BackgroundEntry[] = [];
   const fallback: BackgroundEntry[] = [];
+  const use = opts.use ?? 'scene';
   for (const b of bgs) {
+    // decor / insert / duplicates never; an `event` stage (virtual live space) is still fine for a performance
+    if (!autoSelectable(b, use) && !(opts.performance && b.labels?.stage === true && autoSelectable(b, 'event'))) continue;
     if (opts.performance && b.labels?.stage !== true) continue;
     const f = bgFit(b.labels, who, opts.rules);
     if (f === 'ok') ok.push(b);

@@ -130,6 +130,21 @@ export interface LocationBanner {
   start: number;
 }
 
+/** One stretch of a scene with one background (P20). Segment 0 is the scene's start background; the others come from `background` track keys. */
+export interface BgSegment {
+  start: number;
+  end: number;
+  assetId: string;
+  /** The picture's own size (the world of the scene is the base background's, see `CompiledScene.bg`). */
+  bg: BgInfo;
+  framing: BgFraming;
+  transition: 'cut' | 'dip_black' | 'crossfade';
+  transitionSeconds: number;
+  purpose: 'move' | 'insert' | 'time';
+  /** Track key that made this segment (null for the start background). */
+  keyId: string | null;
+}
+
 export interface CompiledScene {
   index: number;
   id: string;
@@ -137,9 +152,13 @@ export interface CompiledScene {
   start: number;
   contentStart: number;
   end: number;
+  /** Start background (= `bgSegments[0].assetId`). */
   bgAssetId: string;
   framing: BgFraming;
+  /** World of the scene: camera, ground and people are solved against this size and stay put when the background changes. */
   bg: BgInfo;
+  /** Backgrounds in time order; always at least one. */
+  bgSegments: BgSegment[];
   transitionIn: Pick<Transition, 'kind' | 'duration'>;
   timing: TransitionTiming;
   ui: UiStyle;
@@ -212,7 +231,15 @@ export interface RenderState {
   t: number;
   sceneIndex: number;
   sceneId: string;
-  background: { assetId: string; framing: BgFraming; blur: number };
+  background: {
+    assetId: string;
+    framing: BgFraming;
+    blur: number;
+    /** Size of this picture; the layer fits it over the scene's world (cover). */
+    src: { width: number; height: number };
+    /** Second layer while a crossfade runs. */
+    next?: { assetId: string; framing: BgFraming; alpha: number; src: { width: number; height: number } };
+  };
   camera: CameraPose;
   actors: ActorRender[];
   subtitle: SubtitleRender | null;

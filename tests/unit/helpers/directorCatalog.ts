@@ -66,7 +66,7 @@ export function fixtureCatalog(extraKeys: string[] = []): DirectorCatalog {
   const bg = (id: string, name: string, over: Partial<BackgroundEntry> = {}): BackgroundEntry => ({
     id, url: `/assets/backgrounds/${id}.png`, width: 2048, height: 1119, name, aliases: [], kind: 'scene', location: name, category: null, setting: '室内', time: '日间', weather: null, description: null, tags: [], ...over,
   });
-  const backgrounds = [...new Set(bd.scenes.map((s) => s.location.backgroundId))].map((id, i) => bg(id, `背景 ${i + 1}`));
+  const backgrounds = [...new Set(bd.scenes.flatMap((s) => [s.location.backgroundId, ...(s.moves ?? []).map((m) => m.backgroundId)]))].map((id, i) => bg(id, `背景 ${i + 1}`));
   backgrounds.push(bg('bg_ring_night', 'RiNG 咖啡厅', { location: 'RiNG', time: '夜间', description: '木地板和吧台' }), bg('bg_roof_night', '学校天台', { location: '天台', setting: '室外', time: '夜间', description: '夜晚的天台' }));
   return {
     models: [...ids].map(model),

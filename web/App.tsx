@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchHealth, type Health } from './api';
 import { AssetBrowser } from './editor/panels/AssetBrowser';
+import { LabelWorkbench } from './editor/labeling/LabelWorkbench';
 import { EditorApp } from './editor/EditorApp';
 import { ActorLab } from './lab/ActorLab';
 import { StageLab } from './lab/StageLab';
@@ -22,7 +23,7 @@ function HealthBar({ health, error }: { health: Health | null; error: string | n
   );
 }
 
-export function App() {
+function MainApp() {
   const [health, setHealth] = useState<Health | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,4 +69,17 @@ export function App() {
       </main>
     </div>
   );
+}
+
+/** The labelling workbench works from the label file, so it opens even when the asset library is missing. */
+function LabelsRoute() {
+  const [health, setHealth] = useState<Health | null>(null);
+  useEffect(() => {
+    fetchHealth().then(setHealth, () => setHealth(null));
+  }, []);
+  return <LabelWorkbench health={health} />;
+}
+
+export function App() {
+  return location.pathname === '/label' ? <LabelsRoute /> : <MainApp />;
 }

@@ -39,8 +39,8 @@ const who = (...keys: string[]) => ({ bands: sceneBands(L.characters, keys), cas
 const label = (id: string) => FILE.labels[id]!;
 
 describe('background label file', () => {
-  it('has 341 valid labels and the user answers', () => {
-    expect(Object.keys(FILE.labels)).toHaveLength(341);
+  it('has 349 valid labels and the user answers', () => {
+    expect(Object.keys(FILE.labels)).toHaveLength(349);
     for (const l of Object.values(FILE.labels)) expect(() => BgLabelSchema.parse(l)).not.toThrow();
     const unknown = Object.values(FILE.labels).filter((l) => l.bands.length === 0);
     expect(unknown.length).toBeGreaterThan(0);
@@ -174,8 +174,8 @@ describe('validateBreakdown background repair', () => {
 describe('digest', () => {
   const d = breakdownDigest(cat);
   it('has band and stage columns and never lists unknown or rare backgrounds', () => {
-    expect(d).toContain('背景（id｜名称｜地点｜室内外｜时间｜乐队｜舞台｜简述）');
-    const row = d.split('\n').find((l) => l.startsWith('18｜'))!;
+    expect(d).toContain('背景（id｜标题｜地点｜室内外｜时间｜乐队｜舞台｜画面内容）');
+    const row = d.split('\n').find((l) => l.startsWith(`${stage(64)}｜`))!;
     expect(row).toContain('Ave Mujica专属');
     expect(row.split('｜')[6]).toBe('否');
     expect(d.split('\n').some((l) => l.startsWith(`${stage(12)}｜`))).toBe(false);

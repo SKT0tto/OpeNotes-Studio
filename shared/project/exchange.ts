@@ -43,6 +43,7 @@ export function collectRefs(project: Project): Refs {
       if (tr.channel === 'costume') tr.keys.forEach((k) => models.add(k.value.modelId));
       if (tr.channel === 'bgm') tr.keys.forEach((k) => k.value.assetId && audio.add(k.value.assetId));
       if (tr.channel === 'se') tr.keys.forEach((k) => audio.add(k.value.assetId));
+      if (tr.channel === 'background') tr.keys.forEach((k) => backgrounds.add(k.value.assetId));
     }
   }
   return { models: sorted(models), backgrounds: sorted(backgrounds), audio: sorted(audio) };
@@ -106,6 +107,7 @@ export function replaceRef(project: Project, kind: RefKind, from: string, to: st
       if (kind === 'model' && tr.channel === 'costume') tr.keys.forEach((k) => { if (k.value.modelId === from) k.value.modelId = to; });
       if (kind === 'audio' && tr.channel === 'bgm') tr.keys.forEach((k) => { if (k.value.assetId === from) k.value.assetId = to; });
       if (kind === 'audio' && tr.channel === 'se') tr.keys.forEach((k) => { if (k.value.assetId === from) k.value.assetId = to; });
+      if (kind === 'background' && tr.channel === 'background') tr.keys.forEach((k) => { if (k.value.assetId === from) k.value.assetId = to; });
     }
   }
   return next;

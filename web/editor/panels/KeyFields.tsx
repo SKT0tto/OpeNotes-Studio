@@ -5,7 +5,10 @@ import type { CompactCatalog } from '@shared/schema/assets';
 import type { Project, Scene } from '@shared/schema/project';
 import { EASE_NAMES, ease, type EaseName } from '@shared/timeline/easing';
 import { FX_KINDS } from '@shared/schema/project';
+import { useState } from 'react';
 import { deleteKeys, lockKey, moveKeys, patchKey } from '../../store/actions';
+import { useSceneFit } from '../bg/bgFit';
+import { BgPicker } from '../bg/BgPicker';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { NumField, Row, SliderField } from '../ui';
@@ -179,10 +182,41 @@ export function KeyFields({ project, scene, catalog }: { project: Project; scene
           {v.fx === 'dutch' && <Row label="倾斜角"><SliderField value={Number(v.roll)} min={-30} max={30} step={0.5} unit="°" testid="key-fx-roll" onChange={(n) => set({ ...v, roll: n }, '修改倾斜角', 'roll')} onCommit={seal} /></Row>}
         </>
       )}
+      {channel === 'background' && <BackgroundKey value={v} set={set} seal={seal} scene={scene} project={project} catalog={catalog} />}
       <Row label="操作">
         <button className="btn-s danger" data-testid="key-delete" onClick={() => deleteKeys(scene.id, [key.id])}>删除关键帧</button>
       </Row>
     </div>
+  );
+}
+
+const BG_TRANSITIONS: Array<[string, string]> = [['cut', '硬切'], ['dip_black', '黑场（眨眼）'], ['crossfade', '叠化']];
+const BG_PURPOSES: Array<[string, string]> = [['move', '换地点（人物保留）'], ['insert', '插入镜头（人物隐藏到下一次切换）'], ['time', '同地点换时段']];
+
+/** Value of a background switch: which picture, how it changes (cut / dip to black / crossfade), what it is for. */
+function BackgroundKey({ value, set, seal, scene, project, catalog }: { value: Record<string, unknown>; set: (v: unknown, l: string, c?: string) => unknown; seal: () => void; scene: Scene; project: Project; catalog: CompactCatalog | null }) {
+  const [picker, setPicker] = useState(false);
+  const fit = useSceneFit(project, scene, catalog);
+  const cur = catalog?.backgrounds.find((b) => b.id === value.assetId);
+  const transition = String(value.transition ?? 'cut');
+  return (
+    <>
+      <Row label="背景">
+        <button type="button" className="btn-s" data-testid="key-bg" onClick={() => setPicker(true)} title={String(value.assetId)}>{cur?.name ?? String(value.assetId)} · 更换…</button>
+      </Row>
+      <Row label="转场">
+        <select value={transition} data-testid="key-bg-transition" onChange={(e) => set({ ...value, transition: e.target.value, transitionSeconds: e.target.value === 'cut' ? 0 : Number(value.transitionSeconds) || (e.target.value === 'dip_black' ? 0.8 : 1) }, '修改背景转场')}>
+          {BG_TRANSITIONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+        </select>
+      </Row>
+      {transition !== 'cut' && <Row label="转场时长"><SliderField value={Number(value.transitionSeconds ?? 0.5)} min={0.1} max={3} step={0.05} unit="s" testid="key-bg-seconds" onChange={(n) => set({ ...value, transitionSeconds: n }, '修改背景转场时长', 'bgsec')} onCommit={seal} /></Row>}
+      <Row label="用途">
+        <select value={String(value.purpose ?? 'move')} data-testid="key-bg-purpose" onChange={(e) => set({ ...value, purpose: e.target.value }, '修改背景用途')}>
+          {BG_PURPOSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+        </select>
+      </Row>
+      {picker && catalog && <BgPicker backgrounds={catalog.backgrounds} current={String(value.assetId)} title="更换这次切换的背景" fit={fit} use={value.purpose === 'insert' ? 'insert' : 'scene'} onPick={(id) => { setPicker(false); set({ ...value, assetId: id }, '更换背景'); }} onClose={() => setPicker(false)} />}
+    </>
   );
 }
 

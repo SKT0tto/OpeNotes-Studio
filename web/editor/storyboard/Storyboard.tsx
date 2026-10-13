@@ -13,6 +13,7 @@ import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { LockIcon } from '../ui';
 import { cachedThumb, useThumbnails } from './thumbs';
+import { useCatalog } from '../useCatalog';
 
 type Host = ReturnType<typeof usePlayerHost>;
 const TRANSITION_LABEL: Record<string, string> = { cut: '硬切', dip_black: '黑场眨眼', scene_black: '换场黑场', fade_black: '黑场', fade_white: '白场', crossfade: '交叉溶解', wipe: '擦除' };
@@ -26,6 +27,8 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
   const storedKey = useMemo(() => project.scenes.flatMap((s) => s.beats.map((b) => b.id)).join(','), [project.scenes]);
   const { pending } = useThumbnails(host, storedKey, active);
   const name = (id: string) => project.cast.find((c) => c.id === id)?.displayName ?? id;
+  const catalog = useCatalog();
+  const bgName = (id: string) => catalog?.backgrounds.find((b) => b.id === id)?.name ?? id;
 
   const pick = (sceneId: string, beatId: string, e: React.MouseEvent) => {
     useProject.getState().select({ sceneId, beatId });
@@ -112,6 +115,10 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
                         <span className="sb-badges">
                           <span className="badge shot" data-testid={`sb-shot-${b.id}`}>{SHOT_SHORT[type] ?? type}</span>
                           {cb && <span className="badge" title="景深等级">景深 {cb.dof}</span>}
+                          {cb && cScene && (() => {
+                            const seg = cScene.bgSegments.find((g, i) => i > 0 && g.start >= cb.start - 1e-6 && g.start < cb.end - 1e-6);
+                            return seg ? <span className="badge bgsw" title={`从这句起换背景：${bgName(seg.assetId)}`} data-testid={`sb-bg-${b.id}`}>🖼 {bgName(seg.assetId).slice(0, 8)}</span> : null;
+                          })()}
                           {cb?.shotHeld && <span className="badge held" title="沿用上一机位">⏸</span>}
                           {b.cutIn === 'dip_black' && <span className="badge dip" title="黑场眨眼切入">◆</span>}
                           {b.meta.locked && <span className="badge" title="已锁定"><LockIcon locked /></span>}

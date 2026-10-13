@@ -1,6 +1,10 @@
 /** Output schemas of the two AI passes. Intent only: no coordinates, no file names, only ids the server offered. */
 import { z } from 'zod';
-import { AI_FX, AI_KINDS, AI_MOVES, AI_SHOT_TYPES, AI_TRANSITIONS, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../director/vocab';
+import { AI_BG_TRANSITIONS, AI_FX, AI_KINDS, AI_MOVES, AI_SHOT_TYPES, AI_TRANSITIONS, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../director/vocab';
+
+/** A place change inside a scene: from `paragraph` on the story is at `backgroundId`. */
+export const BgMoveSchema = z.object({ paragraph: z.number().int(), backgroundId: z.string(), reason: z.string(), transition: z.enum(AI_BG_TRANSITIONS) });
+export type BgMove = z.infer<typeof BgMoveSchema>;
 
 // ---- Pass 1: breakdown ------------------------------------------------------------------------------------------
 export const BreakdownSchema = z.object({
@@ -19,6 +23,8 @@ export const BreakdownSchema = z.object({
       mood: z.string(),
       isPerformance: z.boolean(),
       band: z.string().nullable(),
+      /** Place changes INSIDE the scene that the text states outright ("走出校门" "回到房间"); empty / absent when the scene stays in one place. At most 3. */
+      moves: z.array(BgMoveSchema).optional(),
     }),
   ),
 });
@@ -46,6 +52,8 @@ export const SceneDirectionSchema = z.object({
       reason: z.string(),
       shot: z.object({ type: z.enum(AI_SHOT_TYPES), focus: z.array(z.string()), move: z.enum(AI_MOVES), dof: z.number().int().nullable(), insertTarget: z.enum(INSERT_TARGETS).nullable().optional() }),
       cutIn: z.enum(['cut', 'dip_black']),
+      /** Switch the background at this beat: only a background of this scene's set (start, moves, insert candidates). null = keep. */
+      bg: z.object({ backgroundId: z.string(), transition: z.enum(AI_BG_TRANSITIONS) }).nullable().optional(),
       fx: z.enum(AI_FX),
       actors: z.array(
         z.object({

@@ -29,6 +29,7 @@ export function projectResources(project: Project): { models: string[]; backgrou
   const backgrounds = new Set<string>();
   for (const s of project.scenes) {
     backgrounds.add(s.background.assetId);
+    for (const tr of s.tracks) if (tr.channel === 'background') tr.keys.forEach((k) => backgrounds.add(k.value.assetId));
     Object.values(s.wardrobe).forEach((w) => models.add(w.modelId));
     for (const tr of s.tracks) if (tr.channel === 'costume') tr.keys.forEach((k) => models.add(k.value.modelId));
   }

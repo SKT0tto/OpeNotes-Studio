@@ -12,6 +12,7 @@ import type {
 import { resolveInside } from '../util/safePath';
 import { readMotionStats } from './motionStats';
 import { readLabelFile } from './labels';
+import { bgCategoryOf } from '../../shared/director/bgCategory';
 import type { LabelFile } from '../../shared/schema/assetLabels';
 
 export const NPC_BAND_NAME = '配角 / NPC';
@@ -223,16 +224,16 @@ async function indexBackgrounds(assetRoot: string, manifest: Manifest | null, si
       url: `/assets/backgrounds/${encodeURIComponent(file)}`,
       width: size.width ?? (typeof m?.width === 'number' ? m.width : null),
       height: size.height ?? (typeof m?.height === 'number' ? m.height : null),
-      name: label?.nameOverride ?? str(m?.name) ?? id,
+      name: label?.title ?? label?.nameOverride ?? str(m?.name) ?? id,
       aliases: strArray(m?.aliases),
       kind: str(m?.kind),
       location: str(m?.location),
-      category: str(m?.category),
-      setting: str(m?.setting),
-      time: str(m?.time),
+      category: bgCategoryOf({ id, kind: str(m?.kind), labels: label }),
+      setting: str(m?.setting) ?? (label?.indoor === 'outdoor' ? '室外' : label?.indoor === 'indoor' ? '室内' : null),
+      time: str(m?.time) ?? ({ day: '日间', dusk: '傍晚', night: '夜间' } as Record<string, string>)[label?.time ?? ''] ?? null,
       weather: str(m?.weather),
-      description: label?.descriptionOverride ?? str(m?.description),
-      tags: strArray(m?.tags),
+      description: label?.description ?? label?.descriptionOverride ?? str(m?.description),
+      tags: [...new Set([...strArray(m?.tags), ...(label?.tags ?? [])])],
       ...(label ? { labels: label } : {}),
     };
   });
@@ -392,7 +393,9 @@ export async function buildCatalog(opts: IndexerOptions): Promise<Catalog> {
     const stale = Object.keys(labels.labels).filter((id) => !have.has(id));
     if (stale.length > 0) warnings.push(`背景标注中有 ${stale.length} 个 id 在素材里不存在（${stale.slice(0, 5).join(', ')}${stale.length > 5 ? '…' : ''}）`);
     const unlabelled = backgrounds.filter((b) => !labels.labels[b.id]).length;
-    if (unlabelled > 0) warnings.push(`${unlabelled} 张背景尚无标注，按通用处理`);
+    if (unlabelled > 0) warnings.push(`${unlabelled} 张背景尚无标注，按通用处理（类别按 scene，进待确认队列）`);
+    const cards = backgrounds.filter((b) => b.kind === 'card' && !labels.labels[b.id]?.category && Number(b.id) > 13);
+    if (cards.length > 0) warnings.push(`${cards.length} 张名片背景（${cards.slice(0, 4).map((b) => b.id).join(', ')}…）可能是其它背景的重复拷贝`);
     sigs.push(`labels:${createHash('sha1').update(JSON.stringify(labels)).digest('hex')}`);
   }
 

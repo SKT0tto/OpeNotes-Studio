@@ -105,6 +105,21 @@ const Key = <V extends z.ZodType>(value: V) =>
     meta: MetaSchema,
   });
 
+/**
+ * Background track (P20): from this key on the scene shows another background. `scene.background` stays the start background.
+ * purpose: move = the story changes place (people stay), insert = cut-away shot (people hidden until the next key), time = same place, other hour.
+ */
+export const BG_PURPOSES = ['move', 'insert', 'time'] as const;
+export const BG_TRANSITIONS = ['cut', 'dip_black', 'crossfade'] as const;
+const BackgroundSwitchValue = z.object({
+  assetId: Id,
+  framing: z.object({ zoom: z.number().min(1), offsetX: z.number(), offsetY: z.number() }).optional(),
+  transition: z.enum(BG_TRANSITIONS).default('cut'),
+  transitionSeconds: z.number().min(0).max(3).default(0.5),
+  purpose: z.enum(BG_PURPOSES).default('move'),
+});
+export type BackgroundSwitch = z.infer<typeof BackgroundSwitchValue>;
+
 const actorTarget = z.object({ kind: z.literal('actor'), castId: Id });
 const track = <C extends string, T extends z.ZodType, V extends z.ZodType>(channel: C, target: T, value: V) =>
   z.object({ id: Id, target, channel: z.literal(channel), meta: MetaSchema, keys: z.array(Key(value)) });
@@ -123,6 +138,7 @@ export const TrackSchema = z.union([
   track('se', z.object({ kind: z.literal('audio') }), z.object({ assetId: Id, volume: z.number().min(0).max(1).default(0.8) })),
   track('fade', z.object({ kind: z.literal('screen') }), z.object({ color: z.enum(['black', 'white']), alpha: z.number().min(0).max(1) })),
   track('fx', z.object({ kind: z.literal('screen') }), FxValue),
+  track('background', z.object({ kind: z.literal('stage') }), BackgroundSwitchValue),
 ]);
 export type Track = z.infer<typeof TrackSchema>;
 export type Channel = Track['channel'];
@@ -166,7 +182,7 @@ export const SceneSchema = z.object({
     ambience: z.object({ assetId: Id, volume: z.number().min(0).max(1), meta: MetaSchema }).optional(),
   }).default({}),
   /** What the director knows about the scene (set by the AI breakdown; read by scene direction). */
-  brief: z.object({ timeOfDay: z.string().default(''), mood: z.string().default(''), isPerformance: z.boolean().default(false), band: z.string().nullable().default(null), guestOf: z.string().nullable().optional() }).optional(),
+  brief: z.object({ moves: z.array(z.object({ paragraph: z.number().int(), backgroundId: Id, reason: z.string().default(''), transition: z.enum(['cut', 'dip_black', 'crossfade']).default('cut') })).optional(), timeOfDay: z.string().default(''), mood: z.string().default(''), isPerformance: z.boolean().default(false), band: z.string().nullable().default(null), guestOf: z.string().nullable().optional() }).optional(),
   beats: z.array(BeatSchema),
   tracks: z.array(TrackSchema).default([]),
   /** Highest id number ever issued per prefix (beats, tracks, keys): ids of deleted units are never reused. */

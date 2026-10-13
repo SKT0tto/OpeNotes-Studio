@@ -16,6 +16,9 @@ import { notify, useUi } from '../../store/uiStore';
 import { cameraOfBeat } from '../stageTools/camera';
 import { BEAT_KIND_LABEL, SHOT_LABEL, SHOT_SHORT, TRANSITION_LABEL } from '@shared/catalog/labels';
 import { LockIcon } from '../ui';
+import { bgSwitchValue } from '@shared/director/bgKeys';
+import { useSceneFit } from '../bg/bgFit';
+import { BgPicker } from '../bg/BgPicker';
 import { loadModel } from '../useModel';
 import { buildGroups, snapPoints, type Lane, type LaneKey } from './lanes';
 
@@ -58,7 +61,7 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
   const sceneIndex = Math.max(0, project.scenes.findIndex((s) => s.id === selection.sceneId));
   const scene = project.scenes[sceneIndex];
   const cScene = compiled?.scenes.find((s) => s.id === scene?.id);
-  const groups = useMemo(() => (scene ? buildGroups(project, scene, sceneIndex, cScene, (id) => catalog?.audio.find((a) => a.id === id)?.name ?? '音频') : []), [project, scene, sceneIndex, cScene, catalog]);
+  const groups = useMemo(() => (scene ? buildGroups(project, scene, sceneIndex, cScene, (id) => catalog?.audio.find((a) => a.id === id)?.name ?? '音频', (id) => catalog?.backgrounds.find((b) => b.id === id)?.name ?? id) : []), [project, scene, sceneIndex, cScene, catalog]);
   // Selecting a person (stage, inspector, outline) brings their track group into view.
   useEffect(() => {
     const id = selection.castId;
@@ -73,6 +76,8 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
   const open = useUi((s) => s.openGroups);
   const setOpen = (o: Record<string, boolean>) => set({ openGroups: o });
   const [activeLane, setActiveLane] = useState<string | null>(null);
+  /** Time at which the background picker was opened (double-click on the 背景 lane), or null. */
+  const [pickAt, setPickAt] = useState<number | null>(null);
   const [marquee, setMarquee] = useState<Marquee | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -292,11 +297,17 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
       }
       case 'fade': return { value: { color: 'black', alpha: 1 }, duration: 0.5 };
       case 'fx': return { value: { fx: 'vignette_anxiety', strength: 1, roll: 0 }, duration: 0.3 };
+      case 'background': return null; // the picture is chosen in the background picker (see addAt)
     }
   };
   const addAt = async (lane: Lane, t: number) => {
     const tr = lane.track;
     if (!tr) return;
+    if (tr.channel === 'background') {
+      if (tr.locked) notify('这条轨道已锁定，先解锁再添加关键帧');
+      else setPickAt(Math.max(t, cScene.contentStart));
+      return;
+    }
     const v = await defaultValue(lane, t);
     if (!v) return;
     const id = addKeyAt(scene.id, tr.target as TrackTarget, tr.channel as Channel, v.value, t, v.duration);
@@ -504,6 +515,29 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                           <span className="tl-edge" data-testid="tl-banner-edge" onPointerDown={(e) => { e.stopPropagation(); (e.currentTarget as Element).setPointerCapture(e.pointerId); bannerDrag.current = { mode: 'hold', start: cScene.location!.start }; }} onPointerMove={bannerMove} onPointerUp={bannerUp} />
                         </div>
                       )}
+                      {lane.kind === 'background' && cScene.bgSegments.map((g, i) => {
+                        const bgInfo = catalog?.backgrounds.find((b) => b.id === g.assetId);
+                        return (
+                          <div
+                            key={`${g.start}:${g.assetId}`}
+                            className={`tl-block bgseg${i === 0 ? ' first' : ''}${g.keyId && keySel.includes(g.keyId) ? ' sel' : ''}`}
+                            style={{ left: x(g.start), width: Math.max(4, (g.end - g.start) * pps - 1), ['--bgthumb' as string]: `url("/api/thumbs/backgrounds/${encodeURIComponent(g.assetId)}?w=96")` }}
+                            title={`${i === 0 ? '开场背景' : g.purpose === 'insert' ? '插入镜头' : g.purpose === 'time' ? '换时段' : '换地点'} · ${bgInfo?.name ?? g.assetId}${i > 0 ? ` · ${g.transition === 'cut' ? '硬切' : g.transition === 'dip_black' ? '黑场' : '叠化'}` : '（固定，点击在检查器里更换）'}`}
+                            data-testid={i === 0 ? 'tl-bgseg-first' : 'tl-bgseg'}
+                            data-bg-id={g.assetId}
+                            onPointerDown={(e) => {
+                              e.stopPropagation();
+                              if (g.keyId) set({ keySel: [g.keyId], inspectorTab: 'key' });
+                              else { set({ keySel: [], inspectorTab: 'scene' }); }
+                              seekTo(g.start + 0.01);
+                            }}
+                            onDoubleClick={(e) => { e.stopPropagation(); void addAt(lane, timeAt(e.clientX)); }}
+                          >
+                            <i className="bgseg-thumb" />
+                            <span className="tl-block-text">{bgInfo?.name ?? g.assetId}</span>
+                          </div>
+                        );
+                      })}
                       {lane.kind === 'banner' && !cScene.location && <span className="tl-empty-note">本场景没有地点标题条（在“场景”标签里开启）</span>}
 
                       {lane.keys.map((k) => {
@@ -542,6 +576,7 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
             );
           })}
 
+          {pickAt !== null && <TimelineBgPicker project={project} scene={scene} catalog={catalog} t={pickAt} onClose={() => setPickAt(null)} onAdded={(id) => { setPickAt(null); set({ keySel: [id], inspectorTab: 'key' }); }} />}
           <div className="tl-playhead" ref={playhead} style={{ left: HEAD_W }} data-testid="tl-playhead"><span className="tl-playhead-cap" /></div>
           {marquee && <div className="tl-marquee" style={{ left: Math.min(marquee.x0, marquee.x1), top: Math.min(marquee.y0, marquee.y1), width: Math.abs(marquee.x1 - marquee.x0), height: Math.abs(marquee.y1 - marquee.y0) }} />}
         </div>
@@ -550,3 +585,20 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
   );
 }
 
+
+/** Choose the picture of a new background switch at time `t` (double-click on the 背景 lane, or the ＋ button with that lane active). */
+function TimelineBgPicker({ project, scene, catalog, t, onClose, onAdded }: { project: Project; scene: Project['scenes'][number]; catalog: CompactCatalog | null; t: number; onClose: () => void; onAdded: (keyId: string) => void }) {
+  const fit = useSceneFit(project, scene, catalog);
+  if (!catalog) return null;
+  return (
+    <BgPicker
+      backgrounds={catalog.backgrounds} title={`在 ${t.toFixed(1)}s 处切换背景到…`} fit={fit}
+      onPick={(id) => {
+        const key = addKeyAt(scene.id, { kind: 'stage' }, 'background', bgSwitchValue(id, 'cut', 'move'), t, 0);
+        if (key) onAdded(key);
+        else onClose();
+      }}
+      onClose={onClose}
+    />
+  );
+}

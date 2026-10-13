@@ -64,6 +64,14 @@
         "backgroundId": "adv_bkg_stage_000151",
         "reason": "“走出校门的时候，傍晚的风带着一点凉意”，众人在学校门口的路口集合，故选羽丘女子学园校门·傍晚。"
       },
+      "moves": [
+        {
+          "paragraph": 4,
+          "backgroundId": "adv_bkg_stage_000274",
+          "reason": "“立希和乐奈已经在路口等着”，从校门走到路口汇合。",
+          "transition": "cut"
+        }
+      ],
       "timeOfDay": "傍晚",
       "presentCast": [
         "001",
