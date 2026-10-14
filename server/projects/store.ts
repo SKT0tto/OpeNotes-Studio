@@ -70,6 +70,18 @@ export class ProjectStore {
     return out.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
+  /** Every readable project (unreadable / invalid ones are skipped). */
+  async all(): Promise<Project[]> {
+    const names = await fs.readdir(this.root).catch(() => [] as string[]);
+    const out: Project[] = [];
+    for (const id of names) {
+      if (!PROJECT_ID.test(id)) continue;
+      const r = await this.read(id).catch(() => null);
+      if (r) out.push(r.project);
+    }
+    return out;
+  }
+
   async get(id: string): Promise<StoredProject> {
     const r = await this.read(id);
     if (!r) throw new StoreError(404, `project "${id}" does not exist`);

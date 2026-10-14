@@ -4,7 +4,9 @@ import { CATEGORY_LABEL, searchBackgrounds } from '@shared/catalog/bgUi';
 import { bgCategoryOf } from '@shared/director/bgCategory';
 import type { BgCategory } from '@shared/schema/assetLabels';
 import type { BackgroundEntry } from '@shared/schema/assets';
+import { reloadCatalog } from '../useCatalog';
 import { BgCard } from './BgCard';
+import { BgDropOverlay, BgUploadButton, BgUploadStatus, useBgDrop, useBgUpload } from './BgUpload';
 import { useShowDecor } from './useShowDecor';
 
 export interface BgFitInfo {
@@ -32,6 +34,11 @@ export function BgPicker({ backgrounds, current, title, fit, use = 'scene', onPi
   const [cat, setCat] = useState<'' | BgCategory>('');
   const [pendingDecor, setPendingDecor] = useState<BackgroundEntry | null>(null);
   const [limit, setLimit] = useState(36);
+  const [uploaded, setUploaded] = useState<string[]>([]);
+  const up = useBgUpload((ids) => {
+    void reloadCatalog().then(() => setUploaded((u) => [...new Set([...ids, ...u])]), (e: unknown) => alert((e as Error).message));
+  });
+  const drop = useBgDrop((fs) => void up.upload(fs));
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => input.current?.focus(), []);
   useEffect(() => {
@@ -47,11 +54,12 @@ export function BgPicker({ backgrounds, current, title, fit, use = 'scene', onPi
   }, [onClose, pendingDecor]);
 
   const hits = useMemo(() => {
-    const pool = backgrounds.filter((b) => !b.labels?.duplicateOf && (showDecor || bgCategoryOf(b) !== 'decor') && (!cat || bgCategoryOf(b) === cat));
+    const pool = backgrounds.filter((b) => !uploaded.includes(b.id) && !b.labels?.duplicateOf && (showDecor || bgCategoryOf(b) !== 'decor') && (!cat || bgCategoryOf(b) === cat));
     const found = searchBackgrounds(pool, query);
     if (use === 'insert' && !query) return [...found].sort((a, b) => Number(bgCategoryOf(b) === 'insert') - Number(bgCategoryOf(a) === 'insert'));
     return found;
-  }, [backgrounds, query, showDecor, cat, use]);
+  }, [backgrounds, query, showDecor, cat, use, uploaded]);
+  const fresh = useMemo(() => uploaded.map((id) => backgrounds.find((b) => b.id === id)).filter((b): b is BackgroundEntry => !!b), [uploaded, backgrounds]);
   const groups = useMemo(() => {
     const ok: BackgroundEntry[] = [];
     const rest: BackgroundEntry[] = [];
@@ -78,7 +86,8 @@ export function BgPicker({ backgrounds, current, title, fit, use = 'scene', onPi
 
   return createPortal(
     <div className="bgx-modal" role="dialog" aria-label={title} data-testid="bg-picker" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bgx-picker">
+      <div className="bgx-picker bgx-dropzone" {...drop.handlers}>
+        <BgDropOverlay show={drop.dragging} />
         <header>
           <h3>{title}</h3>
           <input ref={input} type="search" className="text" placeholder="搜索标题 / 描述 / 标签 / 地点，多个词用空格（如 夜 卧室）" value={query} onChange={(e) => { setQuery(e.target.value); setLimit(36); }} data-testid="picker-search" aria-label="搜索背景" />
@@ -90,9 +99,13 @@ export function BgPicker({ backgrounds, current, title, fit, use = 'scene', onPi
               <input type="checkbox" checked={showDecor} onChange={(e) => setShowDecor(e.target.checked)} data-testid="picker-show-decor" />显示装饰素材
             </label>
           </div>
+          <BgUploadButton up={up} />
           <button type="button" className="btn" onClick={onClose} data-testid="picker-close">关闭</button>
         </header>
         <div className="bgx-picker-body">
+          <BgUploadStatus up={up} />
+          {fresh.length > 0 && <h4 data-testid="picker-group-uploaded">刚上传（{fresh.length}）</h4>}
+          {fresh.length > 0 && <div className="bgx-grid">{fresh.map(card)}</div>}
           {okShown.length > 0 && <h4 data-testid="picker-group-ok">{use === 'insert' ? '插入镜头候选' : '适合本场景'}（{groups.ok.length}）</h4>}
           <div className="bgx-grid">{okShown.map(card)}</div>
           {restShown.length > 0 && <h4 data-testid="picker-group-rest">其他（{groups.rest.length}）· 带 ⚠ 的与出场角色或类别不符，仍可手动选用</h4>}

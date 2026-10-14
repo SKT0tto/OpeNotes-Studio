@@ -208,4 +208,25 @@ describe('source gate and setup routes', () => {
     expect(evil.status).toBe('error');
     expect(evil.error).toMatch(/不安全|无法处理/);
   });
+
+  it('upload background: content-derived id, sidecar name + tag, duplicate is a no-op, delete only own', async () => {
+    const png = await fs.readFile('tests/fixtures/fake-assets/backgrounds/1.png');
+    const put = (body: Buffer | string, name = '我的 教室.png') => fetch(`${base}/api/import/background`, { method: 'POST', body: new Uint8Array(Buffer.from(body)), headers: { 'x-filename': encodeURIComponent(name), 'content-type': 'image/png' } });
+    const first = await put(png);
+    expect(first.status).toBe(200);
+    const a = await first.json();
+    expect(a).toMatchObject({ status: 'new', name: '我的 教室' });
+    expect(a.id).toMatch(/^user_[0-9a-f]{12}$/);
+    const bg = ((await (await fetch(`${base}/api/catalog`)).json()) as { backgrounds: Array<{ id: string; name: string; tags: string[] }> }).backgrounds.find((b) => b.id === a.id);
+    expect(bg).toMatchObject({ name: '我的 教室' });
+    expect(bg!.tags).toContain('用户上传');
+    const again = await (await put(png, 'other.png')).json();
+    expect(again).toMatchObject({ status: 'duplicate', id: a.id, name: '我的 教室' });
+    expect((await put('not a png')).status).toBe(400);
+    expect((await fetch(`${base}/api/import/background/1`, { method: 'DELETE' })).status).toBe(400);
+    expect((await fetch(`${base}/api/import/background/${a.id}`, { method: 'DELETE' })).status).toBe(200);
+    const after = (await (await fetch(`${base}/api/catalog`)).json()) as { backgrounds: Array<{ id: string }> };
+    expect(after.backgrounds.some((b) => b.id === a.id)).toBe(false);
+    expect((await fetch(`${base}/api/import/background/${a.id}`, { method: 'DELETE' })).status).toBe(404);
+  });
 });

@@ -45,7 +45,12 @@ export class ModelLibrary {
   }
 
   async background(id: string): Promise<BackgroundEntry> {
-    const b = (await this.catalog()).backgrounds.find((x) => x.id === id);
+    let b = (await this.catalog()).backgrounds.find((x) => x.id === id);
+    if (!b) {
+      // maybe just uploaded: refetch once
+      this.catalogP = fetchCatalog();
+      b = (await this.catalogP).backgrounds.find((x) => x.id === id);
+    }
     if (!b) throw new Error(`unknown background "${id}"`);
     return b;
   }

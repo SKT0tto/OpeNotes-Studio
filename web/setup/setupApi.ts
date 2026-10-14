@@ -82,6 +82,10 @@ export const scanImport = (path: string) => startJob('/api/import/scan', json('P
 export const uploadImport = (file: File) => startJob('/api/import/upload', { method: 'POST', body: file, headers: { 'x-filename': encodeURIComponent(file.name), 'content-type': 'application/octet-stream' } });
 export const replanImport = (planId: string, ids: Record<string, string>) => startJob('/api/import/plan', json('POST', { planId, ids }));
 export const runImport = (planId: string, ids: Record<string, string>, overwrite: boolean) => startJob('/api/import/run', json('POST', { planId, ids, overwrite }));
+export const uploadBackground = (blob: Blob, filename: string) =>
+  call<{ id: string; status: 'new' | 'duplicate'; name: string; width: number; height: number }>('/api/import/background', { method: 'POST', body: blob, headers: { 'x-filename': encodeURIComponent(filename), 'content-type': 'image/png' } });
+export const deleteUploadedBackground = (id: string) => call<{ ok: boolean }>(`/api/import/background/${encodeURIComponent(id)}`, { method: 'DELETE' });
+export const getBackgroundUsage = (id: string) => call<{ projects: Array<{ id: string; title: string; scenes: number }> }>(`/api/import/background/${encodeURIComponent(id)}/usage`);
 export const cancelImport = (planId: string) => call<{ ok: boolean }>(`/api/import/${planId}`, { method: 'DELETE' });
 
 export const getSource = () => call<SourceInfo>('/api/sources/haneoka');
