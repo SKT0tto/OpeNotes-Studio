@@ -89,7 +89,8 @@ describe('digest', () => {
 // dev-notes/ is a local folder (not in the repository): without the content pass only the committed result can be checked
 const CONTENT_FILE = 'dev-notes/bg-content.json';
 describe.skipIf(!fs.existsSync(CONTENT_FILE))('import of the content pass', () => {
-  const content = JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf8')) as BgContent;
+  // the describe body still runs when skipped (test collection): read only when the file is there
+  const content = (fs.existsSync(CONTENT_FILE) ? JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf8')) : {}) as BgContent;
   it('is idempotent and never touches the ownership the user confirmed', () => {
     const before = LabelFileSchema.parse(JSON.parse(fs.readFileSync('tests/fixtures/backgrounds.labels.fixture.json', 'utf8')));
     // start from the file as it was before the import: strip the content fields
