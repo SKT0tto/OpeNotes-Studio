@@ -16,6 +16,12 @@ Background assets, redone (v0.1.4 feedback: "backgrounds are hard to tell apart"
 
 Tests: unit (bgTrack, p20, bgUi), integration (labels / thumbnails over HTTP), e2e (`bg-track`, `label-workbench`); the integration expectations follow the restored library (247 models / 349 backgrounds).
 
+**Upload your own backgrounds.** The background picker (inspector, keyframes, timeline) and the asset browser's background tab have an 「上传背景」 button and accept drag and drop: PNG / JPG / WebP (converted to PNG in the browser, scaled down only when larger than the stage needs, short side >= 320 px). `POST /api/import/background` runs the existing import plan under the import lock; ids are `user_<sha256 prefix>`, so a repeated upload is reported as already in the library; the display name is kept in `backgrounds/<id>.meta.json` in the asset library (the committed label file is not touched). New uploads appear at once without a reload. Uploaded backgrounds can be deleted (`DELETE /api/import/background/:id`, `user_` ids only); `GET .../usage` lists the projects and scenes that use one and the confirmation warns about them.
+
+**Entrance flicker fixed.** The Live2D engine only advances a model while it is rendered, so an actor waiting off screen piled up seconds of model time and applied it in one step on its first visible frame (physics reset, hair and clothes jumped from a stale pose). Hidden actors now keep updating every frame, and a model swapped into a slot drops time accumulated while it was off stage.
+
+**Line-by-line preview.** The editor preview has a 「逐句」 switch (default off): playback holds at the end of each line and Space advances while playing. The setting is shared with the play page's 自动推进 checkbox and the in-stage HUD.
+
 ## 0.1.4
 
 Fixes "some characters do not move" and "group shots are not harmonious" (v0.1.3 feedback).
