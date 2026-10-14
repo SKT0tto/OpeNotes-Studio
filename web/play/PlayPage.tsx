@@ -20,7 +20,6 @@ async function fetchProject(id: string): Promise<Project> {
 export function PlayPage({ health, projectId }: { health: Health; projectId: string }) {
   const [project, setProject] = useState<Project | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [auto, setAuto] = useState(true);
   const [rate, setRate] = useState(1);
   const [aspect, setAspect] = useState<number>(16 / 9);
   const root = useRef<HTMLDivElement>(null);
@@ -33,7 +32,7 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
     fetchProject(projectId).then(setProject, (e: Error) => setLoadError(e.message));
   }, [projectId]);
 
-  const { hostRef: host, playerRef, status, error, ready, playing, info, toggle, advance, seek } = usePlayerHost(health, project, projectId, aspect);
+  const { hostRef: host, playerRef, status, error, ready, playing, info, toggle, advance, seek, auto, setAuto } = usePlayerHost(health, project, projectId, aspect);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -74,7 +73,7 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
           </select>
         </label>
         <label className="check">
-          <input type="checkbox" checked={auto} onChange={(e) => { setAuto(e.target.checked); if (playerRef.current) playerRef.current.auto = e.target.checked; }} data-testid="play-auto" />
+          <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} data-testid="play-auto" />
           自动推进
         </label>
         <button onClick={advance} disabled={!ready} data-testid="play-next">下一句 / 显示全文</button>
