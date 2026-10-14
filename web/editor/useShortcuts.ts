@@ -8,7 +8,7 @@ import { useUi } from '../store/uiStore';
 type Host = ReturnType<typeof usePlayerHost>;
 
 export const SHORTCUTS: Array<[string, string]> = [
-  ['空格', '播放 / 暂停'],
+  ['空格', '播放 / 暂停（逐句模式：播放中进入下一句）'],
   ['K', '暂停'],
   ['L', '播放；连按加速 1× / 2× / 4×'],
   ['J', '倒放（逐步回跳）；连按加速'],
@@ -78,7 +78,8 @@ export function useShortcuts(host: Host, fps: number): void {
         case ' ':
           target.blur?.();
           stopReverse();
-          h.toggle();
+          if (!h.auto && p?.isPlaying) h.advance();
+          else h.toggle();
           break;
         case 'k': case 'K':
           stopReverse();

@@ -155,6 +155,22 @@ export class Live2DActor {
     for (let t = 0; t < seconds * 1000; t += stepMs) this.model.update(stepMs);
   }
 
+  /**
+   * The engine only advances a model while it is rendered (`model.update` just accumulates time). A hidden actor keeps
+   * living through this, so physics and motions never jump by a whole backlog on the first visible frame.
+   */
+  updateHidden(): void {
+    const dt = this.model.deltaTime;
+    if (dt === 0) return;
+    this.model.deltaTime = 0;
+    this.internal.update(dt, this.model.elapsedTime);
+  }
+
+  /** Forget model time accumulated while the actor was not on stage (it must not be applied in one step later). */
+  dropPendingTime(): void {
+    this.model.deltaTime = 0;
+  }
+
   /** Final value the renderer used last frame (includes the overlay). */
   appliedValue(id: string): number | null {
     const i = this.indexById.get(id);

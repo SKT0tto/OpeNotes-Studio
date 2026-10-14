@@ -123,6 +123,12 @@ export class Stage {
     this.fadeRect.visible = false;
     this.transitions = new Transitions(app.renderer, this.width, this.height);
     app.stage.addChild(this.sceneRoot, this.fadeRect, this.transitions.layer);
+    // Actors waiting off screen (opacity 0) are not rendered, so the engine would not advance them: keep them living.
+    this.tickHidden = () => {
+      if (!this.sceneRoot.visible) return;
+      for (const slot of this.slots.values()) if (slot.actor && !slot.wrapper.visible) slot.actor.updateHidden();
+    };
+    app.ticker.add(this.tickHidden);
     // A model rebuilt after a Core heap re-allocation takes the old instance's place at once (the player may be paused: no frame follows).
     this.offReload = library.onReload((fresh, old) => {
       if (!old) return;
@@ -135,6 +141,7 @@ export class Stage {
     });
   }
   private readonly offReload: () => void;
+  private readonly tickHidden: () => void;
 
   get sceneInfo(): StageScene | null {
     return this.scene;
@@ -335,6 +342,7 @@ export class Stage {
       slot.actor.override.setTarget({ headYaw: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 }, 0);
       slot.wrapper.removeChild(slot.actor.model);
     }
+    next.dropPendingTime(); // time piled up while it was not on stage must not be applied in one step
     slot.wrapper.addChild(next.model);
     slot.actor = next;
     slot.eventKey = '';
@@ -410,6 +418,7 @@ export class Stage {
 
   destroy(): void {
     this.offReload();
+    this.app.ticker.remove(this.tickHidden);
     for (const slot of this.slots.values()) this.dropSlot(slot);
     this.slots.clear();
     this.transitions.clear();

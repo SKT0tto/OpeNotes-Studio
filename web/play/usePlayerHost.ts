@@ -38,6 +38,16 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [info, setInfo] = useState<PlayInfo>(EMPTY);
+  /** Automatic line advance (off = hold at the end of every text line); shared by the page controls and the in-stage HUD menu. */
+  const [auto, setAutoState] = useState(true);
+  const autoRef = useRef(true);
+  const hudRef = useRef<HudLayer | null>(null);
+  const setAuto = useCallback((on: boolean) => {
+    autoRef.current = on;
+    setAutoState(on);
+    if (playerRef.current) playerRef.current.auto = on;
+    hudRef.current?.setAuto(on);
+  }, []);
   /** The latest compile result, for panels that show what the compiler made of an edit (held shots, rule director output). */
   const [compiled, setCompiled] = useState<CompiledProject | null>(null);
   const lastInfo = useRef(0);
@@ -89,7 +99,10 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
         return p.compiled.scenes.flatMap((sc) => sc.beats).filter((b) => b.start <= p.t && b.text && (b.kind === 'dialogue' || b.kind === 'narration')).map((b) => ({ name: colorOf(b.speakerId)?.name ?? '', text: b.text }));
       };
       hud = new HudLayer(el, {
-        toggleAuto: () => (playerRef.current ? (playerRef.current.auto = !playerRef.current.auto) : true),
+        toggleAuto: () => {
+          setAuto(!autoRef.current);
+          return autoRef.current;
+        },
         skip: () => {
           const p = playerRef.current;
           const s = p?.state;
@@ -108,6 +121,9 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       setStatus('加载模型、校准并编译时间轴…');
       player = await Player.create(stage, library, audio, first);
       if (dead) return;
+      player.auto = autoRef.current;
+      hudRef.current = hud;
+      hud.setAuto(autoRef.current);
       playerRef.current = player;
       registerDebugPlayer({
         seek: (t) => player!.seek(t),
@@ -161,6 +177,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       unsubscribe?.();
       player?.dispose();
       playerRef.current = null;
+      hudRef.current = null;
       removeRestore?.();
       dialog?.dispose();
       hud?.dispose();
@@ -174,7 +191,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       setInfo(EMPTY);
       setCompiled(null);
     };
-  }, [health.cubismCoreUrl, health.cubismMemoryMB, initKey, hasScenes, aspect]);
+  }, [health.cubismCoreUrl, health.cubismMemoryMB, initKey, hasScenes, aspect, setAuto]);
 
   // Edits: recompile the live player (debounced; a later edit supersedes an earlier one).
   useEffect(() => {
@@ -220,5 +237,5 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
   }, []);
   const advance = useCallback(() => playerRef.current?.advance(), []);
 
-  return { hostRef: host, playerRef, compiled, status, error, reloadError, ready, playing, info, toggle, seek, advance };
+  return { hostRef: host, playerRef, compiled, status, error, reloadError, ready, playing, info, auto, setAuto, toggle, seek, advance };
 }

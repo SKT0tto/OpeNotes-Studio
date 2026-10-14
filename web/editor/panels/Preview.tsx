@@ -22,7 +22,7 @@ const OVERLAYS: Array<['safe' | 'thirds' | 'eyeLine', string, string]> = [
 ];
 
 export function Preview({ host, project, catalog }: { host: Host; project: Project; catalog: CompactCatalog | null }) {
-  const { ready, playing, info, toggle, seek, advance, playerRef, hostRef, error, status, compiled } = host;
+  const { ready, playing, info, toggle, seek, advance, auto, setAuto, playerRef, hostRef, error, status, compiled } = host;
   const empty = project.scenes.length === 0;
   const tool = useUi((s) => s.tool);
   const overlays = useUi((s) => s.overlays);
@@ -86,8 +86,11 @@ export function Preview({ host, project, catalog }: { host: Host; project: Proje
         </div>
       )}
       <div className="transport">
-        <button className="btn primary" disabled={!ready} onClick={toggle} data-testid="play-toggle" title="播放 / 暂停（空格）">{playing ? '❚❚ 暂停' : '▶ 播放'}</button>
-        <button className="btn" disabled={!ready} onClick={advance} data-testid="play-next" title="跳到下一句（↓）">下一句 ⏭</button>
+        <button className="btn primary" disabled={!ready} onClick={toggle} data-testid="play-toggle" title={auto ? '播放 / 暂停（空格）' : '播放；播放中空格进入下一句'}>{playing ? '❚❚ 暂停' : '▶ 播放'}</button>
+        <label className="inline" title="每句停住，播放中按空格进入下一句">
+          <input type="checkbox" checked={!auto} onChange={(e) => setAuto(!e.target.checked)} data-testid="preview-line-mode" />逐句
+        </label>
+        <button className="btn" disabled={!ready} onClick={advance} data-testid="play-next" title={auto ? '跳到下一句（↓）' : '进入下一句（空格 / ↓）'}>下一句 ⏭</button>
         <span className="tc" data-testid="play-time">{fmt(info.t)}</span>
         <input type="range" className="seek" min={0} max={Math.max(1, Math.round(info.duration * 100))} value={Math.round(info.t * 100)} disabled={!ready} onChange={(e) => seek(Number(e.target.value) / 100)} data-testid="play-seek" />
         <span className="tc dim" data-testid="play-duration">{fmt(info.duration)}</span>

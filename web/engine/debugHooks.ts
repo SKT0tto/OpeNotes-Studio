@@ -62,6 +62,8 @@ export interface StudioDebug {
   }>;
   /** Present while the play page is open. */
   player: DebugPlayer | null;
+  /** The Pixi application (frame-stepping tests drive `app.ticker.update` by hand). */
+  app: Application | null;
   /** Camera pose currently applied to the stage. */
   getCamera(): { x: number; y: number; zoom: number; bgZoom?: number; bgViewZoom?: number } | null;
   /** Sampled sum of the Core's output vertices of a model: it must keep changing while the model is on screen. */
@@ -104,6 +106,9 @@ if (import.meta.env.DEV) {
     listLoadedModels: () => [...actors.keys()],
     get player() {
       return player;
+    },
+    get app() {
+      return app;
     },
     getCamera: () => cameraGetter?.() ?? null,
     getActorParams(actorId, ids = WATCHED) {
