@@ -7,9 +7,12 @@ import { Transform } from 'node:stream';
 import express, { Router } from 'express';
 import { z } from 'zod';
 import { updateFileConfig, type StudioConfig } from '../../config';
-import type { CatalogService } from '../indexer';
+import { userBgId, uploadBgName, isUserBg } from '../../../shared/catalog/uploadBg';
+import { readPngSize, type CatalogService } from '../indexer';
 import { applyPlan, type ImportReport } from './apply';
-import { buildPlan, type ImportPlan, type PlanOptions, type PreparedPlan } from './plan';
+import { buildPlan, sha256File, type ImportPlan, type PlanOptions, type PreparedPlan } from './plan';
+import { ProjectStore } from '../../projects/store';
+import { backgroundUsage } from '../../projects/usage';
 import { ZipSafetyError, extractZip, type ZipLimits } from './zip';
 
 interface Session {
@@ -232,6 +235,105 @@ export function importRoutes(deps: ImportDeps): Router {
       name,
     );
     res.json({ jobId: job.id });
+  });
+
+  // one picture from the browser (already re-encoded to PNG): planned and written through the normal import pipeline under a content-derived id
+  r.post('/api/import/background', async (req, res) => {
+    if (running) {
+      res.status(409).json({ error: '已有导入正在进行，请稍后再试' });
+      return;
+    }
+    running = true;
+    const uuid = randomUUID();
+    const temp = path.join(tmpRoot(), uuid);
+    try {
+      const cap0 = Math.min(config.importMaxBytes, 40 * 1024 ** 2);
+      const srcRoot = path.join(temp, 'x');
+      await fs.mkdir(srcRoot, { recursive: true });
+      const file = path.join(srcRoot, 'upload.png');
+      let total = 0;
+      const cap = new Transform({
+        transform(chunk: Buffer, _e, cb) {
+          total += chunk.length;
+          cb(total > cap0 ? new ZipSafetyError(`图片超过大小上限 ${Math.round(cap0 / 1024 ** 2)} MB`) : null, chunk);
+        },
+      });
+      try {
+        await pipeline(req, cap, createWriteStream(file));
+      } catch (e) {
+        res.status(e instanceof ZipSafetyError ? 400 : 500).json({ error: (e as Error).message });
+        return;
+      }
+      const size = await readPngSize(file);
+      if (size.width === null || size.height === null) {
+        res.status(400).json({ error: '不是有效的 PNG 图片' });
+        return;
+      }
+      let filename = '';
+      try {
+        filename = decodeURIComponent(String(req.headers['x-filename'] ?? ''));
+      } catch {
+        /* keep empty */
+      }
+      const id = userBgId(await sha256File(file));
+      const prepared = await buildPlan(srcRoot, uuid, '上传背景', { assetRoot: config.assetRoot, ids: { 'upload.png': id } });
+      const pb = prepared.plan.backgrounds[0];
+      if (!pb || (pb.status !== 'new' && pb.status !== 'duplicate')) {
+        res.status(400).json({ error: pb?.message ?? '无法导入这张图片' });
+        return;
+      }
+      if (pb.status === 'new') {
+        const report = await applyPlan(prepared, config.assetRoot, { overwrite: false });
+        if (report.errors.length > 0) {
+          res.status(500).json({ error: report.errors[0]!.message });
+          return;
+        }
+      }
+      const name = uploadBgName(filename);
+      const metaFile = path.join(config.assetRoot, 'backgrounds', `${id}.meta.json`);
+      if (!(await fs.stat(metaFile).catch(() => null))) {
+        await fs.writeFile(metaFile, JSON.stringify({ name, originalName: filename, uploadedAt: new Date().toISOString() }, null, 2));
+      }
+      await deps.catalog.refresh().catch(() => {});
+      const meta = JSON.parse(await fs.readFile(metaFile, 'utf8').catch(() => '{}')) as { name?: unknown };
+      res.json({ id, status: pb.status, name: typeof meta.name === 'string' ? meta.name : name, width: size.width, height: size.height });
+    } catch (e) {
+      if (!res.headersSent) res.status(500).json({ error: (e as Error).message });
+    } finally {
+      running = false;
+      await fs.rm(temp, { recursive: true, force: true }).catch(() => {});
+    }
+  });
+
+  // which saved projects still show this background (start background or a background-track key)
+  r.get('/api/import/background/:id/usage', async (req, res) => {
+    const id = req.params.id;
+    if (!isUserBg(id)) {
+      res.status(400).json({ error: '只能查询自己上传的背景' });
+      return;
+    }
+    res.json({ projects: backgroundUsage(await new ProjectStore(path.join(config.dataDir, 'projects')).all(), id) });
+  });
+
+  r.delete('/api/import/background/:id', async (req, res) => {
+    const id = req.params.id;
+    if (!isUserBg(id)) {
+      res.status(400).json({ error: '只能删除自己上传的背景' });
+      return;
+    }
+    if (running) {
+      res.status(409).json({ error: '已有导入正在进行，请稍后再试' });
+      return;
+    }
+    const dir = path.join(config.assetRoot, 'backgrounds');
+    if (!(await fs.stat(path.join(dir, `${id}.png`)).catch(() => null))) {
+      res.status(404).json({ error: '找不到这张背景' });
+      return;
+    }
+    await fs.rm(path.join(dir, `${id}.png`), { force: true });
+    await fs.rm(path.join(dir, `${id}.meta.json`), { force: true });
+    await deps.catalog.refresh().catch(() => {});
+    res.json({ ok: true });
   });
 
   const Body = z.object({ planId: z.string(), ids: z.record(z.string(), z.string()).optional(), overwrite: z.boolean().optional() });

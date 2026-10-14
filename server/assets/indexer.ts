@@ -205,8 +205,11 @@ const str = (v: unknown): string | null => (typeof v === 'string' && v !== '' ? 
 async function indexBackgrounds(assetRoot: string, manifest: Manifest | null, sigs: string[], labels: LabelFile | null): Promise<BackgroundEntry[]> {
   const dir = path.join(assetRoot, 'backgrounds');
   let files: string[] = [];
+  let metas = new Set<string>();
   try {
-    files = (await fs.readdir(dir)).filter((f) => f.toLowerCase().endsWith('.png'));
+    const all = await fs.readdir(dir);
+    files = all.filter((f) => f.toLowerCase().endsWith('.png'));
+    metas = new Set(all.filter((f) => f.endsWith('.meta.json')));
   } catch {
     /* no backgrounds dir */
   }
@@ -219,12 +222,21 @@ async function indexBackgrounds(assetRoot: string, manifest: Manifest | null, si
     const m = meta.get(id);
     const strArray = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
     const label = labels?.labels[id];
+    let upName: string | null = null;
+    if (metas.has(`${id}.meta.json`)) {
+      try {
+        const n = (JSON.parse(await fs.readFile(path.join(dir, `${id}.meta.json`), 'utf8')) as { name?: unknown }).name;
+        if (typeof n === 'string' && n.trim()) upName = n.trim();
+      } catch {
+        /* malformed sidecar: ignore */
+      }
+    }
     return {
       id,
       url: `/assets/backgrounds/${encodeURIComponent(file)}`,
       width: size.width ?? (typeof m?.width === 'number' ? m.width : null),
       height: size.height ?? (typeof m?.height === 'number' ? m.height : null),
-      name: label?.title ?? label?.nameOverride ?? str(m?.name) ?? id,
+      name: label?.title ?? label?.nameOverride ?? upName ?? str(m?.name) ?? id,
       aliases: strArray(m?.aliases),
       kind: str(m?.kind),
       location: str(m?.location),
@@ -233,7 +245,7 @@ async function indexBackgrounds(assetRoot: string, manifest: Manifest | null, si
       time: str(m?.time) ?? ({ day: '日间', dusk: '傍晚', night: '夜间' } as Record<string, string>)[label?.time ?? ''] ?? null,
       weather: str(m?.weather),
       description: label?.description ?? label?.descriptionOverride ?? str(m?.description),
-      tags: [...new Set([...strArray(m?.tags), ...(label?.tags ?? [])])],
+      tags: [...new Set([...strArray(m?.tags), ...(label?.tags ?? []), ...(upName ? ['用户上传'] : [])])],
       ...(label ? { labels: label } : {}),
     };
   });

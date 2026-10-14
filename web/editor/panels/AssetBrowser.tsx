@@ -6,6 +6,10 @@ import { bgCategoryOf } from '@shared/director/bgCategory';
 import type { BgCategory } from '@shared/schema/assetLabels';
 import type { BackgroundEntry, CharacterEntry, CompactCatalog, CompactModel, ModelEntry } from '@shared/schema/assets';
 import { fetchCatalog, fetchModel } from '../../api';
+import { deleteUploadedBackground, getBackgroundUsage } from '../../setup/setupApi';
+import { deleteBgWarning, isUserBg } from '@shared/catalog/uploadBg';
+import { BgDropOverlay, BgUploadButton, BgUploadStatus, useBgDrop, useBgUpload } from '../bg/BgUpload';
+import { reloadCatalog } from '../useCatalog';
 import { BgCard } from '../bg/BgCard';
 import { useShowDecor } from '../bg/useShowDecor';
 
@@ -39,7 +43,7 @@ export function AssetBrowser() {
         ))}
       </nav>
       {tab === 'characters' && <CharactersTab catalog={catalog} />}
-      {tab === 'backgrounds' && <BackgroundsTab catalog={catalog} />}
+      {tab === 'backgrounds' && <BackgroundsTab catalog={catalog} reload={() => fetchCatalog().then(setCatalog, () => {})} />}
       {tab === 'audio' && <AudioTab catalog={catalog} />}
     </section>
   );
@@ -187,7 +191,7 @@ function ModelDetail({ id }: { id: string }) {
   );
 }
 
-function BackgroundsTab({ catalog }: { catalog: CompactCatalog }) {
+function BackgroundsTab({ catalog, reload }: { catalog: CompactCatalog; reload: () => Promise<unknown> }) {
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState<'' | BgCategory>('');
   const [setting, setSetting] = useState('');
@@ -201,6 +205,27 @@ function BackgroundsTab({ catalog }: { catalog: CompactCatalog }) {
   const [showDecor, setShowDecor] = useShowDecor();
   const [unfoldAll, setUnfoldAll] = useState(false);
   const [unfolded, setUnfolded] = useState<string[]>([]);
+  const [fresh, setFresh] = useState<string[]>([]);
+  const up = useBgUpload((ids) => {
+    // show the new pictures: clear filters, pin them first
+    setQuery(''); setCat(''); setSetting(''); setTime(''); setBand(''); setPlace(''); setConf(''); setOnlyStage(false); setOnlyUnknown(false); setLimit(PAGE);
+    setFresh((f) => [...new Set([...ids, ...f])]);
+    void Promise.all([reload(), reloadCatalog()]);
+  });
+  const drop = useBgDrop((fs) => void up.upload(fs));
+  const remove = async (b: BackgroundEntry) => {
+    try {
+      // tell the user which projects still use the picture before it goes
+      const usage = await getBackgroundUsage(b.id).catch(() => null);
+      const warn = usage ? deleteBgWarning(usage.projects) : '删除这张上传的背景？无法确认是否有项目正在使用它，已使用它的项目会显示为缺失背景，且无法撤销。';
+      if (!window.confirm(warn)) return;
+      await deleteUploadedBackground(b.id);
+      setFresh((f) => f.filter((x) => x !== b.id));
+      await Promise.all([reload(), reloadCatalog()]);
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  };
 
   const places = useMemo(() => distinct(catalog.backgrounds.map((b) => b.labels?.placeName ?? b.labels?.location ?? null)), [catalog.backgrounds]);
   const copiesOf = useMemo(() => {
@@ -237,8 +262,8 @@ function BackgroundsTab({ catalog }: { catalog: CompactCatalog }) {
       if (master && ids.has(master) && !unfoldAll && !unfolded.includes(master)) continue;
       out.push(b);
     }
-    return out;
-  }, [base, unfoldAll, unfolded]);
+    return fresh.length === 0 ? out : [...out.filter((b) => fresh.includes(b.id)).sort((a, b) => fresh.indexOf(a.id) - fresh.indexOf(b.id)), ...out.filter((b) => !fresh.includes(b.id))];
+  }, [base, unfoldAll, unfolded, fresh]);
   const reset = (fn: (v: string) => void) => (e: { target: { value: string } }) => { fn(e.target.value); setLimit(PAGE); };
   const chips = <T extends string>(label: string, value: T | '', set: (v: T | '') => void, options: Array<[T, string]>, testid: string) => (
     <div className="bgx-chiprow" role="group" aria-label={label} data-testid={testid}>
@@ -252,13 +277,16 @@ function BackgroundsTab({ catalog }: { catalog: CompactCatalog }) {
   const catOptions: Array<[BgCategory, string]> = [['scene', CATEGORY_LABEL.scene], ['insert', CATEGORY_LABEL.insert], ['event', CATEGORY_LABEL.event], ...(showDecor ? ([['decor', CATEGORY_LABEL.decor]] as Array<[BgCategory, string]>) : [])];
   const timeOptions = distinct(catalog.backgrounds.map((b) => b.time)).map((t) => [t, t] as [string, string]);
   return (
-    <div className="content full">
+    <div className="content full bgx-dropzone" {...drop.handlers}>
+      <BgDropOverlay show={drop.dragging} />
       <div className="filters bgx-filters">
+        <BgUploadButton up={up} />
         <input type="search" placeholder="搜索标题 / 描述 / 标签 / 地点，多个词用空格（如 夜 卧室）" value={query} onChange={reset(setQuery)} aria-label="搜索背景" data-testid="bg-search" />
         <label className="sel"><input type="checkbox" checked={showDecor} onChange={(e) => { setShowDecor(e.target.checked); setLimit(PAGE); }} data-testid="bg-show-decor" />显示装饰素材</label>
         <label className="sel"><input type="checkbox" checked={unfoldAll} onChange={(e) => setUnfoldAll(e.target.checked)} data-testid="bg-unfold" />展开重复素材</label>
         <span className="hint" data-testid="bg-count">命中 {hits.length} / {catalog.backgrounds.length}</span>
       </div>
+      <BgUploadStatus up={up} />
       <div className="bgx-filterbox">
         {chips('类别', cat, setCat, catOptions, 'bg-chips-category')}
         {chips('时段', time, setTime, timeOptions, 'bg-chips-time')}
@@ -288,9 +316,11 @@ function BackgroundsTab({ catalog }: { catalog: CompactCatalog }) {
           const shownCopies = unfoldAll || unfolded.includes(b.id);
           return (
             <BgCard
-              key={b.id} bg={b} copies={copies.length}
+              key={b.id} bg={b} copies={copies.length} className={fresh.includes(b.id) ? 'uploaded' : ''}
               {...(copies.length > 0 && !unfoldAll ? { onCopies: () => setUnfolded(shownCopies ? unfolded.filter((x) => x !== b.id) : [...unfolded, b.id]) } : {})}
-            />
+            >
+              {isUserBg(b.id) && <button type="button" className="btn bgx-del" onClick={(e) => { e.stopPropagation(); void remove(b); }} data-testid="bg-delete">删除</button>}
+            </BgCard>
           );
         })}
       </div>
