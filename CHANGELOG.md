@@ -14,7 +14,7 @@ Camera travel mode: a second camera system that moves like Our Notes. The classi
 
 **AI director.** A travel prompt (`scene-3` + `travel-5`) and new intent fields let the model say why a shot exists. A `flow=cut` from the model is only a suggestion; deterministic code validates it against the geometry and rewrites a reason that contradicts it.
 
-**Regenerate scene camera.** A button re-derives the camera of one scene without touching the others or your manual edits.
+**Regenerate cameras.** When you switch to travel and some scenes have no travel direction yet, a notice offers to regenerate the camera of the current scene or of all those scenes. Only the camera is redone, through the usual diff preview, and your manual edits and locks are kept.
 
 Tests: unit (`travelPolicy`, `travelOriginal`, travel golden v11, classic golden unchanged), e2e (`camera-system`, `camera-regeneration`).
 
