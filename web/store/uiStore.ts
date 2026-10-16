@@ -37,6 +37,8 @@ interface UiState {
   toast: Toast | null;
   styleUnit: 'H' | 'px';
   helpOpen: boolean;
+  /** The 「已切换到运镜模式」 notice; set only by an explicit 经典 -> 运镜 switch that leaves scenes without travel direction. */
+  travelNotice: { projectId: string } | null;
   /** Playback speed of the preview (also set by L). */
   rate: number;
   /** Storyboard card multi-selection (beat ids). */
@@ -59,6 +61,7 @@ export const useUi = create<UiState>((set) => ({
   toast: null,
   styleUnit: 'H',
   helpOpen: false,
+  travelNotice: null,
   rate: 1,
   cards: [],
   set: (p) => set(p),

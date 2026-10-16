@@ -53,3 +53,18 @@ describe('classic output carries no travel data', () => {
     }
   });
 });
+
+describe('scenesNeedingTravelDirection', () => {
+  const base = () => ProjectSchema.parse(JSON.parse(JSON.stringify(demo)));
+  it('counts travel scenes without any beat intent; classic scenes and directed scenes are excluded', async () => {
+    const { scenesNeedingTravelDirection } = await import('../../shared/director/travelDirection');
+    const p = base();
+    expect(scenesNeedingTravelDirection(p)).toEqual([]); // classic project
+    p.settings.cameraSystem = 'travel';
+    expect(scenesNeedingTravelDirection(p).map((s) => s.id)).toEqual(p.scenes.map((s) => s.id));
+    p.scenes[0]!.beats[0]!.shot.intent = 'reaction';
+    expect(scenesNeedingTravelDirection(p).map((s) => s.id)).toEqual(p.scenes.slice(1).map((s) => s.id));
+    p.scenes[1]!.cameraSystem = 'classic';
+    expect(scenesNeedingTravelDirection(p).map((s) => s.id)).toEqual(p.scenes.slice(2).map((s) => s.id));
+  });
+});
