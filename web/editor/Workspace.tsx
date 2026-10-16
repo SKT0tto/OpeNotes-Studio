@@ -59,13 +59,13 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
     cameraRequest?.consume();
     setTab(next);
   };
-  const regenerateCamera = (sceneId: string) => {
+  const regenerateCamera = (sceneIds: string[]) => {
     if (aiBusy || cameraRequest) return;
     const snapshot = useProject.getState().project;
-    if (!snapshot?.source.text || !snapshot.scenes.some((s) => s.id === sceneId)) return;
+    if (!snapshot?.source.text || sceneIds.length === 0 || !sceneIds.every((id) => snapshot.scenes.some((s) => s.id === id))) return;
     let consumed = false;
     const request: CameraGenerationRequest = {
-      projectId: snapshot.id, sceneId,
+      projectId: snapshot.id, sceneIds,
       consume: () => {
         if (consumed) return false;
         consumed = true;
@@ -77,6 +77,11 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
     setLeftOpen(true);
     setTab('ai');
   };
+  // The travel notice belongs to one explicit switch; never carry it across mounts or projects.
+  useEffect(() => {
+    useUi.getState().set({ travelNotice: null });
+    return () => useUi.getState().set({ travelNotice: null });
+  }, [project.id]);
   useShortcuts(host, project.settings.fps);
 
   // The inspector follows the playhead.

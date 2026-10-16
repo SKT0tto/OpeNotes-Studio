@@ -125,6 +125,10 @@ test('a scene that differs from the project shows a chip; the chip opens the sce
 test('travel editor: offsets, Shift blocking, locks, manual camera, timeline keys and undo', async () => {
   await page.getByTestId('insp-tab-scene').click();
   await page.getByTestId('insp-scene-camera-system').selectOption('inherit');
+  // an explicit scene switch from classic to travel, on an undirected scene, opens the notice
+  await expect(travelNotice()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(travelNotice()).toHaveCount(0);
   const start = await beatStart(page, 's1b3');
   await seekTo(page, start + 2);
   const base = (await playing(page)).scenes[0]!;
@@ -209,4 +213,66 @@ test('travel narrative intent is editable, undoable, field-lockable and persists
   expect(saved.shot.intent).toBe(next);
   expect(saved.shot.meta.lockedFields).toContain('intent');
   expect(errors).toEqual([]);
+});
+
+test('the notice never opens when every scene already has travel direction, nor on reload, undo or redo', async () => {
+  const directed = structuredClone(demo);
+  for (const s of directed.scenes) s.beats[0].shot.intent = 'reaction';
+  const created = await page.request.post('/api/projects', { data: { ...directed, id: `p_camera_dir_${Date.now()}`, title: '已设计运镜' } });
+  expect(created.ok()).toBe(true);
+  const id = (await created.json()).id as string;
+  try {
+    await page.goto(`/editor/${id}`);
+    await expect(page.getByTestId('play-status')).toHaveText('就绪', { timeout: 180_000 });
+    await expect(travelNotice()).toHaveCount(0);
+    await travelOn().click();
+    await expect(travelOn()).toHaveAttribute('aria-checked', 'true');
+    await expect(travelNotice()).toHaveCount(0);
+    await page.getByTestId('btn-undo').click();
+    await page.getByTestId('btn-redo').click();
+    await expect(travelOn()).toHaveAttribute('aria-checked', 'true');
+    await expect(travelNotice()).toHaveCount(0);
+    await page.getByTestId('btn-save').click();
+    await expect(page.getByTestId('save-state')).toHaveText('已保存');
+    await page.reload();
+    await expect(page.getByTestId('play-status')).toHaveText('就绪', { timeout: 180_000 });
+    await expect(travelNotice()).toHaveCount(0);
+    await travelOn().click(); // already travel
+    await expect(travelNotice()).toHaveCount(0);
+    expect(directorRequests).toEqual([]);
+  } finally {
+    await page.request.delete(`/api/projects/${id}`);
+  }
+});
+
+test('the notice offers both buttons when some scenes are undirected; a directed scene switched per scene stays quiet', async () => {
+  const mixed = structuredClone(demo);
+  mixed.scenes[0].beats[0].shot.intent = 'reaction';
+  const created = await page.request.post('/api/projects', { data: { ...mixed, id: `p_camera_mix_${Date.now()}`, title: '部分运镜' } });
+  expect(created.ok()).toBe(true);
+  const id = (await created.json()).id as string;
+  try {
+    await page.goto(`/editor/${id}`);
+    await expect(page.getByTestId('play-status')).toHaveText('就绪', { timeout: 180_000 });
+    // per-scene switch on a directed scene: no notice; on an undirected scene: notice
+    await page.getByTestId('insp-tab-scene').click();
+    await page.getByTestId('insp-scene-camera-system').selectOption('travel');
+    await expect(travelNotice()).toHaveCount(0);
+    await page.getByTestId('insp-scene-camera-system').selectOption('inherit');
+    await travelOn().click();
+    await expect(travelNotice()).toBeVisible();
+    await expect(page.getByTestId('camera-travel-regenerate')).toBeVisible();
+    await expect(page.getByTestId('camera-travel-regenerate-all')).toContainText('重新生成全部场景镜头（2 场）');
+    await expect(page.getByTestId('camera-travel-regenerate-all')).toBeDisabled(); // no source text, no AI director
+    await page.getByTestId('camera-travel-notice-dismiss').click();
+    await expect(travelNotice()).toHaveCount(0);
+    // the directed scene overridden to classic and back to the project's travel: still directed, no notice
+    await page.getByTestId('insp-scene-camera-system').selectOption('classic');
+    await expect(travelNotice()).toHaveCount(0);
+    await page.getByTestId('insp-scene-camera-system').selectOption('inherit');
+    await expect(travelNotice()).toHaveCount(0);
+    expect(directorRequests).toEqual([]);
+  } finally {
+    await page.request.delete(`/api/projects/${id}`);
+  }
 });

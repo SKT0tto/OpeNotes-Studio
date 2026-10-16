@@ -30,12 +30,15 @@ export function continuityOf(project: Project, catalog: CompactCatalog | null) {
 /** A user-created request; consuming also invalidates it when leaving the panel. */
 export interface CameraGenerationRequest {
   projectId: string;
-  sceneId: string;
+  /** One scene (current-scene regenerate) or several, processed one request at a time. */
+  sceneIds: string[];
   consume: () => boolean;
 }
 
 interface RunOptions {
   sceneId?: string;
+  /** Several scenes, one sequential request each (camera regenerate for all). */
+  sceneIds?: string[];
   scope?: ScopeName;
   preview?: boolean;
   overwriteUser?: boolean;
@@ -159,7 +162,8 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
     if (ctl.current) return;
     const snapshot = useProject.getState().project;
     const runScene = snapshot?.scenes.find((s) => s.id === (options.sceneId ?? scene?.id));
-    if (!snapshot?.source.text || (!all && !runScene)) return;
+    const multi = options.sceneIds;
+    if (!snapshot?.source.text || (!all && !multi && !runScene)) return;
     const runScope = options.scope ?? scope;
     const runPreview = options.preview ?? preview;
     const runOverwrite = options.overwriteUser ?? overwriteUser;
@@ -174,7 +178,7 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
     ctl.current = new AbortController();
     const scopes: ScopeName[] = all ? ['scene'] : [runScope];
     const beatIds = !all && runOnlyBeat && selection.beatId ? [selection.beatId] : undefined;
-    meta.current = { scopes, ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, label: all ? '全部场景' : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}` };
+    meta.current = { scopes, ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, label: all ? '全部场景' : multi ? `${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}` : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}` };
     const eng = runUseRule ? ({ engine: 'rule' } as const) : {};
     const got: SceneResponse[] = [];
     try {
@@ -190,6 +194,30 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
         } catch (e) {
           if ((e as Error).name !== 'AbortError') throw e;
           say('info', `已取消：保留已完成的 ${got.length} 个场景，可再次点击继续（已完成的有缓存，不会重复调用）`);
+        }
+      } else if (multi) {
+        setTotal(multi.length);
+        say('info', `开始：${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}（${runWho}，逐场景依次请求）`);
+        for (const id of multi) {
+          const title = titleOf(id);
+          if (ctl.current.signal.aborted) break;
+          setProgress((x) => ({ ...x, [id]: { sceneId: id, title, state: 'start' } }));
+          try {
+            const result = await postScene(snapshot, id, { scopes, overwriteUser: runOverwrite, ...eng }, ctl.current.signal);
+            got.push(result);
+            setProgress((x) => ({ ...x, [id]: { sceneId: id, title, state: 'done', result } }));
+          } catch (e) {
+            if ((e as Error).name === 'AbortError') {
+              say('info', `已取消：保留已完成的 ${got.length} 个场景`);
+              break;
+            }
+            const msg = e instanceof DirectorApiError ? e.message : (e as Error).message;
+            setProgress((x) => ({ ...x, [id]: { sceneId: id, title, state: 'error', message: msg } }));
+            say('error', `${title}：${msg}`);
+            setError(`${title}：${msg}
+已停止，保留已完成的 ${got.length} 个场景。`);
+            break;
+          }
         }
       } else if (runScene) {
         setTotal(1);
@@ -221,10 +249,11 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
     setOnlyBeat(false);
     if (settingsError || !settings) return;
     const snapshot = useProject.getState().project;
-    if (snapshot?.id !== request.projectId || !snapshot.scenes.some((s) => s.id === request.sceneId)) return;
+    if (snapshot?.id !== request.projectId || !request.sceneIds.every((id) => snapshot.scenes.some((s) => s.id === id))) return;
     const runEngine = settings.status.configured ? 'ai' : 'rule';
     setEngine(runEngine);
-    void run(false, { sceneId: request.sceneId, scope: 'camera', preview: true, overwriteUser: false, onlyBeat: false, engine: runEngine });
+    const [only] = request.sceneIds;
+    void run(false, { ...(request.sceneIds.length === 1 && only ? { sceneId: only } : { sceneIds: request.sceneIds }), scope: 'camera', preview: true, overwriteUser: false, onlyBeat: false, engine: runEngine });
   });
   useEffect(() => {
     if (!cameraRequest || settingsLoading) return;

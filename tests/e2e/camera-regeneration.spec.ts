@@ -23,6 +23,9 @@ let settingsFailure = false;
 let settingsGate: ReturnType<typeof deferred> | null = null;
 let directorGate: ReturnType<typeof deferred> | null = null;
 let requests: Array<{ path: string; body: CameraRequest }> = [];
+let delayMs = 0;
+let inflight = 0;
+let maxInflight = 0;
 
 test.beforeEach(async ({ page }) => {
   configured = true;
@@ -30,6 +33,9 @@ test.beforeEach(async ({ page }) => {
   settingsGate = null;
   directorGate = null;
   requests = [];
+  delayMs = 0;
+  inflight = 0;
+  maxInflight = 0;
   // Install before entering the editor; never read the user's project list or real settings.
   await page.route('**/api/projects', route => route.request().method() === 'GET' ? route.fulfill({ json: [] }) : route.continue());
   await page.route('**/api/llm/settings', async route => {
@@ -50,7 +56,11 @@ test.beforeEach(async ({ page }) => {
     const path = new URL(route.request().url()).pathname;
     const body = route.request().postDataJSON() as CameraRequest;
     requests.push({ path, body });
+    inflight++;
+    maxInflight = Math.max(maxInflight, inflight);
+    try {
     if (directorGate) await directorGate.promise;
+    if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
     if (path !== '/api/director/scene') {
       await route.fulfill({ status: 400, json: { error: { message: 'Unexpected director endpoint' } } });
       return;
@@ -67,6 +77,9 @@ test.beforeEach(async ({ page }) => {
       runs: [{ pass: 'scene', label: 'Fixture', provider, model: 'fixture', cached: false, ms: 1,
         usage: { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 }, repaired: false, warnings: [] }],
     } });
+    } finally {
+      inflight--;
+    }
   });
   const response = await page.request.post('/api/projects', { data: {
     ...demo, id: `p_camera_regen_${Date.now()}`, title: '运镜重新生成 fixture', source: { ...demo.source, text: story },
@@ -201,4 +214,64 @@ test('leaving the panel cancels an unconsumed request and returning does not rep
   await expect(page.getByTestId('ai-status')).toContainText('configured');
   await settled(page);
   expect(requests).toEqual([]);
+});
+
+test('the notice does not open on load or reload; all-scenes regenerate sends one camera request per needing scene, sequentially, with a diff', async ({ page }) => {
+  await expect(page.getByTestId('camera-travel-notice')).toHaveCount(0);
+  delayMs = 150;
+  await page.getByTestId('cam-system-travel').click();
+  await expect(page.getByTestId('camera-travel-notice')).toBeVisible();
+  const all = page.getByTestId('camera-travel-regenerate-all');
+  await expect(all).toContainText(`重新生成全部场景镜头（${demo.scenes.length} 场）`);
+  const before = (await playing(page)).scenes;
+  await all.click();
+  await expect(page.getByTestId('camera-travel-notice')).toHaveCount(0);
+  await expect(page.getByTestId('ai-result')).toHaveCount(demo.scenes.length);
+  expect(requests).toHaveLength(demo.scenes.length);
+  expect(maxInflight).toBe(1);
+  expect(requests.map((r) => r.path)).toEqual(demo.scenes.map(() => '/api/director/scene'));
+  expect(requests.map((r) => r.body.sceneId)).toEqual(demo.scenes.map((s) => s.id));
+  for (const r of requests) {
+    expect(r.body.scopes).toEqual(['camera']);
+    expect(r.body.overwriteUser).toBe(false);
+    expect(r.body.beatIds).toBeUndefined();
+    expect(r.body.engine).toBeUndefined();
+    expect(r.body.project.settings.cameraSystem).toBe('travel');
+  }
+  await expect(page.getByTestId('ai-diff-camera').first()).toBeVisible();
+  await expect(page.getByTestId('ai-preview')).toBeChecked();
+  await settled(page);
+  expect((await playing(page)).scenes).toEqual(before); // nothing applied before accepting
+  // leaving and returning to the panel must not replay the one-shot request
+  await page.getByTestId('tab-script').click();
+  await page.getByTestId('tab-ai').click();
+  await settled(page);
+  expect(requests).toHaveLength(demo.scenes.length);
+});
+
+test('all-scenes regenerate skips scenes that are already directed and excludes classic overrides', async ({ page }) => {
+  const second = demo.scenes[1]!;
+  // direct scene 0 and override scene 1 to classic, through the project API (no private data is read)
+  const mixed = structuredClone(demo) as Project;
+  mixed.scenes[0]!.beats[0]!.shot.intent = 'reaction';
+  mixed.scenes[1]!.cameraSystem = 'classic';
+  const created = await page.request.post('/api/projects', { data: { ...mixed, id: `p_camera_regen_mix_${Date.now()}`, title: '运镜部分 fixture', source: { ...demo.source, text: story } } });
+  expect(created.ok()).toBe(true);
+  const id = (await created.json()).id as string;
+  try {
+    await page.goto(`/editor/${id}`);
+    await expect(page.getByTestId('play-status')).toHaveText('就绪', { timeout: 180_000 });
+    await expect(page.getByTestId('camera-travel-notice')).toHaveCount(0);
+    await page.getByTestId('cam-system-travel').click();
+    await expect(page.getByTestId('camera-travel-notice')).toBeVisible();
+    await expect(page.getByTestId('camera-travel-regenerate-all')).toContainText('（1 场）');
+    await page.getByTestId('camera-travel-regenerate-all').click();
+    await expect(page.getByTestId('ai-result')).toHaveCount(1);
+    expect(requests).toHaveLength(1);
+    expect(requests[0]!.body.sceneId).toBe(demo.scenes[2]!.id);
+    expect(requests[0]!.body.sceneId).not.toBe(second.id);
+    expect(requests[0]!.body.scopes).toEqual(['camera']);
+  } finally {
+    await page.request.delete(`/api/projects/${id}`);
+  }
 });

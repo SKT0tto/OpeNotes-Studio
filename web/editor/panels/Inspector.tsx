@@ -7,7 +7,7 @@ import { bgSwitchValue } from '@shared/director/bgKeys';
 import { bgCategoryOf } from '@shared/director/bgCategory';
 import type { CompactCatalog } from '@shared/schema/assets';
 import { resolveStyle } from '@shared/style/ournotes';
-import { CAMERA_SYSTEMS, type Beat, type Project, type Scene } from '@shared/schema/project';
+import { CAMERA_SYSTEMS, cameraSystemOf, type Beat, type Project, type Scene } from '@shared/schema/project';
 import { EMOTION_TAGS } from '@shared/timeline/compile';
 import type { CompiledProject, RenderState } from '@shared/timeline/types';
 import { addCast, addKeyAt, selectActor, toggleActorInScene } from '../../store/actions';
@@ -18,6 +18,7 @@ import { FieldLock, NumField, Row, Section, SliderField, setFieldLock } from '..
 import { ActorControls } from './ActorFields';
 import { KeyFields } from './KeyFields';
 import { ShotFields } from './ShotFields';
+import { openTravelNoticeIfNeeded } from '../travelNotice';
 import { BgBadges } from '../bg/BgCard';
 import { useSceneFit } from '../bg/bgFit';
 import { BgPicker } from '../bg/BgPicker';
@@ -162,7 +163,11 @@ function SceneFields({ project, scene, catalog, compiled, t }: { project: Projec
           </select>
         </Row>
         <Row label="镜头系统">
-          <select value={scene.cameraSystem ?? 'inherit'} data-testid="insp-scene-camera-system" onChange={(e) => up('修改镜头系统', (s) => { if (e.target.value === 'inherit') delete s.cameraSystem; else s.cameraSystem = e.target.value as 'classic' | 'travel'; touch(s.meta); })}>
+          <select value={scene.cameraSystem ?? 'inherit'} data-testid="insp-scene-camera-system" onChange={(e) => {
+            const before = cameraSystemOf(project, scene);
+            up('修改镜头系统', (s) => { if (e.target.value === 'inherit') delete s.cameraSystem; else s.cameraSystem = e.target.value as 'classic' | 'travel'; touch(s.meta); });
+            if (before === 'classic') openTravelNoticeIfNeeded(scene.id);
+          }}>
             <option value="inherit">{CAMERA_SYSTEM_LABEL.inherit}（当前：{CAMERA_SYSTEM_LABEL[project.settings.cameraSystem ?? 'classic']}）</option>
             {CAMERA_SYSTEMS.map((k) => <option key={k} value={k}>{CAMERA_SYSTEM_LABEL[k]}</option>)}
           </select>
