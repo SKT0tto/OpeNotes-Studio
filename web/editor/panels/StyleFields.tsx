@@ -16,7 +16,7 @@ export type LayerRef = { kind: 'project' } | { kind: 'scene'; sceneId: string } 
 
 const GROUPS: Array<[string, StyleField[]]> = (() => {
   const m = new Map<string, StyleField[]>();
-  for (const f of STYLE_FIELDS) (m.get(f.group) ?? m.set(f.group, []).get(f.group)!).push(f);
+  for (const f of STYLE_FIELDS.filter((field) => !field.hidden)) (m.get(f.group) ?? m.set(f.group, []).get(f.group)!).push(f);
   return [...m];
 })();
 

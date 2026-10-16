@@ -4,12 +4,12 @@ import { parseExpressionName } from './expressionNames';
 import { parseMotionName } from './motionNames';
 
 export const SHOT_LABEL: Record<string, string> = {
-  establishing: '空镜', group: '群像', two_shot: '双人', mcu: '胸像', cu: '近景', ecu: '大特写', insert: '插入',
+  establishing: '空镜', group: '群像', two_shot: '双人', ms: '中景', mcu: '胸像', cu: '近景', ecu: '大特写', insert: '插入',
   closeup: '近景（旧）', bust: '胸像（旧）', medium: '中景（旧）', wide: '远景（旧）',
 };
 /** Short names for narrow places (storyboard cards, timeline blocks). */
 export const SHOT_SHORT: Record<string, string> = {
-  establishing: '空镜', group: '群像', two_shot: '双人', mcu: '胸像', cu: '近景', ecu: '特写', insert: '插入', closeup: '近景', bust: '胸像', medium: '中景', wide: '远景',
+  establishing: '空镜', group: '群像', two_shot: '双人', ms: '中景', mcu: '胸像', cu: '近景', ecu: '特写', insert: '插入', closeup: '近景', bust: '胸像', medium: '中景', wide: '远景',
 };
 export const BEAT_KIND_LABEL: Record<string, string> = {
   dialogue: '对白', narration: '旁白', action: '动作', pause: '停顿', establishing: '空镜', silent: '无声', empty: '空景',
@@ -18,6 +18,11 @@ export const MOVE_LABEL: Record<string, string> = { static: '固定', push_in: '
 export const TRANSITION_LABEL: Record<string, string> = {
   cut: '硬切', dip_black: '黑场眨眼', scene_black: '换场黑场', fade_black: '黑场', fade_white: '白场', crossfade: '交叉溶解', wipe: '擦除',
 };
+export const CAMERA_SYSTEM_LABEL: Record<string, string> = { classic: '经典（硬切）', travel: '运镜（Our Notes / MyGO 式）', inherit: '跟随项目' };
+export const SHOT_TRANSITION_LABEL: Record<string, string> = { auto: '自动', cut: '硬切', glide: '滑移', travel: '运镜' };
+export const TRAVEL_KIND_LABEL: Record<string, string> = { cut: '硬切', glide: '滑移', distance: '景距推拉', lateral: '横移', regroup: '重组（双人/群像↔单人）', settle: '收势推近', reframe: '入场重构图', drift: '空景慢漂', cutDrift: '切入缓移' };
+/** Depth-of-field text of a shot (timeline block, storyboard card): a travel scene blurs by shot distance unless the author set a level. */
+export const dofText = (travel: boolean, manual: number | undefined, level: number) => (travel && manual === undefined ? '景深 按景距' : `景深 ${level}`);
 export const EMOTION_LABEL: Record<string, string> = { happy: '开心', sad: '难过', angry: '生气', surprised: '惊讶', shy: '害羞', thinking: '思考', serious: '认真', neutral: '平静' };
 
 const EXPRESSION_FAMILY: Record<string, string> = {

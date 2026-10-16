@@ -8,12 +8,12 @@ import { lookup } from '../../shared/director/resources';
 import { autoSelectable, bgCategoryOf } from '../../shared/director/bgCategory';
 import type { ScopeName } from '../../shared/director/scope';
 import { validateDirection } from '../../shared/director/validate';
-import { SceneDirectionSchema, type SceneDirection } from '../../shared/schema/ai';
-import type { Beat, Project, Scene } from '../../shared/schema/project';
+import type { SceneDirection } from '../../shared/schema/ai';
+import { cameraSystemOf, type Beat, type Project, type Scene } from '../../shared/schema/project';
 import type { DirectorDeps } from './director';
 import { DirectorError, runStep, type RunInfo } from './pipeline';
 import { LlmError, isModelAi } from './provider';
-import { SCENE_PROMPT_VERSION, SCENE_SYSTEM, sceneInput, type SceneDirectionInput } from './prompts/sceneDirection';
+import { scenePromptFor, sceneInput, type SceneDirectionInput } from './prompts/sceneDirection';
 
 export interface SceneRequest {
   project: Project;
@@ -67,6 +67,8 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   const inScene = paragraphs.filter((p) => p.start >= scene.sourceSpan.start && p.end <= scene.sourceSpan.end);
   if (inScene.length === 0) throw new LlmError('bad_request', `场景「${scene.title}」没有对应的原文段落（手工创建的场景不能用 AI 导演）`);
   const overwrite = req.overwriteUser === true;
+  const cameraSystem = cameraSystemOf(project, scene);
+  const sys = scenePromptFor(cameraSystem);
   const L = lookup(d.catalog);
   const now = (d.now ?? Date.now)();
 
@@ -114,12 +116,13 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
     const fixedIds = new Set(fixedHere.map((b) => b.id));
     const tokens = Math.min(cap, structure ? 1500 + TOKENS_PER_PARA * paras.length : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length)));
     const step = (maxTokens: number) => runStep({
-      provider: d.provider, cache: d.cache, promptVersion: SCENE_PROMPT_VERSION, pass: 'scene', label, refresh: d.refresh === true,
-      req: { system: SCENE_SYSTEM, input: sceneInput(input), schema: SceneDirectionSchema, schemaName: 'SceneDirection', maxTokens, signal: d.signal },
+      provider: d.provider, cache: d.cache, promptVersion: sys.promptVersion, pass: 'scene', label, refresh: d.refresh === true,
+      req: { system: sys.system, input: sceneInput(input), schema: sys.schema, schemaName: sys.schemaName, maxTokens, signal: d.signal },
       validate: (dir) => {
         const v = validateDirection(dir, {
           catalog: d.catalog, cast: cast.map((c) => ({ castId: c.castId, characterKey: c.characterKey, modelId: c.modelId })), paragraphs, range,
-          isPerformance: !!scene.brief?.isPerformance, fixedBeatIds: fixedIds,
+          isPerformance: !!scene.brief?.isPerformance, fixedBeatIds: fixedIds, cameraSystem,
+          ...(cameraSystem === 'travel' ? { slots: Object.fromEntries(Object.entries(scene.blocking).map(([id, b]) => [id, b.slot])) } : {}),
           backgrounds: {
             start: scene.background.assetId, allowed: bgAllowed,
             scope: { title: scene.title, reason: '', mood: scene.brief?.mood ?? '', timeOfDay: scene.brief?.timeOfDay ?? '', isPerformance: !!scene.brief?.isPerformance, presentCast: cast.map((c) => c.characterKey), guestOf: scene.brief?.guestOf ?? null },

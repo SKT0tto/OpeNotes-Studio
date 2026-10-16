@@ -1,14 +1,17 @@
 /** The shot of the selected line: size, move, cut / glide, depth of field, focus, hand-made camera and per-person offsets. */
-import { MOVE_LABEL, SHOT_LABEL } from '@shared/catalog/labels';
-import { CAMERA_MOVES, DEFAULT_INSERT_BOX, SHOT_TYPES, normalizeShotType } from '@shared/staging/framing';
+import { MOVE_LABEL, SHOT_LABEL, SHOT_TRANSITION_LABEL, TRAVEL_KIND_LABEL } from '@shared/catalog/labels';
+import { CAMERA_MOVES, DEFAULT_INSERT_BOX, normalizeShotType, shotTypeChoices } from '@shared/staging/framing';
+import { SHOT_INTENTS, SHOT_INTENT_LABEL } from '@shared/staging/shotIntent';
 import { resolveStyle } from '@shared/style/ournotes';
-import type { Beat, Project, Scene } from '@shared/schema/project';
+import { cameraSystemOf, type Beat, type Project, type Scene } from '@shared/schema/project';
 import type { CompiledProject } from '@shared/timeline/types';
 import { clearManualCamera, editShot, setManualCamera } from '../../store/actions';
 import { useProject } from '../../store/projectStore';
 import { FieldLock, NumField, Row, SliderField, setFieldLock } from '../ui';
 import { cameraOfBeat } from '../stageTools/camera';
 
+
+const EASE_LABEL: Record<string, string> = { outSine: 'OutSine', outQuad: 'OutQuad', outCubic: 'OutCubic', outQuint: 'OutQuint', inOutSine: 'InOutSine', linear: '线性' };
 
 export function ShotFields({ project, scene, beat, compiled }: { project: Project; scene: Scene; beat: Beat; compiled: CompiledProject | null }) {
   const seal = useProject.getState().seal;
@@ -20,13 +23,14 @@ export function ShotFields({ project, scene, beat, compiled }: { project: Projec
   const autoDof = resolveStyle(project.style, scene.style, beat.style).values.shots[normalizeShotType(beat.shot.type).type].dof;
   const cBeat = compiled?.scenes.find((x) => x.id === scene.id)?.beats.find((x) => x.id === beat.id);
   const cam = cameraOfBeat(compiled, scene, scene.id, beat.id);
+  const travel = cameraSystemOf(project, scene) === 'travel';
   const offsets = beat.shot.offsets ?? {};
 
   return (
     <div data-testid="insp-shot">
       <Row label="景别" meta={beat.shot.meta} onLock={lock} extra={fl('type')}>
         <select value={beat.shot.type} data-testid="insp-shot-type" onChange={(e) => sh('修改景别', (s) => void (s.type = e.target.value as Beat['shot']['type']))}>
-          {((SHOT_TYPES as readonly string[]).includes(beat.shot.type) ? [...SHOT_TYPES] : [beat.shot.type, ...SHOT_TYPES]).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
+          {shotTypeChoices(travel, beat.shot.type).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
         </select>
       </Row>
       {normalizeShotType(beat.shot.type).type === 'insert' && (
@@ -47,11 +51,37 @@ export function ShotFields({ project, scene, beat, compiled }: { project: Projec
           {CAMERA_MOVES.map((m) => <option key={m} value={m}>{MOVE_LABEL[m]}</option>)}
         </select>
       </Row>
-      <Row label="换镜方式">
-        <select value={beat.shot.transition ?? 'auto'} data-testid="insp-shot-transition" onChange={(e) => sh('修改换镜方式', (s) => { if (e.target.value === 'auto') delete s.transition; else s.transition = e.target.value as 'cut' | 'glide'; })}>
-          <option value="auto">按风格（默认硬切）</option><option value="cut">硬切</option><option value="glide">滑移</option>
+      <Row label="换镜方式" extra={fl('transition')}>
+        <select value={beat.shot.transition ?? 'auto'} data-testid="insp-shot-transition" onChange={(e) => sh('修改换镜方式', (s) => { if (e.target.value === 'auto') delete s.transition; else s.transition = e.target.value as 'cut' | 'glide' | 'travel'; })}>
+          {travel ? (
+            <>
+              <option value="auto">自动（按运镜规则）</option><option value="cut">{SHOT_TRANSITION_LABEL.cut}</option><option value="travel">运镜（从上一镜移过来：推拉/横移/重组）</option><option value="glide">滑移（旧）</option>
+            </>
+          ) : (
+            <>
+              <option value="auto">按风格（默认硬切）</option><option value="cut">硬切</option><option value="glide">滑移</option>
+              {beat.shot.transition === 'travel' && <option value="travel">运镜（仅运镜系统生效）</option>}
+            </>
+          )}
         </select>
       </Row>
+      {travel && (
+        <Row label="叙事意图" extra={fl('intent')}>
+          <select value={beat.shot.intent ?? 'auto'} data-testid="insp-shot-intent" onChange={(e) => sh('修改叙事意图', (s) => { if (e.target.value === 'auto') delete s.intent; else s.intent = e.target.value as Beat['shot']['intent']; })}>
+            <option value="auto">自动（按镜头结构推断）</option>
+            {SHOT_INTENTS.map((intent) => <option key={intent} value={intent}>{SHOT_INTENT_LABEL[intent]}</option>)}
+          </select>
+        </Row>
+      )}
+      {travel && beat.shot.meta.reason && (
+        <Row label=""><span className="ro" data-testid="insp-shot-narrative-reason">剧情理由：{beat.shot.meta.reason}</span></Row>
+      )}
+      {travel && cBeat?.camTravel && (
+        <Row label=""><span className="ro" data-testid="insp-shot-travel">本句：{TRAVEL_KIND_LABEL[cBeat.camTravel.kind] ?? cBeat.camTravel.kind} {cBeat.camTravel.seconds.toFixed(2)}s{cBeat.camTravel.ease ? ` · ${EASE_LABEL[cBeat.camTravel.ease] ?? cBeat.camTravel.ease}` : ''}</span></Row>
+      )}
+      {travel && cBeat?.camTravel?.reason && (
+        <Row label=""><span className="ro" data-testid="insp-shot-travel-reason">运镜决定：{cBeat.camTravel.reason}</span></Row>
+      )}
       {cBeat?.shotHeld && (
         <Row label="沿用机位">
           <span className="held" data-testid="insp-shot-held">
@@ -62,7 +92,7 @@ export function ShotFields({ project, scene, beat, compiled }: { project: Projec
       )}
       <Row label="景深" extra={fl('dof')}>
         <span className="seg" role="group" aria-label="景深模式">
-          <button className={beat.shot.dof === undefined ? 'on' : ''} aria-pressed={beat.shot.dof === undefined} data-testid="insp-shot-dof-auto" onClick={() => sh('景深自动', (s) => void delete s.dof)}>自动 {autoDof}</button>
+          <button className={beat.shot.dof === undefined ? 'on' : ''} aria-pressed={beat.shot.dof === undefined} data-testid="insp-shot-dof-auto" onClick={() => sh('景深自动', (s) => void delete s.dof)}>自动 {travel ? '按景距' : autoDof}</button>
           <button className={beat.shot.dof !== undefined ? 'on' : ''} aria-pressed={beat.shot.dof !== undefined} data-testid="insp-shot-dof-manual" onClick={() => sh('景深手动', (s) => { if (s.dof === undefined) s.dof = autoDof; })}>手动</button>
         </span>
       </Row>
@@ -115,7 +145,7 @@ export function ShotFields({ project, scene, beat, compiled }: { project: Projec
           </Row>
         );
       })}
-      <p className="hint">在预览里按住 Shift 拖动人物也可以调整；偏移叠加在自动排布之上。</p>
+      <p className="hint">自动取景中的主角可直接拖动调整本镜偏移；其他人物用 Shift+拖动。偏移叠加在自动排布之上。</p>
     </div>
   );
 }

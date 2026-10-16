@@ -7,6 +7,7 @@
  * All of it writes ordinary keys / fields through the editor actions (one undo step per gesture).
  */
 import { useEffect, useRef } from 'react';
+import { stageX, type StageMap } from '@shared/staging/compactStage';
 import { placeActor } from '@shared/staging/ground';
 import { bgZoom, clampCamera, viewWorldHeight } from '@shared/staging/world';
 import type { Project } from '@shared/schema/project';
@@ -26,7 +27,7 @@ const r2 = (v: number) => Math.round(v * 100) / 100;
 
 type Host = ReturnType<typeof usePlayerHost>;
 type Drag =
-  | { kind: 'move'; castId: string; start: Pt; feet0: Pt; s0: number; t: number }
+  | { kind: 'move'; castId: string; start: Pt; feet0: Pt; s0: number; t: number; /** Travel scenes: the compact stage the feet position is measured on. */ stage?: StageMap }
   | { kind: 'offset'; castId: string; start: Pt; s0: number; beatId: string; x0: number; y0: number }
   | { kind: 'yaw'; castId: string; cx: number; half: number; t: number }
   | { kind: 'gaze'; castId: string; c: Pt; w: number; h: number; t: number }
@@ -139,7 +140,10 @@ export function StageOverlay({ host, project, compiled }: { host: Host; project:
       begin({ kind: 'offset', castId, start, s0, beatId, x0: off.x, y0: off.y }, e);
       return;
     }
-    begin({ kind: 'move', castId, start, feet0: placeActor(cal, pos, bg).feet, s0, t: state.t }, e);
+    // travel scenes stand on the compact stage: the feet are where the stage puts them, and a drag is converted back through it
+    const stage = compiled?.scenes.find((s) => s.id === scene.id)?.travel?.stage;
+    const feet = placeActor(cal, pos, bg).feet;
+    begin({ kind: 'move', castId, start, feet0: stage ? { x: stageX(stage, pos.slot), y: feet.y } : feet, s0, t: state.t, ...(stage ? { stage } : {}) }, e);
   };
 
   const onMove = (e: React.PointerEvent) => {
@@ -149,7 +153,7 @@ export function StageOverlay({ host, project, compiled }: { host: Host; project:
     const bg = player.stageBgGetter();
     if (!bg) return;
     if (d.kind === 'move') {
-      placeActorAt(scene.id, d.castId, { x: d.feet0.x + (pt.x - d.start.x) / d.s0, y: d.feet0.y + (pt.y - d.start.y) / d.s0 }, bg, d.t);
+      placeActorAt(scene.id, d.castId, { x: d.feet0.x + (pt.x - d.start.x) / d.s0, y: d.feet0.y + (pt.y - d.start.y) / d.s0 }, bg, d.t, d.stage);
     } else if (d.kind === 'offset') {
       const Hw = viewWorldHeight(bg);
       editShot(scene.id, d.beatId, '调整镜头内人物偏移', (shot) => {

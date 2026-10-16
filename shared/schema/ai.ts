@@ -1,6 +1,6 @@
 /** Output schemas of the two AI passes. Intent only: no coordinates, no file names, only ids the server offered. */
 import { z } from 'zod';
-import { AI_BG_TRANSITIONS, AI_FX, AI_KINDS, AI_MOVES, AI_SHOT_TYPES, AI_TRANSITIONS, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../director/vocab';
+import { AI_BG_TRANSITIONS, AI_FX, AI_KINDS, AI_MOVES, AI_SHOT_FLOWS, SHOT_INTENTS, AI_SHOT_TYPES, AI_TRANSITIONS, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../director/vocab';
 
 /** A place change inside a scene: from `paragraph` on the story is at `backgroundId`. */
 export const BgMoveSchema = z.object({ paragraph: z.number().int(), backgroundId: z.string(), reason: z.string(), transition: z.enum(AI_BG_TRANSITIONS) });
@@ -71,5 +71,9 @@ export const SceneDirectionSchema = z.object({
   ),
   costumeChanges: z.array(z.object({ beatIndex: z.number().int(), castId: z.string(), modelId: z.string(), reason: z.string() })),
 });
-export type SceneDirection = z.infer<typeof SceneDirectionSchema>;
+/** Travel camera system: the same direction plus the `shot.flow` intent. A classic answer (no flow) satisfies it as well. */
+const SceneBeat = SceneDirectionSchema.shape.beats.element;
+const TravelShot = SceneBeat.shape.shot.extend({ type: z.enum(AI_TRAVEL_SHOT_TYPES), flow: z.enum(AI_SHOT_FLOWS).nullable().optional(), intent: z.enum(SHOT_INTENTS).nullable().optional() });
+export const SceneDirectionTravelSchema = SceneDirectionSchema.extend({ beats: z.array(SceneBeat.extend({ shot: TravelShot })) });
+export type SceneDirection = z.infer<typeof SceneDirectionTravelSchema>;
 export type DirectedBeat = SceneDirection['beats'][number];

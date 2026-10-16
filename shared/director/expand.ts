@@ -111,7 +111,7 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
       ...(para ? { sourceOffset: para.start + (b.kind === 'dialogue' ? offsetInParagraph(b.text, para.text) : 0) } : {}),
       duration: { mode: 'auto', seconds: 0 },
       emotion: b.emotion,
-      shot: { type: b.shot.type, focus: b.shot.focus, move: b.shot.move, ...(b.shot.dof !== null ? { dof: b.shot.dof } : {}), ...(b.shot.type === 'insert' ? { insertBox: INSERT_BOX[b.shot.insertTarget ?? 'hands'] } : {}), meta: ai(b.reason) },
+      shot: { type: b.shot.type, focus: b.shot.focus, move: b.shot.move, ...(b.shot.dof !== null ? { dof: b.shot.dof } : {}), ...(b.shot.type === 'insert' ? { insertBox: INSERT_BOX[b.shot.insertTarget ?? 'hands'] } : {}), ...(b.shot.intent ? { intent: b.shot.intent } : {}), ...(b.shot.flow === 'cut' ? { transition: 'cut' as const } : b.shot.flow === 'move' ? { transition: 'travel' as const } : {}), meta: ai(b.reason) },
       style: { overrides: {}, meta: rule() },
       meta: ai(b.reason),
       ...(b.kind === 'dialogue' && b.speaker ? { speakerId: b.speaker } : {}),

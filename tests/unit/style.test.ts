@@ -13,6 +13,11 @@ describe('style table (V1-V8 numbers live here, editable)', () => {
     expect(new Set(fields).size).toBe(fields.length);
   });
 
+  it('retired cut drift stays compatible with stored overrides but has no editor control', () => {
+    expect(styleField('travel.cutDrift')?.hidden).toBe(true);
+    expect(resolveStyle({ preset: 'ournotes', overrides: { 'travel.cutDrift': false } }).values.travel.cutDrift).toBe(false);
+  });
+
   it('every default lies inside its own field range and has the right kind', () => {
     for (const f of STYLE_FIELDS) {
       const v = getStylePath(OURNOTES_STYLE, f.path);

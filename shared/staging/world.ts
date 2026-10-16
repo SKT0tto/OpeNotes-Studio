@@ -32,6 +32,9 @@ export interface CameraPose {
   bgZoom?: number;
   /** Manual camera roll (degrees); added to the emotion Dutch roll. */
   roll?: number;
+  /** Only inside a travel segment: the background view centre (world coordinates, without framing.offset). Absent = the camera centre. */
+  bgX?: number;
+  bgY?: number;
 }
 export interface GroundParams {
   /** World y of the horizon (vanishing line). */
@@ -79,8 +82,8 @@ export function bgView(bg: BgInfo, cam: CameraPose, framing: BgFraming = NO_FRAM
   const hw = (viewWorldHeight(bg) * aspect) / zoom / 2;
   const hh = viewWorldHeight(bg) / zoom / 2;
   return {
-    cx: clamp(cam.x + framing.offsetX, hw, Math.max(hw, bg.width - hw)),
-    cy: clamp(cam.y + framing.offsetY, hh, Math.max(hh, bg.height - hh)),
+    cx: clamp((cam.bgX ?? cam.x) + framing.offsetX, hw, Math.max(hw, bg.width - hw)),
+    cy: clamp((cam.bgY ?? cam.y) + framing.offsetY, hh, Math.max(hh, bg.height - hh)),
     zoom,
   };
 }

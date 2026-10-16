@@ -3,7 +3,7 @@
  * current scene and accepted or rejected per scope (one undo step each); progress, cancel, the run log and the continuity
  * check of the whole project.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { costumeLabelZh } from '@shared/catalog/labels';
 import { catalogLookups, checkContinuity } from '@shared/director/continuity';
 import { alignToOld, diffScene, type DiffScope } from '@shared/director/diff';
@@ -27,11 +27,29 @@ export function continuityOf(project: Project, catalog: CompactCatalog | null) {
   return checkContinuity(project, catalogLookups(catalog));
 }
 
-export function AiPanel() {
+/** A user-created request; consuming also invalidates it when leaving the panel. */
+export interface CameraGenerationRequest {
+  projectId: string;
+  sceneId: string;
+  consume: () => boolean;
+}
+
+interface RunOptions {
+  sceneId?: string;
+  scope?: ScopeName;
+  preview?: boolean;
+  overwriteUser?: boolean;
+  onlyBeat?: boolean;
+  engine?: Engine;
+}
+
+export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?: CameraGenerationRequest | null; onBusyChange?: (busy: boolean) => void }) {
   const project = useProject((s) => s.project)!;
   const selection = useProject((s) => s.selection);
   const catalog = useCatalog();
   const [settings, setSettings] = useState<PublicLlmSettings | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [engine, setEngine] = useState<Engine>('ai');
   const [preview, setPreview] = useState(true);
@@ -45,17 +63,34 @@ export function AiPanel() {
   const [log, setLog] = useState<LogLine[]>([]);
   const [error, setError] = useState<string | null>(null);
   const ctl = useRef<AbortController | null>(null);
+  const mounted = useRef(false);
   const meta = useRef<{ scopes: ScopeName[]; beatIds?: string[]; overwrite: boolean; label: string }>({ scopes: ['scene'], overwrite: false, label: '' });
 
-  const reload = useCallback(() => {
-    fetchLlmSettings().then(setSettings, () => setSettings(null));
+  const loadSettings = useCallback(() => {
+    return fetchLlmSettings().then(setSettings, (e: Error) => {
+      setSettings(null);
+      setSettingsError(e.message);
+    }).finally(() => setSettingsLoading(false));
   }, []);
-  useEffect(reload, [reload]);
+  useEffect(() => { void loadSettings(); }, [loadSettings]);
+  const reload = () => {
+    setSettingsLoading(true);
+    setSettingsError(null);
+    void loadSettings();
+  };
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      ctl.current?.abort();
+      onBusyChange?.(false);
+    };
+  }, [onBusyChange]);
 
   const scene = project.scenes.find((s) => s.id === selection.sceneId) ?? project.scenes[0];
   const configured = settings?.status.configured === true;
   const useRule = engine === 'rule' || !configured;
-  const canGenerate = !busy && !!project.source.text && project.scenes.length > 0;
+  const canGenerate = !busy && !settingsLoading && !settingsError && !!project.source.text && project.scenes.length > 0;
   const who = useRule ? '规则' : settings?.status.provider === 'fixture' ? '回放' : 'AI';
   const castName = useCallback((id: string) => project.cast.find((c) => c.id === id)?.displayName ?? id, [project.cast]);
   const titleOf = (id: string) => project.scenes.find((s) => s.id === id)?.title ?? id;
@@ -100,7 +135,7 @@ export function AiPanel() {
   const rejectAll = () => setCards((c) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.state === 'pending' ? { ...v, state: 'rejected' as const } : v])));
   const toggle = (id: string, s: DiffScope) => setCards((c) => ({ ...c, [id]: { ...c[id]!, checked: c[id]!.checked.includes(s) ? c[id]!.checked.filter((x) => x !== s) : [...c[id]!.checked, s] } }));
 
-  const intake = (snapshotScenes: Project['scenes'], results: SceneResponse[]) => {
+  const intake = (snapshotScenes: Project['scenes'], results: SceneResponse[], runPreview: boolean, runWho: string) => {
     const fresh: Record<string, Card> = {};
     for (const r of results) {
       const old = snapshotScenes.find((s) => s.id === r.sceneId);
@@ -116,28 +151,38 @@ export function AiPanel() {
       say('info', `${old.title}：${r.runs.length} 次调用，${r.runs.reduce((n, x) => n + x.ms, 0)} ms，${diff.items.length} 项变化${r.warnings.length ? `，${r.warnings.length} 条修复/警告` : ''}${r.runs.some((x) => x.repaired) ? '，含修复调用' : ''}`);
     }
     setCards((c) => ({ ...c, ...fresh }));
-    if (!preview) applyCards(Object.values(fresh).filter((c) => c.result.applied).map((card) => ({ card, scopes: meta.current.scopes })), `${who} 生成：${meta.current.label}`);
+    if (!runPreview) applyCards(Object.values(fresh).filter((c) => c.result.applied).map((card) => ({ card, scopes: meta.current.scopes })), `${runWho} 生成：${meta.current.label}`);
     else if (Object.values(fresh).some((c) => !c.result.applied)) setError('有场景因锁定冲突没有应用，详见结果。');
   };
 
-  const run = async (all: boolean) => {
+  const run = async (all: boolean, options: RunOptions = {}) => {
+    if (ctl.current) return;
+    const snapshot = useProject.getState().project;
+    const runScene = snapshot?.scenes.find((s) => s.id === (options.sceneId ?? scene?.id));
+    if (!snapshot?.source.text || (!all && !runScene)) return;
+    const runScope = options.scope ?? scope;
+    const runPreview = options.preview ?? preview;
+    const runOverwrite = options.overwriteUser ?? overwriteUser;
+    const runOnlyBeat = options.onlyBeat ?? onlyBeat;
+    const runUseRule = options.engine ? options.engine === 'rule' : useRule;
+    const runWho = runUseRule ? '规则' : settings?.status.provider === 'fixture' ? '回放' : 'AI';
     setBusy(true);
+    onBusyChange?.(true);
     setError(null);
     setProgress({});
     setCards({});
     ctl.current = new AbortController();
-    const scopes: ScopeName[] = all ? ['scene'] : [scope];
-    const snapshot = useProject.getState().project!;
-    const beatIds = !all && onlyBeat && selection.beatId ? [selection.beatId] : undefined;
-    meta.current = { scopes, ...(beatIds ? { beatIds } : {}), overwrite: overwriteUser, label: all ? '全部场景' : `${scene?.title ?? ''} · ${SCOPE_LABEL[scope]}${beatIds ? '（所选台词）' : ''}` };
-    const eng = useRule ? ({ engine: 'rule' } as const) : {};
+    const scopes: ScopeName[] = all ? ['scene'] : [runScope];
+    const beatIds = !all && runOnlyBeat && selection.beatId ? [selection.beatId] : undefined;
+    meta.current = { scopes, ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, label: all ? '全部场景' : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}` };
+    const eng = runUseRule ? ({ engine: 'rule' } as const) : {};
     const got: SceneResponse[] = [];
     try {
       if (all) {
         setTotal(snapshot.scenes.length);
-        say('info', `开始生成全部场景（${who}，并发 3）`);
+        say('info', `开始生成全部场景（${runWho}，并发 3）`);
         try {
-          await postScenes(snapshot, { scopes, overwriteUser, ...eng }, (p) => {
+          await postScenes(snapshot, { scopes, overwriteUser: runOverwrite, ...eng }, (p) => {
             setProgress((x) => ({ ...x, [p.sceneId]: p }));
             if (p.state === 'done' && p.result) got.push(p.result);
             if (p.state === 'error') say('error', `${titleOf(p.sceneId)}：${p.message ?? ''}`);
@@ -146,23 +191,47 @@ export function AiPanel() {
           if ((e as Error).name !== 'AbortError') throw e;
           say('info', `已取消：保留已完成的 ${got.length} 个场景，可再次点击继续（已完成的有缓存，不会重复调用）`);
         }
-      } else if (scene) {
+      } else if (runScene) {
         setTotal(1);
-        say('info', `开始：${scene.title} · ${SCOPE_LABEL[scope]}（${who}）`);
-        got.push(await postScene(snapshot, scene.id, { scopes, ...(beatIds ? { beatIds } : {}), overwriteUser, ...eng }, ctl.current.signal));
+        say('info', '开始：' + runScene.title + ' · ' + SCOPE_LABEL[runScope] + '（' + runWho + '）');
+        got.push(await postScene(snapshot, runScene.id, { scopes, ...(beatIds ? { beatIds } : {}), overwriteUser: runOverwrite, ...eng }, ctl.current.signal));
       }
-      intake(snapshot.scenes, got);
+      if (mounted.current) intake(snapshot.scenes, got, runPreview, runWho);
     } catch (e) {
+      if (!mounted.current) return;
       if ((e as Error).name !== 'AbortError') {
         const msg = e instanceof DirectorApiError ? `${e.message}${e.problems.length ? `\n${e.problems.join('\n')}` : ''}` : (e as Error).message;
         setError(msg);
         say('error', msg.split('\n')[0]!);
       } else say('info', '已取消');
     } finally {
-      setBusy(false);
+      if (mounted.current) {
+        setBusy(false);
+        onBusyChange?.(false);
+      }
       ctl.current = null;
     }
   };
+
+  const receiveCameraRequest = useEffectEvent((request: CameraGenerationRequest) => {
+    if (!request.consume()) return;
+    setScope('camera');
+    setPreview(true);
+    setOverwriteUser(false);
+    setOnlyBeat(false);
+    if (settingsError || !settings) return;
+    const snapshot = useProject.getState().project;
+    if (snapshot?.id !== request.projectId || !snapshot.scenes.some((s) => s.id === request.sceneId)) return;
+    const runEngine = settings.status.configured ? 'ai' : 'rule';
+    setEngine(runEngine);
+    void run(false, { sceneId: request.sceneId, scope: 'camera', preview: true, overwriteUser: false, onlyBeat: false, engine: runEngine });
+  });
+  useEffect(() => {
+    if (!cameraRequest || settingsLoading) return;
+    // Dispatch the user command after the panel/settings commit; navigation cancels it.
+    const timer = window.setTimeout(() => receiveCameraRequest(cameraRequest), 0);
+    return () => window.clearTimeout(timer);
+  }, [cameraRequest, settingsLoading]);
 
   const pending = Object.values(cards).filter((c) => c.state === 'pending' && c.result.applied);
   const warnings = useMemo(() => continuityOf(project, catalog), [project, catalog]);
@@ -170,6 +239,13 @@ export function AiPanel() {
 
   return (
     <div className="ai-panel" data-testid="ai-panel">
+      {settingsLoading && <p className="hint" data-testid="ai-settings-loading">正在读取 AI 设置…</p>}
+      {settingsError && (
+        <div className="bad" data-testid="ai-settings-error">
+          <p>读取 AI 设置失败，尚未开始生成。{settingsError}</p>
+          <button className="btn" onClick={reload} data-testid="ai-settings-retry">重试读取设置</button>
+        </div>
+      )}
       {settings && (
         <p className={settings?.status.verified === 'ok' ? 'ok' : configured && settings?.status.verified !== 'failed' ? 'hint' : 'warn'} data-testid="ai-status">
           {settings.status.message}

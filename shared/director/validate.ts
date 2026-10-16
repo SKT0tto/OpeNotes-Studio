@@ -9,7 +9,7 @@ import { EMOTION_EXPR } from '../timeline/compile';
 import { canon, familyOfName, isIdleFamily, mapExpressionName, mapMotionFamily } from '../timeline/motionMap';
 import { traceability, type Paragraph } from './paragraphs';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
-import { INSERT_HINT, MAX_BG_MOVES, SPECIAL_ATTENTION } from './vocab';
+import { INSERT_HINT, MAX_BG_MOVES, SLOT_X, SPECIAL_ATTENTION } from './vocab';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
 import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
 
@@ -245,8 +245,25 @@ export interface DirectionContext {
   isPerformance: boolean;
   /** Ids of existing beats the model was told to keep (locked / hand-made / the beats of a partial regeneration). */
   fixedBeatIds?: Set<string>;
+  /** Camera system of the scene: classic drops `shot.flow`, travel checks it. Absent = classic. */
+  cameraSystem?: 'classic' | 'travel';
+  /** Stage slot of every person at the start of the scene (travel two-shots pair neighbours only). Absent = the cast order is the left-to-right order. */
+  slots?: Record<string, number>;
   /** Backgrounds of this scene (P20): the start background, the ones Pass 1 moved to, and the cut-away candidates. Absent = background switches are not checked. */
   backgrounds?: { start: string; allowed: ReadonlySet<string>; scope: BgScope };
+}
+
+/** The partner a travel two-shot should have: the wanted one if he is the speaker's neighbour, else the previous speaker or the listener next to the speaker. Null when there is no neighbour. */
+export function pairNeighbours(order: readonly string[], speaker: string, wanted: string, prevSpeaker: string | null): string | null {
+  const at = order.indexOf(speaker);
+  if (at < 0) return wanted;
+  const neighbours = [order[at - 1], order[at + 1]].filter((x): x is string => !!x);
+  if (neighbours.length === 0) return null;
+  if (neighbours.includes(wanted)) return wanted;
+  if (prevSpeaker && neighbours.includes(prevSpeaker)) return prevSpeaker;
+  const wantedAt = order.indexOf(wanted);
+  const toward = wantedAt < at ? order[at - 1] : order[at + 1];
+  return toward ?? neighbours[0]!;
 }
 
 export const familyOf = (name: string): string => familyOfName(name);
@@ -288,6 +305,14 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     seen.add(b.castId);
     return true;
   });
+
+  // left-to-right order of the people (the AI's blocking, else the scene's, else the cast order)
+  const slotName = (id: string): number => {
+    const own = d.blocking.find((x) => x.castId === id);
+    return own ? SLOT_X[own.slot] : ctx.slots?.[id] ?? Number.NaN;
+  };
+  const neighbourOrder = ctx.cast.map((c, n) => ({ id: c.castId, n, slot: slotName(c.castId) }))
+    .sort((a, b) => (Number.isNaN(a.slot) || Number.isNaN(b.slot) ? a.n - b.n : a.slot - b.slot || a.n - b.n)).map((x) => x.id);
 
   if (d.bgm !== null && !L.audio.has(d.bgm)) {
     warnings.push(`BGM ${d.bgm} 不存在，已清除`);
@@ -400,6 +425,11 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       warnings.push(`${where}的景别 ${b.shot.type} 已改为 ${legacy}`);
       b.shot.type = legacy;
     }
+    // the medium shot belongs to the travel camera system; the classic one uses mcu for it
+    if (b.shot.type === 'ms' && ctx.cameraSystem !== 'travel') {
+      warnings.push(`${where}的景别 ms 只用于运镜系统，已改为 mcu`);
+      b.shot.type = 'mcu';
+    }
     b.shot.focus = [...new Set(b.shot.focus.filter(present))];
     if (b.shot.focus.length === 0 && b.shot.type !== 'group') b.shot.focus = b.speaker ? [b.speaker] : ctx.cast.slice(0, 1).map((c) => c.castId);
     if (b.shot.type === 'two_shot' && b.shot.focus.length < 2) {
@@ -407,7 +437,37 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       if (other) b.shot.focus.push(other);
       else b.shot.type = 'mcu';
     }
+    // travel: a two-shot is about two neighbours; a pair with somebody standing between is re-paired (a user's / locked beat is never touched)
+    if (ctx.cameraSystem === 'travel' && b.shot.type === 'two_shot' && b.shot.focus.length >= 2 && !(b.keepId && ctx.fixedBeatIds?.has(b.keepId))) {
+      const spk = b.speaker && b.shot.focus.includes(b.speaker) ? b.speaker : b.shot.focus[0]!;
+      const partner = b.shot.focus.find((x) => x !== spk)!;
+      const prevSpeaker = [...d.beats.slice(0, bi)].reverse().find((x) => x.kind === 'dialogue' && x.speaker && x.speaker !== spk && present(x.speaker))?.speaker ?? null;
+      const fix = pairNeighbours(neighbourOrder, spk, partner, prevSpeaker);
+      if (fix && fix !== partner) {
+        warnings.push(`${where}的双人镜头不是相邻的两人，已改为与 ${fix} 同框`);
+        b.shot.focus = [spk, fix];
+      }
+    }
     if (b.shot.dof !== null && (b.shot.dof < 0 || b.shot.dof > 6)) b.shot.dof = Math.min(6, Math.max(0, b.shot.dof));
+    // camera flow intent (travel system): `move` is only kept where the program could really travel
+    if (ctx.cameraSystem !== 'travel') { delete b.shot.flow; delete b.shot.intent; }
+    else if (b.shot.intent === null) delete b.shot.intent;
+    if (ctx.cameraSystem === 'travel' && b.shot.flow === null) b.shot.flow = 'auto';
+    else if (ctx.cameraSystem === 'travel' && b.shot.flow === 'move') {
+      const prev = bi > 0 ? d.beats[bi - 1] : undefined;
+      // only what the intent level can judge; whether the move is geometrically possible (distance, zoom ratio, length) is compile's call
+      const why = !prev ? '这是第一拍' : b.cutIn !== 'cut' ? '此拍经过黑场' : b.bg ? '此拍切换了背景'
+        : prev.shot.type === 'insert' || b.shot.type === 'insert' ? '插入镜头不运镜'
+          : b.shot.focus.length === 0 && !b.speaker ? '此拍没有焦点' : '';
+      if (why) {
+        warnings.push(`${where}的运镜意图已改为自动：${why}`);
+        b.shot.flow = 'auto';
+      }
+    }
+    if (ctx.cameraSystem === 'travel' && b.shot.move !== 'static') {
+      warnings.push(`${where}的单镜运动已改为 static：由叙事意图和真实机位统一决定运镜，避免重复推拉`);
+      b.shot.move = 'static';
+    }
     // actors
     const used = new Set<string>();
     b.actors = b.actors.filter((a) => {
@@ -445,8 +505,9 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
         b.shot.insertTarget = null;
         b.shot.move = 'static';
       } else {
-        warnings.push(`${where}的插入镜头没有合规的插入背景，已改为 cu`);
-        b.shot.type = 'cu';
+        const fallback = ctx.cameraSystem === 'travel' ? 'ms' : 'cu';
+        warnings.push(`${where}的插入镜头没有合规的插入背景，已改为 ${fallback}`);
+        b.shot.type = fallback;
         b.shot.insertTarget = null;
         if (b.shot.focus.length === 0) b.shot.focus = b.speaker ? [b.speaker] : ctx.cast.slice(0, 1).map((c) => c.castId);
       }
@@ -455,8 +516,9 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       const playing = b.actors.some((a) => a.motion !== null && /^(play|action|finish)/.test(a.motion) && modelAt(a.castId, bi)?.mode === 'live');
       const hinted = INSERT_HINT.test(b.text);
       if (!playing && !hinted) {
-        warnings.push(`${where}的插入镜头没有可拍的手/物件/乐器，已改为 cu`);
-        b.shot.type = 'cu';
+        const fallback = ctx.cameraSystem === 'travel' ? 'ms' : 'cu';
+        warnings.push(`${where}的插入镜头没有可拍的手/物件/乐器，已改为 ${fallback}`);
+        b.shot.type = fallback;
         b.shot.insertTarget = null;
         if (!b.shot.focus.includes(who) && who) b.shot.focus = [who];
       } else if (!b.shot.insertTarget) {

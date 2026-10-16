@@ -1,4 +1,4 @@
-export const EASE_NAMES = ['linear', 'inQuad', 'outQuad', 'inOutQuad', 'inOutSine', 'outCubic'] as const;
+export const EASE_NAMES = ['linear', 'inQuad', 'outQuad', 'inOutQuad', 'inOutSine', 'outCubic', 'outSine', 'outQuint'] as const;
 export type EaseName = (typeof EASE_NAMES)[number];
 
 const FNS: Record<EaseName, (t: number) => number> = {
@@ -8,6 +8,8 @@ const FNS: Record<EaseName, (t: number) => number> = {
   inOutQuad: (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2),
   inOutSine: (t) => -(Math.cos(Math.PI * t) - 1) / 2,
   outCubic: (t) => 1 - Math.pow(1 - t, 3),
+  outSine: (t) => Math.sin((t * Math.PI) / 2),
+  outQuint: (t) => 1 - Math.pow(1 - t, 5),
 };
 
 /** Eased progress for t in [0,1] (clamped). */

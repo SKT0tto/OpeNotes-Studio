@@ -4,7 +4,7 @@
  */
 import { AlphaFilter, BlurFilter, ColorMatrixFilter, Container, Graphics, Rectangle, type Application, type Filter } from 'pixi.js';
 import { placeActor } from '@shared/staging/ground';
-import { screenToWorld, viewWorldHeight, worldToScreen, type BgInfo, type Pt, type Rect } from '@shared/staging/world';
+import { baseScale, screenToWorld, viewWorldHeight, worldToScreen, type BgInfo, type Pt, type Rect } from '@shared/staging/world';
 import { lastBefore } from '@shared/timeline/sample';
 import type { ActorRender, CompiledScene, RenderState } from '@shared/timeline/types';
 import type { Live2DActor } from './Live2DActor';
@@ -35,6 +35,8 @@ export interface StageScene {
   motions: Record<string, string[]>;
   /** Expression names each model will show (loaded before the scene is shown, so a scene change never waits for a file). */
   expressions: Record<string, string[]>;
+  /** Travel camera system: neighbours stay on screen under strong blur, so the stage culls off-screen actors and blurs at half resolution. */
+  travel?: boolean;
 }
 
 export function stageSceneOf(s: CompiledScene): StageScene {
@@ -62,6 +64,7 @@ export function stageSceneOf(s: CompiledScene): StageScene {
     modelIds: [...ids],
     motions: flat(motions),
     expressions: flat(expressions),
+    ...(s.cameraSystem === 'travel' ? { travel: true } : {}),
   };
 }
 
@@ -220,6 +223,7 @@ export class Stage {
         scene.bg, state.camera, bgState.blur * px,
         { assetId: bgState.assetId, texture: main, framing: bgState.framing, src: bgState.src },
         bgState.next && nx ? { assetId: bgState.next.assetId, texture: nx, framing: bgState.next.framing, src: bgState.next.src, alpha: bgState.next.alpha } : undefined,
+        scene.travel === true,
       );
     }
 
@@ -319,7 +323,13 @@ export class Stage {
       filters.push(slot.alpha);
     }
     if (a.blur * px > 0.05) {
-      slot.blur.strength = a.blur * px * this.camera.pose.zoom * 0.6;
+      // travel: the blur is already in screen pixels (the same unit as the background's); classic scales a depth-of-field share with the zoom
+      slot.blur.strength = this.scene?.travel ? a.blur * px : a.blur * px * this.camera.pose.zoom * 0.6;
+      if (this.scene?.travel) {
+        // a blurred picture needs no full resolution: a quarter of the pixels, and one pass less for a very strong blur
+        slot.blur.resolution = 0.5;
+        slot.blur.quality = slot.blur.strength > 6 ? 3 : 4;
+      }
       filters.push(slot.blur);
     }
     slot.wrapper.filters = filters.length > 0 ? filters : null;
@@ -331,6 +341,41 @@ export class Stage {
       const cy = pl.headCenter.y;
       slot.wrapper.filterArea = new Rectangle(cx + (b.x - cx) * a.shiftS + sx - padX * a.shiftS, cy + (b.y - cy) * a.shiftS + a.shiftY - padY * a.shiftS, (b.w + padX * 2) * a.shiftS, (b.h + padY * 2) * a.shiftS);
     }
+    if (this.scene?.travel && slot.wrapper.visible) this.cullToView(slot, pl, a, sx, bg, filters.length > 0);
+  }
+
+  /**
+   * Travel scenes keep the neighbours on stage, and with a close camera their bodies are far larger than the screen. An actor whose area
+   * lies outside the view is not drawn at all (it keeps animating, see tickHidden); the filter area of the others is clipped to the view
+   * (plus margin for the blur and the Dutch roll), so a blur only touches the pixels that can be seen.
+   */
+  private cullToView(slot: Slot, pl: ReturnType<typeof placeActor>, a: ActorRender, sx: number, bg: BgInfo, hasFilters: boolean): void {
+    const b = pl.bodyBox;
+    const cx = pl.headCenter.x;
+    const cy = pl.headCenter.y;
+    const padX = b.w * FILTER_PAD;
+    const padY = b.h * 0.1;
+    const x0 = cx + (b.x - cx) * a.shiftS + sx - padX * a.shiftS;
+    const y0 = cy + (b.y - cy) * a.shiftS + a.shiftY - padY * a.shiftS;
+    const x1 = x0 + (b.w + padX * 2) * a.shiftS;
+    const y1 = y0 + (b.h + padY * 2) * a.shiftS;
+    const cam = this.camera.pose;
+    const s = baseScale(bg, this.height) * cam.zoom;
+    const marginX = (this.width * 0.15) / s;
+    const marginY = (this.height * 0.15) / s;
+    const vx0 = cam.x - this.width / 2 / s - marginX;
+    const vx1 = cam.x + this.width / 2 / s + marginX;
+    const vy0 = cam.y - this.height / 2 / s - marginY;
+    const vy1 = cam.y + this.height / 2 / s + marginY;
+    const ix0 = Math.max(x0, vx0);
+    const iy0 = Math.max(y0, vy0);
+    const ix1 = Math.min(x1, vx1);
+    const iy1 = Math.min(y1, vy1);
+    if (ix1 <= ix0 || iy1 <= iy0) {
+      slot.wrapper.visible = false;
+      return;
+    }
+    if (hasFilters) slot.wrapper.filterArea = new Rectangle(ix0, iy0, ix1 - ix0, iy1 - iy0);
   }
 
   /** Atomic costume swap: the new model is already loaded, so there is never an empty frame. */

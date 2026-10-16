@@ -9,7 +9,7 @@
  * (STYLE_REFERENCE: the game keeps its vertical field of view, widescreen only shows more at the sides).
  */
 
-export const STYLE_SHOT_KEYS = ['establishing', 'group', 'two_shot', 'mcu', 'cu', 'ecu', 'insert'] as const;
+export const STYLE_SHOT_KEYS = ['establishing', 'group', 'two_shot', 'ms', 'mcu', 'cu', 'ecu', 'insert'] as const;
 export type StyleShotKey = (typeof STYLE_SHOT_KEYS)[number];
 
 const shot = (headH: number, eyeY: number, topMargin: number, lookRoom: number, bgZoom: number, dof: number) => ({ headH, eyeY, topMargin, lookRoom, bgZoom, dof });
@@ -21,6 +21,8 @@ const BASE = {
     establishing: shot(0, 0.5, -1, 0, 1, 0),
     group: shot(0.4, 0.32, -1, 0.02, 1.35, 2),
     two_shot: shot(0.39, 0.37, 0.04, 0.02, 1.45, 2),
+    /** Travel system only: the original's most common single shot (head 0.31H, the person off centre by the look room, neighbours stay in frame). */
+    ms: shot(0.31, 0.38, 0.06, 0.18, 1.3, 0),
     mcu: shot(0.52, 0.4, 0.02, 0.07, 1.5, 2),
     cu: shot(0.7, 0.43, -1, 0.03, 2.5, 5),
     ecu: shot(0.95, 0.42, -1, 0.02, 3.2, 6),
@@ -223,6 +225,57 @@ const BASE = {
     glowDialogAlpha: 0.55,
     dutchRoll: 10,
   },
+  /** Travel camera system parameters; the classic system never reads them. */
+  travel: {
+    /** Narrative eligibility: original = adjacent motivated transfers; less = pushes/pulls/reveals with longer rests; more = wider adjacent transfers; off = no automatic travel. */
+    density: 'original' as string,
+    ease: 'outQuad' as string,
+    /** Move duration multiplier (1 = the original's medians). */
+    tempo: 1,
+    /** Compact stage: distance between neighbouring people in head heights (v7: 1.3 = the classic group pitch of five people, so a travel group looks like a classic one; medium shots keep only the speaker and the previous shot's people, so the closer stage costs nothing there). */
+    pitchHeads: 1.3,
+    /** Distance scale of the background parallax: shift ratio = 1 / (1 + headShare / sigma), 0.76 at a two-shot, 0.84 at a group, 0.80 at a medium shot, 0.63 at a close-up (the original: 0.55-0.9). */
+    parallaxSigma: 1.2,
+    /** Background magnification = bgScale * camera zoom * parallax / 0.75 (clamped to 1..bgZoomMax). */
+    bgScale: 0.33,
+    bgZoomMax: 3.2,
+    /** People outside a tight shot (mcu and closer): 'original' fades them out as the camera starts, 'keep' leaves everybody in. */
+    neighbours: 'original' as string,
+    /** Fade of people leaving / entering the frame at the start of a move (the original: 0.2 s). */
+    fadeSeconds: 0.25,
+    /** Depth of field: 'original' (blur follows the head share of the frame), 'off' or 'strong'. */
+    dofMode: 'original' as string,
+    /** Strength of the depth of field (1 = the original's). */
+    aperture: 1,
+    /** Depth difference (blocking depth) at which a person is as blurred as the background. */
+    depthSpan: 1.5,
+    /** Longest sideways move in frame widths; longer changes cut (1: the original moves a skip-one medium shot, about 0.9 frame widths, 33% of the time). */
+    maxTravelW: 1,
+    /** Largest zoom ratio between the two ends of a move. */
+    maxZoomRatio: 2.4,
+    /** Longest move in seconds. */
+    moveMax: 2,
+    moveEase: 'outQuad' as string,
+    /** Optional landing push; default 1 preserves the same settled size as a hard cut. */
+    landPush: 1,
+    /** Only size changes of at most this many steps (mcu <-> cu <-> ecu) travel. */
+    maxSizeSteps: 2,
+    /** Entrance reframe (the original: 1.3-1.6 s). */
+    reframeSeconds: 1.3,
+    /** Settle push-in of the first shot with people after an empty shot / scene start / black. */
+    settleSeconds: 1,
+    /** How much wider than the static solution the settle starts (people zoom factor). */
+    settleZoom: 1.06,
+    /** Slow drift of an empty shot: sideways share of the frame width. */
+    driftShare: 0.04,
+    /** Slow drift push-in factor (people and background). */
+    driftZoom: 1.04,
+    /** Empty shots shorter than this do not drift. */
+    driftMinSeconds: 1.5,
+    /** After some hard cuts the camera drifts slowly to rest for a second or two (the original: 29% of the cuts, half of those into an mcu). */
+    /** Legacy storage only: unmotivated drift after a cut is disabled. */
+    cutDrift: true,
+  },
 };
 
 type Widen<T> = T extends number ? number : T extends string ? T : T extends boolean ? boolean : { [K in keyof T]: Widen<T[K]> };
@@ -252,16 +305,18 @@ export interface StyleField {
   step?: number;
   unit?: string;
   options?: Array<[string, string]>;
+  /** Retired controls remain readable in saved projects. */
+  hidden?: boolean;
 }
 
-const G = { shot: '景别', frame: '构图', stage: '舞台', rhythm: '节奏', dialog: '对话区', hud: 'HUD', loc: '地点标题条', trans: '转场', perf: '表演', fx: '特效' };
+const G = { shot: '景别', frame: '构图', stage: '舞台', rhythm: '节奏', dialog: '对话区', hud: 'HUD', loc: '地点标题条', trans: '转场', perf: '表演', fx: '特效', travel: '运镜（运镜系统）' };
 const num = (path: string, label: string, group: string, min: number, max: number, step: number, unit?: string): StyleField => ({ path, label, group, kind: 'number', min, max, step, ...(unit ? { unit } : {}) });
 const int = (path: string, label: string, group: string, min: number, max: number): StyleField => ({ path, label, group, kind: 'int', min, max, step: 1 });
 const bool = (path: string, label: string, group: string): StyleField => ({ path, label, group, kind: 'bool' });
 const color = (path: string, label: string, group: string): StyleField => ({ path, label, group, kind: 'color' });
 const text = (path: string, label: string, group: string): StyleField => ({ path, label, group, kind: 'text' });
 
-const SHOT_LABEL: Record<StyleShotKey, string> = { establishing: '空镜', group: '群像', two_shot: '双人', mcu: '胸像 MCU', cu: '近景 CU', ecu: '大特写 ECU', insert: '插入' };
+const SHOT_LABEL: Record<StyleShotKey, string> = { establishing: '空镜', group: '群像', two_shot: '双人', ms: '中景 MS', mcu: '胸像 MCU', cu: '近景 CU', ecu: '大特写 ECU', insert: '插入' };
 const shotFields = (): StyleField[] =>
   STYLE_SHOT_KEYS.flatMap((k) => [
     num(`shots.${k}.headH`, `${SHOT_LABEL[k]} 头高/H`, G.shot, 0, 2.5, 0.01),
@@ -414,6 +469,31 @@ export const STYLE_FIELDS: StyleField[] = [
   num('fx.glowBloom', '泛光 强度', G.fx, 0, 1, 0.05),
   num('fx.glowDialogAlpha', '泛光 对话区渐变保留比例', G.fx, 0, 1, 0.05),
   num('fx.dutchRoll', '荷兰角 倾斜°', G.fx, 0, 30, 0.5, '°'),
+  { path: 'travel.density', label: '运镜密度', group: G.travel, kind: 'enum', options: [['original', '标准'], ['less', '少'], ['more', '多'], ['off', '关（只硬切）']] },
+  { path: 'travel.ease', label: '运镜缓动', group: G.travel, kind: 'enum', options: [['outSine', 'OutSine'], ['outQuad', 'OutQuad'], ['outCubic', 'OutCubic'], ['outQuint', 'OutQuint'], ['inOutSine', 'InOutSine'], ['linear', '线性']] },
+  { path: 'travel.moveEase', label: '横移/重组缓动', group: G.travel, kind: 'enum', options: [['outCubic', 'OutCubic'], ['outQuad', 'OutQuad'], ['outSine', 'OutSine'], ['outQuint', 'OutQuint'], ['inOutSine', 'InOutSine'], ['linear', '线性']] },
+  num('travel.tempo', '运镜时长倍率', G.travel, 0.5, 2, 0.05, '×'),
+  num('travel.pitchHeads', '紧凑站位 相邻间距（头高）', G.travel, 0.8, 2.5, 0.05),
+  num('travel.parallaxSigma', '视差随景距（σ）', G.travel, 0.3, 3, 0.05),
+  num('travel.bgScale', '背景放大/镜头放大', G.travel, 0.1, 1, 0.01),
+  num('travel.bgZoomMax', '背景最大放大', G.travel, 1, 6, 0.1),
+  { path: 'travel.neighbours', label: '画框外的旁人', group: G.travel, kind: 'enum', options: [['original', '原作（近景撤人）'], ['keep', '全部保留']] },
+  num('travel.fadeSeconds', '旁人淡入淡出时长', G.travel, 0, 1, 0.05, 's'),
+  { path: 'travel.dofMode', label: '景深虚化', group: G.travel, kind: 'enum', options: [['original', '原作（按景距）'], ['off', '关'], ['strong', '强']] },
+  num('travel.aperture', '虚化强度（光圈）', G.travel, 0, 2, 0.05),
+  num('travel.depthSpan', '人物虚化的深度跨度', G.travel, 0.3, 4, 0.1),
+  num('travel.maxTravelW', '横移最大距离/画面宽', G.travel, 0.1, 2, 0.05),
+  num('travel.maxZoomRatio', '运镜最大推拉比', G.travel, 1, 4, 0.05),
+  num('travel.moveMax', '运镜最长时长', G.travel, 0.5, 5, 0.05, 's'),
+  num('travel.landPush', '横移落点推近倍率', G.travel, 1, 1.2, 0.01),
+  int('travel.maxSizeSteps', '运镜最大景别差（级）', G.travel, 1, 3),
+  { ...bool('travel.cutDrift', '切入后缓移（已停用）', G.travel), hidden: true },
+  num('travel.reframeSeconds', '入场重构图时长', G.travel, 0.2, 3, 0.05, 's'),
+  num('travel.settleSeconds', '收势推近时长', G.travel, 0.2, 3, 0.05, 's'),
+  num('travel.settleZoom', '收势起点拉远倍率', G.travel, 1, 1.5, 0.01),
+  num('travel.driftShare', '空景慢漂横移/画面宽', G.travel, 0, 0.2, 0.005),
+  num('travel.driftZoom', '空景慢漂推近倍率', G.travel, 1, 1.3, 0.01),
+  num('travel.driftMinSeconds', '空景慢漂最短时长', G.travel, 0, 10, 0.1, 's'),
 ];
 
 const FIELD_BY_PATH = new Map(STYLE_FIELDS.map((f) => [f.path, f]));

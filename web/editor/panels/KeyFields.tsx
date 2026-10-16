@@ -2,7 +2,8 @@
 import { absTime, locateKey, storedBeatTimes } from '@shared/project/mutate';
 import { SHOT_LABEL, costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
 import type { CompactCatalog } from '@shared/schema/assets';
-import type { Project, Scene } from '@shared/schema/project';
+import { cameraSystemOf, type Project, type Scene } from '@shared/schema/project';
+import { shotTypeChoices } from '@shared/staging/framing';
 import { EASE_NAMES, ease, type EaseName } from '@shared/timeline/easing';
 import { FX_KINDS } from '@shared/schema/project';
 import { useState } from 'react';
@@ -15,7 +16,7 @@ import { NumField, Row, SliderField } from '../ui';
 import { CHANNEL_LABEL } from '../timeline/lanes';
 import { useModelEntry } from '../useModel';
 
-const EASE_LABEL: Record<EaseName, string> = { linear: '线性', inQuad: '缓入', outQuad: '缓出', inOutQuad: '缓入缓出', inOutSine: '正弦缓入缓出', outCubic: '三次缓出' };
+const EASE_LABEL: Record<EaseName, string> = { linear: '线性', inQuad: '缓入', outQuad: '缓出', inOutQuad: '缓入缓出', inOutSine: '正弦缓入缓出', outCubic: '三次缓出', outSine: '正弦缓出', outQuint: '五次缓出' };
 const FX_LABEL: Record<string, string> = { vignette_anxiety: '不安暗角', memory_glow: '回忆泛光', dutch: '荷兰角倾斜' };
 
 function Curve({ name }: { name: EaseName }) {
@@ -237,7 +238,7 @@ function CameraKey({ value, set, seal, scene, project }: { value: { shot: string
     <>
       <Row label="景别">
         <select value={value.shot} data-testid="key-cam-shot" onChange={(e) => set({ ...value, shot: e.target.value }, '修改镜头景别')}>
-          {['establishing', 'group', 'two_shot', 'mcu', 'cu', 'ecu', 'insert'].map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
+          {shotTypeChoices(cameraSystemOf(project, scene) === 'travel', value.shot).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
         </select>
       </Row>
       <Row label="焦点">

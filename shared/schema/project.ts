@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SHOT_INTENTS } from '../staging/shotIntent';
 import { EASE_NAMES } from '../timeline/easing';
 import { ALL_SHOT_TYPES, CAMERA_MOVES } from '../staging/framing';
 
@@ -9,7 +10,7 @@ export const MetaSchema = z
     locked: z.boolean(),
     genId: z.string().optional(),
     reason: z.string().optional(),
-    /** Field-level locks (beat: text/speakerId/kind/duration/emotion/cutIn; shot: type/focus/move/dof/offsets). `locked` locks everything. */
+    /** Field-level locks (beat: text/speakerId/kind/duration/emotion/cutIn; shot: type/focus/move/dof/transition/intent/offsets). `locked` locks everything. */
     lockedFields: z.array(z.string()).optional(),
     updatedAt: z.number(),
   })
@@ -44,8 +45,10 @@ export const ShotSchema = z.object({
   move: CameraMoveSchema.default('static'),
   /** Depth-of-field level 0..6 (original game's blur table). Absent = the style table's value for the shot size. */
   dof: z.number().int().min(0).max(6).optional(),
-  /** How the camera changes into this beat: hard cut (the original's default) or a short glide. Absent = decided by the style (`performance.glideSeconds` > 0 glides). */
-  transition: z.enum(['cut', 'glide']).optional(),
+  /** How the camera changes into this beat: hard cut (the original's default) or a short glide. Absent = decided by the style (`performance.glideSeconds` > 0 glides). 'travel' only has an effect in the travel camera system; classic treats it as unset. */
+  transition: z.enum(['cut', 'glide', 'travel']).optional(),
+  /** Travel-only narrative motivation. Optional for existing projects. */
+  intent: z.enum(SHOT_INTENTS).optional(),
   /** Hand offsets of single people inside this shot, in stage heights (x right, y down), added to the automatic arrangement. */
   /** Target of an `insert` shot: a box relative to the person's bounding box (see framing.ts InsertBox). */
   insertBox: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), w: z.number().min(0.05).max(1), h: z.number().min(0.05).max(1) }).optional(),
@@ -177,6 +180,8 @@ export const SceneSchema = z.object({
   /** Place-name banner shown over the establishing shot after a scene change. */
   location: z.object({ text: z.string(), show: z.boolean().default(true), meta: MetaSchema }).optional(),
   style: StyleSchema,
+  /** Camera system of this scene; absent = inherit (follow the project). */
+  cameraSystem: z.enum(['inherit', 'classic', 'travel']).optional(),
   audio: z.object({
     bgm: z.object({ assetId: Id, volume: z.number().min(0).max(1), meta: MetaSchema }).optional(),
     ambience: z.object({ assetId: Id, volume: z.number().min(0).max(1), meta: MetaSchema }).optional(),
@@ -201,6 +206,8 @@ export const ProjectSchema = z.object({
     fps: z.number().int().positive(),
     textSpeedCps: z.number().positive(),
     defaultLineGap: z.number().min(0),
+    /** Camera system of the project; absent = classic. */
+    cameraSystem: z.enum(['classic', 'travel']).optional(),
   }),
   source: z.object({ text: z.string(), format: z.enum(['novel', 'script']) }),
   cast: z.array(CastMemberSchema),
@@ -214,3 +221,11 @@ export type Project = z.infer<typeof ProjectSchema>;
 export type Scene = z.infer<typeof SceneSchema>;
 export type Beat = z.infer<typeof BeatSchema>;
 export type CastMember = z.infer<typeof CastMemberSchema>;
+
+export const CAMERA_SYSTEMS = ['classic', 'travel'] as const;
+export type CameraSystem = (typeof CAMERA_SYSTEMS)[number];
+export function cameraSystemOf(project: Pick<Project, 'settings'>, scene: Pick<Scene, 'cameraSystem'>): CameraSystem {
+  const s = scene.cameraSystem;
+  if (s === 'classic' || s === 'travel') return s;
+  return project.settings.cameraSystem ?? 'classic';
+}
