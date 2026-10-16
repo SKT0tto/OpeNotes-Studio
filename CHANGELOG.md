@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0
+
+Camera travel mode: a second camera system that moves like Our Notes. The classic camera is untouched and stays the default; classic AI generation and compile output are byte-identical to 0.1.5.
+
+**Classic / travel switch.** A switch in the toolbar chooses the camera system of the project, and every scene can override it. Existing projects keep classic.
+
+**Moves inside one continuous space.** In travel mode the stage is one continuous space: the camera slides and pushes across it instead of cutting between unrelated framings, with parallax on the background. Every move has a reason (a narrative intent such as exchange, reaction, rupture or reveal); the move-or-cut decision, its distance and its duration come from that reason and the real geometry of who stands where. Cuts remain where the story calls for them (a reaction, a rupture, a new person into a close-up).
+
+**Two-shots pair neighbours.** A two-shot frames the two people who are next to each other on the stage; someone standing between them stays in frame instead of being skipped.
+
+**Reasons are visible.** The camera panel and the timeline show the reason of each shot, so you can see why the camera moved or cut and change it.
+
+**AI director.** A travel prompt (`scene-3` + `travel-5`) and new intent fields let the model say why a shot exists. A `flow=cut` from the model is only a suggestion; deterministic code validates it against the geometry and rewrites a reason that contradicts it.
+
+**Regenerate scene camera.** A button re-derives the camera of one scene without touching the others or your manual edits.
+
+Tests: unit (`travelPolicy`, `travelOriginal`, travel golden v11, classic golden unchanged), e2e (`camera-system`, `camera-regeneration`).
+
 ## 0.1.5
 
 Background assets, redone (v0.1.4 feedback: "backgrounds are hard to tell apart", "one scene can only have one background", "logos and name-card pictures were used as backgrounds", "answering a questionnaire one picture at a time is too tiring").
