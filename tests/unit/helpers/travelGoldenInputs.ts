@@ -25,7 +25,10 @@ export function digest(project: Project, ctx: CompileContext): { compiled: strin
   for (let t = 0; t <= c.duration + 1e-9; t += step) ts.add(+t.toFixed(6));
   for (const sc of c.scenes) for (const k of sc.camera) ts.add(k.at).add(k.at + k.duration / 2).add(k.at + k.duration);
   const sorted = [...ts].sort((a, b) => a - b);
-  return { compiled: sha(JSON.stringify(c)), frames: sha(JSON.stringify(sorted.map((t) => evaluate(c, t)))) };
+  // Frames are rounded to 1e-4 before hashing: Math.pow / exp / sin differ in the last bits between Windows and Linux, which made
+  // the exact hashes platform- and Node-version-dependent (the v0.2.0 release runner failed on it). Compiled JSON and frames are both rounded.
+  const round = (_k: string, v: unknown) => (typeof v === 'number' ? Math.round(v * 1e4) / 1e4 : v);
+  return { compiled: sha(JSON.stringify(c, round)), frames: sha(JSON.stringify(sorted.map((t) => evaluate(c, t)), round)) };
 }
 
 function fixtureInput(raw: unknown): { project: Project; ctx: CompileContext } {

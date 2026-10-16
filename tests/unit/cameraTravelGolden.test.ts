@@ -4,7 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { asTravelProject, digest, travelGoldenInputs } from './helpers/travelGoldenInputs';
 
 /**
- * Travel golden (version 11): the compiled JSON and the evaluated frames of the travel camera system on fixed inputs.
+ * Travel golden file v12 (travel output version 11):
+ * v12 file: same travel output as v11; only the digest changed (compiled JSON and frame numbers rounded to 1e-4 before hashing, so the hash is the same on
+ * Windows and Linux). CompiledScene.travel.version stays 11.
+ * the compiled JSON and the evaluated frames of the travel camera system on fixed inputs.
  * v11: an exchange between stage neighbours (adjacent slot rank) is allowed whatever the measured spacing (the maxTravelW cap stays);
  * a speaker change into cu / ecu is inferred as exchange, not reaction.
  * v10: travel two-shots pair neighbours only (the middle person stays in frame when the pair is not adjacent); wide landings
@@ -28,9 +31,9 @@ import { asTravelProject, digest, travelGoldenInputs } from './helpers/travelGol
  * `.v12.json`, raise CompiledScene.travel.version, and say why in the commit message. The classic golden is a different
  * file and is never regenerated.
  */
-const GOLDEN_PATH = path.resolve('tests/fixtures/camera-travel-golden.v11.json');
+const GOLDEN_PATH = path.resolve('tests/fixtures/camera-travel-golden.v12.json');
 
-describe('travel camera golden v11', () => {
+describe('travel camera golden v12', () => {
   it('compiled output and evaluated frames match the recorded travel baseline', async () => {
     const inputs = await travelGoldenInputs();
     const got: Record<string, { compiled: string; frames: string }> = {};
