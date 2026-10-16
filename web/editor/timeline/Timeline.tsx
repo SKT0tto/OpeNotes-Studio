@@ -14,7 +14,10 @@ import { addKeyAt, bakeRuleKeys, editBeat, editScene, lockTrack, moveKeys, patch
 import { useProject } from '../../store/projectStore';
 import { notify, useUi } from '../../store/uiStore';
 import { cameraOfBeat } from '../stageTools/camera';
-import { BEAT_KIND_LABEL, SHOT_LABEL, SHOT_SHORT, TRANSITION_LABEL } from '@shared/catalog/labels';
+import { BEAT_KIND_LABEL, SHOT_LABEL, SHOT_SHORT, TRANSITION_LABEL, TRAVEL_KIND_LABEL, dofText } from '@shared/catalog/labels';
+
+/** Glyph of a travel segment inside a shot block of the timeline. */
+const TRAVEL_ICON: Record<string, string> = { lateral: '⇢', regroup: '⤢', distance: '⊕', settle: '◎', reframe: '↔', drift: '〰', cutDrift: '〰', glide: '⇢' };
 import { LockIcon } from '../ui';
 import { bgSwitchValue } from '@shared/director/bgKeys';
 import { useSceneFit } from '../bg/bgFit';
@@ -484,12 +487,15 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                       )}
                       {lane.kind === 'shots' && cScene.beats.map((b) => {
                         const stored = storedIds.has(b.id);
+                        const dofLabel = dofText(!!cScene.travel, scene.beats.find((x) => x.id === b.id)?.shot.dof, b.dof);
+                        // travel scenes: the part of the block in which the camera is on its way (striped)
+                        const travelW = b.camTravel && b.camTravel.kind !== 'cut' && !b.shotHeld && b.camTravel.seconds > 0 ? Math.min(b.camTravel.seconds * pps, Math.max(2, (b.end - b.start) * pps - 1)) : 0;
                         return (
                           <div
                             key={b.id}
                             className={`tl-block shot${selection.beatId === b.id ? ' sel' : ''}${b.shotHeld ? ' held' : ''}`}
                             style={{ left: x(b.start), width: Math.max(2, (b.end - b.start) * pps - 1) }}
-                            title={`${SHOT_LABEL[b.shotType] ?? b.shotType} · 景深 ${b.dof}${b.shotHeld ? ' · 沿用上一机位' : ''}${stored ? '（双击：烘焙为手动镜头）' : ''}`}
+                            title={`${SHOT_LABEL[b.shotType] ?? b.shotType} · ${dofLabel}${b.shotHeld ? ' · 沿用上一机位' : ''}${stored ? '（双击：烘焙为手动镜头）' : ''}${b.camTravel && b.camTravel.kind !== 'cut' && b.camTravel.seconds > 0 ? ` · 运镜：${TRAVEL_KIND_LABEL[b.camTravel.kind] ?? b.camTravel.kind} ${b.camTravel.seconds.toFixed(2)}s` : ''}${b.camTravel?.reason && !b.shotHeld ? ` · ${b.camTravel.reason}` : ''}`}
                             data-testid={`tl-shot-${b.id}`}
                             onPointerDown={(e) => { e.stopPropagation(); useProject.getState().select({ beatId: b.id }); set({ inspectorTab: 'shot' }); seekTo(b.start + 0.01); }}
                             onDoubleClick={() => {
@@ -497,7 +503,17 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                               if (cam && !cam.manual) setManualCamera(scene.id, b.id, cam.pose, '烘焙镜头为手动');
                             }}
                           >
-                            <span className="tl-block-text">{b.shotHeld ? '⏸ ' : ''}{SHOT_SHORT[b.shotType] ?? b.shotType} · 景深 {b.dof}</span>
+                            {travelW > 0 && b.camTravel && (
+                              <span
+                                className={`tl-travel k-${b.camTravel.kind}`}
+                                style={{ width: travelW }}
+                                title={`${TRAVEL_KIND_LABEL[b.camTravel.kind] ?? b.camTravel.kind} · ${b.camTravel.seconds.toFixed(2)}s${b.camTravel.ease ? ` · ${b.camTravel.ease}` : ''}${b.camTravel.reason ? ` · ${b.camTravel.reason}` : ''}`}
+                                data-testid={`tl-travel-${b.id}`}
+                              >
+                                {TRAVEL_ICON[b.camTravel.kind] ?? '⇢'} {b.camTravel.seconds.toFixed(1)}s
+                              </span>
+                            )}
+                            <span className="tl-block-text" style={travelW > 0 ? { marginLeft: Math.max(0, travelW - 2) } : undefined}>{b.shotHeld ? '⏸ ' : ''}{SHOT_SHORT[b.shotType] ?? b.shotType} · {dofLabel}</span>
                           </div>
                         );
                       })}

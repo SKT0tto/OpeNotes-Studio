@@ -24,11 +24,12 @@ export class RuleProvider implements LlmProvider {
     if (req.schemaName === 'Breakdown') {
       const paras = (input.paragraphs as Array<{ i: number; text: string }>).map((p) => ({ index: p.i, text: p.text, start: 0, end: 0 }) as Paragraph);
       out = ruleBreakdown(this.catalog, paras);
-    } else if (req.schemaName === 'SceneDirection') {
+    } else if (req.schemaName === 'SceneDirection' || req.schemaName === 'SceneDirectionTravel') {
       const scene = input.scene as { isPerformance: boolean };
       const si: RuleSceneInput = {
         cast: input.cast as ActorResources[], paragraphs: input.paragraphs as RuleSceneInput['paragraphs'], previousScene: input.previousScene ?? null,
         isPerformance: scene.isPerformance, fixedBeats: (input.fixedBeats as RuleSceneInput['fixedBeats']) ?? [],
+        ...(req.schemaName === 'SceneDirectionTravel' ? { travel: true } : {}),
       };
       out = ruleDirection(this.idx, this.catalog, si);
     } else throw new LlmError('bad_request', `规则导演不支持 ${req.schemaName}`);

@@ -1,13 +1,13 @@
 /** Right-hand inspector: every value of the selected project / scene / beat is a field you can edit by hand. */
 import { useState } from 'react';
 import type { Draft } from 'immer';
-import { EMOTION_LABEL, costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
+import { CAMERA_SYSTEM_LABEL, EMOTION_LABEL, costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
 import { bandText } from '@shared/director/bandFit';
 import { bgSwitchValue } from '@shared/director/bgKeys';
 import { bgCategoryOf } from '@shared/director/bgCategory';
 import type { CompactCatalog } from '@shared/schema/assets';
 import { resolveStyle } from '@shared/style/ournotes';
-import type { Beat, Project, Scene } from '@shared/schema/project';
+import { CAMERA_SYSTEMS, type Beat, type Project, type Scene } from '@shared/schema/project';
 import { EMOTION_TAGS } from '@shared/timeline/compile';
 import type { CompiledProject, RenderState } from '@shared/timeline/types';
 import { addCast, addKeyAt, selectActor, toggleActorInScene } from '../../store/actions';
@@ -116,6 +116,8 @@ function ProjectFields({ project, catalog }: { project: Project; catalog: Compac
         <SliderField value={resolveStyle(project.style).values.rhythm.textSpeedCps} min={2} max={40} step={0.5} digits={1} unit="字/秒" testid="insp-cps" onChange={(v) => applyEdit((d) => { d.style.overrides['rhythm.textSpeedCps'] = v; touch(d.style.meta); }, '修改文字速度', { coalesce: 'style.rhythm.cps' })} onCommit={seal} />
       </Row>
       <Row label="帧率"><span className="ro">{project.settings.fps} fps · {project.settings.aspect}</span></Row>
+      <Row label="镜头系统"><span className="ro" data-testid="insp-camera-system">{CAMERA_SYSTEM_LABEL[project.settings.cameraSystem ?? 'classic']}（在顶部工具栏切换）</span></Row>
+      <p className="hint">经典 = 硬切为主；运镜 = 紧凑站位、说话人之间横移、双人/群像与单人之间的推拉；相邻的人之间运镜，近景换人硬切。</p>
     </Section>
     <Section title="角色" hint={`${project.cast.length} 人`} testid="insp-cast-list">
       {project.cast.length === 0 && <p className="hint" data-testid="cast-empty">还没有角色。从下拉里选择一个角色加入项目，再到场景里让 TA 入场。</p>}
@@ -157,6 +159,12 @@ function SceneFields({ project, scene, catalog, compiled, t }: { project: Projec
         <Row label="转场" meta={scene.transitionIn.meta} onLock={lock((s) => s.transitionIn.meta)}>
           <select value={scene.transitionIn.kind} data-testid="insp-transition" onChange={(e) => up('修改转场', (s) => { s.transitionIn.kind = e.target.value as Scene['transitionIn']['kind']; touch(s.transitionIn.meta); })}>
             {TRANSITIONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+          </select>
+        </Row>
+        <Row label="镜头系统">
+          <select value={scene.cameraSystem ?? 'inherit'} data-testid="insp-scene-camera-system" onChange={(e) => up('修改镜头系统', (s) => { if (e.target.value === 'inherit') delete s.cameraSystem; else s.cameraSystem = e.target.value as 'classic' | 'travel'; touch(s.meta); })}>
+            <option value="inherit">{CAMERA_SYSTEM_LABEL.inherit}（当前：{CAMERA_SYSTEM_LABEL[project.settings.cameraSystem ?? 'classic']}）</option>
+            {CAMERA_SYSTEMS.map((k) => <option key={k} value={k}>{CAMERA_SYSTEM_LABEL[k]}</option>)}
           </select>
         </Row>
         {!['dip_black', 'scene_black'].includes(scene.transitionIn.kind) && (

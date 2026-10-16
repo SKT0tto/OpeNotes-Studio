@@ -8,6 +8,7 @@ import {
   addKey, anchorAt, clone, absTime, duplicateBeat, ensureTrack, findTrack, insertBeat, insertScene, keyLocked, locateKey, moveBeat, moveKeyTo, moveScene, nextCastId,
   removeBeat, removeKey, removeScene, setActorInScene, storedBeatTimes, userMeta, type AnyKey, type Channel, type TrackTarget,
 } from '@shared/project/mutate';
+import { stageSlotOf, type StageMap } from '@shared/staging/compactStage';
 import { feetToSlotDepth } from '@shared/staging/ground';
 import type { Beat, Project, Scene } from '@shared/schema/project';
 import type { RuleKey } from '@shared/timeline/types';
@@ -240,8 +241,10 @@ export function pasteKeys(sceneId: string, t: number): number {
  * Move a person: the latest position key at / before `t` when there is one, otherwise the scene's starting blocking.
  * `feet` is the target world point of the feet.
  */
-export function placeActorAt(sceneId: string, castId: string, feet: { x: number; y: number }, bg: { width: number; ground: { horizonY: number; floorY: number } }, t: number): Write {
-  return setSlotDepth(sceneId, castId, feetToSlotDepth(feet, bg), t);
+export function placeActorAt(sceneId: string, castId: string, feet: { x: number; y: number }, bg: { width: number; ground: { horizonY: number; floorY: number } }, t: number, stage?: StageMap): Write {
+  const sd = feetToSlotDepth(feet, bg);
+  // travel scenes: the feet x is a position on the compact stage, not on the classic slot scale
+  return setSlotDepth(sceneId, castId, stage ? { slot: stageSlotOf(stage, feet.x), depth: sd.depth } : sd, t);
 }
 
 /** Set a person's slot / depth at time `t` (position key at / before `t`, else the scene's starting blocking). */

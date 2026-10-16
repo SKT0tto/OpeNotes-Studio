@@ -1,0 +1,38 @@
+{
+  "demo": {
+    "compiled": "fd7d244c8d46619652d32013ac7d0f740c00af2c",
+    "frames": "0f727aadc2561b2907ab9867f7e92603a1a97546"
+  },
+  "aiA": {
+    "compiled": "7c1250f5382c30c70444dbabaf576e770600adc4",
+    "frames": "2ab7853d0ed7134de2d716da1ef1e5d08bbc03a7"
+  },
+  "aiB": {
+    "compiled": "95e3f370ac85c8ca364375ab8bc835ab256d5118",
+    "frames": "51d561a1090b1f6969100d729c24f0c07c1903b5"
+  },
+  "aiC": {
+    "compiled": "ac10dc9a90108b8a37c387adf4f3fbc2d6322226",
+    "frames": "5e5f4686acd7a9a8f2e42c4e2b97518cde87fa81"
+  },
+  "rule": {
+    "compiled": "fab2c7eca4cb9c2f9bc56ccff8a81e71d3e48f4d",
+    "frames": "bba42de2ccada9abb3fadf292f036d69ec211ce1"
+  },
+  "miniPlain": {
+    "compiled": "7846e400f5c02e825476a1e749d16aaa5ae3d2b3",
+    "frames": "3fb48e371546d53a89cdb47b459f0cae9cb79ddb"
+  },
+  "miniGlideStyle": {
+    "compiled": "577a0cb5135f98cd96e2eeec8b5f6f0ea31f83ad",
+    "frames": "d560dcb081a0e66e7c3578753b444f0adde5be3d"
+  },
+  "miniGlideBeats": {
+    "compiled": "b8505607e27efac438e6b792d5a9a78c44d702d8",
+    "frames": "21571e8a9541de987affef578896e5302678b684"
+  },
+  "miniMotion": {
+    "compiled": "938ab62f8458c108c282e608cf4ee6468ffc332c",
+    "frames": "b72969fab4042a60e3c2beb60591356ab963346e"
+  }
+}

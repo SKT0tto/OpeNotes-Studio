@@ -1,0 +1,26 @@
+{
+  "demo": {
+    "compiled": "c08cf993ea8ea8bb1f61a37f1c9765884641075e",
+    "frames": "308ead90914e9f5612d4545e000793f3ecb1f93b"
+  },
+  "aiA": {
+    "compiled": "1b07129c940d3bd3e0064fab5c6d7283ec89338b",
+    "frames": "1089e9dd436bbfb5a188f73cb47c85fc7ebd9ae0"
+  },
+  "aiB": {
+    "compiled": "10d1ca6fd135f351f4d1c3fe0d56ea84fb43751b",
+    "frames": "a8a957a638c06a459663c97fb5a0acf7a41d5534"
+  },
+  "aiC": {
+    "compiled": "16dea9cf3d0620c41a0475c3026d8693f42259f7",
+    "frames": "d868a9b2023aec671a6f737789497ecc49493bdf"
+  },
+  "rule": {
+    "compiled": "1c021b365817524c984ddf70faf6e3512af0f408",
+    "frames": "48c4aa163a5d123ea0166d89c0dd5b449d0c6414"
+  },
+  "sideways": {
+    "compiled": "84dae45e0b720c9c946561abd66383c5fc7c96e8",
+    "frames": "051c755e0a88f7d6ed1fbe995679ae58d876977b"
+  }
+}

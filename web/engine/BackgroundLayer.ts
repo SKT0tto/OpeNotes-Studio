@@ -23,6 +23,7 @@ export class BackgroundLayer extends Container {
   private readonly nextSprite = new Sprite();
   private readonly blur = new BlurFilter({ strength: 0, quality: 4 });
   private readonly blurNext = new BlurFilter({ strength: 0, quality: 4 });
+  private readonly blurRes = this.blur.resolution;
   private assetId: string | null = null;
   /** Effective background magnification of the last frame (debug / tests). */
   viewZoom = 1;
@@ -47,8 +48,13 @@ export class BackgroundLayer extends Container {
     return { main: this.assetId, next: this.nextSprite.visible ? ((this.nextSprite as unknown as { __asset?: string }).__asset ?? null) : null, nextAlpha: this.nextSprite.alpha };
   }
 
-  /** `blurPx` is in screen pixels. `world` is the scene's base background; `main` / `next` are the pictures to draw. */
-  apply(world: BgInfo, cam: CameraPose, blurPx: number, main: BgPicture, next?: BgPicture & { alpha: number }): void {
+  /**
+   * `blurPx` is in screen pixels. `world` is the scene's base background; `main` / `next` are the pictures to draw.
+   * `halfResBlur` (travel scenes): the blur runs at half resolution; a strongly blurred picture needs no more.
+   */
+  apply(world: BgInfo, cam: CameraPose, blurPx: number, main: BgPicture, next?: BgPicture & { alpha: number }, halfResBlur = false): void {
+    this.blur.resolution = halfResBlur ? 0.5 : this.blurRes;
+    this.blurNext.resolution = this.blur.resolution;
     const v = bgView(world, cam, main.framing, this.viewportW / this.viewportH);
     this.viewZoom = v.zoom;
     const s = baseScale(world, this.viewportH) * v.zoom;

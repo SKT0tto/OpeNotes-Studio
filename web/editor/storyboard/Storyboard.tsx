@@ -4,9 +4,9 @@
  * drag reorders inside a scene, ＋ inserts a line after, ✕ deletes. Thumbnails come from the live player (see thumbs.ts).
  */
 import { useMemo, useState } from 'react';
-import { BEAT_KIND_LABEL, SHOT_LABEL, SHOT_SHORT } from '@shared/catalog/labels';
-import { SHOT_TYPES } from '@shared/staging/framing';
-import type { Beat, Project } from '@shared/schema/project';
+import { BEAT_KIND_LABEL, SHOT_LABEL, SHOT_SHORT, dofText } from '@shared/catalog/labels';
+import { shotTypeChoices } from '@shared/staging/framing';
+import { cameraSystemOf, type Beat, type Project } from '@shared/schema/project';
 import type { usePlayerHost } from '../../play/usePlayerHost';
 import { addBeatAfter, copyBeat, deleteBeat, editBeat, editScene, editShot, reorderBeat } from '../../store/actions';
 import { useProject } from '../../store/projectStore';
@@ -64,7 +64,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
             <span className="dim">已选 {cards.length} 张 · 批量</span>
             <select value="" aria-label="批量景别" data-testid="sb-batch-shot" onChange={(e) => e.target.value && batchShot(e.target.value as Beat['shot']['type'])}>
               <option value="">景别…</option>
-              {SHOT_TYPES.map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
+              {shotTypeChoices(project.scenes.some((sc) => cameraSystemOf(project, sc) === 'travel')).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
             </select>
             <select value="" aria-label="批量切入方式" data-testid="sb-batch-cutin" onChange={(e) => e.target.value && batch('批量修改切入方式', (b) => void (b.cutIn = e.target.value as Beat['cutIn']))}>
               <option value="">切入…</option><option value="cut">硬切</option><option value="dip_black">黑场眨眼</option>
@@ -114,7 +114,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
                         <span className="sb-n">{bi + 1}</span>
                         <span className="sb-badges">
                           <span className="badge shot" data-testid={`sb-shot-${b.id}`}>{SHOT_SHORT[type] ?? type}</span>
-                          {cb && <span className="badge" title="景深等级">景深 {cb.dof}</span>}
+                          {cb && <span className="badge" title={cScene?.travel && b.shot.dof === undefined ? '运镜场景：背景虚化按景距自动计算' : '景深等级'}>{dofText(!!cScene?.travel, b.shot.dof, cb.dof)}</span>}
                           {cb && cScene && (() => {
                             const seg = cScene.bgSegments.find((g, i) => i > 0 && g.start >= cb.start - 1e-6 && g.start < cb.end - 1e-6);
                             return seg ? <span className="badge bgsw" title={`从这句起换背景：${bgName(seg.assetId)}`} data-testid={`sb-bg-${b.id}`}>🖼 {bgName(seg.assetId).slice(0, 8)}</span> : null;
@@ -133,7 +133,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
                       <div className="sb-text"><span className="sb-who">{b.speakerId ? name(b.speakerId) : BEAT_KIND_LABEL[b.kind] ?? b.kind}</span>{b.text || '—'}</div>
                       <div className="sb-ctl" onClick={(e) => e.stopPropagation()}>
                         <select value={b.shot.type} aria-label="景别" data-testid={`sb-type-${b.id}`} onChange={(e) => editShot(s.id, b.id, '修改景别', (sh) => void (sh.type = e.target.value as Beat['shot']['type']))}>
-                          {((SHOT_TYPES as readonly string[]).includes(b.shot.type) ? [...SHOT_TYPES] : [b.shot.type, ...SHOT_TYPES]).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
+                          {shotTypeChoices(cameraSystemOf(project, s) === 'travel', b.shot.type).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
                         </select>
                         <select value={b.cutIn} aria-label="切入方式" data-testid={`sb-cutin-${b.id}`} onChange={(e) => editBeat(s.id, b.id, '修改切入方式', (x) => void (x.cutIn = e.target.value as Beat['cutIn']))}>
                           <option value="cut">硬切</option><option value="dip_black">黑场</option>

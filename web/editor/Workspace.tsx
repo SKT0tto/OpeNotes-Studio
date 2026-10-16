@@ -7,10 +7,11 @@ import { usePlayerHost } from '../play/usePlayerHost';
 import { createProject } from '../projectsApi';
 import { useProject } from '../store/projectStore';
 import { useUi } from '../store/uiStore';
+import { CameraSystemSwitch } from './CameraSystemSwitch';
 import { downloadProject } from './io';
 import { AssetBrowser } from './panels/AssetBrowser';
 import { SettingsDialog } from './dialogs/SettingsDialog';
-import { AiPanel } from './panels/AiPanel';
+import { AiPanel, type CameraGenerationRequest } from './panels/AiPanel';
 import { Inspector } from './panels/Inspector';
 import { Outline } from './panels/Outline';
 import { Preview } from './panels/Preview';
@@ -52,6 +53,30 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   const [rightOpen, setRightOpen] = useState(true);
   const [tab, setTab] = useState<'script' | 'assets' | 'ai'>('script');
   const [notice, setNotice] = useState<string | null>(null);
+  const [cameraRequest, setCameraRequest] = useState<CameraGenerationRequest | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const selectTab = (next: typeof tab) => {
+    cameraRequest?.consume();
+    setTab(next);
+  };
+  const regenerateCamera = (sceneId: string) => {
+    if (aiBusy || cameraRequest) return;
+    const snapshot = useProject.getState().project;
+    if (!snapshot?.source.text || !snapshot.scenes.some((s) => s.id === sceneId)) return;
+    let consumed = false;
+    const request: CameraGenerationRequest = {
+      projectId: snapshot.id, sceneId,
+      consume: () => {
+        if (consumed) return false;
+        consumed = true;
+        setCameraRequest((current) => current === request ? null : current);
+        return true;
+      },
+    };
+    setCameraRequest(request);
+    setLeftOpen(true);
+    setTab('ai');
+  };
   useShortcuts(host, project.settings.fps);
 
   // The inspector follows the playhead.
@@ -108,6 +133,8 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
           <button role="tab" aria-selected={centerView === 'storyboard'} className={centerView === 'storyboard' ? 'on' : ''} onClick={() => set({ centerView: 'storyboard' })} data-testid="view-storyboard">分镜</button>
         </span>
         <span className="sep" />
+        <CameraSystemSwitch project={project} onRegenerate={regenerateCamera} regenerationBusy={aiBusy || cameraRequest !== null} />
+        <span className="sep" />
         <button className="btn primary" disabled={saveState === 'saving'} onClick={() => void useProject.getState().save()} data-testid="btn-save" title="保存（Ctrl+S）">保存</button>
         <button className="btn" onClick={() => void saveCopy()} data-testid="btn-save-copy">另存为副本</button>
         <button className="btn" disabled={!catalog} onClick={() => catalog && downloadProject(project, catalog.version)} data-testid="btn-export">导出</button>
@@ -115,7 +142,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         {notice && <span className="notice" data-testid="notice">{notice}</span>}
         <button className="btn" onClick={() => setSettingsOpen(true)} data-testid="btn-settings">AI 设置</button>
         <button className="btn" onClick={() => set({ helpOpen: true })} data-testid="btn-help" title="快捷键（?）">？ 快捷键</button>
-        <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => setLeftOpen(!leftOpen)} aria-pressed={leftOpen} title="左栏">▌◧</button>
+        <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => { if (leftOpen) cameraRequest?.consume(); setLeftOpen(!leftOpen); }} aria-pressed={leftOpen} title="左栏">▌◧</button>
         <button className={`btn toggle${rightOpen ? ' on' : ''}`} onClick={() => setRightOpen(!rightOpen)} aria-pressed={rightOpen} title="检查器">◨▐</button>
       </header>
 
@@ -124,11 +151,11 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
           <>
             <aside className="ws-left" style={{ width: leftW }} data-testid="left-panel">
               <nav className="tabs">
-                <button className={tab === 'script' ? 'active' : ''} onClick={() => setTab('script')} data-testid="tab-script">剧本</button>
-                <button className={tab === 'assets' ? 'active' : ''} onClick={() => setTab('assets')} data-testid="tab-assets">素材</button>
-                <button className={tab === 'ai' ? 'active' : ''} onClick={() => setTab('ai')} data-testid="tab-ai">AI 导演</button>
+                <button className={tab === 'script' ? 'active' : ''} onClick={() => selectTab('script')} data-testid="tab-script">剧本</button>
+                <button className={tab === 'assets' ? 'active' : ''} onClick={() => selectTab('assets')} data-testid="tab-assets">素材</button>
+                <button className={tab === 'ai' ? 'active' : ''} onClick={() => selectTab('ai')} data-testid="tab-ai">AI 导演</button>
               </nav>
-              <div className="panel-scroll">{tab === 'script' ? <Outline seek={host.seek} playerRef={host.playerRef} compiled={host.compiled} catalog={catalog} /> : tab === 'ai' ? <AiPanel /> : <AssetBrowser />}</div>
+              <div className="panel-scroll">{tab === 'script' ? <Outline seek={host.seek} playerRef={host.playerRef} compiled={host.compiled} catalog={catalog} /> : tab === 'ai' ? <AiPanel cameraRequest={cameraRequest} onBusyChange={setAiBusy} /> : <AssetBrowser />}</div>
             </aside>
             <Splitter axis="x" label="调整左栏宽度" onDelta={(d) => setLeftW(leftW + d)} />
           </>
@@ -172,7 +199,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
       {helpOpen && (
         <Modal title="快捷键" onClose={() => set({ helpOpen: false })} testid="help-sheet">
           <table className="keys-table"><tbody>{SHORTCUTS.map(([k, d]) => <tr key={k}><td><kbd>{k}</kbd></td><td>{d}</td></tr>)}</tbody></table>
-          <p className="hint">在预览里：拖动人物 = 站位（自动取景里是“画面位置”，Ctrl+拖动才改站位）；Shift+拖动 = 画面位置；Alt+滚轮 = 纵深；头顶的刻度盘 = 头部朝向（Alt = 视线）；相机工具下拖动 / 滚轮 = 平移 / 缩放镜头。</p>
+          <p className="hint">在预览里：自动取景中的主角，拖动调整本镜画面位置，Shift+拖动修改站位；其他人物则拖动修改站位，Shift+拖动调整画面位置。运镜系统使用紧凑舞台，精细构图可用本镜偏移。Alt+滚轮调整纵深；头顶刻度盘调整朝向（Alt 调整视线）；相机工具下拖动 / 滚轮调整取景。</p>
         </Modal>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { absTime, findTrack, locateKey, storedBeatTimes } from '../../shared/project/mutate';
 import type { Project } from '../../shared/schema/project';
+import { buildStageMap } from '../../shared/staging/compactStage';
 import { compileProject } from '../../shared/timeline/compile';
 import {
   addBeatAfter, bakeRuleKeys, clearManualCamera, copyKeys, deleteBeat, deleteKeys, editBeat, editShot, keyNear, lockKey, lockTrack, manualCameraKey, moveKeys, pasteKeys, patchKey,
@@ -118,6 +119,20 @@ describe('stage and shot edits', () => {
     st().applyEdit((d) => void (d.scenes[0]!.blocking.b!.meta.locked = true), 'lock');
     expect(setSlotDepth('s1', 'b', { slot: 0, depth: 0.2 }, 1)).toBe('locked');
     expect(proj().scenes[0]!.blocking.b!.slot).toBe(0.4);
+  });
+
+  it('in a travel scene the dragged feet position is converted back through the compact stage (and not through the slot scale)', () => {
+    const bg = { width: 2048, ground: { horizonY: 560, floorY: 1040 } };
+    const stage = buildStageMap([-0.4, 0.4], 150, 1024); // a at x 949, b at x 1099
+    expect(placeActorAt('s1', 'a', { x: 1099, y: 950 }, bg, 1, stage)).toBe('ok');
+    expect(proj().scenes[0]!.blocking.a!.slot).toBeCloseTo(0.4, 3);
+    st().undo();
+    expect(placeActorAt('s1', 'a', { x: 1024, y: 950 }, bg, 1, stage)).toBe('ok');
+    expect(proj().scenes[0]!.blocking.a!.slot).toBeCloseTo(0, 3);
+    // without a stage the same x lands on the classic slot scale
+    st().undo();
+    placeActorAt('s1', 'a', { x: 1099, y: 950 }, bg, 1);
+    expect(proj().scenes[0]!.blocking.a!.slot).toBeCloseTo(((1099 / 2048) - 0.5) / 0.38, 3);
   });
 
   it('a manual camera is a key at the start of the line; clearing it brings the solver back; locks protect it', () => {

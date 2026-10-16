@@ -1,3 +1,4 @@
+import { SHOT_INTENT_LABEL } from '../staging/shotIntent';
 /**
  * Difference between the scene as it is and the scene an AI / rule run proposes (already merged with the locks).
  * Items are grouped by the scope table (`scope.ts`) so "accept" / "reject" works per scope; `structural` means the beat list
@@ -71,7 +72,7 @@ const short = (v: unknown): string => {
   return s.length > 60 ? `${s.slice(0, 57)}…` : s;
 };
 
-const shotText = (b: Beat['shot']) => `${SHOT_LABEL[b.type] ?? b.type}${b.focus.length ? `·${b.focus.length}人` : ''}${b.move !== 'static' ? `·${MOVE_LABEL[b.move] ?? b.move}` : ''}${b.dof !== undefined ? `·景深${b.dof}` : ''}`;
+const shotText = (b: Beat['shot']) => `${SHOT_LABEL[b.type] ?? b.type}${b.focus.length ? `·${b.focus.length}人` : ''}${b.move !== 'static' ? `·${MOVE_LABEL[b.move] ?? b.move}` : ''}${b.dof !== undefined ? `·景深${b.dof}` : ''}${b.transition === 'travel' ? '·运镜' : ''}${b.intent ? `·${SHOT_INTENT_LABEL[b.intent]}` : ''}`;
 const CUT_LABEL: Record<string, string> = TRANSITION_LABEL;
 
 export function diffScene(old: Scene, fresh: Scene, namesIn: DiffNames | ((id: string) => string) = {}): SceneDiff {

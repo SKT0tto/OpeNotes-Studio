@@ -14,7 +14,12 @@ export const DEPTH_Y: Record<DepthName, number> = { front: 0.08, mid: 0.3, back:
 export const EMOTIONS = EMOTION_TAGS as readonly string[] as readonly [string, ...string[]];
 /** Shot sizes the AI may use (STYLE_REFERENCE vocabulary; `establishing` is added by compile, not by the model). */
 export const AI_SHOT_TYPES = ['group', 'two_shot', 'mcu', 'cu', 'ecu', 'insert'] as const;
+/** The travel camera system also has the medium shot `ms` (the original's most common single shot); the classic vocabulary stays as it was. */
+export const AI_TRAVEL_SHOT_TYPES = ['group', 'two_shot', 'ms', 'mcu', 'cu', 'ecu', 'insert'] as const;
 export const AI_MOVES = ['static', 'push_in', 'pull_out'] as const;
+/** Camera-flow intent of a beat (travel camera system only): auto = the program decides, cut = hard cut, move = travel from the previous shot. */
+export const AI_SHOT_FLOWS = ['auto', 'cut', 'move'] as const;
+export { SHOT_INTENTS, type ShotIntent } from '../staging/shotIntent';
 export const AI_KINDS = ['dialogue', 'narration', 'silent'] as const;
 export const AI_FX = ['none', 'vignette_anxiety', 'memory_glow', 'dutch'] as const;
 export const AI_TRANSITIONS = ['cut', 'dip_black', 'scene_black'] as const;

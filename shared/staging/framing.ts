@@ -9,8 +9,13 @@ import { clamp } from '../timeline/easing';
 import { feetToSlotDepth } from './ground';
 import { ASPECT, MAX_ZOOM, MIN_ZOOM, clampCamera, clampZoom, viewRect, viewWorldHeight, type BgFraming, type BgInfo, type CameraPose, type Rect } from './world';
 
-export const SHOT_TYPES = ['establishing', 'group', 'two_shot', 'mcu', 'cu', 'ecu', 'insert'] as const;
+export const SHOT_TYPES = ['establishing', 'group', 'two_shot', 'ms', 'mcu', 'cu', 'ecu', 'insert'] as const;
 export type ShotType = (typeof SHOT_TYPES)[number];
+/** Shot sizes the editor offers: the medium shot `ms` belongs to the travel camera system (still listed when the value already is ms); an unknown or legacy current value is kept at the front. */
+export function shotTypeChoices(travel: boolean, current?: string): string[] {
+  const all: string[] = current !== undefined && !(SHOT_TYPES as readonly string[]).includes(current) ? [current, ...SHOT_TYPES] : [...SHOT_TYPES];
+  return all.filter((t) => t !== 'ms' || travel || current === 'ms');
+}
 /** Pre-P7.2 names, still accepted in stored projects: closeup->cu, bust|medium->mcu, wide->group (with people). */
 export const LEGACY_SHOT_TYPES = ['closeup', 'bust', 'medium', 'wide'] as const;
 export const ALL_SHOT_TYPES = [...SHOT_TYPES, ...LEGACY_SHOT_TYPES] as const;
@@ -361,7 +366,7 @@ function solveGroup(
 }
 
 /** Lower the head on screen when its top would be closer to the upper edge than `margin` (share of the frame). */
-function headTopFloor(cy: number, headTop: number, Hv: number, margin: number): number {
+export function headTopFloor(cy: number, headTop: number, Hv: number, margin: number): number {
   const top = (headTop - (cy - Hv / 2)) / Hv;
   return top < margin ? cy - (margin - top) * Hv : cy;
 }

@@ -248,6 +248,35 @@ export interface RuleSceneInput {
   previousScene: unknown;
   isPerformance: boolean;
   fixedBeats: Array<{ keepId: string; paragraph: number; kind: string; speaker: string | null; text: string }>;
+  /** Travel camera system: the shot mix follows the original (medium shots as the default, a two-shot now and then, close-ups for emotion). */
+  travel?: boolean;
+}
+
+/** Camera width of the travel shots (larger = closer); only the order matters. Two-shot heads (0.39H) are bigger than medium ones (0.31H). */
+const TRAVEL_CLOSENESS: Record<string, number> = { establishing: 0, group: 1, ms: 2, two_shot: 2.5, mcu: 3, cu: 4, ecu: 5, insert: 6 };
+/** The intent label of a travel shot, taken from what the framing really does relative to the previous one (not a fixed guess). */
+export function shotLabel(previous: DirectedBeat | undefined, type: string, focus: string[]): NonNullable<DirectedBeat['shot']['intent']> {
+  if (!previous) return 'reveal';
+  const pf = previous.shot.focus;
+  const sameSet = pf.length === focus.length && focus.every((f) => pf.includes(f));
+  const closer = (TRAVEL_CLOSENESS[type] ?? 2) - (TRAVEL_CLOSENESS[previous.shot.type] ?? 2);
+  if (focus.length > pf.length && focus.some((f) => !pf.includes(f))) return focus.some((f) => pf.includes(f)) ? 'reveal' : 'exchange';
+  if (sameSet) return previous.shot.type === type ? 'continue' : closer > 0 ? 'emphasis' : 'release';
+  return focus.every((f) => pf.includes(f)) || !focus.some((f) => pf.includes(f)) || focus.length <= pf.length ? 'exchange' : 'reveal';
+}
+
+/**
+ * The partner of a travel two-shot: only a neighbour on the stage (the cast order is the left-to-right order). The previous speaker if
+ * he stands next to the speaker, else the neighbour on the side of the previous speaker, else the nearest neighbour.
+ */
+export function adjacentPartner(order: readonly string[], speaker: string, last: string | null): string | undefined {
+  const at = order.indexOf(speaker);
+  if (at < 0) return order.find((c) => c !== speaker);
+  const left = order[at - 1], right = order[at + 1];
+  if (last && (last === left || last === right)) return last;
+  const lastAt = last ? order.indexOf(last) : -1;
+  if (lastAt >= 0 && lastAt !== at) return lastAt < at ? left ?? right : right ?? left;
+  return right ?? left;
 }
 
 const pickFrom = (cands: readonly string[], have: readonly string[], salt: number): string | null => {
@@ -287,7 +316,34 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
     const first = beats.length === 0;
     let type: DirectedBeat['shot']['type'];
     let focus: string[];
-    if (first && everyone.length >= 2) { type = 'group'; focus = everyone.slice(0, 4); sinceWide = 0; }
+    let intent: NonNullable<DirectedBeat['shot']['intent']> = 'continue';
+    let travelReason = '延续这一段对话';
+    if (input.travel) {
+      const previous = beats.at(-1);
+      const changedEmotion = emotion !== 'neutral' && emotion !== previous?.emotion;
+      const partner = speaker ? adjacentPartner(everyone, speaker, lastSpeaker) : undefined;
+      if (first) {
+        type = everyone.length >= 2 ? 'group' : 'ms'; focus = everyone.slice(0, 4);
+        intent = 'reveal'; travelReason = '建立在场人物关系';
+      } else if (dialogue && speaker && changedEmotion && (emotion === 'surprised' || emotion === 'angry')) {
+        type = 'cu'; focus = [speaker]; intent = 'reaction'; travelReason = '切近观察新出现的强烈反应';
+      } else if (dialogue && speaker && changedEmotion) {
+        type = 'mcu'; focus = [speaker]; intent = 'emphasis'; travelReason = '情绪发生变化，强调当前焦点';
+      } else if (dialogue && speaker && previous?.shot.type === 'two_shot' && previous.shot.focus.includes(speaker)) {
+        type = 'two_shot'; focus = previous.shot.focus;
+      } else if (dialogue && speaker && partner) {
+        type = 'two_shot'; focus = [speaker, partner];
+        intent = shotLabel(previous, type, focus); travelReason = '回到两人关系并保持连续对话';
+      } else if (focusId) {
+        type = 'ms'; focus = [focusId];
+        intent = shotLabel(previous, type, focus);
+        travelReason = intent === 'continue' ? '稳定观察当前人物' : intent === 'release' ? '拉开一点，交代当前人物' : '注意交给新的叙述焦点';
+      } else {
+        type = everyone.length >= 2 ? 'group' : 'ms'; focus = everyone.slice(0, 4);
+        intent = shotLabel(previous, type, focus); travelReason = '舒缓并交代在场关系';
+      }
+    }
+    else if (first && everyone.length >= 2) { type = 'group'; focus = everyone.slice(0, 4); sinceWide = 0; }
     else if (dialogue && speaker) {
       sinceWide++;
       const partner = everyone.find((c) => c !== speaker && c === lastSpeaker) ?? everyone.find((c) => c !== speaker);
@@ -308,7 +364,7 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
     }
     return {
       keepId: forced?.keepId ?? null, paragraph: para, kind: dialogue ? 'dialogue' : 'narration', speaker: dialogue ? speaker : null, text: seg.text,
-      emotion, reason: '规则：关键词与固定节奏', shot: { type, focus, move: type === 'cu' && emotion !== 'neutral' ? 'push_in' : 'static', dof: null },
+      emotion, reason: input.travel ? travelReason : '规则：关键词与固定节奏', shot: { type, focus, move: input.travel ? 'static' : type === 'cu' && emotion !== 'neutral' ? 'push_in' : 'static', dof: null, ...(input.travel ? { intent } : {}) },
       cutIn: 'cut', fx: 'none', actors,
     } as DirectedBeat;
   };
@@ -331,7 +387,7 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
     }
   }
   return {
-    reason: '规则导演（非 AI）：按引号识别对白，按名字匹配说话人，按关键词选情绪，镜头按固定节奏。',
+    reason: input.travel ? '规则导演（非 AI）：按人物关系保持连续对话，情绪变化才强调或切反应。' : '规则导演（非 AI）：按引号识别对白，按名字匹配说话人，按关键词选情绪，镜头按固定节奏。',
     blocking: [],
     transitionIn: input.previousScene ? 'scene_black' : 'cut',
     bgm: null,

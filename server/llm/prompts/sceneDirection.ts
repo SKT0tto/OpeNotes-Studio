@@ -1,6 +1,9 @@
 import type { ActorResources } from '../../../shared/director/catalogDigest';
 import type { Paragraph } from '../../../shared/director/paragraphs';
-import { AI_FX, AI_MOVES, AI_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../../../shared/director/vocab';
+import type { ZodType } from 'zod';
+import { SceneDirectionSchema, SceneDirectionTravelSchema, type SceneDirection } from '../../../shared/schema/ai';
+import type { CameraSystem } from '../../../shared/schema/project';
+import { AI_FX, AI_MOVES, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../../../shared/director/vocab';
 
 export const SCENE_PROMPT_VERSION = 'scene-3';
 
@@ -60,6 +63,31 @@ export interface SceneDirectionInput {
   previousScene: { title: string; endSummary: string } | null;
   fixedBeats: Array<{ keepId: string; paragraph: number; kind: string; speaker: string | null; text: string; lockedFields?: string[] }>;
   mode: { scopes: string[]; focusBeatIds?: string[] };
+}
+
+/** Extra instructions and the version tag of the travel camera system. The classic prompt (SCENE_SYSTEM, SCENE_PROMPT_VERSION) is never touched, so classic requests and cache keys stay as they were. */
+export const SCENE_TRAVEL_VERSION = 'scene-3+travel-5';
+export const SCENE_TRAVEL_SECTION = `# 叙事镜头与运镜（本场景使用「运镜」系统，以下镜头规则优先）
+- 先按叙事段组织镜头：一段连续对话可以一直保持同一个 two_shot（focus 两人）或稳定 ms；换说话人不等于必须换镜。two_shot 的两人必须是舞台上相邻的两位（focus 里是上一位说话人或身边的听者）。ms 是单人中景，不保证旁人可见。mcu/cu/ecu 只给具体信息、情绪变化或反应；没有可拍的物体时回到稳定中景，不要自动改成特写。不要按比例配额或每隔几句换镜。
+- shot.intent 说明这一拍的叙事作用：continue=延续当前观看；exchange=交接注意给另一人；emphasis=强调同一焦点的新情绪/信息；reaction=观察反应；reveal=揭示此前未见的焦点；release=舒缓、拉开交代关系；rupture=时间/情绪断裂。reason 写这一作用的具体原因，不能只写“需要运镜”。意图不是坐标，程序按真实机位判断。
+- shot.flow 多数用 auto。move 表示希望从上一镜移到本拍焦点，但仍须符合 intent 的叙事理由、同一背景和安全条件；AI 的 move 不是用户手动指定。cut 只是建议：反应、断裂、或换人进入特写时程序才照单硬切，其他情况由程序按机位和叙事规则决定。
+- exchange：同背景相邻焦点可以移到下一位，远距离用切；emphasis：只有实际靠近才推近；release：只有实际拉远才退；reveal：必须有新的可见焦点；reaction/rupture 通常切；continue 稳住。运镜后给观众稳定观看时间，不要连续机械推拉。
+- type 可用 ${AI_TRAVEL_SHOT_TYPES.join(' / ')}；move 默认 static。不要通过额外 push_in/pull_out 叠加无理由的运动。距离、真实方向、停留时长和手动关键帧由程序检查；不合适时会降级，不能要求无条件连续移到。`;
+
+export interface ScenePrompt {
+  system: string;
+  schema: ZodType<SceneDirection>;
+  schemaName: string;
+  promptVersion: string;
+}
+
+export function scenePromptFor(system: CameraSystem): ScenePrompt {
+  if (system === 'travel') {
+    return { system: `${SCENE_SYSTEM}
+
+${SCENE_TRAVEL_SECTION}`, schema: SceneDirectionTravelSchema, schemaName: 'SceneDirectionTravel', promptVersion: SCENE_TRAVEL_VERSION };
+  }
+  return { system: SCENE_SYSTEM, schema: SceneDirectionSchema, schemaName: 'SceneDirection', promptVersion: SCENE_PROMPT_VERSION };
 }
 
 export function sceneInput(i: SceneDirectionInput): Record<string, unknown> {

@@ -79,7 +79,7 @@ const KIND: Record<string, string> = {
   bgm: 'BGM', ambience: '环境音', beats: '台词', shot: '镜头', style: '风格设置', tracks: '轨道', keys: '关键帧',
 };
 
-const FIELD_LABEL: Record<string, string> = { text: '文本', speakerId: '说话人', kind: '类型', duration: '时长', emotion: '情绪', cutIn: '镜头切入', type: '景别', focus: '焦点', move: '运镜', dof: '景深', offsets: '画面位置' };
+const FIELD_LABEL: Record<string, string> = { text: '文本', speakerId: '说话人', kind: '类型', duration: '时长', emotion: '情绪', cutIn: '镜头切入', type: '景别', focus: '焦点', move: '运镜', dof: '景深', transition: '换镜方式', offsets: '画面位置' };
 
 function labelOf(root: Obj, path: Seg[], node: Obj): string {
   const last = path.at(-1);

@@ -3,6 +3,8 @@ import type { MotionEntry } from '../schema/assets';
 import type { Transition } from '../schema/project';
 import type { BgFraming, BgInfo, CameraPose, GroundParams } from '../staging/world';
 import type { ShotType } from '../staging/framing';
+import type { StageMap } from '../staging/compactStage';
+import type { TravelBgModel } from '../staging/travelBg';
 import type { StyleValues } from '../style/ournotes';
 import type { EaseName } from './easing';
 import type { TransitionTiming } from './time';
@@ -36,8 +38,16 @@ export interface GazeKey extends TimedKey {
   x: number;
   y: number;
 }
+export type TravelKind = 'distance' | 'lateral' | 'regroup' | 'settle' | 'reframe' | 'drift' | 'cutDrift';
+/** Travel segment info of a camera key (travel camera system only). */
+export interface CameraTravel {
+  kind: TravelKind;
+  /** Screen anchor (world coordinates). With an anchor the segment is interpolated by `travelPose`, otherwise by `blendPose`. */
+  anchor?: { x: number; y: number };
+}
 export interface CameraKey extends TimedKey {
   pose: CameraPose;
+  travel?: CameraTravel;
 }
 export interface FadeKey extends TimedKey {
   alpha: number;
@@ -123,6 +133,8 @@ export interface CompiledBeat {
   focus: string[];
   shotType: ShotType;
   dof: number;
+  /** Travel scenes only: how the camera changes into this beat (editor display). */
+  camTravel?: { kind: TravelKind | 'cut' | 'glide'; seconds: number; ease?: string; reason?: string };
 }
 
 export interface LocationBanner {
@@ -171,6 +183,20 @@ export interface CompiledScene {
   shakes: Array<{ start: number; end: number; amp: number }>;
   dof: NumKey[];
   focus: Array<{ at: number; ids: string[] }>;
+  /** Set to 'travel' in travel scenes only. */
+  cameraSystem?: 'travel';
+  /** Travel scenes only: the data evaluate needs to derive the background pose, the compact stage and the depth of field (version 8). */
+  travel?: {
+    version: 11;
+    aspect: number;
+    stage: StageMap;
+    bg: TravelBgModel;
+    /** Mean visible head height of the shot's people (world units), eased with the camera. */
+    focusHead: NumKey[];
+    /** The author's depth-of-field level per shot (-1 = automatic from the head share). */
+    dofManual: NumKey[];
+    dof: { mode: string; aperture: number; depthSpan: number };
+  };
 }
 
 export interface CompiledProject {

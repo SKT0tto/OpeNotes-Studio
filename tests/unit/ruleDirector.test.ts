@@ -145,3 +145,32 @@ describe('wide frame (2.16:1)', () => {
     expect((wide[1]!.x - wide[0]!.x) / wide[0]!.headH).toBeCloseTo((narrow[1]!.x - narrow[0]!.x) / narrow[0]!.headH, 2);
   });
 });
+
+import { adjacentPartner, shotLabel } from '../../shared/director/ruleDirector';
+import { pairNeighbours } from '../../shared/director/validate';
+
+describe('travel two-shot pairing (v10)', () => {
+  it('rule director pairs only neighbours', () => {
+    const order = ['a', 'b', 'c', 'd'];
+    expect(adjacentPartner(order, 'b', 'c')).toBe('c');
+    expect(adjacentPartner(order, 'a', 'd')).toBe('b');
+    expect(adjacentPartner(order, 'd', 'a')).toBe('c');
+    expect(adjacentPartner(order, 'c', 'a')).toBe('b');
+    expect(adjacentPartner(order, 'b', null)).toBe('c');
+  });
+  it('re-pairs a non-adjacent pair with the previous speaker or the listener next to the speaker', () => {
+    const order = ['a', 'b', 'c', 'd'];
+    expect(pairNeighbours(order, 'a', 'b', null)).toBe('b');
+    expect(pairNeighbours(order, 'a', 'c', null)).toBe('b');
+    expect(pairNeighbours(order, 'b', 'd', 'a')).toBe('a');
+    expect(pairNeighbours(order, 'b', 'd', 'd')).toBe('c');
+    expect(pairNeighbours(['a'], 'a', 'b', null)).toBeNull();
+  });
+  it('labels from the framing change', () => {
+    const prev = (type: string, focus: string[]) => ({ shot: { type, focus } }) as never;
+    expect(shotLabel(prev('ms', ['a']), 'two_shot', ['a', 'b'])).toBe('reveal');
+    expect(shotLabel(prev('two_shot', ['a', 'b']), 'ms', ['a'])).toBe('exchange');
+    expect(shotLabel(prev('ms', ['a']), 'ms', ['a'])).toBe('continue');
+    expect(shotLabel(prev('mcu', ['a']), 'ms', ['a'])).toBe('release');
+  });
+});

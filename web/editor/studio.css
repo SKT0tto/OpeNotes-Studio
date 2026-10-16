@@ -132,6 +132,11 @@ kbd { font-family: var(--font-mono); padding: 1px 6px; border: 1px solid var(--l
 .tl-block.held { opacity: 0.6; border-style: dashed; }
 .tl-block.trans { border-color: var(--text-3); }
 .tl-block.trans.cut { padding: 0 3px; }
+.tl-travel { position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: center; box-sizing: border-box; padding: 0 4px; overflow: hidden; white-space: nowrap; font-size: 10px; line-height: 1; color: var(--text-1); pointer-events: none; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--track-camera) 55%, transparent) 0 4px, color-mix(in srgb, var(--track-camera) 22%, transparent) 4px 8px); border-right: 2px solid var(--track-camera); }
+.tl-travel.k-drift, .tl-travel.k-cutDrift { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--text-3) 45%, transparent) 0 4px, transparent 4px 8px); border-right-color: var(--text-3); }
+.cam-system button.on { background: var(--track-camera); color: #fff; font-weight: 600; }
+.cam-system { margin-left: 2px; }
+.cam-override { margin-left: 6px; border-color: var(--track-camera); }
 .tl-block-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-label); color: var(--text-1); pointer-events: none; }
 .tl-edge { position: absolute; right: 0; top: 0; bottom: 0; width: 6px; cursor: ew-resize; background: transparent; }
 .tl-edge:hover, .tl-edge:active { background: var(--accent); }
