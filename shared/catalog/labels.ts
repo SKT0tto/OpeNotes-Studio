@@ -20,6 +20,8 @@ export const TRANSITION_LABEL: Record<string, string> = {
 };
 export const CAMERA_SYSTEM_LABEL: Record<string, string> = { classic: '经典（硬切）', travel: '运镜（Our Notes / MyGO 式）', inherit: '跟随项目' };
 export const SHOT_TRANSITION_LABEL: Record<string, string> = { auto: '自动', cut: '硬切', glide: '滑移', travel: '运镜' };
+/** A travel decision's reason without its own "运镜：" lead-in, so a label such as "运镜决定：" does not repeat it. */
+export const travelReasonText = (reason: string): string => reason.replace(/^\s*运镜(决定)?[：:]\s*/, '');
 export const TRAVEL_KIND_LABEL: Record<string, string> = { cut: '硬切', glide: '滑移', distance: '景距推拉', lateral: '横移', regroup: '重组（双人/群像↔单人）', settle: '收势推近', reframe: '入场重构图', drift: '空景慢漂', cutDrift: '切入缓移' };
 /** Depth-of-field text of a shot (timeline block, storyboard card): a travel scene blurs by shot distance unless the author set a level. */
 export const dofText = (travel: boolean, manual: number | undefined, level: number) => (travel && manual === undefined ? '景深 按景距' : `景深 ${level}`);

@@ -4,7 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { asTravelProject, digest, travelGoldenInputs } from './helpers/travelGoldenInputs';
 
 /**
- * Travel golden file v12 (travel output version 11):
+ * Travel golden file v13 (travel output version 12), recorded once with the rounded digest:
+ * v13: people leave / enter during a move with the camera (switched while outside the frame; a remaining cross-fade is at most 0.2 s);
+ * move durations paced to the original's median of about 1.0 s (the long end compressed, p90 about 1.4-1.6 s). Who is in frame is unchanged.
+ * v12 file (travel output version 11):
  * v12 file: same travel output as v11; only the digest changed (compiled JSON and frame numbers rounded to 1e-4 before hashing, so the hash is the same on
  * Windows and Linux). CompiledScene.travel.version stays 11.
  * the compiled JSON and the evaluated frames of the travel camera system on fixed inputs.
@@ -27,13 +30,13 @@ import { asTravelProject, digest, travelGoldenInputs } from './helpers/travelGol
  * v4: the faithful phase-3 travel system plus the gap fixes: travel groups framed wide (head 0.23 of the frame), compact-stage pitch 2.0
  * heads and parallax sigma 1.2, hashed exceptions per transition class, a visible post-cut drift, durations spread by move size, and an mcu
  * every 4-5 lines in the rule director. (v3: structural move / cut rules, OutQuad, depth based blur, ms, post-cut drift.)
- * Written only with UPDATE_TRAVEL_GOLDEN=1, and recorded once for v11. When the travel look is changed on purpose again: add a new
- * `.v12.json`, raise CompiledScene.travel.version, and say why in the commit message. The classic golden is a different
+ * Written only with UPDATE_TRAVEL_GOLDEN=1, and recorded once for v13. When the travel look is changed on purpose again: add a new
+ * `.v14.json`, raise CompiledScene.travel.version, and say why in the commit message. The classic golden is a different
  * file and is never regenerated.
  */
-const GOLDEN_PATH = path.resolve('tests/fixtures/camera-travel-golden.v12.json');
+const GOLDEN_PATH = path.resolve('tests/fixtures/camera-travel-golden.v13.json');
 
-describe('travel camera golden v12', () => {
+describe('travel camera golden v13', () => {
   it('compiled output and evaluated frames match the recorded travel baseline', async () => {
     const inputs = await travelGoldenInputs();
     const got: Record<string, { compiled: string; frames: string }> = {};

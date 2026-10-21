@@ -50,7 +50,6 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
   }, []);
   /** The latest compile result, for panels that show what the compiler made of an edit (held shots, rule director output). */
   const [compiled, setCompiled] = useState<CompiledProject | null>(null);
-  const lastInfo = useRef(0);
   const hasScenes = (project?.scenes.length ?? 0) > 0;
   useEffect(() => {
     projectRef.current = project;
@@ -69,6 +68,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
     let hiddenSrc: RenderState['ui'] | null = null;
     let hiddenUi: RenderState['ui'] | null = null;
     let unsubscribe: (() => void) | null = null;
+    let unsubscribeSlow: (() => void) | null = null;
     let removeRestore: (() => void) | null = null;
     const audio = new AudioEngine();
     const el = host.current!;
@@ -141,7 +141,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       registerDebugStage(() => stage!.probe());
       registerDebugBoxes(() => stage!.actorGeometry().map((g) => ({ castId: g.castId, modelId: stage!.actorFor(g.castId)?.id ?? null, head: g.head })));
       registerDebugCamera(() => ({ ...stage!.camera.pose, bgViewZoom: stage!.bgViewZoom }));
-      unsubscribe = player.subscribe((s: RenderState, p) => {
+      unsubscribe = player.subscribe((s: RenderState) => {
         // identity-stable while the interface is hidden, so the layers do not re-layout every frame
         if (hud!.hidden && hiddenSrc !== s.ui) {
           hiddenSrc = s.ui;
@@ -150,12 +150,17 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
         const ui = hud!.hidden ? hiddenUi! : s.ui;
         dialog!.update(s.subtitle, ui, false, s.fx.glow);
         hud!.update({ ...s, ui });
-        const now = performance.now();
-        if (now - lastInfo.current < 100 && p.isPlaying) return;
-        lastInfo.current = now;
+      });
+      // React state follows the player on its slow clock (2 / s while playing, every frame while paused); the time readouts and the
+      // timeline playhead are driven by the player's own events (see PlayClock), not by this state.
+      unsubscribeSlow = player.subscribeSlow((s, p) => {
         const sc = p.compiled.scenes[s.sceneIndex]!;
         setPlaying(p.isPlaying);
-        setInfo({ t: s.t, duration: p.duration, scene: s.sceneId, sceneTitle: sc.title, beat: s.subtitle?.beatId ?? '', sceneStarts: p.compiled.scenes.map((x) => x.start) });
+        setInfo((prev) => {
+          const beat = s.subtitle?.beatId ?? '';
+          const same = prev.duration === p.duration && prev.scene === s.sceneId && prev.beat === beat && prev.sceneTitle === sc.title && prev.sceneStarts.length === p.compiled.scenes.length;
+          return same && prev.t === s.t ? prev : { t: s.t, duration: p.duration, scene: s.sceneId, sceneTitle: sc.title, beat, sceneStarts: same ? prev.sceneStarts : p.compiled.scenes.map((x) => x.start) };
+        });
       });
       for (const w of player.compiled.warnings) console.warn(w);
       setCompiled(player.compiled);
@@ -175,6 +180,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       registerDebugBoxes(null);
       registerDebugApp(null);
       unsubscribe?.();
+      unsubscribeSlow?.();
       player?.dispose();
       playerRef.current = null;
       hudRef.current = null;

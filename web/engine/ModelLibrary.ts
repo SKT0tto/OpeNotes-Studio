@@ -27,6 +27,7 @@ export class ModelLibrary {
   private readonly unregister = new Map<string, () => void>();
   private readonly reloadListeners = new Set<(fresh: Live2DActor, old: Live2DActor | null) => void>();
   private readonly textures = new Map<string, Promise<Texture>>();
+  private readonly bgUrls = new Map<string, string>();
   private readonly grounds = new Map<string, Promise<GroundOverride | null>>();
   /** Model ids used by the scene on screen; never evicted. */
   private pinned = new Set<string>();
@@ -65,9 +66,33 @@ export class ModelLibrary {
     let p = this.textures.get(id);
     if (!p) {
       const entry = await this.background(id);
-      this.textures.set(id, (p = Assets.load<Texture>({ src: entry.url, parser: 'loadTextures' })));
+      p = this.textures.get(id);
+      if (!p) {
+        this.bgUrls.set(id, entry.url);
+        this.textures.set(id, (p = Assets.load<Texture>({ src: entry.url, parser: 'loadTextures' })));
+      }
     }
     return p;
+  }
+
+  /** Ids of the backgrounds whose texture is loaded (or loading). */
+  loadedBackgrounds(): string[] {
+    return [...this.textures.keys()];
+  }
+
+  /**
+   * Forget a background's texture so the next `backgroundTexture(id)` loads it again; the caller destroys the GPU copy with
+   * `unloadBackground(url)` once nothing draws it any more.
+   */
+  forgetBackground(id: string): string | null {
+    const url = this.bgUrls.get(id) ?? null;
+    this.textures.delete(id);
+    this.bgUrls.delete(id);
+    return url;
+  }
+
+  unloadBackground(url: string): void {
+    void Assets.unload(url).catch(() => undefined);
   }
 
   ground(id: string): Promise<GroundOverride | null> {

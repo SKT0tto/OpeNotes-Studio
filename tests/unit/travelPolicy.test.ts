@@ -162,26 +162,28 @@ describe('narrative travel: motivation, geometry and rhythm', () => {
 describe('travel policy v3: durations of the original', () => {
   const s = (type: TravelShotInfo['type'], ids = ['a']) => shot(type, ids);
   const sec = (kind: 'distance' | 'regroup' | 'lateral', prev: TravelShotInfo, cur: TravelShotInfo, lat = 1, over: Partial<typeof tv> = {}) => moveSeconds(kind, prev, cur, lat, { ...tv, ...over });
-  it('one value per kind of move, as measured in the MyGO scripts', () => {
-    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1)).toBe(1.0);
-    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1.7)).toBe(1.2);
-    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 3)).toBe(1.3);
-    expect(sec('distance', s('mcu'), s('cu'))).toBe(1.3);
-    expect(sec('distance', s('mcu'), s('ecu'))).toBe(1.5);
-    expect(sec('distance', s('cu'), s('mcu'))).toBe(1.0);
-    expect(sec('distance', s('ecu'), s('mcu'))).toBe(1.5);
-    expect(sec('regroup', s('mcu'), s('two_shot', ['a', 'b']))).toBe(1.0);
-    expect(sec('regroup', s('two_shot', ['a', 'b']), s('mcu'))).toBe(1.2);
+  /** v13 pace: the MyGO table times 1.25 (median about 1.0 s), the part above 1.2 s counted at half. */
+  const pace = (x: number) => (x * 1.25 <= 1.2 ? x * 1.25 : 1.2 + (x * 1.25 - 1.2) * 0.5);
+  it('one value per kind of move, as measured in the MyGO scripts (paced to the original median of about 1.0 s)', () => {
+    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1)).toBeCloseTo(pace(1.0), 9);
+    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1.7)).toBeCloseTo(pace(1.2), 9);
+    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 3)).toBeCloseTo(pace(1.3), 9);
+    expect(sec('distance', s('mcu'), s('cu'))).toBeCloseTo(pace(1.3), 9);
+    expect(sec('distance', s('mcu'), s('ecu'))).toBeCloseTo(pace(1.5), 9);
+    expect(sec('distance', s('cu'), s('mcu'))).toBeCloseTo(pace(1.0), 9);
+    expect(sec('distance', s('ecu'), s('mcu'))).toBeCloseTo(pace(1.5), 9);
+    expect(sec('regroup', s('mcu'), s('two_shot', ['a', 'b']))).toBeCloseTo(pace(1.0), 9);
+    expect(sec('regroup', s('two_shot', ['a', 'b']), s('mcu'))).toBeCloseTo(pace(1.2), 9);
   });
   it('the tempo multiplies but never goes below 0.4 s or above moveMax', () => {
-    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1, { tempo: 0.5 })).toBe(0.5);
-    expect(sec('distance', s('mcu'), s('cu'), 1, { tempo: 0.5 })).toBeCloseTo(0.65, 9);
+    expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1, { tempo: 0.5 })).toBeCloseTo(pace(1.0) * 0.5, 9);
+    expect(sec('distance', s('mcu'), s('cu'), 1, { tempo: 0.5 })).toBeCloseTo(pace(1.3) * 0.5, 9);
     expect(sec('lateral', s('mcu'), s('mcu', ['b']), 1, { tempo: 0.3 })).toBe(0.4);
     expect(sec('distance', s('ecu'), s('mcu'), 1, { tempo: 2 })).toBe(tv.moveMax);
   });
   it('decideTravel uses the table, outQuad, and the span cap on top', () => {
     const d = move(decideTravel(input({ span: 10 })));
-    expect(d.seconds).toBeCloseTo(1.0 * moveSizeFactor(moveGeometry(LAT_PREV, LAT_CUR, H, 16 / 9)), 9);
+    expect(d.seconds).toBeCloseTo(pace(1.0 * moveSizeFactor(moveGeometry(LAT_PREV, LAT_CUR, H, 16 / 9))), 9);
     expect(d.ease).toBe('outQuad');
     expect(tv.ease).toBe('outQuad');
     expect(tv.moveEase).toBe('outQuad');

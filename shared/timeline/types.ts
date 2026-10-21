@@ -187,7 +187,7 @@ export interface CompiledScene {
   cameraSystem?: 'travel';
   /** Travel scenes only: the data evaluate needs to derive the background pose, the compact stage and the depth of field (version 8). */
   travel?: {
-    version: 11;
+    version: 12;
     aspect: number;
     stage: StageMap;
     bg: TravelBgModel;

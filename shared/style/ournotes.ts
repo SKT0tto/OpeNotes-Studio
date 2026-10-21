@@ -241,8 +241,8 @@ const BASE = {
     bgZoomMax: 3.2,
     /** People outside a tight shot (mcu and closer): 'original' fades them out as the camera starts, 'keep' leaves everybody in. */
     neighbours: 'original' as string,
-    /** Fade of people leaving / entering the frame at the start of a move (the original: 0.2 s). */
-    fadeSeconds: 0.25,
+    /** Longest cross-fade of a person inside the frame who must still appear / disappear during a move (never above 0.2 s). People the camera carries out of / into the frame do not fade at all. */
+    fadeSeconds: 0.2,
     /** Depth of field: 'original' (blur follows the head share of the frame), 'off' or 'strong'. */
     dofMode: 'original' as string,
     /** Strength of the depth of field (1 = the original's). */

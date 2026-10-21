@@ -4,6 +4,7 @@ import type { AxisSigns } from '@shared/schema/calibration';
 import { ParamOverride, type ParamAccess } from './ParamOverride';
 import { idleNameOf } from '@shared/timeline/motionMap';
 import type { ensureRuntime } from './runtime';
+import { installFastGlState } from './fastGlState';
 
 type Runtime = Awaited<ReturnType<typeof ensureRuntime>>;
 
@@ -89,6 +90,7 @@ export class Live2DActor {
     };
     this.override = new ParamOverride(access, signs);
     this.hook();
+    installFastGlState(this.internal);
   }
 
   static async load(rt: Runtime, opts: ActorOptions): Promise<Live2DActor> {
@@ -164,6 +166,31 @@ export class Live2DActor {
     if (dt === 0) return;
     this.model.deltaTime = 0;
     this.internal.update(dt, this.model.elapsedTime);
+  }
+
+  /**
+   * Upload the model's textures to the GPU now. The engine does it lazily on the first frame the model is drawn, which for a person who
+   * walks in, fades in or changes costume mid-shot means three 2048 x 2048 uploads inside one frame (a 30 - 50 ms stall).
+   * `limit` caps the textures uploaded by this call (one per frame spreads a costume over a few frames); returns how many are still missing.
+   */
+  preupload(renderer: { gl: WebGL2RenderingContext; uid: number; texture: { bind(t: unknown, unit: number): void; resetState(): void } }, limit = Infinity): number {
+    const m = this.model as unknown as { textures: Array<{ source: { _gpuData: Record<number, unknown> } }> };
+    const flip = (this.internal as unknown as { textureFlipY: boolean }).textureFlipY;
+    let touched = false;
+    let left = 0;
+    for (const tex of m.textures) {
+      if (tex.source._gpuData[renderer.uid]) continue;
+      if (limit <= 0) {
+        left++;
+        continue;
+      }
+      limit--;
+      renderer.gl.pixelStorei(renderer.gl.UNPACK_FLIP_Y_WEBGL, flip);
+      renderer.texture.bind(tex, 0);
+      touched = true;
+    }
+    if (touched) renderer.texture.resetState();
+    return left;
   }
 
   /** Forget model time accumulated while the actor was not on stage (it must not be applied in one step later). */

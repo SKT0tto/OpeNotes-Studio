@@ -6,6 +6,7 @@ import type { usePlayerHost } from '../../play/usePlayerHost';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { AspectBox } from '../../ui/AspectBox';
+import { PlaySeek, PlayTime } from '../../play/PlayClock';
 import { StageOverlay } from '../stageTools/StageOverlay';
 import { useRenderState } from '../useRenderState';
 import { ActorControls } from './ActorFields';
@@ -91,8 +92,8 @@ export function Preview({ host, project, catalog }: { host: Host; project: Proje
           <input type="checkbox" checked={!auto} onChange={(e) => setAuto(!e.target.checked)} data-testid="preview-line-mode" />逐句
         </label>
         <button className="btn" disabled={!ready} onClick={advance} data-testid="play-next" title={auto ? '跳到下一句（↓）' : '进入下一句（空格 / ↓）'}>下一句 ⏭</button>
-        <span className="tc" data-testid="play-time">{fmt(info.t)}</span>
-        <input type="range" className="seek" min={0} max={Math.max(1, Math.round(info.duration * 100))} value={Math.round(info.t * 100)} disabled={!ready} onChange={(e) => seek(Number(e.target.value) / 100)} data-testid="play-seek" />
+        <PlayTime playerRef={playerRef} ready={ready} duration={info.duration} decimals={2} className="tc" testId="play-time" />
+        <PlaySeek playerRef={playerRef} ready={ready} duration={info.duration} onSeek={seek} testId="play-seek" />
         <span className="tc dim" data-testid="play-duration">{fmt(info.duration)}</span>
         <label className="inline">速度
           <select value={rate} onChange={(e) => { set({ rate: Number(e.target.value) }); if (playerRef.current) playerRef.current.rate = Number(e.target.value); }} data-testid="play-rate">
