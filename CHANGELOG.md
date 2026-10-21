@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.1
+
+Playback performance and travel polish. The classic camera output is unchanged: classic compile output is byte-identical to 0.2.0 and classic frames render identically within one colour level (the golden tests are untouched).
+
+**Smoother playback.** Far fewer dropped frames in the player and in the editor, on a classic and on a travel project: no spike when a camera move starts (shaders and textures are prepared before they are first drawn), cheaper hidden characters in travel scenes, a cache for the blurred background of a still classic shot, and the editor no longer re-renders its panels while a project plays (the time readout, slider and timeline playhead follow the player directly; the inspector follows twice a second).
+
+**Travel: people are carried, not cross-faded.** A person who enters or leaves the frame during a camera move is now carried in and out by the camera instead of fading, so there is no double image; a fade stays only for somebody who is already on screen and has to disappear (at most 0.2 s). Moves take about one second, like the original (median about 1.1 s instead of 0.9 s).
+
+**Reason text.** The reason of a travel shot in the shot panel and on the timeline no longer repeats its "运镜" prefix.
+
+**Auto quality for slow machines (travel only).** When the frames of a travel scene keep taking longer than their budget to prepare, blurs run at a lower resolution and off-screen characters update less often; after a stretch of headroom it returns to normal by itself. It looks at the work of a frame, not at the time between frames, so a 30 fps cap or a power-saver mode does not trigger it. The classic camera never changes quality.
+
+**Lower memory.** Background pictures that neither the current nor the next scene uses are released from the GPU, and the next scene's pictures are loaded ahead; a scene uploads only the costumes it starts in, and a costume worn later in the scene is uploaded just before it first appears.
+
+Tests: unit (`qualityGovernor`, a compile / evaluate budget), e2e (`perf-safety`: GL state shortcut, released backgrounds, playhead outside React, quality fallback, blur cache, costume upload), travel golden v13, classic goldens unchanged. `scripts/perf/frame-work.mjs` is a headless frame-time harness for maintainers.
+
 ## 0.2.0
 
 Camera travel mode: a second camera system that moves like Our Notes. The classic camera is untouched and stays the default; classic AI generation and compile output are byte-identical to 0.1.5.
