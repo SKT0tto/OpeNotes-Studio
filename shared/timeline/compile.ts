@@ -12,11 +12,12 @@ import { placeActor, type Placement } from '../staging/ground';
 import { arrangeRect, buildStageMap, shiftPlacement, stageArrangement, stageDx, type StageMap } from '../staging/compactStage';
 import { driftEnd, pushAbout, settleStart } from '../staging/travel';
 import { solveTravelShot } from '../staging/travelFraming';
-import { defaultGround, type BgInfo, type CameraPose, type Pt } from '../staging/world';
+import { defaultGround, viewWorldHeight, type BgInfo, type CameraPose, type Pt } from '../staging/world';
 import { clamp, lerp, type EaseName } from './easing';
 import { EMOTION_GESTURE, familyOfName, idleFamilyOf, isLiveSet, isLoopFamily, mapExpressionName, mapMotionFamily, pickReaction } from './motionMap';
 import { clipOverlaps, lastBefore, sampleKeys } from './sample';
 import type { StyleValues } from '../style/ournotes';
+import { evaluate } from './evaluate';
 import { EMPTY_KINDS, TEXT_KINDS, sceneTimes, type SceneTime } from './time';
 import { SHOT_RANK, aiCutHonoured, decideTravel, hashSeed, type TravelShotInfo } from './travelPolicy';
 import type {
@@ -28,6 +29,8 @@ const DEFAULT_GLIDE = 0.5;
 /// Re-pick the idle variant when the wanted yaw is this far from what the current variant bakes in.
 const RESELECT_YAW_GAP = 0.55;
 const FRAMING_YAW_LOOKAHEAD = 0.5;
+/** Longest cross-fade of a person who is inside the frame and still has to appear / disappear during a travel move (the original: 0.2 s). */
+const TRAVEL_FADE_MAX = 0.2;
 
 type KeyOf<C extends Channel> = Extract<Track, { channel: C }>['keys'][number];
 type Timed<C extends Channel> = { k: KeyOf<C>; at: number };
@@ -589,6 +592,8 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   const poseOf = (type: ShotType, ids: string[], t: number, v: StyleValues): CameraPose => poseFull(type, ids, t, v).pose;
   /** Per-actor screen arrangement keys of a shot (multi-person layout, bystanders hidden by the edge rule). */
   const shiftKeys = new Map<string, { x: NumKey[]; y: NumKey[]; s: NumKey[]; z: NumKey[]; vis: NumKey[] }>(works.map((w) => [w.castId, { x: [], y: [], s: [], z: [], vis: [] }]));
+  /** Travel moves: visibility changes that happen during a camera move (resolved against the real picture once the scene is assembled). */
+  const pendingVis: Array<{ id: string; index: number; at: number; len: number; from: number; to: number }> = [];
   const pushShift = (at: number, duration: number, ease: NumKey['ease'], shifts: Record<string, { dx: number; dy: number; s: number; z?: number }>, hide: string[], visDuration = 0, visEase: NumKey['ease'] = 'linear') => {
     for (const [id, k] of shiftKeys) {
       const sh = shifts[id] ?? { dx: 0, dy: 0, s: 1 };
@@ -842,7 +847,15 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
           hide = works.filter((w) => !keep.has(w.castId)).map((w) => w.castId);
         }
         const fades = dec.kind === 'distance' || dec.kind === 'lateral' || dec.kind === 'regroup' || dec.kind === 'reframe';
-        pushShift(at0, dec.kind === 'settle' ? 0 : len, easeName, shifts, hide, fades ? Math.min(tv.fadeSeconds, len) : 0, 'linear');
+        const visBefore = new Map([...shiftKeys].map(([id, k]) => [id, k.vis.at(-1)?.value ?? 1]));
+        pushShift(at0, dec.kind === 'settle' ? 0 : len, easeName, shifts, hide);
+        // A move lets people leave / enter by the camera carrying them out of / into the frame: when the visibility switches is decided below.
+        if (fades && len > 0 && i > 0) {
+          for (const [id, k] of shiftKeys) {
+            const to = hide.includes(id) ? 0 : 1;
+            if (visBefore.get(id) !== to) pendingVis.push({ id, index: k.vis.length - 1, at: at0, len, from: visBefore.get(id) ?? 1, to });
+          }
+        }
         if (beat.shot.move !== 'static' && beat.shot.move !== 'shake') {
           camera.push({ at: bt.start + len, duration: Math.max(0, dur - len), ease: 'inOutSine', pose: to });
         }
@@ -915,22 +928,72 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   const loc = scene.location;
   const location = loc?.show && loc.text ? { text: loc.text, start: st.contentStart + st.timing.fadeIn + sceneV.location.delay } : null;
 
-  return {
+  const buildActors = () =>
+    actors.map((a) => {
+      const k = shiftKeys.get(a.castId)!;
+      return { ...a, shiftX: clipOverlaps(k.x), shiftY: clipOverlaps(k.y), shiftS: clipOverlaps(k.s), shiftZ: clipOverlaps(k.z), shotVisible: clipOverlaps(k.vis) };
+    });
+  /**
+   * Travel: people who leave or enter the picture during a camera move do it with the camera, not with a cross-fade (two half-transparent
+   * copies of a person look like a ghost). The visibility switches while the person is fully outside the frame; only a person who is inside the
+   * frame at the start of the move and must still appear / disappear gets a quick fade (at most TRAVEL_FADE_MAX seconds, at the start).
+   */
+  const timeVisibility = (scene0: CompiledScene, pending: typeof pendingVis) => {
+    const fake = { duration: scene0.end + 1, scenes: [scene0], fade: [], fx: { anxiety: [], glow: [], roll: [] }, bgm: [] } as unknown as CompiledProject;
+    const half = asp / 2;
+    const Hs = viewWorldHeight(bg);
+    const N = 24;
+    const fadeLen = Math.min(tv.fadeSeconds, TRAVEL_FADE_MAX);
+    const onScreen = (id: string, t: number): boolean => {
+      const rs = evaluate(fake, t);
+      const a = rs.actors.find((x) => x.castId === id);
+      if (!a) return false;
+      const pl = placeActor(calOf(a.modelId), { slot: a.slot, depth: a.depth }, bg);
+      const hc = pl.headCenter;
+      const b = pl.bodyBox;
+      const x = hc.x + (b.x - hc.x) * a.shiftS + a.shiftX + a.slideH * Hs;
+      const w = b.w * a.shiftS;
+      const Hv = Hs / rs.camera.zoom;
+      const left = (x - rs.camera.x) / Hv;
+      const right = (x + w - rs.camera.x) / Hv;
+      return right > -half && left < half;
+    };
+    for (const pv of pending) {
+      const keys = shiftKeys.get(pv.id)!.vis;
+      const times = Array.from({ length: N + 1 }, (_, j) => pv.at + (pv.len * j) / N);
+      const on = times.map((t) => onScreen(pv.id, t));
+      let key: NumKey;
+      if (pv.to === 0) {
+        // leaving: switch once the person is out of the frame for good
+        let j = N + 1;
+        while (j > 0 && !on[j - 1]) j--;
+        key = j <= N ? { at: times[j]!, duration: 0, ease: 'linear', value: 0 } : { at: pv.at, duration: Math.min(fadeLen, pv.len), ease: 'linear', value: 0 };
+      } else {
+        // entering: switch just before the person comes into the frame
+        const j = on.indexOf(true);
+        key = j < 0 ? { at: pv.at, duration: 0, ease: 'linear', value: 1 } : j === 0 ? { at: pv.at, duration: Math.min(fadeLen, pv.len), ease: 'linear', value: 1 } : { at: times[j - 1]!, duration: 0, ease: 'linear', value: 1 };
+      }
+      keys[pv.index] = key;
+    }
+  };
+  const out: CompiledScene = {
     index, id: scene.id, title: scene.title, start: st.start, contentStart: st.contentStart, end: st.end,
     bgAssetId: scene.background.assetId, framing, bg, bgSegments, transitionIn: { kind: scene.transitionIn.kind, duration: scene.transitionIn.duration },
     timing: st.timing, ui: uiOf(sceneV), hiddenDialog, location,
-    actors: actors.map((a) => {
-      const k = shiftKeys.get(a.castId)!;
-      return { ...a, shiftX: clipOverlaps(k.x), shiftY: clipOverlaps(k.y), shiftS: clipOverlaps(k.s), shiftZ: clipOverlaps(k.z), shotVisible: clipOverlaps(k.vis) };
-    }), beats, camera: clipOverlaps(camera), shakes, dof: clipOverlaps(dof), focus,
+    actors: buildActors(), beats, camera: clipOverlaps(camera), shakes, dof: clipOverlaps(dof), focus,
     ...(travel && stage
       ? {
           cameraSystem: 'travel' as const,
           travel: {
-            version: 11 as const, aspect: asp, stage, bg: { sigma: tv.parallaxSigma, scale: tv.bgScale, zoomMax: tv.bgZoomMax, ref: travelRef },
+            version: 12 as const, aspect: asp, stage, bg: { sigma: tv.parallaxSigma, scale: tv.bgScale, zoomMax: tv.bgZoomMax, ref: travelRef },
             focusHead: clipOverlaps(focusHead), dofManual: clipOverlaps(dofManual), dof: { mode: tv.dofMode, aperture: tv.aperture, depthSpan: tv.depthSpan },
           },
         }
       : {}),
   };
+  if (travel && stage && pendingVis.length > 0) {
+    timeVisibility(out, pendingVis);
+    out.actors = buildActors();
+  }
+  return out;
 }

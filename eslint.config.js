@@ -14,6 +14,8 @@ export default tseslint.config(
     rules: { ...reactHooks.configs.recommended.rules },
   },
   { files: ['scripts/**/*.mjs'], languageOptions: { globals: globals.node } },
+  // the perf harness mixes node code with snippets that run inside the page
+  { files: ['scripts/perf/**/*.{js,mjs}'], languageOptions: { globals: { ...globals.node, ...globals.browser } } },
   { files: ['server/**/*.ts', 'tests/**/*.ts', 'tests/**/*.mjs', '*.ts'], languageOptions: { globals: globals.node } },
   { files: ['site/**/*.js'], languageOptions: { globals: globals.browser, sourceType: 'script' } },
 );

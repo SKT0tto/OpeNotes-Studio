@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { parallaxAt } from '../../shared/staging/travelBg';
-import { bgView, viewWorldHeight } from '../../shared/staging/world';
+import { bgView, defaultGround, viewWorldHeight } from '../../shared/staging/world';
 import { OURNOTES_STYLE } from '../../shared/style/ournotes';
 import { compileProject } from '../../shared/timeline/compile';
 import { evaluate } from '../../shared/timeline/evaluate';
 import { sampleNum } from '../../shared/timeline/sample';
 import type { CompiledBeat, CompiledProject, CompiledScene } from '../../shared/timeline/types';
+import { groupMetricsAt } from './helpers/groupMetrics';
 import { asTravel, novelProject } from './helpers/travelNovel';
 
 /**
@@ -216,6 +217,42 @@ describe('travel = the original (the example novel, rule director, default style
     }
     expect(ms).toBeGreaterThan(10);
     expect(withOther).toBe(0);
+  });
+
+  it('move durations on the example novel: median about 1.0 s (the original), p90 about 1.3-1.6 s', async () => {
+    const { c } = await build();
+    const secs = c.scenes.flatMap((s) => s.beats.filter((b) => !b.shotHeld && b.camTravel && MOVE.includes(b.camTravel.kind)).map((b) => b.camTravel!.seconds)).sort((a, b) => a - b);
+    expect(secs.length).toBeGreaterThan(20);
+    const q = (f: number) => secs[Math.min(secs.length - 1, Math.floor(secs.length * f))]!;
+    expect(q(0.5)).toBeGreaterThanOrEqual(0.9);
+    expect(q(0.5)).toBeLessThanOrEqual(1.1);
+    expect(q(0.9)).toBeGreaterThanOrEqual(1.3);
+    expect(q(0.9)).toBeLessThanOrEqual(1.6);
+  });
+
+  it('no ghosting: people leave / enter with the camera, and any remaining cross-fade is at most 0.2 s', async () => {
+    const { p, ctx } = await novelProject();
+    const c = compileProject(asTravel(p), ctx);
+    const bgOf = (id: string) => { const g = ctx.backgrounds[id] ?? { width: 2048, height: 1119 }; return { width: g.width, height: g.height, ground: defaultGround(g.width, g.height) }; };
+    let steps = 0;
+    for (const s of c.scenes) {
+      for (const a of s.actors) {
+        a.shotVisible.forEach((k, i) => {
+          expect(k.duration, `${s.id}/${a.castId}@${k.at}`).toBeLessThanOrEqual(0.2 + 1e-9);
+          const prev = a.shotVisible[i - 1];
+          if (k.duration > 0 || !prev || prev.value === k.value) return;
+          // a switch that is not at the start of a shot is made inside a camera move, while the person is outside the frame
+          const beat = s.beats.find((b) => !b.shotHeld && Math.abs(b.start - k.at) < 1e-6);
+          if (beat || k.at < s.contentStart) return;
+          steps++;
+          const t = k.value === 0 ? k.at - 1e-6 : k.at + 1e-6;
+          const f = groupMetricsAt(c, ctx, bgOf, t, 16 / 9).faces.find((x) => x.id === a.castId);
+          expect(f, `${s.id}/${a.castId}@${k.at}`).toBeDefined();
+          expect(f!.left >= 16 / 18 - 0.02 || f!.right <= -16 / 18 + 0.02, `${s.id}/${a.castId}@${k.at} is outside the frame`).toBe(true);
+        });
+      }
+    }
+    expect(steps).toBeGreaterThan(0);
   });
 
   it('all settled backgrounds use the classic crop, including groups and off-centre framing', async () => {

@@ -122,13 +122,21 @@ export function moveSeconds(kind: 'distance' | 'regroup' | 'lateral', prev: Trav
   // The original's durations spread from 0.5 s to 2 s (IQR 1.0-1.5): a short hop is quick, a long sweep or a big push-pull is slow.
   // `size` is 1 for a typical move (about 0.35 frame widths sideways, or a zoom ratio of 1.6).
   if (geo) base *= moveSizeFactor(geo);
-  return clamp(base * tv.tempo, 0.4, tv.moveMax);
+  // v13: the original's median is about 1.0 s (the earlier table gave 0.8 s): scale up, and give the long end only half of what lies above LONG_MOVE_FROM
+  // so that the slowest tenth stays at about 1.3-1.6 s.
+  const scaled = base * MOVE_PACE;
+  const paced = scaled <= LONG_MOVE_FROM ? scaled : LONG_MOVE_FROM + (scaled - LONG_MOVE_FROM) * LONG_MOVE_SHARE;
+  return clamp(paced * tv.tempo, 0.4, tv.moveMax);
 }
 /** Duration factor of a move by its size: 1 at a typical move, quicker for a hop, slower for a sweep or a big push / pull. */
 export function moveSizeFactor(geo: MoveGeometry): number {
   const size = clamp(Math.max(geo.d / MOVE_TYPICAL_D, Math.abs(Math.log(geo.r)) / Math.log(MOVE_TYPICAL_R)), MOVE_SIZE_MIN, MOVE_SIZE_MAX);
   return MOVE_SIZE_BASE + (1 - MOVE_SIZE_BASE) * size;
 }
+/** Pace of a move relative to the earlier size table (its median was 0.8 s, the original's is about 1.0 s). */
+const MOVE_PACE = 1.25;
+const LONG_MOVE_FROM = 1.2;
+const LONG_MOVE_SHARE = 0.5;
 const MOVE_TYPICAL_D = 0.25;
 const MOVE_TYPICAL_R = 1.5;
 const MOVE_SIZE_MIN = 0.1;

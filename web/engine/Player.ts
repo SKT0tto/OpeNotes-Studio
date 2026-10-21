@@ -18,6 +18,8 @@ import type { Pt } from '@shared/staging/world';
 const PREFETCH_SECONDS = 5;
 /** Physics catch-up after a seek / scene entry. */
 const SETTLE_SECONDS = 0.5;
+/** While playing, React-facing listeners (`subscribeSlow`) fire this often: the UI follows the playhead at 2 commits per second. */
+const SLOW_MS = 500;
 
 export interface PlayerListener {
   (state: RenderState, player: Player): void;
@@ -55,6 +57,9 @@ export class Player {
   private prefetched = new Set<number>();
   private lastState: RenderState | null = null;
   private readonly listeners = new Set<PlayerListener>();
+  /** React-side listeners: called on every drawn frame while paused, but at most every SLOW_MS while playing (see `subscribeSlow`). */
+  private readonly slowListeners = new Set<PlayerListener>();
+  private lastSlow = 0;
   private readonly tickFn: (t: Ticker) => void;
   private bgmKey = '';
   /** Audio stays untouched until the first user-initiated play (browser autoplay policy). */
@@ -124,17 +129,33 @@ export class Player {
     return () => void this.listeners.delete(fn);
   }
 
+  /**
+   * Like `subscribe`, but meant for React state: while the clock runs it fires at most every SLOW_MS (together for all slow listeners,
+   * so their state updates land in one commit); while paused it fires on every drawn frame, and once more when play / pause toggles.
+   */
+  subscribeSlow(fn: PlayerListener): () => void {
+    this.slowListeners.add(fn);
+    return () => void this.slowListeners.delete(fn);
+  }
+
+  private fireSlow(state: RenderState): void {
+    this.lastSlow = performance.now();
+    for (const fn of this.slowListeners) fn(state, this);
+  }
+
   async play(): Promise<void> {
     if (this.t >= this.duration) await this.seek(0);
     this.playing = true;
     this.waiting = false;
     this.audioOn = true;
+    if (this.lastState) this.fireSlow(this.lastState);
     await this.audio.resume().catch(() => undefined);
     if (this.lastState) void this.syncAudio(this.lastState);
   }
 
   pause(): void {
     this.playing = false;
+    if (this.lastState) this.fireSlow(this.lastState);
     void this.audio.suspend().catch(() => undefined);
   }
 
@@ -232,6 +253,9 @@ export class Player {
       this.keepVisible = false;
       await this.stage.setScene(stageSceneOf(scene));
       this.sceneIdx = state.sceneIndex;
+      // The next scene's pictures are fetched and decoded now, long before the 5 s model prefetch, so entering it never waits for an image.
+      const following = this.compiled.scenes[state.sceneIndex + 1];
+      if (following) void this.stage.preloadBackgrounds([...new Set(following.bgSegments.map((g) => g.assetId))]).catch((e) => console.warn('background preload failed', e));
     }
     state = evaluate(this.compiled, this.t);
     const settle = changed || !this.playing;
@@ -297,6 +321,7 @@ export class Player {
     this.lastState = state;
     if (this.audioOn) void this.syncAudio(state);
     for (const fn of this.listeners) fn(state, this);
+    if (this.slowListeners.size > 0 && (!this.playing || performance.now() - this.lastSlow >= SLOW_MS)) this.fireSlow(state);
   }
 
   private prefetch(state: RenderState): void {

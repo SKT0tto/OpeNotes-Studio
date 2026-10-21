@@ -4,12 +4,11 @@ import demoJson from '../../tests/fixtures/demo-project.json';
 import type { Health } from '../api';
 import { loadProject } from '../projectsApi';
 import { AspectBox } from '../ui/AspectBox';
+import { PlaySeek, PlayTime } from './PlayClock';
 import { usePlayerHost } from './usePlayerHost';
 
 /** Window shapes: the editor's 16:9, and the original game's wide frame (reference frames are 1920x890). */
 const ASPECTS = [['16:9', 16 / 9], ['宽画幅 2.16:1', 1920 / 890]] as const;
-
-const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
 
 /** `/play/demo` is the bundled example; any other id is read from the project store. */
 async function fetchProject(id: string): Promise<Project> {
@@ -55,17 +54,8 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
       {err && <p className="bad" data-testid="play-error">{err}</p>}
       <div className="play-controls">
         <button onClick={toggle} disabled={!ready} data-testid="play-toggle">{playing ? '暂停' : '播放'}</button>
-        <input
-          type="range"
-          className="seek"
-          min={0}
-          max={Math.max(1, Math.round(info.duration * 100))}
-          value={Math.round(info.t * 100)}
-          disabled={!ready}
-          onChange={(e) => seek(Number(e.target.value) / 100)}
-          data-testid="play-seek"
-        />
-        <span className="time" data-testid="play-time">{fmt(info.t)} / {fmt(info.duration)}</span>
+        <PlaySeek playerRef={playerRef} ready={ready} duration={info.duration} onSeek={seek} testId="play-seek" />
+        <PlayTime playerRef={playerRef} ready={ready} duration={info.duration} withDuration className="time" testId="play-time" />
         <label>
           速度{' '}
           <select value={rate} onChange={(e) => { setRate(Number(e.target.value)); if (playerRef.current) playerRef.current.rate = Number(e.target.value); }} data-testid="play-rate">

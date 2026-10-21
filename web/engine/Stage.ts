@@ -10,6 +10,7 @@ import type { ActorRender, CompiledScene, RenderState } from '@shared/timeline/t
 import type { Live2DActor } from './Live2DActor';
 import type { ModelLibrary } from './ModelLibrary';
 import { BackgroundLayer } from './BackgroundLayer';
+import { QualityGovernor } from './QualityGovernor';
 import { Camera } from './Camera';
 import { Transitions } from './Transitions';
 import { OuterGlowFilter, ScreenFxFilter } from './fx/FxFilters';
@@ -31,6 +32,10 @@ export interface StageScene {
   bgAssetIds: string[];
   bg: BgInfo;
   modelIds: string[];
+  /** The costume each person starts the scene in: the models whose textures are uploaded ahead of time (a later costume loads on demand). */
+  startModelIds: string[];
+  /** Costume changes inside the scene, by time (absolute seconds): each costume's textures are uploaded shortly before its first appearance. */
+  laterModels: Array<{ modelId: string; at: number }>;
   /** Motion names each model will play (warmed before the scene is shown). */
   motions: Record<string, string[]>;
   /** Expression names each model will show (loaded before the scene is shown, so a scene change never waits for a file). */
@@ -41,11 +46,17 @@ export interface StageScene {
 
 export function stageSceneOf(s: CompiledScene): StageScene {
   const ids = new Set<string>();
+  const start = new Set<string>();
+  const later = new Map<string, number>();
   const motions: Record<string, Set<string>> = {};
   const expressions: Record<string, Set<string>> = {};
   for (const a of s.actors) {
     ids.add(a.initialModelId);
-    a.models.forEach((m) => ids.add(m.modelId));
+    start.add(a.initialModelId);
+    for (const m of a.models) {
+      ids.add(m.modelId);
+      later.set(m.modelId, Math.min(later.get(m.modelId) ?? Infinity, m.at));
+    }
     for (const ev of a.motions) {
       const id = lastBefore(a.models, ev.at)?.modelId ?? a.initialModelId;
       (motions[id] ??= new Set()).add(ev.name);
@@ -62,11 +73,17 @@ export function stageSceneOf(s: CompiledScene): StageScene {
     bgAssetIds: [...new Set(s.bgSegments.map((g) => g.assetId))],
     bg: s.bg,
     modelIds: [...ids],
+    startModelIds: [...start],
+    laterModels: [...later].filter(([id]) => !start.has(id)).map(([modelId, at]) => ({ modelId, at })).sort((x, y) => x.at - y.at),
     motions: flat(motions),
     expressions: flat(expressions),
     ...(s.cameraSystem === 'travel' ? { travel: true } : {}),
   };
 }
+
+/** A costume change is prepared this many seconds ahead (about two beats), and forgotten this long after it happened. */
+const PREUPLOAD_AHEAD = 1.5;
+const PREUPLOAD_KEEP = 0.5;
 
 interface Slot {
   castId: string;
@@ -75,12 +92,26 @@ interface Slot {
   blur: BlurFilter;
   tint: ColorMatrixFilter;
   glow: OuterGlowFilter;
+  /** The wrapper's filter area, reused every frame (a new Rectangle per frame is garbage and gives the filter system a new object to look at). */
+  area: Rectangle;
+  /** Frames since this actor was last advanced while hidden. */
+  hiddenFrames: number;
   actor: Live2DActor | null;
   eventKey: string;
   expression: string | null | undefined;
   /** The model was rebuilt in place (Core heap repair): restart its motion at the elapsed time instead of at 0. */
   resyncOnce?: boolean;
 }
+
+/** Logical filter-area sizes (width, height) that reach the texture pool buckets an actor's filter chain asks for. */
+const WARM_AREAS: Array<[number, number]> = [[256, 512], [512, 512], [512, 768], [768, 1024], [1024, 1024], [512, 1400], [1280, 720]];
+
+/** A hidden actor is advanced once in this many frames (about 15 Hz at 60 fps). */
+const HIDDEN_EVERY = 4;
+
+/** Ticker priorities that bracket the whole frame (the Pixi application renders at LOW = -25). */
+const FRAME_FIRST = 1000;
+const FRAME_LAST = -1000;
 
 /** Share of the body box added around an actor's filter area so swaying hair is never clipped. */
 const FILTER_PAD = 0.35;
@@ -93,6 +124,10 @@ export class Stage {
   private readonly bgLayer: BackgroundLayer;
   /** Textures of the backgrounds of the prepared scenes (filled by `prepare`, read by `apply`). */
   private readonly bgTextures = new Map<string, import('pixi.js').Texture>();
+  /** Backgrounds of scenes prepared ahead (the next scene) while the current one is on screen: kept, not released. */
+  private readonly aheadBg = new Set<string>();
+  /** Released backgrounds waiting until no sprite draws them any more (destroyed right after a frame that does not use them). */
+  private doomed: Array<{ id: string; url: string; texture: import('pixi.js').Texture }> = [];
   get bgViewZoom(): number {
     return this.bgLayer.viewZoom;
   }
@@ -116,7 +151,7 @@ export class Stage {
     this.width = Math.round(this.height * aspect);
     this.fxArea = new Rectangle(0, 0, this.width, this.height);
     this.camera = new Camera({ width: this.width, height: this.height, ground: { horizonY: 0, floorY: 1 } }, this.height, aspect);
-    this.bgLayer = new BackgroundLayer(this.width, this.height);
+    this.bgLayer = new BackgroundLayer(this.width, this.height, app.renderer);
     this.actorLayer.sortableChildren = true;
     this.sceneRoot.addChild(this.bgLayer, this.actorLayer);
     this.sceneRoot.pivot.set(this.width / 2, this.height / 2);
@@ -129,9 +164,24 @@ export class Stage {
     // Actors waiting off screen (opacity 0) are not rendered, so the engine would not advance them: keep them living.
     this.tickHidden = () => {
       if (!this.sceneRoot.visible) return;
-      for (const slot of this.slots.values()) if (slot.actor && !slot.wrapper.visible) slot.actor.updateHidden();
+      // Somebody who cannot be seen (fully transparent, or outside the view of a travel shot) is advanced every HIDDEN_EVERY-th frame with
+      // the time of all of them, so the Core update (the largest cost per model) is paid a quarter as often. Travel scenes only: a
+      // classic shot's physics must step exactly as before (`globalThis.__hiddenThrottle` overrides, for the pixel comparison).
+      const throttle = (globalThis as { __hiddenThrottle?: boolean }).__hiddenThrottle ?? this.scene?.travel === true;
+      for (const slot of this.slots.values()) {
+        if (!slot.actor || slot.wrapper.visible) {
+          slot.hiddenFrames = 0;
+          continue;
+        }
+        if (throttle && ++slot.hiddenFrames < (this.lowQuality ? HIDDEN_EVERY * 2 : HIDDEN_EVERY)) continue;
+        slot.hiddenFrames = 0;
+        slot.actor.updateHidden();
+      }
     };
+    app.ticker.add(this.markFrameStart, undefined, FRAME_FIRST);
     app.ticker.add(this.tickHidden);
+    app.ticker.add(this.markFrameEnd, undefined, FRAME_LAST);
+    this.warmFilters();
     // A model rebuilt after a Core heap re-allocation takes the old instance's place at once (the player may be paused: no frame follows).
     this.offReload = library.onReload((fresh, old) => {
       if (!old) return;
@@ -144,7 +194,69 @@ export class Stage {
     });
   }
   private readonly offReload: () => void;
+  /**
+   * Automatic fallback for slow machines, travel scenes only (a classic frame never changes): when the frames keep taking over their
+   * budget in CPU work for a few seconds, blurs run at a quarter of the resolution and hidden actors are advanced at 7.5 Hz; it goes
+   * back to normal after a longer spell of headroom (see `QualityGovernor`: the work time decides, never the frame interval, so a 30 fps
+   * cap does not trigger it). A strongly blurred picture does not show the difference. `globalThis.__quality = 'low' | 'normal'` forces either.
+   */
+  get lowQuality(): boolean {
+    return this.governor.low;
+  }
+  private readonly governor = new QualityGovernor();
+  private frameStart = 0;
+  /** First ticker listener of a frame: the clock for the frame's work time. */
+  private readonly markFrameStart = (): void => {
+    this.frameStart = performance.now();
+  };
+  /** Last ticker listener of a frame (after the render call): the frame's work time goes to the governor. */
+  private readonly markFrameEnd = (): void => {
+    const force = (globalThis as { __quality?: string }).__quality;
+    const travel = this.scene?.travel === true;
+    if (force) {
+      this.governor.low = force === 'low' && travel;
+      return;
+    }
+    this.governor.sample(performance.now() - this.frameStart, this.app.ticker.deltaMS, travel);
+  };
   private readonly tickHidden: () => void;
+
+  /**
+   * Compile every filter program the stage uses and fill the filter texture pool for the sizes an actor's filter area takes, once, before
+   * the first frame. Without it the first fade / blur / move of a session stalls for 20 - 40 ms on shader compilation and texture
+   * allocation, right when the shot starts to move. Draws only into the (still empty) canvas, which is cleared afterwards.
+   */
+  private warmFilters(): void {
+    const r = this.app.renderer;
+    try {
+      const holder = new Container();
+      holder.addChild(new Graphics().rect(0, 0, 8, 8).fill(0xffffff));
+      const blur = new BlurFilter({ strength: 6, quality: 4 });
+      const blurHalf = new BlurFilter({ strength: 6, quality: 3 });
+      blurHalf.resolution = 0.5;
+      const tint = new ColorMatrixFilter();
+      tint.brightness(0.7, false);
+      const glow = new OuterGlowFilter();
+      glow.set(8, 0.5);
+      const chains: Filter[][] = [[tint, glow, new AlphaFilter({ alpha: 0.5 }), blur], [new AlphaFilter({ alpha: 0.5 }), blurHalf], [tint, new AlphaFilter({ alpha: 0.5 })]];
+      for (const [w, h] of WARM_AREAS) {
+        holder.filterArea = new Rectangle(0, 0, w, h);
+        for (const chain of chains) {
+          holder.filters = chain;
+          r.render({ container: holder });
+        }
+      }
+      holder.filters = null;
+      holder.destroy({ children: true });
+      blur.destroy();
+      blurHalf.destroy();
+      glow.destroy();
+      tint.destroy();
+      r.clear();
+    } catch (e) {
+      console.warn('filter warm-up skipped', e);
+    }
+  }
 
   get sceneInfo(): StageScene | null {
     return this.scene;
@@ -167,6 +279,7 @@ export class Stage {
   /** Load the background texture and every model the scene may use (all costumes). */
   async prepare(scene: StageScene): Promise<void> {
     this.library.pin([...(this.scene?.modelIds ?? []), ...scene.modelIds]);
+    if (scene !== this.scene) for (const id of scene.bgAssetIds) this.aheadBg.add(id);
     await Promise.all([
       ...scene.bgAssetIds.map(async (id) => void this.bgTextures.set(id, await this.library.backgroundTexture(id))),
       ...scene.modelIds.map(async (id) => {
@@ -180,10 +293,72 @@ export class Stage {
   async setScene(scene: StageScene): Promise<void> {
     await this.prepare(scene);
     this.library.pin(scene.modelIds);
+    // Only the costumes the scene starts in are uploaded now; a costume worn later is uploaded a little ahead of its first appearance (`preuploadAhead`).
+    for (const id of scene.startModelIds) this.library.loaded(id)?.preupload(this.app.renderer as never);
+    this.upcoming = scene.laterModels.slice();
     for (const slot of this.slots.values()) this.dropSlot(slot);
     this.slots.clear();
     this.scene = scene;
     this.camera.bg = scene.bg;
+    this.aheadBg.clear();
+    this.releaseBackgrounds();
+  }
+
+  /** Costume changes of the scene on screen whose textures are not uploaded yet (by time). */
+  private upcoming: Array<{ modelId: string; at: number }> = [];
+
+  /**
+   * Upload the textures of the next costume change that is within PREUPLOAD_AHEAD seconds - one texture per frame, so no frame carries a
+   * whole costume. Called once per applied frame; a costume changed into after a jump is simply drawn the usual lazy way.
+   */
+  private preuploadAhead(t: number): void {
+    const up = this.upcoming;
+    while (up.length > 0 && up[0]!.at <= t - PREUPLOAD_KEEP) up.shift(); // already worn (or jumped over)
+    for (let i = 0; i < up.length; i++) {
+      const c = up[i]!;
+      if (c.at - t > PREUPLOAD_AHEAD) break;
+      const actor = this.library.loaded(c.modelId);
+      if (!actor || actor.preupload(this.app.renderer as never, 1) === 0) {
+        up.splice(i, 1);
+        if (actor) return; // this frame's upload is spent
+        i--;
+        continue;
+      }
+      return;
+    }
+  }
+
+  /** Load the backgrounds of a scene that is likely to come next (just the pictures; its models wait for the real prefetch). */
+  async preloadBackgrounds(ids: readonly string[]): Promise<void> {
+    for (const id of ids) this.aheadBg.add(id);
+    await Promise.all(ids.map(async (id) => void this.bgTextures.set(id, await this.library.backgroundTexture(id))));
+  }
+
+  /**
+   * Free the GPU copy of every background that belongs neither to the scene on screen nor to the one prepared ahead (a 2048 x 1152
+   * picture is about 9 MB; a long project otherwise keeps every picture it ever showed). The destroy waits until a frame was drawn
+   * without the picture, so a sprite never samples a destroyed texture.
+   */
+  private releaseBackgrounds(): void {
+    const keep = new Set([...(this.scene?.bgAssetIds ?? []), ...this.aheadBg]);
+    for (const id of this.library.loadedBackgrounds()) {
+      if (keep.has(id)) continue;
+      const texture = this.bgTextures.get(id);
+      const url = this.library.forgetBackground(id);
+      this.bgTextures.delete(id);
+      if (texture && url) this.doomed.push({ id, url, texture });
+    }
+  }
+
+  private flushDoomed(): void {
+    if (this.doomed.length === 0) return;
+    const rest: typeof this.doomed = [];
+    for (const d of this.doomed) {
+      if (this.bgLayer.drawsTexture(d.texture)) rest.push(d);
+      else if (this.library.loadedBackgrounds().includes(d.id)) continue; // wanted again meanwhile: the cache entry now belongs to the new load
+      else this.library.unloadBackground(d.url);
+    }
+    this.doomed = rest;
   }
 
   private dropSlot(slot: Slot): void {
@@ -199,7 +374,7 @@ export class Stage {
     if (!s) {
       const wrapper = new Container();
       const blur = new BlurFilter({ strength: 0, quality: 4 });
-      s = { castId, wrapper, alpha: new AlphaFilter({ alpha: 1 }), blur, tint: new ColorMatrixFilter(), glow: new OuterGlowFilter(), actor: null, eventKey: '', expression: undefined };
+      s = { castId, wrapper, alpha: new AlphaFilter({ alpha: 1 }), blur, tint: new ColorMatrixFilter(), glow: new OuterGlowFilter(), area: new Rectangle(), hiddenFrames: 0, actor: null, eventKey: '', expression: undefined };
       this.actorLayer.addChild(wrapper);
       this.slots.set(castId, s);
     }
@@ -223,7 +398,9 @@ export class Stage {
         scene.bg, state.camera, bgState.blur * px,
         { assetId: bgState.assetId, texture: main, framing: bgState.framing, src: bgState.src },
         bgState.next && nx ? { assetId: bgState.next.assetId, texture: nx, framing: bgState.next.framing, src: bgState.next.src, alpha: bgState.next.alpha } : undefined,
-        scene.travel === true,
+        scene.travel === true ? (this.lowQuality ? 0.25 : true) : false,
+        // no cache on a rolled screen (the picture is clipped differently) or under the screen effects (they amplify the one-level rounding of the cache)
+        state.fx.roll === 0 && state.fx.anxiety <= 0.002 && state.fx.glow <= 0.002 && !(globalThis as { __noBgCache?: boolean }).__noBgCache,
       );
     }
 
@@ -244,6 +421,8 @@ export class Stage {
     this.applyScreenFx(state);
     if (state.transition) this.transitions.update(state.transition.kind, state.transition.progress, state.transition);
     else this.transitions.clear();
+    this.flushDoomed();
+    this.preuploadAhead(state.t);
   }
 
   /** Emotion effects: Dutch roll (scaled up so the corners stay covered), vignette / glow filter. */
@@ -327,7 +506,7 @@ export class Stage {
       slot.blur.strength = this.scene?.travel ? a.blur * px : a.blur * px * this.camera.pose.zoom * 0.6;
       if (this.scene?.travel) {
         // a blurred picture needs no full resolution: a quarter of the pixels, and one pass less for a very strong blur
-        slot.blur.resolution = 0.5;
+        slot.blur.resolution = this.lowQuality ? 0.25 : 0.5;
         slot.blur.quality = slot.blur.strength > 6 ? 3 : 4;
       }
       filters.push(slot.blur);
@@ -339,7 +518,11 @@ export class Stage {
       const padY = b.h * 0.1;
       const cx = pl.headCenter.x;
       const cy = pl.headCenter.y;
-      slot.wrapper.filterArea = new Rectangle(cx + (b.x - cx) * a.shiftS + sx - padX * a.shiftS, cy + (b.y - cy) * a.shiftS + a.shiftY - padY * a.shiftS, (b.w + padX * 2) * a.shiftS, (b.h + padY * 2) * a.shiftS);
+      slot.area.x = cx + (b.x - cx) * a.shiftS + sx - padX * a.shiftS;
+      slot.area.y = cy + (b.y - cy) * a.shiftS + a.shiftY - padY * a.shiftS;
+      slot.area.width = (b.w + padX * 2) * a.shiftS;
+      slot.area.height = (b.h + padY * 2) * a.shiftS;
+      slot.wrapper.filterArea = slot.area;
     }
     if (this.scene?.travel && slot.wrapper.visible) this.cullToView(slot, pl, a, sx, bg, filters.length > 0);
   }
@@ -375,7 +558,13 @@ export class Stage {
       slot.wrapper.visible = false;
       return;
     }
-    if (hasFilters) slot.wrapper.filterArea = new Rectangle(ix0, iy0, ix1 - ix0, iy1 - iy0);
+    if (hasFilters) {
+      slot.area.x = ix0;
+      slot.area.y = iy0;
+      slot.area.width = ix1 - ix0;
+      slot.area.height = iy1 - iy0;
+      slot.wrapper.filterArea = slot.area;
+    }
   }
 
   /** Atomic costume swap: the new model is already loaded, so there is never an empty frame. */
@@ -464,6 +653,8 @@ export class Stage {
   destroy(): void {
     this.offReload();
     this.app.ticker.remove(this.tickHidden);
+    this.app.ticker.remove(this.markFrameStart);
+    this.app.ticker.remove(this.markFrameEnd);
     for (const slot of this.slots.values()) this.dropSlot(slot);
     this.slots.clear();
     this.transitions.clear();

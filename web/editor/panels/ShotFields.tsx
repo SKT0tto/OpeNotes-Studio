@@ -1,5 +1,5 @@
 /** The shot of the selected line: size, move, cut / glide, depth of field, focus, hand-made camera and per-person offsets. */
-import { MOVE_LABEL, SHOT_LABEL, SHOT_TRANSITION_LABEL, TRAVEL_KIND_LABEL } from '@shared/catalog/labels';
+import { MOVE_LABEL, SHOT_LABEL, SHOT_TRANSITION_LABEL, TRAVEL_KIND_LABEL, travelReasonText } from '@shared/catalog/labels';
 import { CAMERA_MOVES, DEFAULT_INSERT_BOX, normalizeShotType, shotTypeChoices } from '@shared/staging/framing';
 import { SHOT_INTENTS, SHOT_INTENT_LABEL } from '@shared/staging/shotIntent';
 import { resolveStyle } from '@shared/style/ournotes';
@@ -80,7 +80,7 @@ export function ShotFields({ project, scene, beat, compiled }: { project: Projec
         <Row label=""><span className="ro" data-testid="insp-shot-travel">本句：{TRAVEL_KIND_LABEL[cBeat.camTravel.kind] ?? cBeat.camTravel.kind} {cBeat.camTravel.seconds.toFixed(2)}s{cBeat.camTravel.ease ? ` · ${EASE_LABEL[cBeat.camTravel.ease] ?? cBeat.camTravel.ease}` : ''}</span></Row>
       )}
       {travel && cBeat?.camTravel?.reason && (
-        <Row label=""><span className="ro" data-testid="insp-shot-travel-reason">运镜决定：{cBeat.camTravel.reason}</span></Row>
+        <Row label=""><span className="ro" data-testid="insp-shot-travel-reason">运镜决定：{travelReasonText(cBeat.camTravel.reason)}</span></Row>
       )}
       {cBeat?.shotHeld && (
         <Row label="沿用机位">

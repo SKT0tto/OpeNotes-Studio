@@ -49,7 +49,7 @@ describe('travel compile v2', () => {
   it('writes the scene data: stage map, background model, blur factor; every person has visibility keys', () => {
     const sc = run3(SEQ).scenes[0]!;
     expect(sc.cameraSystem).toBe('travel');
-    expect(sc.travel!.version).toBe(11);
+    expect(sc.travel!.version).toBe(12);
     expect(sc.travel!.stage.slots).toEqual([-0.3, 0, 0.3]);
     expect(sc.travel!.bg).toMatchObject({ sigma: 1.2, scale: 0.33, zoomMax: 3.2 });
     expect(sc.travel!.dof).toEqual({ mode: 'original', aperture: 1, depthSpan: 1.5 });
