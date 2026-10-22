@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0
+
+A much better AI director. The classic camera and the classic prompt are unchanged: the classic system prompt, schema and prompt version are byte-identical to 0.2.1, and classic compile output and goldens are untouched. Classic generation does benefit from the smarter chunking and the chunk-end fix below.
+
+**Fewer wrong shots.** In our evaluation on original test stories (213 beats before, 218 after, same judge and criteria), beats judged unreasonable went from about 4% to about 1%, and reasonable beats from 74% to 93%. The three biggest failures are gone: shots on the wrong person (a line credited to the wrong speaker), validation rewriting a correct two-shot, and object close-ups being thrown away.
+
+**Two-shots respect who is talking and who is on stage.** The pair is the speaker plus the person being spoken to or answering, and nobody who has not entered yet or has already left is put into it. Object inserts (a hand, a stone, a key) are kept when the text or the model's reason names a thing to show.
+
+**Intents match the picture.** When a shot's intent contradicts the framing the shot itself describes (a "reveal" of somebody already on screen, a "release" that is closer than the shot before, an "emphasis" on a new person), it is relabelled and the reason says so.
+
+**Travel prompt with examples.** The travel instructions now explain each intent with a right and a wrong example and include a short worked scene, so the model writes what a beat actually is.
+
+**Smarter chunking.** Long scenes are cut by the measured cost per paragraph, each later chunk gets the last paragraphs, the last beats and who is on stage, and people already shown in a group shot are not announced as "not yet seen". This works for classic as well. A cached re-run plans the same chunks, so it hits the cache.
+
+**No wasted strict-schema request.** A provider that does not support strict JSON schema is asked once per process; later requests go straight to the plain JSON mode.
+
+**Chunk end is not scene end.** The model sometimes treated the end of a non-final chunk as the end of the scene and added a closing pull-back. Every non-final chunk now says that the scene goes on afterwards, and a deterministic guard downgrades a closing release or pull-out at the last beat of a non-final chunk (with a warning that gives the reason). In a small live check on original test stories, spurious scene-end pull-backs went from 3 of 7 chunk ends to 0 of 5.
+
+Tests: unit (`directorChunking`: continuation note, classic prompt untouched, guard; director travel fixes), travel golden and classic goldens unchanged, e2e `camera-system` and `camera-regeneration`.
+
 ## 0.2.1
 
 Playback performance and travel polish. The classic camera output is unchanged: classic compile output is byte-identical to 0.2.0 and classic frames render identically within one colour level (the golden tests are untouched).
