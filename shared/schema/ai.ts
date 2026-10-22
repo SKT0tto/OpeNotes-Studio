@@ -73,7 +73,12 @@ export const SceneDirectionSchema = z.object({
 });
 /** Travel camera system: the same direction plus the `shot.flow` intent. A classic answer (no flow) satisfies it as well. */
 const SceneBeat = SceneDirectionSchema.shape.beats.element;
-const TravelShot = SceneBeat.shape.shot.extend({ type: z.enum(AI_TRAVEL_SHOT_TYPES), flow: z.enum(AI_SHOT_FLOWS).nullable().optional(), intent: z.enum(SHOT_INTENTS).nullable().optional() });
+const TravelShot = SceneBeat.shape.shot.extend({
+  type: z.enum(AI_TRAVEL_SHOT_TYPES),
+  /** A word that is not a flow (models write `continue` here, which is an intent) means `auto`; it must not cost a repair call. */
+  flow: z.enum(AI_SHOT_FLOWS).nullable().optional().catch('auto'),
+  intent: z.enum(SHOT_INTENTS).nullable().optional(),
+});
 export const SceneDirectionTravelSchema = SceneDirectionSchema.extend({ beats: z.array(SceneBeat.extend({ shot: TravelShot })) });
 export type SceneDirection = z.infer<typeof SceneDirectionTravelSchema>;
 export type DirectedBeat = SceneDirection['beats'][number];

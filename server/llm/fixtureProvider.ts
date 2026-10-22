@@ -16,8 +16,8 @@ interface IndexEntry {
 export class FixtureProvider implements LlmProvider {
   readonly id = 'fixture' as const;
   readonly model = 'fixture-replay';
-  /** Recorded with a capped provider (8192 output tokens): long scenes were directed in spans. */
-  readonly maxOutputTokens = 8192;
+  /** The answers were recorded when a long scene was directed in spans of 9 paragraphs (8192 tokens at 700 per paragraph); the cap keeps that split with today's 450 tokens per paragraph. */
+  readonly maxOutputTokens = 5550;
   /** Every call, in order (tests assert how many calls were made and with what). */
   readonly calls: Array<{ schemaName: string; input: string }> = [];
 
