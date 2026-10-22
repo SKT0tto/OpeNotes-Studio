@@ -59,7 +59,7 @@ describe('director: camera flow intent', () => {
     expect(t.schema).toBe(SceneDirectionTravelSchema);
     expect(t.schemaName).toBe('SceneDirectionTravel');
     expect(t.promptVersion).toBe(SCENE_TRAVEL_VERSION);
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-3+travel-5');
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-3+travel-6');
     expect(SCENE_TRAVEL_SECTION).toContain('移到');
     expect(SCENE_TRAVEL_SECTION).not.toContain('一期');
     expect(SCENE_SYSTEM).not.toContain('shot.flow');

@@ -9,7 +9,9 @@ import { EMOTION_EXPR } from '../timeline/compile';
 import { canon, familyOfName, isIdleFamily, mapExpressionName, mapMotionFamily } from '../timeline/motionMap';
 import { traceability, type Paragraph } from './paragraphs';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
-import { INSERT_HINT, MAX_BG_MOVES, SLOT_X, SPECIAL_ATTENTION } from './vocab';
+import { INSERT_HINT, MAX_BG_MOVES, SPECIAL_ATTENTION, TRAVEL_INSERT_HINT } from './vocab';
+import { stageEvents, stageTimeline } from './stage';
+import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
 import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
 
@@ -247,8 +249,10 @@ export interface DirectionContext {
   fixedBeatIds?: Set<string>;
   /** Camera system of the scene: classic drops `shot.flow`, travel checks it. Absent = classic. */
   cameraSystem?: 'classic' | 'travel';
-  /** Stage slot of every person at the start of the scene (travel two-shots pair neighbours only). Absent = the cast order is the left-to-right order. */
+  /** Stage slot of every person at the start of the scene. No longer used by the checks (a travel two-shot is judged by who is on stage, not by seating); kept so callers stay compatible. */
   slots?: Record<string, number>;
+  /** People who had already left the stage before the first beat given (the later span of a long scene). */
+  awayAtStart?: ReadonlySet<string>;
   /** Backgrounds of this scene (P20): the start background, the ones Pass 1 moved to, and the cut-away candidates. Absent = background switches are not checked. */
   backgrounds?: { start: string; allowed: ReadonlySet<string>; scope: BgScope };
 }
@@ -306,13 +310,8 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     return true;
   });
 
-  // left-to-right order of the people (the AI's blocking, else the scene's, else the cast order)
-  const slotName = (id: string): number => {
-    const own = d.blocking.find((x) => x.castId === id);
-    return own ? SLOT_X[own.slot] : ctx.slots?.[id] ?? Number.NaN;
-  };
-  const neighbourOrder = ctx.cast.map((c, n) => ({ id: c.castId, n, slot: slotName(c.castId) }))
-    .sort((a, b) => (Number.isNaN(a.slot) || Number.isNaN(b.slot) ? a.n - b.n : a.slot - b.slot || a.n - b.n)).map((x) => x.id);
+  // who is on stage at each beat (enter / exit flags of the actors): a travel two-shot never pairs a person who is not there
+  const timeline = stageTimeline(d.beats, ctx.cast.map((c) => c.castId), ctx.awayAtStart);
 
   if (d.bgm !== null && !L.audio.has(d.bgm)) {
     warnings.push(`BGM ${d.bgm} 不存在，已清除`);
@@ -437,15 +436,27 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       if (other) b.shot.focus.push(other);
       else b.shot.type = 'mcu';
     }
-    // travel: a two-shot is about two neighbours; a pair with somebody standing between is re-paired (a user's / locked beat is never touched)
+    // travel: a two-shot is the two people who are talking (the model's pair is kept, also when somebody stands between them - the camera keeps
+    // the middle person in frame). Only a partner who is not on stage at this beat (not yet entered / already gone) is replaced: by the previous or
+    // next speaker, else by who the speaker looks at, else the shot becomes a medium shot of the speaker. A user's / locked beat is never touched.
     if (ctx.cameraSystem === 'travel' && b.shot.type === 'two_shot' && b.shot.focus.length >= 2 && !(b.keepId && ctx.fixedBeatIds?.has(b.keepId))) {
+      const on = timeline[bi]!;
       const spk = b.speaker && b.shot.focus.includes(b.speaker) ? b.speaker : b.shot.focus[0]!;
       const partner = b.shot.focus.find((x) => x !== spk)!;
-      const prevSpeaker = [...d.beats.slice(0, bi)].reverse().find((x) => x.kind === 'dialogue' && x.speaker && x.speaker !== spk && present(x.speaker))?.speaker ?? null;
-      const fix = pairNeighbours(neighbourOrder, spk, partner, prevSpeaker);
-      if (fix && fix !== partner) {
-        warnings.push(`${where}的双人镜头不是相邻的两人，已改为与 ${fix} 同框`);
-        b.shot.focus = [spk, fix];
+      if (!on.has(partner)) {
+        const ok = (x: string | null | undefined): x is string => !!x && x !== spk && present(x) && on.has(x);
+        const prevSpeaker = [...d.beats.slice(0, bi)].reverse().find((x) => x.kind === 'dialogue' && ok(x.speaker))?.speaker;
+        const nextSpeaker = d.beats.slice(bi + 1, bi + 4).find((x) => x.kind === 'dialogue' && ok(x.speaker))?.speaker;
+        const looksAt = b.actors.find((a) => a.castId === spk && ok(a.attention))?.attention;
+        const fix = [prevSpeaker, nextSpeaker, looksAt].find(ok);
+        if (fix) {
+          warnings.push(`${where}的双人镜头里的 ${partner} 此刻不在台上，已改为与 ${fix} 同框`);
+          b.shot.focus = [spk, fix];
+        } else {
+          warnings.push(`${where}的双人镜头里的 ${partner} 此刻不在台上，找不到合适的搭档，已改为 ${spk} 的单人中景`);
+          b.shot.type = 'ms';
+          b.shot.focus = [spk];
+        }
       }
     }
     if (b.shot.dof !== null && (b.shot.dof < 0 || b.shot.dof > 6)) b.shot.dof = Math.min(6, Math.max(0, b.shot.dof));
@@ -514,7 +525,8 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     } else if (b.shot.type === 'insert') {
       const who = b.shot.focus[0] ?? b.speaker ?? '';
       const playing = b.actors.some((a) => a.motion !== null && /^(play|action|finish)/.test(a.motion) && modelAt(a.castId, bi)?.mode === 'live');
-      const hinted = INSERT_HINT.test(b.text);
+      // travel: a silent / narration beat has no text of its own, so the paragraph it belongs to and the model's reason say what there is to show
+      const hinted = ctx.cameraSystem === 'travel' ? TRAVEL_INSERT_HINT.test([b.text, b.reason, b.kind === 'dialogue' ? '' : paraOf(b.paragraph)?.text ?? ''].join(' ')) : INSERT_HINT.test(b.text);
       if (!playing && !hinted) {
         const fallback = ctx.cameraSystem === 'travel' ? 'ms' : 'cu';
         warnings.push(`${where}的插入镜头没有可拍的手/物件/乐器，已改为 ${fallback}`);
@@ -526,6 +538,13 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       }
     } else if (b.shot.insertTarget) b.shot.insertTarget = null;
   });
+  // travel: intent labels that contradict the picture are relabelled (a locked / user beat is never touched)
+  if (ctx.cameraSystem === 'travel') {
+    warnings.push(...normalizeIntents(d.beats, {
+      castIds: ctx.cast.map((c) => c.castId), events: stageEvents(d.beats), ...(ctx.awayAtStart ? { awayAtStart: ctx.awayAtStart } : {}),
+      skip: (b) => !!b.keepId && !!ctx.fixedBeatIds?.has(b.keepId), where: (i) => `第 ${i + 1} 句`,
+    }));
+  }
   if (d.beats.length === 0) errors.push('没有任何节拍');
   if (dialogue >= 2 && untraceable / dialogue > 0.4) errors.push(`${untraceable}/${dialogue} 句对白无法回溯到原文，文本疑似编造`);
   return { value: d, warnings, errors };

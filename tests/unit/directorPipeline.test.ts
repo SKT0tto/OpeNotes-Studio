@@ -86,7 +86,7 @@ describe('Pass 2 is one call per scene, not per line', () => {
 
   it('a scene that fails does not stop the others and is reported', async () => {
     const real = new FixtureProvider(FIXTURE_DIR);
-    const flaky: LlmProvider = { ...real, id: 'openai', model: 'x', maxOutputTokens: 8192, test: real.test, generateStructured: async (req) => {
+    const flaky: LlmProvider = { ...real, id: 'openai', model: 'x', maxOutputTokens: real.maxOutputTokens, test: real.test, generateStructured: async (req) => {
       if (JSON.stringify(req.input).includes('"paragraphRange":[19,22]')) throw new LlmError('rate_limit', '429');
       return real.generateStructured(req);
     } };

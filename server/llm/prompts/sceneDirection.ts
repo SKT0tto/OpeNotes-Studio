@@ -61,18 +61,84 @@ export interface SceneDirectionInput {
   cast: ActorResources[];
   paragraphs: Array<{ i: number; text: string }>;
   previousScene: { title: string; endSummary: string } | null;
+  /** Only on the 2nd and later span of a long scene: what the spans before it established (read-only context). */
+  continuation?: {
+    note: string;
+    contextParagraphs: Array<{ i: number; text: string }>;
+    previousBeats: Array<{ kind: string; speaker: string | null; text: string }>;
+    onStage: string[];
+    notYetSeen: string[];
+    exited: string[];
+  };
+  /** Only on a span that is NOT the last of its scene: the scene goes on after it, so its last beat must not close the scene. */
+  sceneContinues?: { note: string; nextParagraph: number };
   fixedBeats: Array<{ keepId: string; paragraph: number; kind: string; speaker: string | null; text: string; lockedFields?: string[] }>;
   mode: { scopes: string[]; focusBeatIds?: string[] };
 }
 
 /** Extra instructions and the version tag of the travel camera system. The classic prompt (SCENE_SYSTEM, SCENE_PROMPT_VERSION) is never touched, so classic requests and cache keys stay as they were. */
-export const SCENE_TRAVEL_VERSION = 'scene-3+travel-5';
+/**
+ * A short original scene that shows the travel rules at work (only the fields that matter for the camera; the real answer has them all).
+ * Exported so the tests can run it through the same validation as a real answer.
+ */
+export const TRAVEL_EXAMPLE_PARAGRAPHS = [
+  '夕阳把天台的栏杆染成橘色。小夏把一枚生锈的钥匙放在栏杆上。',
+  '“这是你上次丢的吧。”小夏说。',
+  '阿秋愣了一下，没有接。',
+  '“……不是我的。”',
+  '“那它为什么会在你的书包里？”',
+  '水箱后面传来一声轻响，小冬探出头来。',
+  '“对不起，我只是想……”',
+  '风停了。三个人谁也没有再说话。',
+];
+export const TRAVEL_EXAMPLE_BEATS = [
+  { paragraph: 0, kind: 'narration', speaker: null, text: '夕阳把天台的栏杆染成橘色。', shot: { type: 'group', focus: [], intent: 'continue', flow: 'auto' }, reason: '交代地点和在场的两个人（小冬还藏着，不在台上）' },
+  { paragraph: 0, kind: 'silent', speaker: null, text: '', shot: { type: 'insert', focus: ['cA'], insertTarget: 'hands', intent: 'reveal', flow: 'cut' }, reason: '小夏放下生锈的钥匙，第一次露出的物件' },
+  { paragraph: 1, kind: 'dialogue', speaker: 'cA', text: '这是你上次丢的吧。', shot: { type: 'two_shot', focus: ['cA', 'cB'], intent: 'exchange', flow: 'cut' }, reason: '小夏对阿秋说话，两人正在对话' },
+  { paragraph: 2, kind: 'silent', speaker: null, text: '', shot: { type: 'cu', focus: ['cB'], intent: 'reaction', flow: 'cut' }, reason: '阿秋愣住，只拍反应' },
+  { paragraph: 3, kind: 'dialogue', speaker: 'cB', text: '……不是我的。', shot: { type: 'cu', focus: ['cB'], intent: 'continue', flow: 'auto' }, reason: '同一个人接着说，镜头留在她身上' },
+  { paragraph: 4, kind: 'dialogue', speaker: 'cA', text: '那它为什么会在你的书包里？', shot: { type: 'two_shot', focus: ['cA', 'cB'], intent: 'exchange', flow: 'cut' }, reason: '注意交回小夏，回到两人对话' },
+  { paragraph: 5, kind: 'silent', speaker: null, text: '', shot: { type: 'mcu', focus: ['cC'], intent: 'reveal', flow: 'cut' }, actors: [{ castId: 'cC', enter: true }], reason: '躲着的小冬第一次出现，所以在这一拍 enter=true' },
+  { paragraph: 6, kind: 'dialogue', speaker: 'cC', text: '对不起，我只是想……', shot: { type: 'mcu', focus: ['cC'], intent: 'continue', flow: 'auto' }, reason: '小冬接着说' },
+  { paragraph: 7, kind: 'narration', speaker: null, text: '风停了。三个人谁也没有再说话。', shot: { type: 'group', focus: [], intent: 'release', flow: 'auto' }, reason: '场尾拉开，交代三个人的距离' },
+];
+
+export const SCENE_TRAVEL_VERSION = 'scene-3+travel-6';
 export const SCENE_TRAVEL_SECTION = `# 叙事镜头与运镜（本场景使用「运镜」系统，以下镜头规则优先）
-- 先按叙事段组织镜头：一段连续对话可以一直保持同一个 two_shot（focus 两人）或稳定 ms；换说话人不等于必须换镜。two_shot 的两人必须是舞台上相邻的两位（focus 里是上一位说话人或身边的听者）。ms 是单人中景，不保证旁人可见。mcu/cu/ecu 只给具体信息、情绪变化或反应；没有可拍的物体时回到稳定中景，不要自动改成特写。不要按比例配额或每隔几句换镜。
-- shot.intent 说明这一拍的叙事作用：continue=延续当前观看；exchange=交接注意给另一人；emphasis=强调同一焦点的新情绪/信息；reaction=观察反应；reveal=揭示此前未见的焦点；release=舒缓、拉开交代关系；rupture=时间/情绪断裂。reason 写这一作用的具体原因，不能只写“需要运镜”。意图不是坐标，程序按真实机位判断。
-- shot.flow 多数用 auto。move 表示希望从上一镜移到本拍焦点，但仍须符合 intent 的叙事理由、同一背景和安全条件；AI 的 move 不是用户手动指定。cut 只是建议：反应、断裂、或换人进入特写时程序才照单硬切，其他情况由程序按机位和叙事规则决定。
-- exchange：同背景相邻焦点可以移到下一位，远距离用切；emphasis：只有实际靠近才推近；release：只有实际拉远才退；reveal：必须有新的可见焦点；reaction/rupture 通常切；continue 稳住。运镜后给观众稳定观看时间，不要连续机械推拉。
-- type 可用 ${AI_TRAVEL_SHOT_TYPES.join(' / ')}；move 默认 static。不要通过额外 push_in/pull_out 叠加无理由的运动。距离、真实方向、停留时长和手动关键帧由程序检查；不合适时会降级，不能要求无条件连续移到。`;
+先想清楚：此刻观众该看谁、为什么。程序会按真实机位和叙事规则核对你的意图，写错的标签会被程序改标，所以要写「这一拍实际是什么」，不要写你希望它是什么。
+
+## 镜头怎么选
+- 一段连续对话可以一直保持同一个 two_shot 或稳定 ms；换说话人不等于必须换镜。ms 是单人中景，不保证旁人可见。mcu/cu/ecu 只给具体信息、情绪变化或反应；没有可拍的物体时回到稳定中景，不要自动改成特写。不要按比例配额，也不要每隔几句换镜。
+- two_shot 的 focus 填「此刻正在对话的两个人」：说话人，加上他正在对着说话、或刚刚回应他的那个人。两个人不必坐在一起，中间站着的人程序会留在画面里。绝不要把还没有入场（还没有 enter）或已经离场（已经 exit）的人放进 focus。找不到对话对象就用 ms。
+- type 可用 ${AI_TRAVEL_SHOT_TYPES.join(' / ')}；move 默认 static。不要通过额外 push_in/pull_out 叠加无理由的运动。
+- 多人斗嘴时，不要让五个人连续各来一个特写硬切：每隔几拍回到 group 或 ms 重新交代一次谁在跟谁说话；一场戏结束时用 release 拉开成 group 或 two_shot，不要用 cu 推近收场。
+
+## 每个 intent 先问自己一句话
+- continue：观众的注意还停在原来的人和构图上吗？✓ 同一个人接着说下去；✗ 换了说话人还标 continue（那是 exchange）。
+- exchange：注意从一个人交给另一个人。✓ 甲说完，镜头交给回答的乙；✗ 同一个人情绪升高也标 exchange（那是 emphasis）。
+- emphasis：同一个人，此刻有新的情绪或信息，所以更近。✓ 同一个人从平静到说出真话，mcu 推到 cu；✗ 换了说话人就标 emphasis。
+- reaction：听者的反应。✓ 听到坦白之后，对方不说话的 cu；✗ 说话人自己在讲话。
+- reveal：观众此前没看到的人或物：入场的人、藏着的人、第一次露出的物件。✓ 躲在后面的人第一次探出头；✗ 对一直在场的人标 reveal。
+- release：舒缓、拉开交代关系，景别只能更远。✓ 场尾拉成群像；✗ 景别比上一镜更近还标 release。
+- rupture：时间或情绪的断裂（回忆切入、爆发、场尾黑场前）。
+reason 写这一拍的具体原因，不能只写“需要运镜”。
+
+## 容易出错的地方
+- 没有署名的连续对白：先看前一段写了谁在做什么。前一段写某人在笑、在做动作，紧跟着的问句多半是另一个人在问，回答再换回来；不要把一连串对白都算给同一个人。speaker 填真正说话的人，focus 对准他。
+- 藏着的人、稍后出现的人：在「观众第一次看到他」的那一拍，给这个人的 actors 项写 enter=true，并用 reveal；在这之前不要把他放进 focus。
+- 离场的人：离开的那一拍写 exit=true，之后不再拍他。
+- 无声的物件拍（拿起、摊开、放下东西）：用 silent + insert（insertTarget=hands），并且在 reason 里写出物件名，例如「摊开手掌，露出石头」；原文没有可拍的东西就不要用 insert。
+
+## 流向 shot.flow
+- flow 只能是 auto / cut / move 三个词之一，不要把 intent 的词写到这里。多数用 auto。move 表示希望从上一镜移到本拍焦点，但仍须符合 intent 的叙事理由、同一背景和安全条件；AI 的 move 不是用户手动指定。cut 只是建议：反应、断裂、或换人进入特写时程序才照单硬切，其他情况由程序按机位和叙事规则决定。
+- exchange：同背景相邻焦点可以移到下一位，远距离用切；emphasis：只有实际靠近才推近；release：只有实际拉远才退；reveal：必须有新的可见焦点；reaction/rupture 通常切；continue 稳住。运镜后给观众稳定观看时间，不要连续机械推拉。距离、真实方向、停留时长和手动关键帧由程序检查；不合适时会降级，不能要求无条件连续移到。
+
+## 示范（原创的小片段，只示范镜头写法，不要照抄它的节奏；这里只列出和镜头有关的字段，真正的输出要写全 schema 规定的所有字段）
+人物：cA 小夏、cB 阿秋、cC 小冬（开场躲在水箱后，不在台上）。
+原文段落：
+${TRAVEL_EXAMPLE_PARAGRAPHS.map((t, i) => `${i}. ${t}`).join('\n')}
+输出的 beats：
+${TRAVEL_EXAMPLE_BEATS.map((b) => JSON.stringify(b)).join('\n')}`;
 
 export interface ScenePrompt {
   system: string;

@@ -3,13 +3,13 @@ import type { AddressInfo } from 'node:net';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../../server/app';
 import { resolveConfig } from '../../server/config';
 import { AnthropicProvider } from '../../server/llm/anthropic';
 import { LlmCache, generateCached } from '../../server/llm/cache';
-import { OpenAiCompatProvider } from '../../server/llm/openaiCompat';
+import { MODE_MEMORY_MS, OpenAiCompatProvider, forgetStructuredModes, type RememberedMode } from '../../server/llm/openaiCompat';
 import { LlmError, TruncatedError, extractJson, modelJsonSchema, stableStringify, type LlmProvider } from '../../server/llm/provider';
 import { LlmSettings, loadDotEnv } from '../../server/settings/store';
 
@@ -38,6 +38,7 @@ describe('helpers', () => {
 });
 
 describe('OpenAI-compatible provider (mock fetch)', () => {
+  beforeEach(() => forgetStructuredModes());
   const make = (fetchImpl: typeof fetch, over: Record<string, unknown> = {}) =>
     new OpenAiCompatProvider({ baseUrl: 'http://localhost:1234/v1/', apiKey: KEY, model: 'm', fetch: fetchImpl, sleep: async () => {}, ...over });
 
@@ -341,3 +342,64 @@ describe('environment defaults', () => {
   });
 });
 
+
+describe('a service that refuses strict json_schema is remembered', () => {
+  const strict400 = (seen: string[]) => async (_u: unknown, init?: RequestInit) => {
+    const t = JSON.parse(init!.body as string).response_format?.type ?? 'text';
+    seen.push(t);
+    return t === 'json_schema' ? json({ error: { message: 'This response_format type is unavailable now' } }, 400) : chat('{"title":"t","n":1}');
+  };
+  const make = (f: typeof fetch, over: Record<string, unknown> = {}) => new OpenAiCompatProvider({ baseUrl: 'https://api.example.test/v1', apiKey: KEY, model: 'flash', fetch: f, sleep: async () => {}, ...over });
+  beforeEach(() => forgetStructuredModes());
+
+  it('the first provider pays one 400; a later provider (a new request) starts from json_object', async () => {
+    const seen: string[] = [];
+    const f = strict400(seen) as unknown as typeof fetch;
+    await make(f).generateStructured(req());
+    expect(seen).toEqual(['json_schema', 'json_object']);
+    seen.length = 0;
+    const second = make(f);
+    expect(second.structuredMode).toBe('json_object');
+    await second.generateStructured(req());
+    expect(seen).toEqual(['json_object']);
+  });
+
+  it('is per service and model, and a service that accepts strict is never put on the list', async () => {
+    const seen: string[] = [];
+    const f = strict400(seen) as unknown as typeof fetch;
+    await make(f).generateStructured(req());
+    seen.length = 0;
+    await make(f, { model: 'other' }).generateStructured(req());
+    expect(seen).toEqual(['json_schema', 'json_object']);
+    const ok = vi.fn(async () => chat('{"title":"t","n":1}'));
+    await make(ok as unknown as typeof fetch, { baseUrl: 'https://strict.example.test/v1' }).generateStructured(req());
+    await make(ok as unknown as typeof fetch, { baseUrl: 'https://strict.example.test/v1' }).generateStructured(req());
+    expect(JSON.parse((ok.mock.calls[1] as unknown as [string, RequestInit])[1].body as string).response_format.type).toBe('json_schema');
+  });
+
+  it('the memory expires, and can be cleared when the settings change', async () => {
+    const mem = new Map<string, RememberedMode>();
+    const seen: string[] = [];
+    const f = strict400(seen) as unknown as typeof fetch;
+    let t = 1_000;
+    await make(f, { modeMemory: mem, now: () => t }).generateStructured(req());
+    expect(mem.size).toBe(1);
+    t += MODE_MEMORY_MS + 1;
+    expect(make(f, { modeMemory: mem, now: () => t }).structuredMode).toBeNull();
+    expect(mem.size).toBe(0);
+    await make(f, { modeMemory: mem, now: () => t }).generateStructured(req());
+    forgetStructuredModes('https://api.example.test/v1/', mem);
+    expect(mem.size).toBe(0);
+    expect(make(f, { modeMemory: false }).structuredMode).toBeNull();
+  });
+
+  it('editing the endpoint or model in the settings makes the provider ask for strict again', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'mem-'));
+    const seen: string[] = [];
+    await make(strict400(seen) as unknown as typeof fetch).generateStructured(req());
+    const s = new LlmSettings({ file: path.join(dir, 's.json'), env: {} });
+    s.patch({ provider: 'openai', openai: { baseUrl: 'https://api.example.test/v1', apiKey: KEY, model: 'flash' } });
+    expect(make(strict400(seen) as unknown as typeof fetch).structuredMode).toBeNull();
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+});

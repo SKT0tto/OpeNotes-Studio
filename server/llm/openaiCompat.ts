@@ -17,10 +17,28 @@ export interface OpenAiCompatOptions {
   sleep?: (ms: number) => Promise<void>;
   /** Structured-output mode to start from (default json_schema; degrades json_schema -> json_object -> text and remembers what worked). */
   mode?: Mode;
+  /**
+   * Where "this service does not accept strict json_schema" is remembered across provider instances (a provider is built per request).
+   * Default: one process-wide memory; tests pass their own. `false` = no memory.
+   */
+  modeMemory?: Map<string, RememberedMode> | false;
+  now?: () => number;
 }
 
 type Mode = 'json_schema' | 'json_object' | 'text';
 const MODES: Mode[] = ['json_schema', 'json_object', 'text'];
+
+export interface RememberedMode { mode: Mode; at: number }
+/** How long a service is believed not to support strict json_schema before it is tried again (a service may add it). */
+export const MODE_MEMORY_MS = 6 * 60 * 60 * 1000;
+const sharedModeMemory = new Map<string, RememberedMode>();
+const modeKey = (baseUrl: string, model: string) => `${baseUrl.trim().replace(/\/+$/, '')}|${model}`;
+/** Forget what was learned about services (all of them, or one base URL): call it when the endpoint / model setting changes. */
+export function forgetStructuredModes(baseUrl?: string, memory: Map<string, RememberedMode> = sharedModeMemory): void {
+  if (baseUrl === undefined) return void memory.clear();
+  const prefix = `${baseUrl.trim().replace(/\/+$/, '')}|`;
+  for (const k of [...memory.keys()]) if (k.startsWith(prefix)) memory.delete(k);
+}
 
 interface ChatResponse {
   choices?: Array<{ finish_reason?: string | null; message?: { content?: string | null; refusal?: string | null } }>;
@@ -53,7 +71,23 @@ export class OpenAiCompatProvider implements LlmProvider {
     this.base = opts.baseUrl.trim().replace(/\/+$/, '');
     this.doFetch = opts.fetch ?? fetch;
     this.sleep = opts.sleep ?? defaultSleep;
-    this.mode = opts.mode ?? null;
+    this.memory = opts.modeMemory === false ? null : opts.modeMemory ?? sharedModeMemory;
+    this.mode = opts.mode ?? this.remembered() ?? null;
+  }
+
+  private readonly memory: Map<string, RememberedMode> | null;
+  private memoryKey(): string {
+    return modeKey(this.base, this.model);
+  }
+  /** The weaker mode this service needed the last time, if it is still believed. */
+  private remembered(): Mode | null {
+    const e = this.memory?.get(this.memoryKey());
+    if (!e) return null;
+    if ((this.opts.now ?? Date.now)() - e.at > MODE_MEMORY_MS) {
+      this.memory!.delete(this.memoryKey());
+      return null;
+    }
+    return e.mode;
   }
 
   /** Mode actually in use (null until the first call succeeded). */
@@ -153,6 +187,11 @@ export class OpenAiCompatProvider implements LlmProvider {
     }
     if (!res) throw lastErr ?? new LlmError('network', '没有响应');
     this.mode = used;
+    // a service that refused strict json_schema is not asked again (by this or a later provider instance); one that took it is forgotten
+    if (this.memory) {
+      if (used === 'json_schema') this.memory.delete(this.memoryKey());
+      else this.memory.set(this.memoryKey(), { mode: used, at: (this.opts.now ?? Date.now)() });
+    }
     const choice = res.choices?.[0];
     const raw = choice?.message?.content ?? '';
     const u = res.usage ?? {};

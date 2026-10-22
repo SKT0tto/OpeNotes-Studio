@@ -4,9 +4,11 @@ import { expandScene } from '../../shared/director/expand';
 import { mergeLocks, type MergeConflict, type MergeReport } from '../../shared/director/mergeLocks';
 import type { Paragraph } from '../../shared/director/paragraphs';
 import { splitParagraphs } from '../../shared/director/paragraphs';
+import { stageSummary } from '../../shared/director/stage';
 import { lookup } from '../../shared/director/resources';
 import { autoSelectable, bgCategoryOf } from '../../shared/director/bgCategory';
 import type { ScopeName } from '../../shared/director/scope';
+import { downgradeChunkEnd } from '../../shared/director/intentNormalize';
 import { validateDirection } from '../../shared/director/validate';
 import type { SceneDirection } from '../../shared/schema/ai';
 import { cameraSystemOf, type Beat, type Project, type Scene } from '../../shared/schema/project';
@@ -38,8 +40,15 @@ export interface SceneResult {
 }
 
 const MAX_PARAS_PER_CALL = 45;
-/** Output tokens per paragraph of source text (about two beats of ~300 tokens each). */
-const TOKENS_PER_PARA = 700;
+/**
+ * Output tokens per paragraph of source text, the first guess before any call has been measured (a real run of a reasoning model
+ * measured a median of ~360 tokens per paragraph, p90 ~570). After every real call the estimate follows what the provider reported.
+ */
+export const TOKENS_PER_PARA = 450;
+const MIN_TOKENS_PER_PARA = 250;
+const MAX_TOKENS_PER_PARA = 900;
+/** Measured tokens per paragraph get this much head room before they size the next span. */
+const MEASURED_HEADROOM = 1.3;
 
 const protectedBeat = (b: Beat, overwrite: boolean) => b.meta.locked || (b.meta.lockedFields?.length ?? 0) > 0 || (!overwrite && b.meta.source === 'user');
 
@@ -97,9 +106,15 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   });
 
   const cap = d.provider.maxOutputTokens ?? 16000;
-  const perCall = Math.max(4, Math.min(MAX_PARAS_PER_CALL, Math.floor((cap - 1500) / TOKENS_PER_PARA)));
+  const perCallAt = (perPara: number) => Math.max(4, Math.min(MAX_PARAS_PER_CALL, Math.floor((cap - 1500) / perPara)));
   const runs: RunInfo[] = [];
-  const direct = async (paras: Paragraph[], prev: SceneDirectionInput['previousScene'], fixedHere: Beat[], label: string): Promise<SceneDirection> => {
+  const chunkWarnings: string[] = [];
+  /** Output tokens per paragraph: starts at the default, then follows the provider's own usage numbers. */
+  let tpp = TOKENS_PER_PARA;
+  const direct = async (paras: Paragraph[], prev: SceneDirectionInput['previousScene'], fixedHere: Beat[], label: string, continuation?: SceneDirectionInput['continuation']): Promise<SceneDirection> => {
+    const lastPara = inScene.at(-1)!.index;
+    const more = paras.at(-1)!.index < lastPara;
+    const nextPara = inScene.find((p) => p.index > paras.at(-1)!.index)?.index ?? lastPara;
     const input: SceneDirectionInput = {
       scene: {
         title: scene.title, mood: scene.brief?.mood ?? '', timeOfDay: scene.brief?.timeOfDay ?? '',
@@ -109,12 +124,14 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
       cast,
       paragraphs: paras.map((p) => ({ i: p.index, text: p.text })),
       previousScene: prev,
+      ...(continuation ? { continuation } : {}),
+      ...(structure && more ? { sceneContinues: { note: `注意：这一段不是整个场景的结尾，场景在第 ${nextPara} 段之后还会继续（后面还有对白和事件）。所以这一段的最后一拍不要给场尾收束：不要用 release、拉远成群像、pull_out 或黑场式的收尾，镜头和节奏保持「场景正在进行」的状态；真正的场尾由最后一段处理。`, nextParagraph: nextPara } } : {}),
       fixedBeats: fixedHere.map(fixedInput),
       mode: { scopes: req.scopes, ...(req.beatIds ? { focusBeatIds: fixedHere.map((b) => b.id) } : {}) },
     };
     const range = { start: paras[0]!.index, end: paras.at(-1)!.index };
     const fixedIds = new Set(fixedHere.map((b) => b.id));
-    const tokens = Math.min(cap, structure ? 1500 + TOKENS_PER_PARA * paras.length : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length)));
+    const tokens = Math.min(cap, structure ? 1500 + tpp * paras.length : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length)));
     const step = (maxTokens: number) => runStep({
       provider: d.provider, cache: d.cache, promptVersion: sys.promptVersion, pass: 'scene', label, refresh: d.refresh === true,
       req: { system: sys.system, input: sceneInput(input), schema: sys.schema, schemaName: sys.schemaName, maxTokens, signal: d.signal },
@@ -122,7 +139,7 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
         const v = validateDirection(dir, {
           catalog: d.catalog, cast: cast.map((c) => ({ castId: c.castId, characterKey: c.characterKey, modelId: c.modelId })), paragraphs, range,
           isPerformance: !!scene.brief?.isPerformance, fixedBeatIds: fixedIds, cameraSystem,
-          ...(cameraSystem === 'travel' ? { slots: Object.fromEntries(Object.entries(scene.blocking).map(([id, b]) => [id, b.slot])) } : {}),
+          ...(direction ? { awayAtStart: new Set(stageSummary(direction.beats, cast.map((c) => c.castId)).exited) } : {}),
           backgrounds: {
             start: scene.background.assetId, allowed: bgAllowed,
             scope: { title: scene.title, reason: '', mood: scene.brief?.mood ?? '', timeOfDay: scene.brief?.timeOfDay ?? '', isPerformance: !!scene.brief?.isPerformance, presentCast: cast.map((c) => c.characterKey), guestOf: scene.brief?.guestOf ?? null },
@@ -142,17 +159,44 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
       throw e;
     });
     runs.push(info);
-    return value;
+    // travel: the last beat of a span that is not the scene's last must not close the scene (the model is told so; this is the guard)
+    let result = value;
+    if (structure && more && cameraSystem === 'travel' && value.beats.length > 0) {
+      result = structuredClone(value);
+      chunkWarnings.push(...downgradeChunkEnd(result.beats, { prev: direction?.beats.at(-1), skip: (b) => !!b.keepId && fixedIds.has(b.keepId), where: (i) => `${label} 第 ${i + 1} 句` }));
+    }
+    // measure: what this span really cost per paragraph steers the size of the following spans
+    // (a cache hit carries the usage of the call that produced it, so a cached re-run plans exactly the same spans and hits again)
+    if (structure && info.usage.outputTokens > 0) {
+      const seen = (info.usage.outputTokens / paras.length) * MEASURED_HEADROOM;
+      tpp = Math.min(MAX_TOKENS_PER_PARA, Math.max(MIN_TOKENS_PER_PARA, Math.round((tpp + seen) / 2)));
+    }
+    return result;
   };
 
   const prev0 = endSummary(project, index);
   let direction: SceneDirection | null = null;
   const tail = () => ({ title: scene.title, endSummary: `同一场景的前半部分，最后一句：${[...(direction?.beats.at(-1)?.text ?? '')].slice(0, 40).join('')}` });
+  /** What the next span of a long scene needs to know about the spans before it: the last paragraphs, the last beats, who is on stage. */
+  const carry = (part: Paragraph[]): SceneDirectionInput['continuation'] | undefined => {
+    if (!direction || direction.beats.length === 0) return undefined;
+    const castIds = cast.map((c) => c.castId);
+    const st = stageSummary(direction.beats, castIds);
+    const shown = (c: string) => `${c}（${project.cast.find((x) => x.id === c)?.displayName ?? c}）`;
+    return {
+      note: '这是同一场景接着往下导的一段：前文已经导完。contextParagraphs 是紧挨着的前文原文，只读，不要为它们输出节拍；previousBeats 是前文最后几拍，对白没有署名时请结合它判断是谁在说话；onStage 是此刻在台上的人，notYetSeen 是前文还没出现过的人（他们若在后文出现，请在那一拍给 enter=true），exited 是已离场的人。',
+      contextParagraphs: inScene.filter((p) => p.index < part[0]!.index).slice(-2).map((p) => ({ i: p.index, text: p.text })),
+      previousBeats: direction.beats.slice(-3).map((b) => ({ kind: b.kind, speaker: b.speaker, text: [...b.text].slice(0, 60).join('') })),
+      onStage: st.onStage.map(shown),
+      notYetSeen: st.notYetSeen.map(shown),
+      exited: st.exited.map(shown),
+    };
+  };
   const fixedIn = (part: Paragraph[]) => fixed.filter((b) => paraOfBeat(b) >= part[0]!.index && paraOfBeat(b) <= part.at(-1)!.index);
   const label = (part: Paragraph[], extra = '') => `${scene.title} · 段落 ${part[0]!.index}–${part.at(-1)!.index}${extra}`;
   const callPart = async (part: Paragraph[], depth: number, only?: Beat[]): Promise<void> => {
     try {
-      const dir = await direct(part, direction ? tail() : prev0, only ?? fixedIn(part), label(part));
+      const dir = await direct(part, direction ? tail() : prev0, only ?? fixedIn(part), label(part), structure ? carry(part) : undefined);
       direction = direction ? combine(direction, dir) : dir;
     } catch (e) {
       if (!(e instanceof LlmError && e.kind === 'truncated')) throw e;
@@ -164,7 +208,9 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
         for (const half of [group.slice(0, mid), group.slice(mid)]) await callPart(contextOf(half), depth + 1, half);
         return;
       }
-      // truncated output: split the span in two and direct the halves one after the other
+      // truncated output: the estimate was too low, so the spans after this one get smaller too
+      tpp = Math.min(MAX_TOKENS_PER_PARA, Math.round(tpp * 1.4));
+      // split the span in two and direct the halves one after the other
       if (depth < 3 && part.length >= 2) {
         const mid = Math.ceil(part.length / 2);
         await callPart(part.slice(0, mid), depth + 1);
@@ -180,9 +226,19 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   };
   if (structure) {
     // long scenes are directed in consecutive spans that each fit the provider's output limit
-    const spanCount = Math.ceil(inScene.length / perCall);
-    const size = Math.ceil(inScene.length / spanCount);
-    for (let i = 0; i < spanCount; i++) await callPart(inScene.slice(i * size, (i + 1) * size), 0);
+    // (spans are sized by the measured cost per paragraph; the plan is redone when the measurement moves the estimate)
+    let rest = inScene;
+    let planned = tpp;
+    const planSize = (n: number) => Math.ceil(n / Math.ceil(n / perCallAt(planned)));
+    let size = planSize(rest.length);
+    while (rest.length > 0) {
+      if (Math.abs(tpp - planned) / planned > 0.15) {
+        planned = tpp;
+        size = planSize(rest.length);
+      }
+      await callPart(rest.slice(0, size), 0);
+      rest = rest.slice(size);
+    }
   } else {
     const perGroup = Math.max(1, Math.floor((cap - 1500) / 700));
     for (let i = 0; i < fixed.length; i += perGroup) {
@@ -200,7 +256,7 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   };
   const { scene: fresh, warnings: expandWarnings } = expandScene({ base: scene, direction: dir, paragraphs, genId, now, playMotionOf, isInsertBg: (id) => { const b = L.backgrounds.get(id); return !!b && bgCategoryOf(b) === 'insert'; }, decisions: isModelAi(d.provider) ? 'ai' : 'rule' });
   const merged = mergeLocks(scene, fresh, { scopes: req.scopes, beatIds: req.beatIds, overwriteUser: overwrite });
-  const warnings = [...runs.flatMap((r) => r.warnings), ...expandWarnings, ...merged.conflicts.map((c) => `锁定冲突：${c.label}`)];
+  const warnings = [...runs.flatMap((r) => r.warnings), ...chunkWarnings, ...expandWarnings, ...merged.conflicts.map((c) => `锁定冲突：${c.label}`)];
   return { sceneId: scene.id, scene: merged.scene, applied: merged.applied, conflicts: merged.conflicts, report: merged.report, direction: dir, warnings, runs };
 }
 

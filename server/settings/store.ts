@@ -6,7 +6,7 @@ import {
   type LlmProviderId, type LlmSettingsPatch, type PublicKeyInfo, type PublicLlmSettings, type StoredLlmSettings,
 } from '../../shared/schema/settings';
 import { AnthropicProvider } from '../llm/anthropic';
-import { OpenAiCompatProvider } from '../llm/openaiCompat';
+import { OpenAiCompatProvider, forgetStructuredModes } from '../llm/openaiCompat';
 import type { LlmProvider } from '../llm/provider';
 
 type Env = Record<string, string | undefined>;
@@ -189,6 +189,8 @@ export class LlmSettings {
     };
     apply(next.anthropic, patch.anthropic);
     apply(next.openai, patch.openai);
+    // a changed endpoint / model may be a service that does support strict json_schema: let the provider ask again
+    if (patch.openai?.baseUrl !== undefined || patch.openai?.model !== undefined) forgetStructuredModes();
     this.write(next);
     return this.view();
   }
