@@ -32,7 +32,7 @@ export interface TravelShotInfo {
 export type Density = 'original' | 'less' | 'more' | 'off';
 
 export interface TravelInput {
-  cutIn: 'cut' | 'dip_black';
+  cutIn: 'cut' | 'dip_black' | 'dip_white';
   move: string;
   userTransition: 'cut' | 'glide' | 'travel' | undefined;
   /** The previous shot that set a new camera (not held). */
@@ -197,7 +197,7 @@ export function decideTravel(i: TravelInput): TravelDecision {
   // An explicit user / locked cut is absolute. An AI `flow=cut` is a suggestion: it is honoured as a hard cut only for a reaction, a
   // rupture, or a change of person into a close-up; otherwise the structural rules below decide.
   if (userTransition === 'cut' && (manual || aiCutHonoured(intent, prev, cur))) return { kind: 'cut', reason: `${manual ? '用户' : 'AI'}指定硬切：${motivation}` };
-  if (i.cutIn === 'dip_black') return cut('黑场分隔，重新建立观看');
+  if (i.cutIn === 'dip_black' || i.cutIn === 'dip_white') return cut('黑场分隔，重新建立观看');
   if (i.afterEmpty) {
     // Establish the space once. Continue/reaction/rupture never get a decorative push after a cut.
     if (i.move === 'static' && density !== 'off' && intent === 'reveal' && i.span >= 2) {

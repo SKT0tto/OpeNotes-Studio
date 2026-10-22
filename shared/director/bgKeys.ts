@@ -4,7 +4,7 @@ import type { BackgroundSwitch } from '../schema/project';
 export type BgTransition = BackgroundSwitch['transition'];
 export type BgPurpose = BackgroundSwitch['purpose'];
 
-export const DEFAULT_BG_SECONDS: Record<BgTransition, number> = { cut: 0, dip_black: 0.8, crossfade: 1 };
+export const DEFAULT_BG_SECONDS: Record<BgTransition, number> = { cut: 0, dip_black: 0.8, dip_white: 0.8, crossfade: 1 };
 
 export function bgSwitchValue(assetId: string, transition: BgTransition, purpose: BgPurpose = 'move'): BackgroundSwitch {
   return { assetId, transition, transitionSeconds: DEFAULT_BG_SECONDS[transition], purpose };

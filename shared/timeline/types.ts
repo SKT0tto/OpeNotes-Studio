@@ -1,6 +1,6 @@
 import type { Calibration } from '../schema/calibration';
 import type { MotionEntry } from '../schema/assets';
-import type { Transition } from '../schema/project';
+import type { MemoryEdge, MemoryTone, Transition } from '../schema/project';
 import type { BgFraming, BgInfo, CameraPose, GroundParams } from '../staging/world';
 import type { ShotType } from '../staging/framing';
 import type { StageMap } from '../staging/compactStage';
@@ -49,6 +49,20 @@ export interface CameraKey extends TimedKey {
   pose: CameraPose;
   travel?: CameraTravel;
 }
+/** Memory look from this time on (a step, not a ramp): the grade and the white edge of the memory keys. */
+export interface MemoryLookKey {
+  at: number;
+  tone: MemoryTone;
+  edge: MemoryEdge;
+}
+
+/** A short decaying camera shake: from `start` for `seconds`, `strength` 0..1 (1 = 2 % of the stage height). */
+export interface ShakeWindow {
+  start: number;
+  seconds: number;
+  strength: number;
+}
+
 export interface FadeKey extends TimedKey {
   alpha: number;
   color: 'black' | 'white';
@@ -150,7 +164,7 @@ export interface BgSegment {
   /** The picture's own size (the world of the scene is the base background's, see `CompiledScene.bg`). */
   bg: BgInfo;
   framing: BgFraming;
-  transition: 'cut' | 'dip_black' | 'crossfade';
+  transition: 'cut' | 'dip_black' | 'dip_white' | 'crossfade';
   transitionSeconds: number;
   purpose: 'move' | 'insert' | 'time';
   /** Track key that made this segment (null for the start background). */
@@ -206,7 +220,7 @@ export interface CompiledProject {
   se: Array<{ at: number; assetId: string; volume: number }>;
   fade: FadeKey[];
   /** Emotion effects on the screen: strengths 0..1 and the Dutch roll in degrees. */
-  fx: { anxiety: NumKey[]; glow: NumKey[]; roll: NumKey[] };
+  fx: { anxiety: NumKey[]; glow: NumKey[]; roll: NumKey[]; memory?: NumKey[]; memoryLook?: MemoryLookKey[]; dim?: NumKey[]; shake?: ShakeWindow[]; daze?: NumKey[]; blink?: NumKey[] };
   /** Non-fatal problems (missing motion, unknown beat id, ...). Compile never invents resources. */
   warnings: string[];
 }
@@ -274,6 +288,7 @@ export interface RenderState {
   /** Style of the beat on screen (dialogue area, HUD, banner, effects). */
   ui: UiStyle;
   location: { text: string; phase: 'in' | 'hold' | 'out'; progress: number } | null;
-  fx: { anxiety: number; glow: number; roll: number };
+  /** The optional fields exist only in a project that uses the effect (a project without them evaluates to the old three numbers). */
+  fx: { anxiety: number; glow: number; roll: number; memory?: number; memoryTone?: MemoryTone; memoryEdge?: MemoryEdge; dim?: number; daze?: number; blink?: number };
   audio: { bgm: { assetId: string; volume: number } | null };
 }

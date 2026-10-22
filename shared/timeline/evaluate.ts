@@ -9,6 +9,7 @@ import { travelPose } from '../staging/travel';
 import { travelBgPose } from '../staging/travelBg';
 import { bgView, viewWorldHeight } from '../staging/world';
 import { clamp, ease, lerp } from './easing';
+import { MEMORY_DEFAULT_EDGE, MEMORY_DEFAULT_TONE, SHAKE_AMPLITUDE, SHAKE_DECAY } from './fxParams';
 import { lastBefore, sampleKeys, sampleNum } from './sample';
 import { TEXT_KINDS } from './time';
 import type { ActorRender, CameraKey, CompiledActor, CompiledProject, CompiledScene, RenderState, SubtitleRender } from './types';
@@ -104,6 +105,11 @@ function travelCamera(s: CompiledScene, tr: NonNullable<CompiledScene['travel']>
     b = endpoint(prev);
   }
   return { x, y, zoom: cam.zoom, ...b, bgX: b.bgX + (x - cam.x), bgY: b.bgY + (y - cam.y) };
+}
+
+function memoryAt(c: CompiledProject, t: number): Pick<RenderState['fx'], 'memory' | 'memoryTone' | 'memoryEdge'> {
+  const look = lastBefore(c.fx.memoryLook ?? [], t);
+  return { memory: sampleNum(c.fx.memory ?? [], t, 0), memoryTone: look?.tone ?? MEMORY_DEFAULT_TONE, memoryEdge: look?.edge ?? MEMORY_DEFAULT_EDGE };
 }
 
 export function sceneIndexAt(c: CompiledProject, t: number): number {
@@ -235,6 +241,14 @@ export function evaluate(c: CompiledProject, tIn: number): RenderState {
     }
   }
 
+  // the shake effect: a short decaying jolt of the camera (same sine pair as the beat-long shake, deterministic in t)
+  for (const w of c.fx.shake ?? []) {
+    if (t < w.start || t >= w.start + w.seconds) continue;
+    const a = (w.strength * SHAKE_AMPLITUDE * viewWorldHeight(s.bg) * Math.exp((-SHAKE_DECAY * (t - w.start)) / w.seconds)) / cam.zoom;
+    x += Math.sin(t * 61.3) * a;
+    y += Math.sin(t * 47.9 + 1.3) * a;
+  }
+
   let subtitle: SubtitleRender | null = null;
   const hidden = s.hiddenDialog.some(([a, b]) => t >= a && t < b);
   if (beat && beat.text.length > 0 && TEXT_KINDS.includes(beat.kind) && t >= beat.start && !hidden) {
@@ -267,7 +281,14 @@ export function evaluate(c: CompiledProject, tIn: number): RenderState {
       : null,
     ui: (beat ?? null)?.ui ?? s.ui,
     location: locationAt(s, t),
-    fx: { anxiety: sampleNum(c.fx.anxiety, t, 0), glow: sampleNum(c.fx.glow, t, 0), roll: sampleNum(c.fx.roll, t, 0) + (cam.roll ?? 0) },
+    fx: {
+      anxiety: sampleNum(c.fx.anxiety, t, 0), glow: sampleNum(c.fx.glow, t, 0), roll: sampleNum(c.fx.roll, t, 0) + (cam.roll ?? 0),
+      // the effects of v0.4 only appear in a project that uses them (the golden of the old projects hashes this object)
+      ...(c.fx.memory ? memoryAt(c, t) : {}),
+      ...(c.fx.dim ? { dim: sampleNum(c.fx.dim, t, 0) } : {}),
+      ...(c.fx.daze ? { daze: sampleNum(c.fx.daze, t, 0) } : {}),
+      ...(c.fx.blink ? { blink: sampleNum(c.fx.blink, t, 0) } : {}),
+    },
     fade: fadeA,
     audio: { bgm: bgm && bgm.assetId ? { assetId: bgm.assetId, volume: bgm.volume } : null },
   };

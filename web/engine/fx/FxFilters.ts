@@ -37,6 +37,10 @@ uniform float uAspect;
 uniform float uSmoke;
 uniform float uTime;
 uniform vec3 uTint;
+uniform float uMemory;
+uniform float uTone;
+uniform float uDim;
+uniform float uSat;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
@@ -44,6 +48,37 @@ float noise(vec2 p) {
   return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 float fbm(vec2 p) { return 0.55 * noise(p) + 0.3 * noise(p * 2.1 + 3.7) + 0.15 * noise(p * 4.3 + 8.1); }
+
+// Memory grade (the original's reminiscence 1 / 2): desaturated, a little brighter, cool (tone 0) or warm (tone 1) split toning.
+float luma(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+vec3 memoryGrade(vec3 c) {
+  vec3 g = c;
+  if (uTone < 0.5) {
+    g *= 1.06;
+    g = mix(vec3(luma(g)), g, 0.5);
+    float l = luma(g);
+    g = mix(g, vec3(0.50, 0.53, 0.62), 0.06 * (1.0 - l));
+    g = mix(g, vec3(0.47, 0.48, 0.53), 0.04 * l);
+  } else if (uTone < 1.5) {
+    g *= vec3(1.0, 0.949, 0.922);
+    g = mix(vec3(luma(g)), g, 0.6);
+    g += 0.07 * sin(3.14159265 * clamp(g, 0.0, 1.0));
+  } else if (uTone < 2.5) {
+    // sepia: saturation x0.40, exposure and warm colour filter (the original's are linear-space; these are their gamma-space equivalents), warm split toning
+    g *= 0.92 * vec3(1.0, 0.94, 0.916);
+    g = mix(vec3(luma(g)), g, 0.40);
+    float l = luma(g);
+    g = mix(g, vec3(0.63, 0.37, 0.37), 0.08 * (1.0 - l));
+    g = mix(g, vec3(0.48, 0.40, 0.32), 0.10 * l);
+    g *= vec3(1.05, 1.0, 0.9);
+  } else {
+    // mono: saturation 0, contrast x1.415 around linear mid-grey 0.18 and x0.78, both in linear light (as the original's renderer does)
+    float lin = pow(max(luma(g), 0.0), 2.2);
+    lin = 0.18 * pow(lin / 0.18, 1.415) * 0.78;
+    g = vec3(pow(lin, 1.0 / 2.2));
+  }
+  return g;
+}
 
 void main(void) {
   vec2 uv = vTextureCoord;
@@ -66,6 +101,21 @@ void main(void) {
     col += (1.0 - col) * uLift * uGlow;
   }
 
+  if (uMemory > 0.001) {
+    vec3 graded = memoryGrade(col);
+    if (uTone < 0.5) {
+      // weak blue-violet bloom (threshold 0.7, intensity 0.2, tint 0.54 0.52 1.0)
+      vec3 acc = vec3(0.0);
+      for (int i = 0; i < 8; i++) {
+        float ang = float(i) * 0.7853982;
+        vec2 d = vec2(cos(ang) / uAspect, sin(ang)) * 0.012;
+        acc += max(texture(uTexture, uv + d).rgb - 0.7, 0.0) + max(texture(uTexture, uv + d * 2.2).rgb - 0.7, 0.0);
+      }
+      graded += vec3(0.54, 0.52, 1.0) * (luma(acc) / 16.0) * 0.2 * 4.0;
+    }
+    col = mix(col, graded, uMemory);
+  }
+
   if (uAnxiety > 0.001) {
     // Smoky vignette: an irregular rim whose edge and density come from slowly drifting fbm clouds, tinted grey, heavier in the corners.
     vec2 q = uv * vec2(3.0 * uAspect, 3.0);
@@ -83,6 +133,8 @@ void main(void) {
     float fog = clamp(m * (0.25 + 0.95 * smoke) * uSmoke * uAnxiety, 0.0, 1.0);
     col = mix(col, uTint * (0.35 + 1.3 * smoke), fog);
   }
+  col *= 1.0 - uDim;
+  if (uSat < 0.999) col = mix(vec3(luma(col)), col, uSat);
   finalColor = vec4(col, a);
 }
 `;
@@ -100,6 +152,13 @@ export interface ScreenFx {
   smoke: number;
   tint: [number, number, number];
   time: number;
+  /** Memory strength 0..1 and its tone (0 cool, 1 warm, 2 sepia, 3 mono). */
+  memory: number;
+  tone: number;
+  /** Darkening 0..1 (the share of the picture removed). */
+  dim: number;
+  /** Saturation multiplier (1 = unchanged). */
+  sat: number;
 }
 
 export class ScreenFxFilter extends Filter {
@@ -110,7 +169,7 @@ export class ScreenFxFilter extends Filter {
         fx: {
           uAnxiety: { value: 0, type: 'f32' }, uDesat: { value: 0, type: 'f32' }, uInset: { value: 0, type: 'f32' }, uDark: { value: 0, type: 'f32' },
           uGlow: { value: 0, type: 'f32' }, uLift: { value: 0, type: 'f32' }, uChroma: { value: 0, type: 'f32' }, uBloom: { value: 0, type: 'f32' },
-          uAspect: { value: aspect, type: 'f32' }, uSmoke: { value: 0, type: 'f32' }, uTime: { value: 0, type: 'f32' }, uTint: { value: new Float32Array([0.5, 0.5, 0.5]), type: 'vec3<f32>' },
+          uAspect: { value: aspect, type: 'f32' }, uSmoke: { value: 0, type: 'f32' }, uTime: { value: 0, type: 'f32' }, uMemory: { value: 0, type: 'f32' }, uTone: { value: 0, type: 'f32' }, uDim: { value: 0, type: 'f32' }, uSat: { value: 1, type: 'f32' }, uTint: { value: new Float32Array([0.5, 0.5, 0.5]), type: 'vec3<f32>' },
         },
       },
     });
@@ -120,7 +179,7 @@ export class ScreenFxFilter extends Filter {
     const u = (this.resources.fx as { uniforms: Record<string, number> }).uniforms;
     u.uAnxiety = v.anxiety; u.uDesat = v.desat; u.uInset = v.inset; u.uDark = v.dark;
     u.uGlow = v.glow; u.uLift = v.lift; u.uChroma = v.chroma; u.uBloom = v.bloom;
-    u.uSmoke = v.smoke; u.uTime = v.time;
+    u.uSmoke = v.smoke; u.uTime = v.time; u.uMemory = v.memory; u.uTone = v.tone; u.uDim = v.dim; u.uSat = v.sat;
     (u as unknown as Record<string, Float32Array>).uTint!.set(v.tint);
   }
 }

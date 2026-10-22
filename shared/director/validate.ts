@@ -9,7 +9,7 @@ import { EMOTION_EXPR } from '../timeline/compile';
 import { canon, familyOfName, isIdleFamily, mapExpressionName, mapMotionFamily } from '../timeline/motionMap';
 import { traceability, type Paragraph } from './paragraphs';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
-import { INSERT_HINT, MAX_BG_MOVES, SPECIAL_ATTENTION, TRAVEL_INSERT_HINT } from './vocab';
+import { INSERT_HINT, MAX_BG_MOVES, MAX_DIM_BEATS, MEMORY_CUE, MONOLOGUE_TEXT, SPECIAL_ATTENTION, TRAVEL_INSERT_HINT } from './vocab';
 import { stageEvents, stageTimeline } from './stage';
 import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
@@ -538,6 +538,49 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       }
     } else if (b.shot.insertTarget) b.shot.insertTarget = null;
   });
+  // screen effects (v0.4): the old `memory_glow` is read as `memory`; a memory needs a cue in the text; dim is for inner voice and never runs long;
+  // a flash / shake is not repeated on neighbouring beats
+  {
+    d.beats.forEach((b) => {
+      if (b.fx === 'memory_glow') b.fx = 'memory';
+      if (b.memoryTone === null || b.fx !== 'memory') delete b.memoryTone;
+      if (b.fxStrength === null || b.fx !== 'shake') delete b.fxStrength;
+    });
+    for (let i = 0; i < d.beats.length; i++) {
+      if (d.beats[i]!.fx !== 'memory') continue;
+      let j = i;
+      while (j + 1 < d.beats.length && d.beats[j + 1]!.fx === 'memory') j++;
+      const lo = Math.max(ctx.range.start, d.beats[i]!.paragraph - 1);
+      const hi = d.beats[j]!.paragraph;
+      const text = [...ctx.paragraphs.filter((p) => p.index >= lo && p.index <= hi).map((p) => p.text), ...d.beats.slice(i, j + 1).map((x) => x.text)].join(String.fromCharCode(10));
+      if (!MEMORY_CUE.test(text)) {
+        warnings.push(`第 ${i + 1}${j > i ? `–${j + 1}` : ''} 句标了回忆特效，但原文里没有回忆线索（回忆 / 以前 / 小时候 / 那时 / 数年前 / 当初……），已取消`);
+        for (let k = i; k <= j; k++) {
+          d.beats[k]!.fx = 'none';
+          delete d.beats[k]!.memoryTone;
+        }
+      }
+      i = j;
+    }
+    let dimRun = 0;
+    d.beats.forEach((b, bi) => {
+      if (b.fx === 'dim' && !(b.kind === 'narration' || MONOLOGUE_TEXT.test(b.text))) {
+        warnings.push(`第 ${bi + 1} 句标了心声压暗，但它不是独白或旁白，已取消`);
+        b.fx = 'none';
+      }
+      dimRun = b.fx === 'dim' ? dimRun + 1 : 0;
+      if (b.fx === 'dim' && dimRun > MAX_DIM_BEATS) {
+        warnings.push(`第 ${bi + 1} 句：压暗已连续 ${MAX_DIM_BEATS} 句，已收回（原作的压暗只在一两句心声上）`);
+        b.fx = 'none';
+        dimRun = 0;
+      }
+      const prev = d.beats[bi - 1];
+      if ((b.fx === 'flash' || b.fx === 'shake') && prev && prev.fx === b.fx) {
+        warnings.push(`第 ${bi + 1} 句的 ${b.fx} 紧跟着上一句的同一特效，已取消`);
+        b.fx = 'none';
+      }
+    });
+  }
   // travel: intent labels that contradict the picture are relabelled (a locked / user beat is never touched)
   if (ctx.cameraSystem === 'travel') {
     warnings.push(...normalizeIntents(d.beats, {

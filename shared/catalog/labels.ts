@@ -16,7 +16,7 @@ export const BEAT_KIND_LABEL: Record<string, string> = {
 };
 export const MOVE_LABEL: Record<string, string> = { static: '固定', push_in: '推近', pull_out: '拉远', pan: '横摇', track: '跟随', shake: '抖动' };
 export const TRANSITION_LABEL: Record<string, string> = {
-  cut: '硬切', dip_black: '黑场眨眼', scene_black: '换场黑场', fade_black: '黑场', fade_white: '白场', crossfade: '交叉溶解', wipe: '擦除',
+  cut: '硬切', dip_black: '黑场眨眼', dip_white: '白场眨眼', scene_black: '换场黑场', fade_black: '黑场', fade_white: '白场', crossfade: '交叉溶解', wipe: '擦除',
 };
 export const CAMERA_SYSTEM_LABEL: Record<string, string> = { classic: '经典（硬切）', travel: '运镜（Our Notes / MyGO 式）', inherit: '跟随项目' };
 export const SHOT_TRANSITION_LABEL: Record<string, string> = { auto: '自动', cut: '硬切', glide: '滑移', travel: '运镜' };

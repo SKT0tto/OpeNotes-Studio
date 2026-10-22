@@ -5,7 +5,8 @@ import type { CompactCatalog } from '@shared/schema/assets';
 import { cameraSystemOf, type Project, type Scene } from '@shared/schema/project';
 import { shotTypeChoices } from '@shared/staging/framing';
 import { EASE_NAMES, ease, type EaseName } from '@shared/timeline/easing';
-import { FX_KINDS } from '@shared/schema/project';
+import { FX_KINDS, MEMORY_EDGES, MEMORY_TONES } from '@shared/schema/project';
+import { MEMORY_DEFAULT_EDGE, MEMORY_DEFAULT_TONE } from '@shared/timeline/fxParams';
 import { useState } from 'react';
 import { deleteKeys, lockKey, moveKeys, patchKey } from '../../store/actions';
 import { useSceneFit } from '../bg/bgFit';
@@ -17,7 +18,9 @@ import { CHANNEL_LABEL } from '../timeline/lanes';
 import { useModelEntry } from '../useModel';
 
 const EASE_LABEL: Record<EaseName, string> = { linear: '线性', inQuad: '缓入', outQuad: '缓出', inOutQuad: '缓入缓出', inOutSine: '正弦缓入缓出', outCubic: '三次缓出', outSine: '正弦缓出', outQuint: '五次缓出' };
-const FX_LABEL: Record<string, string> = { vignette_anxiety: '不安暗角', memory_glow: '回忆泛光', dutch: '荷兰角倾斜' };
+const FX_LABEL: Record<string, string> = { vignette_anxiety: '不安暗角', memory_glow: '泛光（旧）', dutch: '荷兰角倾斜', memory: '回忆白边', dim: '心声压暗', flash: '白闪', shake: '抖动', daze: '恍惚模糊' };
+const MEMORY_TONE_LABEL: Record<string, string> = { cool: '冷（回忆 1）', warm: '暖（很久以前）', sepia: '旧照片', mono: '黑白（定格）' };
+const MEMORY_EDGE_LABEL: Record<string, string> = { fog: '雾边', bands: '白带', both: '雾边 + 白带', none: '无' };
 
 function Curve({ name }: { name: EaseName }) {
   const pts = Array.from({ length: 33 }, (_, i) => `${(i / 32) * 100},${(1 - ease(name, i / 32)) * 36 + 2}`).join(' ');
@@ -175,11 +178,36 @@ export function KeyFields({ project, scene, catalog }: { project: Project; scene
       {channel === 'fx' && (
         <>
           <Row label="特效">
-            <select value={String(v.fx)} data-testid="key-fx" onChange={(e) => set({ ...v, fx: e.target.value }, '修改特效')}>
+            <select value={String(v.fx)} data-testid="key-fx" onChange={(e) => {
+              // fields of another kind (memory tone / edge, daze blink) do not travel with the key when its kind changes
+              const next: Record<string, unknown> = { ...v, fx: e.target.value };
+              if (next.fx !== 'memory') { delete next.tone; delete next.edge; }
+              if (next.fx !== 'daze') delete next.variant;
+              set(next, '修改特效');
+            }}>
               {FX_KINDS.map((k) => <option key={k} value={k}>{FX_LABEL[k]}</option>)}
             </select>
           </Row>
           <Row label="强度"><SliderField value={Number(v.strength)} min={0} max={1} step={0.01} testid="key-fx-strength" onChange={(n) => set({ ...v, strength: n }, '修改特效强度', 'str')} onCommit={seal} /></Row>
+          {v.fx === 'memory' && (
+            <>
+              <Row label="边缘">
+                <select value={String(v.edge ?? MEMORY_DEFAULT_EDGE)} data-testid="key-fx-edge" onChange={(e) => set({ ...v, edge: e.target.value }, '修改回忆边缘')}>
+                  {MEMORY_EDGES.map((k) => <option key={k} value={k}>{MEMORY_EDGE_LABEL[k]}</option>)}
+                </select>
+              </Row>
+              <Row label="色调">
+                <select value={String(v.tone ?? MEMORY_DEFAULT_TONE)} data-testid="key-fx-tone" onChange={(e) => set({ ...v, tone: e.target.value }, '修改回忆色调')}>
+                  {MEMORY_TONES.map((k) => <option key={k} value={k}>{MEMORY_TONE_LABEL[k]}</option>)}
+                </select>
+              </Row>
+            </>
+          )}
+          {v.fx === 'daze' && (
+            <Row label="眨眼遮罩">
+              <label className="chip check"><input type="checkbox" checked={v.variant === 'blink'} data-testid="key-fx-blink" onChange={(e) => { const next = { ...v }; if (e.target.checked) next.variant = 'blink'; else delete next.variant; set(next, '修改眨眼遮罩'); }} />上下眼睑（强度 = 闭合度）</label>
+            </Row>
+          )}
           {v.fx === 'dutch' && <Row label="倾斜角"><SliderField value={Number(v.roll)} min={-30} max={30} step={0.5} unit="°" testid="key-fx-roll" onChange={(n) => set({ ...v, roll: n }, '修改倾斜角', 'roll')} onCommit={seal} /></Row>}
         </>
       )}
@@ -191,7 +219,7 @@ export function KeyFields({ project, scene, catalog }: { project: Project; scene
   );
 }
 
-const BG_TRANSITIONS: Array<[string, string]> = [['cut', '硬切'], ['dip_black', '黑场（眨眼）'], ['crossfade', '叠化']];
+const BG_TRANSITIONS: Array<[string, string]> = [['cut', '硬切'], ['dip_black', '黑场（眨眼）'], ['dip_white', '白场（眨眼）'], ['crossfade', '叠化']];
 const BG_PURPOSES: Array<[string, string]> = [['move', '换地点（人物保留）'], ['insert', '插入镜头（人物隐藏到下一次切换）'], ['time', '同地点换时段']];
 
 /** Value of a background switch: which picture, how it changes (cut / dip to black / crossfade), what it is for. */

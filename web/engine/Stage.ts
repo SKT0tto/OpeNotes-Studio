@@ -14,7 +14,11 @@ import { QualityGovernor } from './QualityGovernor';
 import { Camera } from './Camera';
 import { Transitions } from './Transitions';
 import { OuterGlowFilter, ScreenFxFilter } from './fx/FxFilters';
+import { MemoryEdgeLayer } from './fx/MemoryEdge';
+import { EyelidLayer } from './fx/Eyelids';
+import { DAZE_BLUR, DAZE_DESAT, DIM_LEVEL, MEMORY_BG_BLUR } from '@shared/timeline/fxParams';
 import { rollCoverScale } from '@shared/staging/roll';
+import { MEMORY_TONES } from '@shared/schema/project';
 
 export const STAGE_H = 720;
 /** Renderer resolution of the player canvas: 720 logical rows x 1.5 = 1080 real rows. */
@@ -135,6 +139,10 @@ export class Stage {
   private readonly fadeRect = new Graphics();
   private readonly transitions: Transitions;
   private readonly screenFx: ScreenFxFilter;
+  private readonly memoryEdge: MemoryEdgeLayer;
+  private readonly eyelids: EyelidLayer;
+  /** The daze blur of the scene root (created on first use: a project without the effect never builds it). */
+  private dazeBlur: BlurFilter | null = null;
   private readonly slots = new Map<string, Slot>();
   private scene: StageScene | null = null;
   private lastPlacement = new Map<string, ReturnType<typeof placeActor>>();
@@ -160,7 +168,9 @@ export class Stage {
     this.fadeRect.rect(0, 0, this.width, this.height).fill(0xffffff);
     this.fadeRect.visible = false;
     this.transitions = new Transitions(app.renderer, this.width, this.height);
-    app.stage.addChild(this.sceneRoot, this.fadeRect, this.transitions.layer);
+    this.memoryEdge = new MemoryEdgeLayer(this.width, this.height);
+    this.eyelids = new EyelidLayer(this.width, this.height);
+    app.stage.addChild(this.sceneRoot, this.memoryEdge.layer, this.eyelids.layer, this.fadeRect, this.transitions.layer);
     // Actors waiting off screen (opacity 0) are not rendered, so the engine would not advance them: keep them living.
     this.tickHidden = () => {
       if (!this.sceneRoot.visible) return;
@@ -395,12 +405,12 @@ export class Stage {
     if (main) {
       const nx = bgState.next ? this.bgTextures.get(bgState.next.assetId) : undefined;
       this.bgLayer.apply(
-        scene.bg, state.camera, bgState.blur * px,
+        scene.bg, state.camera, bgState.blur * px + (state.fx.memory ?? 0) * MEMORY_BG_BLUR * this.height,
         { assetId: bgState.assetId, texture: main, framing: bgState.framing, src: bgState.src },
         bgState.next && nx ? { assetId: bgState.next.assetId, texture: nx, framing: bgState.next.framing, src: bgState.next.src, alpha: bgState.next.alpha } : undefined,
         scene.travel === true ? (this.lowQuality ? 0.25 : true) : false,
         // no cache on a rolled screen (the picture is clipped differently) or under the screen effects (they amplify the one-level rounding of the cache)
-        state.fx.roll === 0 && state.fx.anxiety <= 0.002 && state.fx.glow <= 0.002 && !(globalThis as { __noBgCache?: boolean }).__noBgCache,
+        state.fx.roll === 0 && state.fx.anxiety <= 0.002 && state.fx.glow <= 0.002 && (state.fx.memory ?? 0) <= 0.002 && (state.fx.dim ?? 0) <= 0.002 && (state.fx.daze ?? 0) <= 0.002 && !(globalThis as { __noBgCache?: boolean }).__noBgCache,
       );
     }
 
@@ -432,16 +442,28 @@ export class Stage {
     this.sceneRoot.rotation = (roll * Math.PI) / 180;
     this.sceneRoot.scale.set(rollCoverScale(roll, this.width / this.height));
     const p = ui.fx;
-    const on = fx.anxiety > 0.002 || fx.glow > 0.002;
+    const memory = fx.memory ?? 0;
+    this.memoryEdge.set(memory, fx.memoryEdge ?? 'fog');
+    const dim = (fx.dim ?? 0) * DIM_LEVEL;
+    const daze = fx.daze ?? 0;
+    this.eyelids.set(fx.blink ?? 0);
+    const on = fx.anxiety > 0.002 || fx.glow > 0.002 || memory > 0.002 || dim > 0.001 || daze > 0.002;
     if (on) {
       this.screenFx.set({
         anxiety: fx.anxiety, desat: p.anxietyDesat, inset: p.anxietyInset, dark: p.anxietyDarkness,
         glow: fx.glow, lift: p.glowBlackLift, chroma: p.glowChroma, bloom: p.glowBloom,
         smoke: p.anxietySmoke, tint: hexToRgb01(p.anxietyTint), time: state.t * p.anxietySmokeSpeed,
+        memory, tone: Math.max(0, MEMORY_TONES.indexOf(fx.memoryTone ?? 'cool')), dim, sat: 1 - DAZE_DESAT * daze,
       });
       this.sceneRoot.filterArea = this.fxArea;
     }
-    this.sceneRoot.filters = on ? [this.screenFx] : null;
+    if (daze > 0.002) {
+      // full-screen blur (the original's depth of field focused at 0.1 m); a mild blur needs no more than half the resolution
+      const blur = (this.dazeBlur ??= new BlurFilter({ strength: 0, quality: 3 }));
+      blur.strength = daze * DAZE_BLUR * this.height;
+      blur.resolution = 0.5;
+      this.sceneRoot.filters = [blur, this.screenFx];
+    } else this.sceneRoot.filters = on ? [this.screenFx] : null;
   }
 
   private applyActor(slot: Slot, a: ActorRender, bg: BgInfo, px: number, state: RenderState): void {
@@ -660,6 +682,9 @@ export class Stage {
     this.transitions.clear();
     this.sceneRoot.destroy({ children: true });
     this.fadeRect.destroy();
+    this.memoryEdge.destroy();
+    this.eyelids.destroy();
+    this.dazeBlur?.destroy();
     this.transitions.layer.destroy({ children: true });
   }
 }

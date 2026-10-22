@@ -479,8 +479,8 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                           </div>
                           {cScene.beats.map((b) => {
                             const sb = scene.beats.find((x) => x.id === b.id);
-                            return sb?.cutIn === 'dip_black' ? (
-                              <span key={b.id} className="tl-dip" style={{ left: x(b.start) }} title="黑场眨眼切入（在“句子”标签里调整）" onPointerDown={(e) => { e.stopPropagation(); useProject.getState().select({ beatId: b.id }); set({ inspectorTab: 'beat' }); seekTo(b.start + 0.01); }}>◆</span>
+                            return sb?.cutIn === 'dip_black' || sb?.cutIn === 'dip_white' ? (
+                              <span key={b.id} className="tl-dip" style={{ left: x(b.start) }} title={sb.cutIn === 'dip_white' ? '白场眨眼切入（在“句子”标签里调整）' : '黑场眨眼切入（在“句子”标签里调整）'} onPointerDown={(e) => { e.stopPropagation(); useProject.getState().select({ beatId: b.id }); set({ inspectorTab: 'beat' }); seekTo(b.start + 0.01); }}>◆</span>
                             ) : null;
                           })}
                         </>
@@ -538,7 +538,7 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                             key={`${g.start}:${g.assetId}`}
                             className={`tl-block bgseg${i === 0 ? ' first' : ''}${g.keyId && keySel.includes(g.keyId) ? ' sel' : ''}`}
                             style={{ left: x(g.start), width: Math.max(4, (g.end - g.start) * pps - 1), ['--bgthumb' as string]: `url("/api/thumbs/backgrounds/${encodeURIComponent(g.assetId)}?w=96")` }}
-                            title={`${i === 0 ? '开场背景' : g.purpose === 'insert' ? '插入镜头' : g.purpose === 'time' ? '换时段' : '换地点'} · ${bgInfo?.name ?? g.assetId}${i > 0 ? ` · ${g.transition === 'cut' ? '硬切' : g.transition === 'dip_black' ? '黑场' : '叠化'}` : '（固定，点击在检查器里更换）'}`}
+                            title={`${i === 0 ? '开场背景' : g.purpose === 'insert' ? '插入镜头' : g.purpose === 'time' ? '换时段' : '换地点'} · ${bgInfo?.name ?? g.assetId}${i > 0 ? ` · ${g.transition === 'cut' ? '硬切' : g.transition === 'dip_black' ? '黑场' : g.transition === 'dip_white' ? '白场' : '叠化'}` : '（固定，点击在检查器里更换）'}`}
                             data-testid={i === 0 ? 'tl-bgseg-first' : 'tl-bgseg'}
                             data-bg-id={g.assetId}
                             onPointerDown={(e) => {

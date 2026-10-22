@@ -41,7 +41,7 @@ export interface Group {
   lanes: Lane[];
 }
 
-const FX_LABEL: Record<string, string> = { vignette_anxiety: '暗角', memory_glow: '泛光', dutch: '倾斜' };
+const FX_LABEL: Record<string, string> = { vignette_anxiety: '暗角', memory_glow: '泛光（旧）', dutch: '倾斜', memory: '回忆', dim: '压暗', flash: '白闪', shake: '抖动', daze: '恍惚' };
 const SPECIAL_TARGET: Record<string, string> = { camera: '镜头', away: '移开', down: '低头' };
 
 /** Short Chinese text of a key value for the lane (the raw ids are only in the tooltip). */
