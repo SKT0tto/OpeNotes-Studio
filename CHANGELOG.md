@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.0
+
+Original-style screen effects. They are generated in code: no game assets are included, and the fog edge is a procedural shader, not a game texture. Existing projects render as before: `memory_glow` is unchanged, and the classic and travel goldens are untouched.
+
+**Memory / flashback.** A soft, cloudy white fog edge is the default (white bands are an option, or both), with cool, warm, sepia and mono tones. A memory is entered and left through white, the way the original does it: the screen goes white, the effect switches underneath, the white clears. The background is also softened a little while a memory is on.
+
+**Inner voice.** The scene dims for a character's inner voice; the dialogue, HUD and banner stay bright.
+
+**Flash and white dip.** A white flash for a sudden moment, and a white dip transition (about a second of white) for cuts into or out of a strong light.
+
+**Shake.** A short, decaying camera shake, for impacts.
+
+**Daze.** A full-screen blur that takes colour away, with an optional eyelid that closes and opens with a soft edge.
+
+**The AI director can use them.** In both classic and travel the model can choose these effects (prompt versions `scene-4` and `scene-4+travel-7`). The rule director (no AI) uses them in travel. All of them are editable keys on the timeline and in the inspector.
+
+Tests: unit (`fxEffects`, `fxDirector`), classic and travel goldens unchanged, e2e `camera-system`, `perf-safety`, `play-demo`, `timeline`, `stage` and `editor-basic`. The new effects add well under 0.5 ms (daze under 2 ms) to the 95th percentile frame cost.
+
 ## 0.3.0
 
 A much better AI director. The classic camera and the classic prompt are unchanged: the classic system prompt, schema and prompt version are byte-identical to 0.2.1, and classic compile output and goldens are untouched. Classic generation does benefit from the smarter chunking and the chunk-end fix below.
