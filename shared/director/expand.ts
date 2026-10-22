@@ -6,10 +6,11 @@
  */
 import { nextId, type IdHolder } from '../project/mutate';
 import type { DirectedBeat, SceneDirection } from '../schema/ai';
-import type { Beat, Meta, Scene, Track } from '../schema/project';
+import type { Beat, MemoryTone, Meta, Scene, Track } from '../schema/project';
 import { aiMeta, ruleMeta } from './fromBreakdown';
 import { offsetInParagraph, type Paragraph } from './paragraphs';
-import { DEPTH_Y, INSERT_BOX, SLOT_X } from './vocab';
+import { DEPTH_Y, INSERT_BOX, ONE_SHOT_FX, SLOT_X } from './vocab';
+import { FLASH_SECONDS } from '../timeline/fxParams';
 import { anchorMoves, bgSwitchValue, type BgTransition } from './bgKeys';
 
 export interface ExpandInput {
@@ -28,12 +29,49 @@ export interface ExpandInput {
 
 type AnyTrack = Track & { keys: Array<{ id: string; at: { beatId: string; offset: number }; value: unknown; duration: number; ease: string; meta: Meta }> };
 
+type ContinuousFx = Exclude<SceneDirection['beats'][number]['fx'], 'memory_glow' | 'flash' | 'shake'>;
+type FxName = ContinuousFx | 'flash' | 'shake';
+/** A model's old `memory_glow` is read as `memory` (the old effect is never produced again; projects that already have it keep it). */
+const fxOf = (f: SceneDirection['beats'][number]['fx']): FxName => (f === 'memory_glow' ? 'memory' : f);
+
+/** Beats where a memory starts or ends in the middle of a scene: the white fade covers the change, so a cut-in dip of the beat itself would double it. */
+function memoryBoundaries(beats: ReadonlyArray<{ fx: SceneDirection['beats'][number]['fx'] }>): Set<number> {
+  const out = new Set<number>();
+  let cur: string = 'none';
+  beats.forEach((b, i) => {
+    const f = fxOf(b.fx);
+    if ((ONE_SHOT_FX as readonly string[]).includes(f) || f === cur) return;
+    if (i > 0 && (cur === 'memory' || f === 'memory')) out.add(i);
+    cur = f;
+  });
+  return out;
+}
+
 const hash = (s: string) => [...s].reduce((a, c) => (a * 31 + c.codePointAt(0)!) >>> 0, 7);
 const targetKey = (t: Track['target']) => (t.kind === 'actor' ? `actor:${t.castId}` : t.kind);
 
 export function paragraphOfOffset(paras: readonly Paragraph[], offset: number | undefined): number {
   if (offset === undefined) return -1;
   return paras.find((p) => offset >= p.start && offset <= p.end)?.index ?? -1;
+}
+
+/** Seconds of the white that covers a memory switching on / off (the original: 0.5 - 1 s in, about 1 s out). */
+export const MEMORY_WHITE_IN = 0.8;
+export const MEMORY_WHITE_OUT = 1.0;
+/** Seconds of pure white before the white clears: entering / leaving. */
+export const MEMORY_WHITE_HOLD_IN = 0.2;
+export const MEMORY_WHITE_HOLD_OUT = 0.5;
+
+type KeyFn = (castId: string | null, channel: Track['channel'], beatIndex: number, offset: number, value: unknown, meta: Meta, duration?: number, ease?: string) => void;
+
+/**
+ * Switch a memory on (`strength` 1) or off (0) at the start of beat `bi`, hidden under white: the screen fades to white before the beat, the effect
+ * changes instantly at the white, and the white clears afterwards. Deterministic keys on the fade and fx tracks, no new compile feature.
+ */
+export function memoryThroughWhite(key: KeyFn, bi: number, strength: 0 | 1, metaFx: Meta, metaFade: Meta, tone?: MemoryTone): void {
+  key(null, 'fade', bi, -MEMORY_WHITE_IN, { color: 'white', alpha: 1 }, metaFade, MEMORY_WHITE_IN, 'inOutSine');
+  key(null, 'fx', bi, 0, { fx: 'memory', strength, roll: 0, ...(strength === 1 && tone ? { tone } : {}) }, metaFx, 0);
+  key(null, 'fade', bi, strength === 1 ? MEMORY_WHITE_HOLD_IN : MEMORY_WHITE_HOLD_OUT, { color: 'white', alpha: 0 }, metaFade, MEMORY_WHITE_OUT, 'inOutSine');
 }
 
 /** Which existing beat each directed beat reproduces: by keepId, then paragraph + speaker + ordinal, then identical text. */
@@ -98,6 +136,7 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
   const matched = matchBeats(oldBeats, d.beats, paragraphs);
   const beatIds: string[] = d.beats.map((_, i) => matched[i] ?? nextId(`${scene.id}b`, usedBeat, holder));
   beatIds.forEach((id) => usedBeat.add(id));
+  const memoryEdges = memoryBoundaries(d.beats);
   d.beats.forEach((b, i) => {
     const para = paragraphs[b.paragraph];
     const beat: Beat = {
@@ -105,7 +144,7 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
       kind: b.kind,
       variant: 'normal',
       coSpeakers: [],
-      cutIn: b.cutIn,
+      cutIn: memoryEdges.has(i) ? 'cut' : b.cutIn,
       cutInKeepDialog: false,
       text: b.text,
       ...(para ? { sourceOffset: para.start + (b.kind === 'dialogue' ? offsetInParagraph(b.text, para.text) : 0) } : {}),
@@ -140,7 +179,7 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
 
   const present = new Set(castIds);
   const live = !!scene.brief?.isPerformance;
-  let lastFx: SceneDirection['beats'][number]['fx'] = 'none';
+  let lastFx: ContinuousFx = 'none';
   const blocking = d.blocking.reduce<Record<string, { slot: number; depth: number }>>((m, b) => ((m[b.castId] = { slot: SLOT_X[b.slot], depth: DEPTH_Y[b.depth] }), m), {});
   const enters = new Map<string, { beatId: string; side: 'left' | 'right' }>();
   const exits = new Map<string, { beatId: string }>();
@@ -199,10 +238,21 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
       }
     }
     // emotion effects fade in with the beat that asks for them and out when it changes
-    if (b.fx !== lastFx) {
-      if (lastFx !== 'none') key(null, 'fx', bi, 0, { fx: lastFx, strength: 0, roll: 0 }, ai(), 0.4);
-      if (b.fx !== 'none') key(null, 'fx', bi, 0, { fx: b.fx, strength: 1, roll: b.fx === 'dutch' ? 6 : 0 }, ai(b.reason), 0.5);
-      lastFx = b.fx;
+    const fx = fxOf(b.fx);
+    if ((ONE_SHOT_FX as readonly string[]).includes(fx)) {
+      // a flash / shake is one event: it does not end (or start) the running vignette / memory / dim
+      key(null, 'fx', bi, 0, { fx, strength: fx === 'shake' ? b.fxStrength ?? 0.5 : 1, roll: 0 }, ai(b.reason), fx === 'flash' ? FLASH_SECONDS : 0.5);
+    } else if (fx !== lastFx) {
+      if (lastFx !== 'none') {
+        if (lastFx === 'memory' && bi > 0) memoryThroughWhite(key, bi, 0, ai(), ai(b.reason));
+        else key(null, 'fx', bi, 0, { fx: lastFx, strength: 0, roll: 0 }, ai(), lastFx === 'dim' ? 0.5 : 0.4);
+      }
+      if (fx !== 'none') {
+        // a memory enters through white (the original fades to white, switches the effect underneath and fades back); the first beat of a scene has no room for it and dissolves in
+        if (fx === 'memory' && bi > 0) memoryThroughWhite(key, bi, 1, ai(b.reason), ai(b.reason), b.memoryTone ?? undefined);
+        else key(null, 'fx', bi, 0, { fx, strength: 1, roll: fx === 'dutch' ? 6 : 0, ...(fx === 'memory' && b.memoryTone ? { tone: b.memoryTone } : {}) }, ai(b.reason), 0.5);
+      }
+      lastFx = fx as ContinuousFx;
     }
   });
   if (lastFx !== 'none') key(null, 'fx', d.beats.length - 1, 4, { fx: lastFx, strength: 0, roll: 0 }, ai(), 0.6);

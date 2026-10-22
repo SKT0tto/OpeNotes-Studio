@@ -15,6 +15,7 @@ export { detectChapters, isHeading };
 import { allowedBackgrounds, sceneBands } from './bandFit';
 import { autoSelectable } from './bgCategory';
 import { detectMoves } from './ruleMoves';
+import { MAX_RULE_MEMORY_BEATS, MEMORY_CUE, MONOLOGUE_TEXT, RULE_MEMORY_CUE, RULE_MEMORY_END_CUE, RULE_SHAKE_CUE } from './vocab';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog } from './resources';
 
 // ---- names -----------------------------------------------------------------------------------------------------
@@ -307,6 +308,21 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
     return (others[dialogueCount % Math.max(1, others.length)] ?? input.cast[0])?.castId ?? null;
   };
 
+  // v0.4 screen effects (travel system only: the classic rule output stays as it was): a memory from a cue paragraph to a "back to now" paragraph (or
+  // 12 beats), a short reaction shake on a fright word, the dim of an inner voice (a bracketed beat)
+  let memoryOn = false;
+  let memoryBeats = 0;
+  const fxFor = (text: string): Pick<DirectedBeat, 'fx'> & { fxStrength?: number } => {
+    if (!input.travel) return { fx: 'none' };
+    if (memoryOn) {
+      if (memoryBeats++ < MAX_RULE_MEMORY_BEATS) return { fx: 'memory' };
+      memoryOn = false;
+    }
+    if (RULE_SHAKE_CUE.test(text)) return { fx: 'shake', fxStrength: 0.3 };
+    if (MONOLOGUE_TEXT.test(text)) return { fx: 'dim' };
+    return { fx: 'none' };
+  };
+
   const directed = (para: number, seg: Segment | { kind: 'narration'; text: string }, forced?: { kind: string; speaker: string | null; keepId: string }): DirectedBeat => {
     const dialogue = forced ? forced.kind === 'dialogue' : seg.kind === 'dialogue';
     const speaker = forced ? forced.speaker : dialogue ? speakerOf(seg as Segment) : null;
@@ -365,11 +381,17 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
     return {
       keepId: forced?.keepId ?? null, paragraph: para, kind: dialogue ? 'dialogue' : 'narration', speaker: dialogue ? speaker : null, text: seg.text,
       emotion, reason: input.travel ? travelReason : '规则：关键词与固定节奏', shot: { type, focus, move: input.travel ? 'static' : type === 'cu' && emotion !== 'neutral' ? 'push_in' : 'static', dof: null, ...(input.travel ? { intent } : {}) },
-      cutIn: 'cut', fx: 'none', actors,
+      cutIn: 'cut', ...fxFor(seg.text), actors,
     } as DirectedBeat;
   };
 
   for (const p of input.paragraphs) {
+    if (input.travel) {
+      if (!memoryOn && (RULE_MEMORY_CUE.test(p.text) || (/^\s*[—–]{2}/.test(p.text) && MEMORY_CUE.test(p.text)))) {
+        memoryOn = true;
+        memoryBeats = 0;
+      } else if (memoryOn && RULE_MEMORY_END_CUE.test(p.text)) memoryOn = false;
+    }
     const fixed = fixedBy.get(p.i);
     if (fixed) {
       for (const f of fixed) {

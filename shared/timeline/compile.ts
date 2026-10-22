@@ -5,7 +5,7 @@
  * stage always has an idle loop to fall back to.
  */
 import type { Calibration } from '../schema/calibration';
-import { cameraSystemOf, type Channel, type Project, type Scene, type Track } from '../schema/project';
+import { cameraSystemOf, type Channel, type MemoryEdge, type MemoryTone, type Project, type Scene, type Track } from '../schema/project';
 import { chooseMotionVariant, desiredGaze, desiredYaw, nominalScreenYaw, variantsOfFamily, yawTowardsCamera } from '../staging/facing';
 import { cameraMove, normalizeShotType, solveShotDetailed, visibleHead, type CameraMove, type FramingActor, type InsertBox, type ShotType } from '../staging/framing';
 import { placeActor, type Placement } from '../staging/ground';
@@ -15,13 +15,14 @@ import { solveTravelShot } from '../staging/travelFraming';
 import { defaultGround, viewWorldHeight, type BgInfo, type CameraPose, type Pt } from '../staging/world';
 import { clamp, lerp, type EaseName } from './easing';
 import { EMOTION_GESTURE, familyOfName, idleFamilyOf, isLiveSet, isLoopFamily, mapExpressionName, mapMotionFamily, pickReaction } from './motionMap';
+import { DIP_WHITE, SHAKE_SECONDS, FLASH_PEAK, FLASH_RISE, FLASH_SECONDS, MEMORY_DEFAULT_EDGE, MEMORY_DEFAULT_TONE } from './fxParams';
 import { clipOverlaps, lastBefore, sampleKeys } from './sample';
 import type { StyleValues } from '../style/ournotes';
 import { evaluate } from './evaluate';
 import { EMPTY_KINDS, TEXT_KINDS, sceneTimes, type SceneTime } from './time';
 import { SHOT_RANK, aiCutHonoured, decideTravel, hashSeed, type TravelShotInfo } from './travelPolicy';
 import type {
-  BgSegment, CameraKey, CompileContext, CompiledActor, CompiledBeat, CompiledProject, CompiledScene, ExprEvent, FadeKey, GazeKey, ModelKey, MotionEvent, NumKey, PosKey, RuleKey, UiStyle,
+  BgSegment, CameraKey, CompileContext, CompiledActor, CompiledBeat, CompiledProject, CompiledScene, ExprEvent, FadeKey, GazeKey, MemoryLookKey, ModelKey, ShakeWindow, MotionEvent, NumKey, PosKey, RuleKey, UiStyle,
 } from './types';
 
 /** Glide length used when a beat asks for `transition: 'glide'` while the style's glideSeconds is 0. */
@@ -53,6 +54,12 @@ export function compileProject(project: Project, ctx: CompileContext): CompiledP
   const bgm: CompiledProject['bgm'] = [];
   const se: CompiledProject['se'] = [];
   const fx: CompiledProject['fx'] = { anxiety: [], glow: [], roll: [] };
+  const memory: NumKey[] = [];
+  const dim: NumKey[] = [];
+  const shake: ShakeWindow[] = [];
+  const daze: NumKey[] = [];
+  const blink: NumKey[] = [];
+  const memoryLook: Array<{ at: number; tone?: MemoryTone | undefined; edge?: MemoryEdge | undefined }> = [];
   let fade: FadeKey[] = [];
 
   const scenes = project.scenes.map((scene, index) => {
@@ -68,6 +75,22 @@ export function compileProject(project: Project, ctx: CompileContext): CompiledP
       const base = { at, duration: k.duration, ease: k.ease };
       if (k.value.fx === 'vignette_anxiety') fx.anxiety.push({ ...base, value: k.value.strength });
       else if (k.value.fx === 'memory_glow') fx.glow.push({ ...base, value: k.value.strength });
+      else if (k.value.fx === 'memory') {
+        memory.push({ ...base, value: k.value.strength });
+        memoryLook.push({ at, tone: k.value.tone, edge: k.value.edge });
+      } else if (k.value.fx === 'flash') {
+        // a flash is a white fade: up in FLASH_RISE, then down over the rest of the key (no new compiled array, no new evaluate field)
+        const total = k.duration > 0 ? k.duration : FLASH_SECONDS;
+        const rise = Math.min(FLASH_RISE, total);
+        fade.push(
+          { at, duration: rise, ease: 'outQuad', alpha: FLASH_PEAK * k.value.strength, color: 'white' },
+          { at: at + rise, duration: Math.max(0, total - rise), ease: 'outQuad', alpha: 0, color: 'white' },
+        );
+      } else if (k.value.fx === 'daze') {
+        daze.push({ ...base, value: k.value.strength });
+        blink.push({ ...base, value: k.value.variant === 'blink' ? k.value.strength : 0 });
+      } else if (k.value.fx === 'shake') shake.push({ start: at, seconds: k.duration > 0 ? k.duration : SHAKE_SECONDS, strength: k.value.strength });
+      else if (k.value.fx === 'dim') dim.push({ ...base, value: k.value.strength });
       else fx.roll.push({ ...base, value: k.value.roll });
     }
     return out;
@@ -75,7 +98,31 @@ export function compileProject(project: Project, ctx: CompileContext): CompiledP
   bgm.sort((a, b) => a.at - b.at);
   se.sort((a, b) => a.at - b.at);
   fade = clipOverlaps(fade);
-  return { duration: times.at(-1)?.end ?? 0, scenes, bgm, se, fade, fx: { anxiety: clipOverlaps(fx.anxiety), glow: clipOverlaps(fx.glow), roll: clipOverlaps(fx.roll) }, warnings };
+  const fxOut: CompiledProject['fx'] = { anxiety: clipOverlaps(fx.anxiety), glow: clipOverlaps(fx.glow), roll: clipOverlaps(fx.roll) };
+  // the new effects add their arrays only when a key uses them: a project without them compiles to exactly the old object
+  if (memory.length > 0) {
+    fxOut.memory = clipOverlaps(memory);
+    fxOut.memoryLook = resolveMemoryLook(memoryLook);
+  }
+  if (dim.length > 0) fxOut.dim = clipOverlaps(dim);
+  if (daze.length > 0) {
+    fxOut.daze = clipOverlaps(daze);
+    // the eyelid curve exists only when some daze key asks for the blink variant
+    if (blink.some((k) => k.value > 0)) fxOut.blink = clipOverlaps(blink);
+  }
+  if (shake.length > 0) fxOut.shake = shake.sort((a, b) => a.start - b.start);
+  return { duration: times.at(-1)?.end ?? 0, scenes, bgm, se, fade, fx: fxOut, warnings };
+}
+
+/** A memory key without its own tone / edge (typically the one that switches it off) keeps the look of the key before it, so the fade-out looks like the effect. */
+function resolveMemoryLook(keys: Array<{ at: number; tone?: MemoryTone | undefined; edge?: MemoryEdge | undefined }>): MemoryLookKey[] {
+  let tone: MemoryTone = MEMORY_DEFAULT_TONE;
+  let edge: MemoryEdge = MEMORY_DEFAULT_EDGE;
+  return [...keys].sort((a, b) => a.at - b.at).map((k) => {
+    tone = k.tone ?? tone;
+    edge = k.edge ?? edge;
+    return { at: k.at, tone, edge };
+  });
 }
 
 function absoluteTime(scene: Scene, st: SceneTime, warnings: string[]) {
@@ -752,7 +799,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
         const gs = v.performance.glideSeconds;
         const wantsGlide = ((beat.shot.transition === 'travel' ? undefined : beat.shot.transition) ?? (gs > 0 ? 'glide' : 'cut')) === 'glide';
         const glideLen = reframe ? v.performance.reframeSeconds : wantsGlide ? (gs > 0 ? gs : DEFAULT_GLIDE) : 0;
-        const glide = i === 0 || beat.cutIn === 'dip_black' ? 0 : Math.min(glideLen, dur / 2);
+        const glide = i === 0 || beat.cutIn !== 'cut' ? 0 : Math.min(glideLen, dur / 2);
         camera.push({ at: i === 0 ? st.start : bt.start, duration: glide, ease: reframe ? 'outCubic' : 'inOutSine', pose: from });
         // hand offsets of single people (Beat.shot.offsets) ride on top of the automatic arrangement
         const shifts = { ...solved.shifts };
@@ -805,7 +852,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
             break;
           case 'glide': {
             const gs = v.performance.glideSeconds;
-            len = i === 0 || beat.cutIn === 'dip_black' ? 0 : Math.min(gs > 0 ? gs : DEFAULT_GLIDE, dur / 2);
+            len = i === 0 || beat.cutIn !== 'cut' ? 0 : Math.min(gs > 0 ? gs : DEFAULT_GLIDE, dur / 2);
             camera.push({ at: at0, duration: len, ease: 'inOutSine', pose: from });
             break;
           }
@@ -894,12 +941,15 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
 
     // dialogue area visibility and the dip between two shots
     if (EMPTY_KINDS.includes(beat.kind) || beat.kind === 'silent') hiddenDialog.push([i === 0 ? st.start : bt.start, bt.end]);
-    if (i > 0 && beat.cutIn === 'dip_black') {
-      const d = v.transitions;
+    if (i > 0 && beat.cutIn !== 'cut') {
+      // dip_white (into / out of a memory, a strong light) is a longer, softer dip through white with its own fixed timing
+      const white = beat.cutIn === 'dip_white';
+      const d = white ? { dipOut: DIP_WHITE.out, dipHold: DIP_WHITE.hold, dipIn: DIP_WHITE.in } : v.transitions;
       const mid = bt.start - d.dipHold / 2;
+      const color = white ? 'white' : 'black';
       fadeOut.push(
-        { at: mid - d.dipOut, duration: d.dipOut, ease: 'inOutSine', alpha: 1, color: 'black' },
-        { at: mid + d.dipHold, duration: d.dipIn, ease: 'inOutSine', alpha: 0, color: 'black' },
+        { at: mid - d.dipOut, duration: d.dipOut, ease: 'inOutSine', alpha: 1, color },
+        { at: mid + d.dipHold, duration: d.dipIn, ease: 'inOutSine', alpha: 0, color },
       );
       if (!beat.cutInKeepDialog) hiddenDialog.push([mid - d.dipOut, mid + d.dipHold + d.dipIn]);
     }
@@ -912,10 +962,11 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   }
   // background switches that dip through black ride on the project's fade channel (the picture changes at the darkest moment)
   bgSegments.forEach((sg, i) => {
-    if (i === 0 || sg.transition !== 'dip_black' || sg.transitionSeconds <= 0) return;
+    if (i === 0 || (sg.transition !== 'dip_black' && sg.transition !== 'dip_white') || sg.transitionSeconds <= 0) return;
+    const color = sg.transition === 'dip_white' ? 'white' : 'black';
     const half = Math.min(sg.transitionSeconds / 2, Math.max(0, sg.start - st.start));
     if (half <= 0) return;
-    fadeOut.push({ at: sg.start - half, duration: half, ease: 'inOutSine', alpha: 1, color: 'black' }, { at: sg.start, duration: sg.transitionSeconds / 2, ease: 'inOutSine', alpha: 0, color: 'black' });
+    fadeOut.push({ at: sg.start - half, duration: half, ease: 'inOutSine', alpha: 1, color }, { at: sg.start, duration: sg.transitionSeconds / 2, ease: 'inOutSine', alpha: 0, color });
     hiddenDialog.push([sg.start - half, sg.start + sg.transitionSeconds / 2]);
   });
   if (list.length === 0) camera.push({ at: st.start, duration: 0, ease: 'linear', pose: poseOf('establishing', [], st.start, sceneV) });

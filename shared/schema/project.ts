@@ -69,7 +69,7 @@ export const BeatSchema = z.object({
   /** Extra speakers that talk together with `speakerId` (name plate "A & B"). */
   coSpeakers: z.array(Id).default([]),
   /** How the picture changes into this beat: hard cut, or a short dip to black (optionally keeping the dialogue). */
-  cutIn: z.enum(['cut', 'dip_black']).default('cut'),
+  cutIn: z.enum(['cut', 'dip_black', 'dip_white']).default('cut'),
   cutInKeepDialog: z.boolean().default(false),
   text: z.string().default(''),
   sourceOffset: z.number().optional(),
@@ -95,8 +95,20 @@ const CameraValue = z.union([
 ]);
 
 /** Emotion effects (STYLE_REFERENCE section 6). `strength` 0..1 fades the effect; `roll` (degrees, signed) is the Dutch angle. */
-export const FX_KINDS = ['vignette_anxiety', 'memory_glow', 'dutch'] as const;
-const FxValue = z.object({ fx: z.enum(FX_KINDS), strength: z.number().min(0).max(1).default(1), roll: z.number().min(-30).max(30).default(0) });
+export const FX_KINDS = ['vignette_anxiety', 'memory_glow', 'dutch', 'memory', 'dim', 'flash', 'shake', 'daze'] as const;
+/** Memory: the colour grade (cool = reminiscence 1, warm = reminiscence 2, sepia = an old photograph, mono = black and white) and the white edge (fog = frame_fog look, bands = letterbox_white look). */
+export const MEMORY_TONES = ['cool', 'warm', 'sepia', 'mono'] as const;
+export const MEMORY_EDGES = ['fog', 'bands', 'both', 'none'] as const;
+/** Daze: `blink` adds the eyelids (the original's eyeblink mask) to the blur. */
+export const DAZE_VARIANTS = ['blink'] as const;
+export type DazeVariant = (typeof DAZE_VARIANTS)[number];
+export type MemoryTone = (typeof MEMORY_TONES)[number];
+export type MemoryEdge = (typeof MEMORY_EDGES)[number];
+/** `tone` / `edge` are optional (never defaulted): an old project parses to exactly what it was, and only keys that use them carry them. */
+const FxValue = z.object({
+  fx: z.enum(FX_KINDS), strength: z.number().min(0).max(1).default(1), roll: z.number().min(-30).max(30).default(0),
+  tone: z.enum(MEMORY_TONES).optional(), edge: z.enum(MEMORY_EDGES).optional(), variant: z.enum(DAZE_VARIANTS).optional(),
+});
 
 const Key = <V extends z.ZodType>(value: V) =>
   z.object({
@@ -113,7 +125,7 @@ const Key = <V extends z.ZodType>(value: V) =>
  * purpose: move = the story changes place (people stay), insert = cut-away shot (people hidden until the next key), time = same place, other hour.
  */
 export const BG_PURPOSES = ['move', 'insert', 'time'] as const;
-export const BG_TRANSITIONS = ['cut', 'dip_black', 'crossfade'] as const;
+export const BG_TRANSITIONS = ['cut', 'dip_black', 'dip_white', 'crossfade'] as const;
 const BackgroundSwitchValue = z.object({
   assetId: Id,
   framing: z.object({ zoom: z.number().min(1), offsetX: z.number(), offsetY: z.number() }).optional(),
@@ -187,7 +199,7 @@ export const SceneSchema = z.object({
     ambience: z.object({ assetId: Id, volume: z.number().min(0).max(1), meta: MetaSchema }).optional(),
   }).default({}),
   /** What the director knows about the scene (set by the AI breakdown; read by scene direction). */
-  brief: z.object({ moves: z.array(z.object({ paragraph: z.number().int(), backgroundId: Id, reason: z.string().default(''), transition: z.enum(['cut', 'dip_black', 'crossfade']).default('cut') })).optional(), timeOfDay: z.string().default(''), mood: z.string().default(''), isPerformance: z.boolean().default(false), band: z.string().nullable().default(null), guestOf: z.string().nullable().optional() }).optional(),
+  brief: z.object({ moves: z.array(z.object({ paragraph: z.number().int(), backgroundId: Id, reason: z.string().default(''), transition: z.enum(['cut', 'dip_black', 'dip_white', 'crossfade']).default('cut') })).optional(), timeOfDay: z.string().default(''), mood: z.string().default(''), isPerformance: z.boolean().default(false), band: z.string().nullable().default(null), guestOf: z.string().nullable().optional() }).optional(),
   beats: z.array(BeatSchema),
   tracks: z.array(TrackSchema).default([]),
   /** Highest id number ever issued per prefix (beats, tracks, keys): ids of deleted units are never reused. */

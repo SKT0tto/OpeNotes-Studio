@@ -1,6 +1,7 @@
 /** Output schemas of the two AI passes. Intent only: no coordinates, no file names, only ids the server offered. */
 import { z } from 'zod';
-import { AI_BG_TRANSITIONS, AI_FX, AI_KINDS, AI_MOVES, AI_SHOT_FLOWS, SHOT_INTENTS, AI_SHOT_TYPES, AI_TRANSITIONS, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../director/vocab';
+import { MEMORY_TONES } from './project';
+import { AI_BG_TRANSITIONS, AI_FX_PARSE, AI_KINDS, AI_MOVES, AI_SHOT_FLOWS, SHOT_INTENTS, AI_SHOT_TYPES, AI_TRANSITIONS, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../director/vocab';
 
 /** A place change inside a scene: from `paragraph` on the story is at `backgroundId`. */
 export const BgMoveSchema = z.object({ paragraph: z.number().int(), backgroundId: z.string(), reason: z.string(), transition: z.enum(AI_BG_TRANSITIONS) });
@@ -51,10 +52,14 @@ export const SceneDirectionSchema = z.object({
       emotion: z.enum(EMOTIONS),
       reason: z.string(),
       shot: z.object({ type: z.enum(AI_SHOT_TYPES), focus: z.array(z.string()), move: z.enum(AI_MOVES), dof: z.number().int().nullable(), insertTarget: z.enum(INSERT_TARGETS).nullable().optional() }),
-      cutIn: z.enum(['cut', 'dip_black']),
+      cutIn: z.enum(['cut', 'dip_black', 'dip_white']),
       /** Switch the background at this beat: only a background of this scene's set (start, moves, insert candidates). null = keep. */
       bg: z.object({ backgroundId: z.string(), transition: z.enum(AI_BG_TRANSITIONS) }).nullable().optional(),
-      fx: z.enum(AI_FX),
+      fx: z.enum(AI_FX_PARSE),
+      /** Only read when fx = memory: the grade of the memory (cool = default, warm = long ago). */
+      memoryTone: z.enum(MEMORY_TONES).nullable().optional(),
+      /** Strength of a one-shot shake (0..1, default 0.5); the rule director's reaction shake is a small 0.3. */
+      fxStrength: z.number().min(0).max(1).nullable().optional(),
       actors: z.array(
         z.object({
           castId: z.string(),

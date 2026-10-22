@@ -16,7 +16,7 @@ import { cachedThumb, useThumbnails } from './thumbs';
 import { useCatalog } from '../useCatalog';
 
 type Host = ReturnType<typeof usePlayerHost>;
-const TRANSITION_LABEL: Record<string, string> = { cut: '硬切', dip_black: '黑场眨眼', scene_black: '换场黑场', fade_black: '黑场', fade_white: '白场', crossfade: '交叉溶解', wipe: '擦除' };
+const TRANSITION_LABEL: Record<string, string> = { cut: '硬切', dip_black: '黑场眨眼', dip_white: '白场眨眼', scene_black: '换场黑场', fade_black: '黑场', fade_white: '白场', crossfade: '交叉溶解', wipe: '擦除' };
 
 export function Storyboard({ project, host, active }: { project: Project; host: Host; active: boolean }) {
   const selection = useProject((s) => s.selection);
@@ -67,7 +67,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
               {shotTypeChoices(project.scenes.some((sc) => cameraSystemOf(project, sc) === 'travel')).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
             </select>
             <select value="" aria-label="批量切入方式" data-testid="sb-batch-cutin" onChange={(e) => e.target.value && batch('批量修改切入方式', (b) => void (b.cutIn = e.target.value as Beat['cutIn']))}>
-              <option value="">切入…</option><option value="cut">硬切</option><option value="dip_black">黑场眨眼</option>
+              <option value="">切入…</option><option value="cut">硬切</option><option value="dip_black">黑场眨眼</option><option value="dip_white">白场眨眼</option>
             </select>
             <button className="btn-s" onClick={() => set({ cards: [] })}>取消选择</button>
           </span>
@@ -121,6 +121,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
                           })()}
                           {cb?.shotHeld && <span className="badge held" title="沿用上一机位">⏸</span>}
                           {b.cutIn === 'dip_black' && <span className="badge dip" title="黑场眨眼切入">◆</span>}
+                          {b.cutIn === 'dip_white' && <span className="badge dip" title="白场眨眼切入">◇</span>}
                           {b.meta.locked && <span className="badge" title="已锁定"><LockIcon locked /></span>}
                         </span>
                         <span className="sb-dur mono">{cb ? (cb.end - cb.start).toFixed(1) : '—'}s</span>
@@ -136,7 +137,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
                           {shotTypeChoices(cameraSystemOf(project, s) === 'travel', b.shot.type).map((t) => <option key={t} value={t}>{SHOT_LABEL[t]}</option>)}
                         </select>
                         <select value={b.cutIn} aria-label="切入方式" data-testid={`sb-cutin-${b.id}`} onChange={(e) => editBeat(s.id, b.id, '修改切入方式', (x) => void (x.cutIn = e.target.value as Beat['cutIn']))}>
-                          <option value="cut">硬切</option><option value="dip_black">黑场</option>
+                          <option value="cut">硬切</option><option value="dip_black">黑场</option><option value="dip_white">白场</option>
                         </select>
                       </div>
                       <div className="sb-focus" onClick={(e) => e.stopPropagation()}>

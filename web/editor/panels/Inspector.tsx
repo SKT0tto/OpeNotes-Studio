@@ -269,7 +269,7 @@ function SceneFields({ project, scene, catalog, compiled, t }: { project: Projec
 }
 
 const PURPOSE_LABEL: Record<string, string> = { move: '换地点', insert: '插入镜头', time: '换时段' };
-const BG_TRANS_LABEL: Record<string, string> = { cut: '硬切', dip_black: '黑场', crossfade: '叠化' };
+const BG_TRANS_LABEL: Record<string, string> = { cut: '硬切', dip_black: '黑场', dip_white: '白场', crossfade: '叠化' };
 
 /** The scene's backgrounds: the start picture, the switches along the timeline, and "switch here" at the playhead. */
 function BackgroundSection({ project, scene, catalog, compiled, t, onPick, lock }: { project: Project; scene: Scene; catalog: CompactCatalog | null; compiled: CompiledProject | null; t: number; onPick: (id: string) => void; lock: (l: boolean) => void }) {
@@ -380,9 +380,9 @@ function BeatFields({ project, scene, beat, compiled }: { project: Project; scen
         </Row>
         <Row label="镜头切入" extra={fl('cutIn')}>
           <select value={beat.cutIn} data-testid="insp-beat-cutin" onChange={(e) => up('修改切入方式', (b) => { b.cutIn = e.target.value as Beat['cutIn']; touch(b.meta); })}>
-            <option value="cut">硬切</option><option value="dip_black">黑场眨眼</option>
+            <option value="cut">硬切</option><option value="dip_black">黑场眨眼</option><option value="dip_white">白场眨眼</option>
           </select>
-          {beat.cutIn === 'dip_black' && (
+          {beat.cutIn !== 'cut' && (
             <label className="chip check"><input type="checkbox" checked={beat.cutInKeepDialog} data-testid="insp-beat-keepdialog" onChange={(e) => up('黑场保留对话区', (b) => { b.cutInKeepDialog = e.target.checked; touch(b.meta); })} />保留对话区</label>
           )}
         </Row>
