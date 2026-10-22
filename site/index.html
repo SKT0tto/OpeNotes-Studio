@@ -58,7 +58,7 @@
   </div>
   <div class="wrap hero-in">
     <div class="hero-copy">
-      <p class="pill-tag"><span>v0.2.1</span>开源 · GPL-3.0 · 非官方同人项目</p>
+      <p class="pill-tag"><span>v0.3.0</span>开源 · GPL-3.0 · 非官方同人项目</p>
       <h1 id="hero-title">Ope<span>Notes</span> Studio</h1>
       <p class="tagline">把小说，演成一场 Live。</p>
       <p class="lead">基于 Live2D 的 AI 剧情演出导演与制作平台。一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出——分场、选景、换装、镜头与表演由 AI 导演完成，每一句、每一帧仍由你精细手调。</p>
@@ -164,7 +164,7 @@
     <header class="sec-head"><p class="en">HOW TO START</p><h2 id="start-title">开始使用</h2><p class="sub">需要 Node.js 22 及以上（开发使用 24）。不想用命令行？从 <a href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）即可；下面是开发者方式。</p></header>
     <div class="glass dl">
       <div><h3>最简单：下载 zip，双击开演</h3><p>从 Releases 下载最新 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）。</p></div>
-      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载最新版 v0.2.1</a>
+      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载最新版 v0.3.0</a>
     </div>
     <div class="cmds">
       <div class="cmd glass"><div class="cmd-h"><span class="n">1</span><div><h3>获取代码并安装依赖</h3><p>克隆仓库后安装 npm 依赖。</p></div></div><div class="code"><button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true" width="16" height="16"><use href="#i-copy"/></svg><span>复制</span></button><pre><code>git clone https://github.com/SKT0tto/OpeNotes-Studio.git openotes-studio
@@ -184,6 +184,7 @@ cp studio.config.example.json studio.config.json
   <div class="wrap narrow">
     <header class="sec-head"><p class="en">UPDATES</p><h2 id="updates-title">更新</h2><p class="sub">完整记录见 <a href="https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG</a>。</p></header>
     <ul class="news">
+      <li><span class="ver">v0.3.0</span><p>AI 导演大幅改进：张冠李戴、拍错人的镜头更少（我们用原创测试故事评测，不合理的节拍从约 4% 降到约 1%）；双人镜头会照顾「谁在说话、谁在台上」，物件特写会保留，镜头意图与画面矛盾时会自动改正，运镜提示词附带示范；长场景的分段会带上前文的上下文（经典模式同样受益）；不支持严格模式的服务商不再白发一次请求；分段末尾不再误当成场景结尾而「拉开收尾」。经典提示词保持不变。</p></li>
       <li><span class="ver">v0.2.1</span><p>播放更流畅：掉帧更少，镜头开始移动时不再卡一下，编辑器播放时界面不再反复重绘；运镜里的人物随镜头被带入、带出画面而不是淡入淡出，镜头移动约 1 秒，更接近原作；运镜理由不再重复「运镜」前缀；配置较低的电脑上运镜会自动降低画质；背景与服装贴图按需加载和释放，占用内存更低。经典镜头的输出不变，画面在 1 个色阶以内一致。</p></li>
       <li><span class="ver">v0.2.0</span><p>新增「运镜模式」：像原作那样在同一空间里平移、推拉镜头，每一次镜头移动都有叙事理由；工具栏可在经典与运镜之间切换（默认仍是经典），每个镜头的理由会显示在面板与时间线上，单个场景也可以一键重新生成运镜。</p></li>
       <li><span class="ver">v0.1.5</span><p>背景素材体验重做：每张背景有标题与说明，一个场景里可以按剧情换多个背景，新增可视化标注工作台，logo/纯色/界面截图不再被自动选用；可以直接上传自己的背景图；修复人物入场闪烁，编辑器预览新增逐句模式。</p></li>
@@ -234,7 +235,7 @@ cp studio.config.example.json studio.config.json
       <nav aria-label="页脚链接"><a href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub</a><a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0</a><a href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili</a><a href="#top">回到顶部 ↑</a></nav>
     </div>
     <p><strong>免责声明：</strong>OpeNotes Studio 是非官方同人项目。BanG Dream!、Our Notes 及所有相关角色、名称与素材均为 Bushiroad、Craft Egg 及其他权利方的财产；本项目与其无任何关联，亦未获其认可。本项目不包含任何游戏素材与 Live2D Cubism Core，用户须自行准备合法获取的素材并遵守相应条款。本页所有界面与图形均为原创示意。</p>
-    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v0.2.1</p>
+    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v0.3.0</p>
   </div>
 </footer>
 <div class="toast" role="status" aria-live="polite"></div>
