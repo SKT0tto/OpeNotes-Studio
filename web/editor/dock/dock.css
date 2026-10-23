@@ -1,0 +1,42 @@
+/* Dock layout (dockview): theme variables from the editor tokens, panel fill rules, tab / header actions, the layout menu. */
+.ws-mid { position: relative; }
+.dock-root { position: absolute; inset: 0; }
+.dock-root > .dv-dockview, .dock-root > div { height: 100%; width: 100%; }
+.dock-root .dockview-theme-dark {
+  --dv-group-view-background-color: var(--bg-2);
+  --dv-tabs-and-actions-container-background-color: var(--bg-2);
+  --dv-tabs-and-actions-container-height: 28px;
+  --dv-tabs-and-actions-container-font-size: var(--fs-label);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--bg-2);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--bg-1);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--bg-2);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--bg-1);
+  --dv-tab-divider-color: var(--line);
+  --dv-activegroup-visiblepanel-tab-color: var(--text-1);
+  --dv-activegroup-hiddenpanel-tab-color: var(--text-2);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--text-2);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--text-3);
+  --dv-separator-border: var(--line);
+  --dv-paneview-header-border-color: var(--line);
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: var(--accent);
+  --dv-active-sash-transition-delay: 0s;
+  --dv-drag-over-background-color: var(--accent-weak);
+  --dv-drag-over-border-color: var(--accent);
+  --dv-icon-hover-background-color: var(--bg-4);
+  font-family: var(--font-ui);
+}
+.dock-fill { width: 100%; height: 100%; position: relative; overflow: hidden; }
+.sb-dock { position: absolute; inset: 0; }
+.dock-tab { display: flex; align-items: center; gap: 6px; height: 100%; padding: 0 10px; font-size: var(--fs-label); letter-spacing: 0.04em; white-space: nowrap; cursor: grab; user-select: none; }
+.dock-tab-x { width: 16px; height: 16px; padding: 0; display: grid; place-items: center; background: none; border: 0; border-radius: var(--radius-s); color: var(--text-3); font-size: 10px; cursor: pointer; }
+.dock-tab-x:hover { background: var(--bg-4); color: var(--text-1); }
+.dock-actions { display: flex; align-items: center; height: 100%; padding-right: 4px; }
+.dock-act { width: 22px; height: 22px; padding: 0; display: grid; place-items: center; background: none; border: 0; border-radius: var(--radius-s); color: var(--text-2); font-size: 12px; cursor: pointer; }
+.dock-act:hover, .dock-act[aria-pressed='true'] { background: var(--bg-4); color: var(--text-1); }
+.layout-menu { position: relative; display: inline-flex; }
+.layout-pop { position: absolute; top: calc(100% + 4px); right: 0; z-index: 3000; min-width: 220px; padding: 4px 0; background: var(--bg-2); border: 1px solid var(--line-strong); border-radius: var(--radius-m); box-shadow: var(--shadow-pop); display: flex; flex-direction: column; }
+.lm-head { padding: 6px 12px 2px; font-size: var(--fs-label); color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.lm-item { display: flex; align-items: center; gap: 8px; padding: 5px 12px; background: none; border: 0; text-align: left; color: var(--text-1); cursor: pointer; }
+.lm-item:hover { background: var(--bg-4); }
+.lm-foot { padding: 6px 12px; font-size: var(--fs-label); color: var(--text-3); max-width: 240px; border-top: 1px solid var(--line); margin-top: 4px; }

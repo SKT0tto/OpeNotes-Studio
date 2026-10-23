@@ -82,7 +82,7 @@ export const BeatSchema = z.object({
 
 // ---- channel values (intent level) -------------------------------------------------------------------------
 const TurnTarget = z.union([
-  z.object({ mode: z.literal('target'), target: Id }), // CastId | 'camera' | 'away'
+  z.object({ mode: z.literal('target'), target: Id, /** Head only: -1 = head down (低头) .. 1 = up, on ParamAngleY. */ pitch: z.number().min(-1).max(1).optional() }), // CastId | 'camera' | 'away' | 'auto' (the default facing)
   z.object({ mode: z.literal('angle'), yaw: z.number().min(-1).max(1), pitch: z.number().min(-1).max(1).optional() }),
 ]);
 const GazeValue = z.union([

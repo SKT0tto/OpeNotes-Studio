@@ -313,6 +313,8 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     if (v.mode === 'angle') return v.yaw;
     const self = placeAtClassic(w, t);
     const partner = nearestPartner(w, t);
+    // 'auto' = the default facing (towards the nearest partner); used by a head key that only sets the pitch
+    if (v.target === 'auto') return partner ? desiredYaw(self.headCenter, placeAtClassic(partner, t).headCenter, self.headUnit) : 0;
     if (v.target === 'camera') return yawTowardsCamera(self.headCenter, partner ? placeAtClassic(partner, t).headCenter : null);
     if (v.target === 'away') return partner ? -Math.sign(placeAtClassic(partner, t).headCenter.x - self.headCenter.x) * 0.7 : 0.7;
     const other = works.find((o) => o.castId === v.target && o !== w);
@@ -372,6 +374,9 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
           ? desiredYaw(placeAtClassic(w, st.start).headCenter, placeAtClassic(partner0, st.start).headCenter, placeAtClassic(w, st.start).headUnit)
           : 0;
     const yaw = clipOverlaps<NumKey>([{ at: st.start, duration: 0, ease: 'linear', value: initialYaw }, ...headKeys]);
+    // head pitch (低头): only when some head key of this actor sets one, so every other compile stays as it was
+    const pitchSrc = collect(scene, 'head', mine, abs).map(({ k, at }): NumKey => ({ at, duration: k.duration, ease: k.ease, value: (k.value as { pitch?: number }).pitch ?? 0 }));
+    const pitch = pitchSrc.some((k) => k.value !== 0) ? clipOverlaps<NumKey>([{ at: st.start, duration: 0, ease: 'linear', value: 0 }, ...pitchSrc]) : undefined;
     const bodyYaw = clipOverlaps(collect(scene, 'body', mine, abs).map(({ k, at }): NumKey => ({ at, duration: k.duration, ease: k.ease, value: yawFor(w, k.value, at) })));
     const yawAt = (t: number) => sampleKeys(yaw, t, initialYaw, (k) => k.value, lerp);
     yawFns.set(w.castId, yawAt);
@@ -581,7 +586,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
 
     return {
       castId: w.castId, initialModelId: w.initialModelId, initialPos: w.initialPos, models: w.models, position: w.position, opacity,
-      presence: clipOverlaps(presence), slide: clipOverlaps(slide), shiftX: [], shiftY: [], shiftS: [], shiftZ: [], shotVisible: [], yaw, bodyYaw, gaze, motions, expressions, ruleKeys,
+      presence: clipOverlaps(presence), slide: clipOverlaps(slide), shiftX: [], shiftY: [], shiftS: [], shiftZ: [], shotVisible: [], yaw, ...(pitch ? { pitch } : {}), bodyYaw, gaze, motions, expressions, ruleKeys,
     };
   });
 

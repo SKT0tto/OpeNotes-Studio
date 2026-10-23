@@ -15,6 +15,8 @@ import { Player } from '../engine/Player';
 import { STAGE_H, STAGE_RES, Stage } from '../engine/Stage';
 import { registerDebugApp, registerDebugBoxes, registerDebugCamera, registerDebugPlayer, registerDebugStage } from '../engine/debugHooks';
 import { ensureRuntime } from '../engine/runtime';
+import { frameTimes } from '@shared/agent/frames';
+import { registerFrameGrabber } from '../agentFrames';
 
 export interface PlayInfo {
   t: number;
@@ -226,6 +228,46 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
     return () => cancelAnimationFrame(raf);
   }, [project, ready]);
 
+  // The assistant's eyes (capture_frames): render its sandbox project on this stage, grab the asked moments, then put the user's project back.
+  // Edits arriving meanwhile wait (the reload lock) and are applied right after.
+  useEffect(() => {
+    const p = playerRef.current;
+    if (!ready || !p) return;
+    return registerFrameGrabber(async (proj, req) => {
+      while (reloading.current) await new Promise((r) => setTimeout(r, 30));
+      reloading.current = true;
+      const wasPlaying = p.isPlaying;
+      if (wasPlaying) p.pause();
+      const t0 = p.t;
+      const own = latestProject.current ?? p.project;
+      try {
+        await p.reload(proj);
+        const times = frameTimes(p.compiled, req.frames);
+        const w = Math.round(req.width);
+        const h = Math.round((w * 9) / 16);
+        const out: Array<{ label: string; dataUrl: string }> = [];
+        for (const [i, t] of times.entries()) {
+          if (t === null) continue;
+          let c = await p.grab(t, w, h);
+          if (isBlackCanvas(c)) {
+            await new Promise((r) => setTimeout(r, 300));
+            c = await p.grab(t, w, h);
+          }
+          out.push({ label: req.frames[i]!.label, dataUrl: c.toDataURL('image/jpeg', 0.85) });
+        }
+        return out;
+      } finally {
+        try {
+          await p.reload(latestProject.current ?? own);
+          await p.seek(t0);
+          setCompiled(p.compiled);
+        } finally {
+          reloading.current = false;
+        }
+      }
+    });
+  }, [ready]);
+
   const toggle = useCallback(() => {
     const p = playerRef.current;
     if (!p) return;
@@ -244,4 +286,11 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
   const advance = useCallback(() => playerRef.current?.advance(), []);
 
   return { hostRef: host, playerRef, compiled, status, error, reloadError, ready, playing, info, auto, setAuto, toggle, seek, advance };
+}
+
+/** A grab taken while a scene is still being entered is black. */
+function isBlackCanvas(c: HTMLCanvasElement): boolean {
+  const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+  for (let i = 0; i < d.length; i += 4 * 97) if (d[i]! + d[i + 1]! + d[i + 2]! > 24) return false;
+  return true;
 }

@@ -1,5 +1,5 @@
 /** Small editor UI primitives: collapsible sections, labelled rows, scrubbable number fields, splitters, provenance marks. */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Meta } from '@shared/schema/project';
 
 export const SOURCE_LABEL: Record<Meta['source'], string> = { ai: 'AI', rule: '规则', user: '人工', default: '默认' };
@@ -169,54 +169,6 @@ export function SliderField(p: NumFieldProps & { min: number; max: number }) {
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} onPointerUp={onCommit} onKeyUp={onCommit} />
       <NumField {...p} />
     </span>
-  );
-}
-
-/** Pixel size of a panel, remembered across sessions. */
-export function usePanelSize(key: string, initial: number, min: number, max: number) {
-  const [size, setSize] = useState(() => {
-    try {
-      const v = Number(localStorage.getItem(`studio.panel.${key}`));
-      return v >= min && v <= max ? v : initial;
-    } catch {
-      return initial;
-    }
-  });
-  const set = useCallback(
-    (v: number) => {
-      const c = Math.min(max, Math.max(min, v));
-      setSize(c);
-      try {
-        localStorage.setItem(`studio.panel.${key}`, String(c));
-      } catch {
-        /* storage may be unavailable; the size just is not remembered */
-      }
-    },
-    [key, min, max],
-  );
-  return [size, set] as const;
-}
-
-/** Drag handle between panels. `onDelta` receives the pointer movement along the axis since the last event. */
-export function Splitter({ axis, onDelta, label }: { axis: 'x' | 'y'; onDelta: (d: number) => void; label: string }) {
-  const last = useRef<number | null>(null);
-  return (
-    <div
-      className={`splitter splitter-${axis}`}
-      role="separator"
-      aria-label={label}
-      onPointerDown={(e) => {
-        (e.target as HTMLElement).setPointerCapture(e.pointerId);
-        last.current = axis === 'x' ? e.clientX : e.clientY;
-      }}
-      onPointerMove={(e) => {
-        if (last.current === null) return;
-        const p = axis === 'x' ? e.clientX : e.clientY;
-        onDelta(p - last.current);
-        last.current = p;
-      }}
-      onPointerUp={() => (last.current = null)}
-    />
   );
 }
 

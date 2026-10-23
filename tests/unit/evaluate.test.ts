@@ -154,3 +154,17 @@ describe('transitions in evaluate', () => {
     expect(evaluate(compileProject(miniProject(), MINI_CTX), 0.1).transition).toBeNull();
   });
 });
+
+describe('head pitch (低头)', () => {
+  const pitched = compileProject(miniProject({ tracks: [
+    { id: 'hd', target: actor('b'), channel: 'head', keys: [key('h1', 'b1', 0, { mode: 'target', target: 'auto', pitch: -0.6 }), key('h2', 'b2', 0, { mode: 'target', target: 'camera' })] },
+  ] }), MINI_CTX);
+  const at = (t: number) => evaluate(pitched, t).actors.find((a) => a.castId === 'b')!;
+  it('a head key with a pitch lowers the head until the next head key resets it; other actors and unpitched projects carry no pitch', () => {
+    const b2 = pitched.scenes[0]!.beats[1]!.start;
+    expect(at(pitched.scenes[0]!.beats[0]!.start + 0.5).headPitch).toBeCloseTo(-0.6, 5);
+    expect(at(b2 + 0.5).headPitch ?? 0).toBeCloseTo(0, 5);
+    expect(evaluate(pitched, 0.5).actors.find((a) => a.castId === 'a')!.headPitch).toBeUndefined();
+    expect(Object.keys(B(0.5))).not.toContain('headPitch');
+  });
+});

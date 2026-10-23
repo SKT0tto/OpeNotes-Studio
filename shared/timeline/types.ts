@@ -118,6 +118,8 @@ export interface CompiledActor {
   shotVisible: NumKey[];
   /** Desired absolute screen yaw of the head (-1..1). */
   yaw: NumKey[];
+  /** Head pitch (-1 = down .. 1 = up); absent when no head key of this actor sets one. */
+  pitch?: NumKey[];
   /** Optional separate body yaw; absent = body follows the head. */
   bodyYaw: NumKey[];
   gaze: GazeKey[];
@@ -247,6 +249,8 @@ export interface ActorRender {
   expression: string | null;
   /** Overlay intents (-1..1, screen space) to hand to ParamOverride. */
   head: number;
+  /** Head pitch intent (-1 = head down .. 1 = up); absent = level. */
+  headPitch?: number;
   body: number;
   gaze: { x: number; y: number };
   /** Absolute yaw the head is meant to have (for debugging / assertions). */

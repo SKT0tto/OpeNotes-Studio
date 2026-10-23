@@ -1,17 +1,19 @@
 /**
  * Storyboard: one card per line with its thumbnail, shot size / depth of field / hold badges, duration and the controls
- * you reach for most (shot size, focus, cut-in). Click selects (Ctrl / Shift: several, then change them together),
+ * you reach for most (shot size, focus, cut-in). Click selects (Ctrl toggles, Shift selects a range; the selection is shared with the script list, and the AI assistant),
  * drag reorders inside a scene, ＋ inserts a line after, ✕ deletes. Thumbnails come from the live player (see thumbs.ts).
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { BEAT_KIND_LABEL, SHOT_LABEL, SHOT_SHORT, dofText } from '@shared/catalog/labels';
 import { shotTypeChoices } from '@shared/staging/framing';
 import { cameraSystemOf, type Beat, type Project } from '@shared/schema/project';
 import type { usePlayerHost } from '../../play/usePlayerHost';
 import { addBeatAfter, copyBeat, deleteBeat, editBeat, editScene, editShot, reorderBeat } from '../../store/actions';
+import { modsOf, pickBeat } from '../../store/beatPick';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { LockIcon } from '../ui';
+import { MarqueeBand, useMarquee } from '../useMarquee';
 import { cachedThumb, useThumbnails } from './thumbs';
 import { useCatalog } from '../useCatalog';
 
@@ -24,6 +26,8 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
   const set = useUi((s) => s.set);
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const { band } = useMarquee(inner, '[data-beat-id]', 'grid', project.scenes.length > 0);
   const storedKey = useMemo(() => project.scenes.flatMap((s) => s.beats.map((b) => b.id)).join(','), [project.scenes]);
   const { pending } = useThumbnails(host, storedKey, active);
   const name = (id: string) => project.cast.find((c) => c.id === id)?.displayName ?? id;
@@ -31,11 +35,9 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
   const bgName = (id: string) => catalog?.backgrounds.find((b) => b.id === id)?.name ?? id;
 
   const pick = (sceneId: string, beatId: string, e: React.MouseEvent) => {
-    useProject.getState().select({ sceneId, beatId });
-    if (e.ctrlKey || e.metaKey || e.shiftKey) set({ cards: cards.includes(beatId) ? cards.filter((c) => c !== beatId) : [...cards, beatId] });
-    else set({ cards: [beatId] });
+    const plain = pickBeat(sceneId, beatId, modsOf(e));
     const t = host.playerRef.current?.compiled.scenes.find((s) => s.id === sceneId)?.beats.find((b) => b.id === beatId)?.start;
-    if (t !== undefined && !e.ctrlKey && !e.shiftKey) host.seek(t + 0.01);
+    if (t !== undefined && plain) host.seek(t + 0.01);
   };
   const batch = (label: string, fn: (b: Beat) => void) => {
     for (const s of project.scenes) for (const b of s.beats) if (cards.includes(b.id)) editBeat(s.id, b.id, label, fn);
@@ -76,6 +78,8 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
         )}
       </div>
       <div className="sb-scroll">
+        <div className="sb-inner" ref={inner}>
+        <MarqueeBand band={band} />
         {project.scenes.map((s, si) => {
           const cScene = host.compiled?.scenes.find((x) => x.id === s.id);
           return (
@@ -101,6 +105,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
                       key={b.id}
                       className={`sb-card${sel ? ' sel' : ''}${dragging === b.id ? ' dragging' : ''}${over === b.id && dragging && dragging !== b.id ? ' drop' : ''}`}
                       data-testid={`sb-card-${b.id}`}
+                      data-beat-id={b.id}
                       draggable
                       onDragStart={(e) => { e.dataTransfer.setData('text/beat', b.id); e.dataTransfer.effectAllowed = 'move'; setDragging(b.id); }}
                       onDragEnd={() => { setDragging(null); setOver(null); }}
@@ -157,6 +162,7 @@ export function Storyboard({ project, host, active }: { project: Project; host: 
             </section>
           );
         })}
+        </div>
       </div>
     </div>
   );

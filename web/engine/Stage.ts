@@ -374,7 +374,7 @@ export class Stage {
   private dropSlot(slot: Slot): void {
     slot.actor?.stopMotions();
     slot.actor?.setMouth(0);
-    slot.actor?.override.setTarget({ headYaw: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 }, 0);
+    slot.actor?.override.setTarget({ headYaw: 0, headPitch: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 }, 0);
     slot.wrapper.removeChildren();
     slot.wrapper.destroy();
   }
@@ -504,7 +504,7 @@ export class Stage {
       slot.expression = a.expression;
       this.pending.push(actor.setExpression(a.expression));
     }
-    actor.override.setTarget({ headYaw: a.head, bodyYaw: a.body, gazeX: a.gaze.x, gazeY: a.gaze.y }, 0);
+    actor.override.setTarget({ headYaw: a.head, headPitch: a.headPitch ?? 0, bodyYaw: a.body, gazeX: a.gaze.x, gazeY: a.gaze.y }, 0);
     actor.setMouth(a.mouth);
 
     // Whole-actor alpha / blur through filters on the wrapper (composited first, then faded), never per-mesh alpha.
@@ -595,7 +595,7 @@ export class Stage {
     if (slot.actor) {
       slot.actor.stopMotions();
       slot.actor.setMouth(0);
-      slot.actor.override.setTarget({ headYaw: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 }, 0);
+      slot.actor.override.setTarget({ headYaw: 0, headPitch: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 }, 0);
       slot.wrapper.removeChild(slot.actor.model);
     }
     next.dropPendingTime(); // time piled up while it was not on stage must not be applied in one step

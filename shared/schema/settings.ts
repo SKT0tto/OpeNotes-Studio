@@ -9,7 +9,15 @@ export const StoredLlmSettingsSchema = z.object({
   provider: z.enum(LLM_PROVIDERS).optional(),
   anthropic: z.object({ apiKey: z.string().optional(), model: z.string().optional(), baseUrl: z.string().optional() }).default({}),
   openai: z.object({ baseUrl: z.string().optional(), apiKey: z.string().optional(), model: z.string().optional() }).default({}),
+  /** The assistant's eyes (screenshots, attached pictures): see `VISION_MODES`. */
+  vision: z.object({ mode: z.enum(['auto', 'main', 'separate', 'off']).optional(), baseUrl: z.string().optional(), apiKey: z.string().optional(), model: z.string().optional() }).default({}),
 });
+/**
+ * auto = the main model when it takes pictures (the endpoint says so), else a separate vision model when one is configured, else none;
+ * main = always send pictures to the main model; separate = a separate OpenAI-compatible vision model that describes them; off = no pictures.
+ */
+export const VISION_MODES = ['auto', 'main', 'separate', 'off'] as const;
+export type VisionMode = (typeof VISION_MODES)[number];
 export type StoredLlmSettings = z.infer<typeof StoredLlmSettingsSchema>;
 
 /** What a client may send to change settings. `apiKey: ''` or `null` clears the stored key; absent keeps it. */
@@ -17,6 +25,7 @@ export const LlmSettingsPatchSchema = z.object({
   provider: z.enum(LLM_PROVIDERS).optional(),
   anthropic: z.object({ apiKey: z.string().nullable().optional(), model: z.string().optional(), baseUrl: z.string().optional() }).optional(),
   openai: z.object({ baseUrl: z.string().optional(), apiKey: z.string().nullable().optional(), model: z.string().optional() }).optional(),
+  vision: z.object({ mode: z.enum(VISION_MODES).optional(), baseUrl: z.string().optional(), apiKey: z.string().nullable().optional(), model: z.string().optional() }).optional(),
 });
 export type LlmSettingsPatch = z.infer<typeof LlmSettingsPatchSchema>;
 
@@ -34,6 +43,8 @@ export interface PublicLlmSettings {
   available: LlmProviderId[];
   anthropic: PublicKeyInfo & { model: string; baseUrl: string };
   openai: PublicKeyInfo & { model: string; baseUrl: string };
+  /** The separate vision model (only used in mode separate, or in auto when the main model takes no pictures). */
+  vision: PublicKeyInfo & { mode: VisionMode; model: string; baseUrl: string };
   status: {
     /** A usable key / address is present (not whether the provider accepts it). */
     configured: boolean;

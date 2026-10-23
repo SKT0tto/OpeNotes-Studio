@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import type { Draft } from 'immer';
 import { CAMERA_SYSTEM_LABEL, EMOTION_LABEL, costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
+import { multiIds } from '@shared/agent/selection';
 import { bandText } from '@shared/director/bandFit';
 import { bgSwitchValue } from '@shared/director/bgKeys';
 import { bgCategoryOf } from '@shared/director/bgCategory';
@@ -40,7 +41,9 @@ export function Inspector({ catalog, compiled, state, t }: { catalog: CompactCat
   const selection = useProject((s) => s.selection);
   const tab = useUi((s) => s.inspectorTab);
   const keyCount = useUi((s) => s.keySel.length);
+  const cards = useUi((s) => s.cards);
   if (!project) return null;
+  const multiN = multiIds(project, cards).length;
   const scene = project.scenes.find((s) => s.id === selection.sceneId) ?? null;
   const beat = scene?.beats.find((b) => b.id === selection.beatId) ?? null;
   const castId = selection.castId && scene?.wardrobe[selection.castId] ? selection.castId : null;
@@ -54,6 +57,7 @@ export function Inspector({ catalog, compiled, state, t }: { catalog: CompactCat
           </button>
         ))}
       </nav>
+      {multiN > 1 && <p className="hint insp-multi" data-testid="insp-multi">已选 {multiN} 句（下方显示最后点选的一句）</p>}
       {tab === 'project' && <ProjectFields project={project} catalog={catalog} />}
       {tab === 'scene' && (scene ? <SceneFields project={project} scene={scene} catalog={catalog} compiled={compiled ?? null} t={t} /> : need('选择一个场景后，这里显示它的转场、背景、站位与音乐。'))}
       {tab === 'beat' && (scene && beat ? <BeatFields project={project} scene={scene} beat={beat} compiled={compiled ?? null} /> : need('在左侧剧本里选择一句台词后，这里编辑它。'))}

@@ -201,6 +201,7 @@ function evalActor(s: CompiledScene, a: CompiledActor, t: number, ctxBeat: Scene
     motion: ev ? { name: ev.name, loop: ev.loop, elapsed: t - ev.at, eventAt: ev.at } : null,
     expression: lastBefore(a.expressions, t)?.name ?? null,
     head,
+    ...(a.pitch ? { headPitch: clamp(sampleNum(a.pitch, t, 0), -1, 1) } : {}),
     body,
     gaze: { x: gazeX, y: clamp(g.y, -1, 1) },
     desiredYaw: desired,

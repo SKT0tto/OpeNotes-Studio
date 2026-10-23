@@ -51,12 +51,68 @@ export interface TestResult {
   latencyMs: number;
 }
 
+/** A tool the model may call: `parameters` is a JSON Schema (from `modelJsonSchema`). */
+export interface ToolSpec {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+export interface ToolCall {
+  id: string;
+  name: string;
+  /** The arguments exactly as the model wrote them (a JSON string); parsing / validation is the caller's job. */
+  arguments: string;
+}
+export interface ChatTurn {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string;
+  toolCalls?: ToolCall[];
+  toolCallId?: string;
+  /** Thinking models: the reasoning of the assistant turn, passed back unchanged inside one tool loop. */
+  reasoning?: string;
+  /** User turns only: pictures sent with the text (multimodal models). */
+  images?: ChatImage[];
+}
+/** A picture for a multimodal model: a `data:image/(png|jpeg|webp);base64,...` URL and a short label that is sent as text before it. */
+export interface ChatImage {
+  dataUrl: string;
+  label?: string | undefined;
+}
+export interface DescribeImagesRequest {
+  /** What to look at / answer (the agent's question). */
+  prompt: string;
+  images: ChatImage[];
+  maxTokens: number;
+  signal?: AbortSignal | undefined;
+}
+export interface ChatToolsRequest {
+  messages: ChatTurn[];
+  tools: ToolSpec[];
+  maxTokens: number;
+  signal?: AbortSignal | undefined;
+}
+export interface ChatToolsResult {
+  text: string;
+  toolCalls: ToolCall[];
+  reasoning?: string | undefined;
+  usage: LlmUsage;
+  finish: string;
+}
+
 export interface LlmProvider {
   readonly id: 'anthropic' | 'openai' | 'fixture' | 'rule';
   readonly model: string;
   /** Largest `max_tokens` the backend accepts (the director splits long scenes to stay below it). */
   readonly maxOutputTokens?: number;
   generateStructured<T>(req: StructuredRequest<T>): Promise<Omit<StructuredResult<T>, 'cached'>>;
+  /** Function calling (optional). `toolsSupported()` is false once the endpoint refused tools; the agent then uses the JSON action protocol. */
+  chatTools?(req: ChatToolsRequest): Promise<ChatToolsResult>;
+  toolsSupported?(): boolean;
+  noteToolsUnsupported?(): void;
+  /** Whether the model takes pictures: true / false when known (the endpoint lists the model's input modalities), null when it cannot be told. */
+  imageInput?(signal?: AbortSignal): Promise<boolean | null>;
+  /** One plain multimodal request: the pictures and a question in, text out (a separate vision model that reports to a text-only agent). */
+  describeImages?(req: DescribeImagesRequest): Promise<{ text: string; usage: LlmUsage }>;
   test(signal?: AbortSignal): Promise<TestResult>;
 }
 

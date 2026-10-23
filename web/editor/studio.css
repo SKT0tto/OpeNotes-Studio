@@ -65,7 +65,10 @@ kbd { font-family: var(--font-mono); padding: 1px 6px; border: 1px solid var(--l
 .curve-line { fill: none; stroke: var(--key); stroke-width: 2; vector-effect: non-scaling-stroke; }
 
 /* script editor */
-.script { padding-bottom: 12px; }
+.script { position: relative; padding: 0 0 12px 14px; cursor: crosshair; } /* the left gutter and the blank areas start a marquee selection */
+.script .o-item { cursor: default; }
+.sb-inner { position: relative; min-height: 100%; padding: 12px 14px 24px; cursor: crosshair; } /* the margins and gaps start a marquee selection */
+.marquee-band { position: absolute; z-index: 6; pointer-events: none; background: var(--accent-weak); border: 1px solid var(--accent); border-radius: 2px; }
 .outline, .outline ul { list-style: none; margin: 0; padding: 0; }
 .outline > li { border-bottom: 1px solid var(--line); padding-bottom: 4px; }
 .o-scene { display: flex; align-items: center; height: 30px; padding-right: 6px; border-left: 2px solid transparent; background: var(--bg-2); position: sticky; top: 0; z-index: 1; }
@@ -79,6 +82,7 @@ kbd { font-family: var(--font-mono); padding: 1px 6px; border: 1px solid var(--l
 .o-item.drop::before { content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: var(--accent); z-index: 1; }
 .o-beat { display: flex; align-items: baseline; gap: 6px; width: 100%; text-align: left; background: none; border: 0; border-left: 2px solid transparent; cursor: pointer; padding: 4px 10px 4px 4px; color: var(--text-2); }
 .o-beat:hover { background: var(--bg-3); }
+.o-beat.hl { background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--accent); }
 .o-beat.sel { background: var(--accent-weak); border-left-color: var(--accent); color: var(--text-1); }
 .o-grip { color: var(--text-3); cursor: grab; font-size: 10px; letter-spacing: -2px; flex: none; }
 .o-n { color: var(--text-3); font-family: var(--font-mono); }
@@ -167,7 +171,7 @@ kbd { font-family: var(--font-mono); padding: 1px 6px; border: 1px solid var(--l
 .storyboard { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: var(--bg-1); min-width: 0; }
 .sb-bar { display: flex; align-items: center; gap: 12px; height: 34px; padding: 0 14px; border-bottom: 1px solid var(--line); background: var(--bg-2); flex: none; }
 .sb-batch { display: flex; align-items: center; gap: 6px; }
-.sb-scroll { flex: 1; min-height: 0; overflow: auto; padding: 12px 14px 24px; }
+.sb-scroll { flex: 1; min-height: 0; overflow: auto; }
 .sb-scene { margin-bottom: 18px; }
 .sb-scene-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; position: sticky; top: -12px; background: var(--bg-1); z-index: 1; padding: 6px 0; }
 .sb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }

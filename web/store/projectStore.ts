@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import type { Meta, Project } from '@shared/schema/project';
 import { ConflictError, createProject, saveProject } from '../projectsApi';
 import { describeViolations, findLockViolations, getByPath, type Seg } from '@shared/project/locks';
+import { planReplay, replayInto, type ReplayItem, type ReplayPlan } from '@shared/agent/replay';
 import { History, type EditOptions } from './history';
 import { notify, useUi } from './uiStore';
 
@@ -35,6 +36,11 @@ interface ProjectState {
   close(): void;
   /** False when a lock refused the edit (nothing changed, the user was told). */
   applyEdit(recipe: (draft: Draft<Project>) => void, label: string, opts?: EditOptions): boolean;
+  /**
+   * Replay agent ops on the project as it is now, inside ONE applyEdit (one undo step). Items the project no longer allows (deleted target, lock, hand-made
+   * content) are reported in the plan and skipped; items the user agreed to unlock open their locks in the same step.
+   */
+  applyAgentOps(items: ReplayItem[], label: string, genId: string): { plan: ReplayPlan; applied: number };
   seal(): void;
   undo(): void;
   redo(): void;
@@ -96,12 +102,23 @@ export const useProject = create<ProjectState>((set, get) => ({
     };
     const next = history.apply(cur, (d) => {
       recipe(d);
-    }, label, opts, guard);
+    }, label, opts, opts?.bypassLocks ? undefined : guard);
     if (blocked) return false;
     if (next === cur) return true;
     set({ project: next, saveState: 'dirty', ...flags() });
     if (useUi.getState().toast) useUi.getState().set({ toast: null });
     return true;
+  },
+
+  applyAgentOps(items, label, genId) {
+    const cur = get().project;
+    const ctx = { genId, now: Date.now() };
+    if (!cur) return { plan: { items: [], accepted: [] }, applied: 0 };
+    const plan = planReplay(cur, items, ctx);
+    if (plan.accepted.length === 0) return { plan, applied: 0 };
+    const ok = get().applyEdit((d) => replayInto(d, plan, ctx), label, { bypassLocks: plan.accepted.some((i) => i.lockPaths.length > 0) });
+    history.seal();
+    return { plan, applied: ok ? plan.accepted.length : 0 };
   },
 
   seal: () => history.seal(),

@@ -2,11 +2,11 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  DEFAULT_ANTHROPIC_MODEL, LlmSettingsPatchSchema, NOT_CONFIGURED_MESSAGE, StoredLlmSettingsSchema, maskKey,
-  type LlmProviderId, type LlmSettingsPatch, type PublicKeyInfo, type PublicLlmSettings, type StoredLlmSettings,
+  DEFAULT_ANTHROPIC_MODEL, LlmSettingsPatchSchema, NOT_CONFIGURED_MESSAGE, StoredLlmSettingsSchema, VISION_MODES, maskKey,
+  type LlmProviderId, type LlmSettingsPatch, type PublicKeyInfo, type PublicLlmSettings, type StoredLlmSettings, type VisionMode,
 } from '../../shared/schema/settings';
 import { AnthropicProvider } from '../llm/anthropic';
-import { OpenAiCompatProvider, forgetStructuredModes } from '../llm/openaiCompat';
+import { OpenAiCompatProvider, forgetStructuredModes, forgetToolsSupport } from '../llm/openaiCompat';
 import type { LlmProvider } from '../llm/provider';
 
 type Env = Record<string, string | undefined>;
@@ -50,7 +50,11 @@ export interface Effective {
   provider: LlmProviderId | null;
   anthropic: { apiKey?: string | undefined; keySource: 'env' | 'file' | null; model: string; baseUrl: string };
   openai: { apiKey?: string | undefined; keySource: 'env' | 'file' | null; model: string; baseUrl: string };
+  vision: { mode: VisionMode; apiKey?: string | undefined; keySource: 'env' | 'file' | null; model: string; baseUrl: string };
 }
+
+/** How the assistant sees pictures: the main model reads them itself, or a separate model describes them in words. */
+export type VisionChannel = { mode: 'inline'; model: string } | { mode: 'describe'; model: string; provider: LlmProvider };
 
 export interface SettingsDeps {
   file: string;
@@ -121,8 +125,11 @@ export class LlmSettings {
     let provider: LlmProviderId | null = f.provider ?? (nonEmpty(e.LLM_PROVIDER) as LlmProviderId | undefined) ?? null;
     if (provider === 'fixture' && !this.deps.fixtureProvider) provider = null;
     if (!provider) provider = aKey ? 'anthropic' : oBase ? 'openai' : this.deps.fixtureProvider ? 'fixture' : null;
+    const vKey = usable(f.vision.apiKey) ?? usable(e.VISION_API_KEY);
+    const vMode = (f.vision.mode ?? (VISION_MODES as readonly string[]).find((m) => m === nonEmpty(e.VISION_MODE)) ?? 'auto') as VisionMode;
     return {
       provider,
+      vision: { mode: vMode, apiKey: vKey, keySource: usable(f.vision.apiKey) ? 'file' : vKey ? 'env' : null, model: nonEmpty(f.vision.model) ?? nonEmpty(e.VISION_MODEL) ?? '', baseUrl: nonEmpty(f.vision.baseUrl) ?? nonEmpty(e.VISION_BASE_URL) ?? '' },
       anthropic: {
         apiKey: aKey, keySource: usable(f.anthropic.apiKey) ? 'file' : aKey ? 'env' : null,
         model: nonEmpty(f.anthropic.model) ?? DEFAULT_ANTHROPIC_MODEL, baseUrl: nonEmpty(f.anthropic.baseUrl) ?? '',
@@ -151,6 +158,27 @@ export class LlmSettings {
     return { provider: null, message: NOT_CONFIGURED_MESSAGE };
   }
 
+  /** The separate vision model, when its address and model are filled in (a remote address also needs a key). */
+  private separateVision(): OpenAiCompatProvider | null {
+    const v = this.effective().vision;
+    if (!v.baseUrl || !v.model || (!v.apiKey && !isLocalUrl(v.baseUrl))) return null;
+    return new OpenAiCompatProvider({ baseUrl: v.baseUrl, apiKey: v.apiKey, model: v.model, timeoutMs: 120_000, ...(this.deps.fetch ? { fetch: this.deps.fetch } : {}) });
+  }
+
+  /**
+   * The assistant's eyes for this request, or null (no pictures: attached ones are ignored with a note, `capture_frames` is not offered).
+   * `auto` asks the main endpoint whether its model takes pictures (cached per model) and falls back to the separate model.
+   */
+  async vision(main: LlmProvider, signal?: AbortSignal): Promise<VisionChannel | null> {
+    const v = this.effective().vision;
+    if (v.mode === 'off') return null;
+    const sep = this.separateVision();
+    if (v.mode === 'separate') return sep ? { mode: 'describe', model: sep.model, provider: sep } : null;
+    if (v.mode === 'main') return main.chatTools ? { mode: 'inline', model: main.model } : null;
+    if (main.chatTools && (await main.imageInput?.(signal)) === true) return { mode: 'inline', model: main.model };
+    return sep ? { mode: 'describe', model: sep.model, provider: sep } : null;
+  }
+
   view(): PublicLlmSettings {
     const eff = this.effective();
     const info = (k: string | undefined, source: 'env' | 'file' | null): PublicKeyInfo => ({ hasKey: !!k, mask: k ? maskKey(k) : null, source });
@@ -161,6 +189,7 @@ export class LlmSettings {
       available: this.deps.fixtureProvider ? ['anthropic', 'openai', 'fixture'] : ['anthropic', 'openai'],
       anthropic: { ...info(eff.anthropic.apiKey, eff.anthropic.keySource), model: eff.anthropic.model, baseUrl: eff.anthropic.baseUrl },
       openai: { ...info(eff.openai.apiKey, eff.openai.keySource), model: eff.openai.model, baseUrl: eff.openai.baseUrl },
+      vision: { ...info(eff.vision.apiKey, eff.vision.keySource), mode: eff.vision.mode, model: eff.vision.model, baseUrl: eff.vision.baseUrl },
       status: p.provider ? this.configuredStatus(eff.provider, model, p.provider) : { configured: false, provider: eff.provider, model, verified: 'none' as const, message: p.message },
     };
   }
@@ -177,7 +206,7 @@ export class LlmSettings {
   patch(raw: unknown): PublicLlmSettings {
     const patch: LlmSettingsPatch = LlmSettingsPatchSchema.parse(raw);
     const cur = this.read();
-    const next: StoredLlmSettings = { ...cur, anthropic: { ...cur.anthropic }, openai: { ...cur.openai } };
+    const next: StoredLlmSettings = { ...cur, anthropic: { ...cur.anthropic }, openai: { ...cur.openai }, vision: { ...cur.vision } };
     if (patch.provider) next.provider = patch.provider;
     const apply = (dst: Record<string, string | undefined>, src: Record<string, string | null | undefined> | undefined) => {
       for (const [k, v] of Object.entries(src ?? {})) {
@@ -189,8 +218,10 @@ export class LlmSettings {
     };
     apply(next.anthropic, patch.anthropic);
     apply(next.openai, patch.openai);
+    if (patch.vision?.mode) next.vision.mode = patch.vision.mode;
+    apply(next.vision as Record<string, string | undefined>, { baseUrl: patch.vision?.baseUrl, apiKey: patch.vision?.apiKey, model: patch.vision?.model });
     // a changed endpoint / model may be a service that does support strict json_schema: let the provider ask again
-    if (patch.openai?.baseUrl !== undefined || patch.openai?.model !== undefined) forgetStructuredModes();
+    if (patch.openai?.baseUrl !== undefined || patch.openai?.model !== undefined) { forgetStructuredModes(); forgetToolsSupport(); }
     this.write(next);
     return this.view();
   }

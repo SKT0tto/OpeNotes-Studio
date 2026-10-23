@@ -22,6 +22,11 @@ describe('mapIntents', () => {
     expect(m.ParamBodyAngleX).toBe(10);
     expect(m.ParamEyeBallX).toBe(-1);
   });
+  it('head pitch drives ParamAngleY (negative = head down) and only when set', () => {
+    const m = mapIntents({ headYaw: 0, headPitch: -0.6, bodyYaw: 0, gazeX: 0, gazeY: 0 }, signs());
+    expect(m.find((d) => d.id === 'ParamAngleY')?.delta).toBeCloseTo(-12, 5);
+    expect(mapIntents({ headYaw: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 }, signs()).find((d) => d.id === 'ParamAngleY')).toBeUndefined();
+  });
   it('clamps intents and skips axes with sign 0', () => {
     const m = mapIntents({ headYaw: 5, bodyYaw: 0, gazeX: 1, gazeY: 0 }, signs(1, 0, 0));
     expect(m.find((d) => d.id === 'ParamAngleX')?.delta).toBe(30);

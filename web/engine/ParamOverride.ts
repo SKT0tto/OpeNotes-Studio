@@ -14,11 +14,15 @@ import type { AxisSigns } from '@shared/schema/calibration';
 export interface OverrideIntents {
   /** Screen-space intents, -1..1. Positive = towards screen-right / up. */
   headYaw: number;
+  /** -1 = head down (低头) .. 1 = up; ParamAngleY. */
+  headPitch?: number;
   bodyYaw: number;
   gazeX: number;
   gazeY: number;
 }
-export const ZERO_INTENTS: OverrideIntents = { headYaw: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 };
+export const ZERO_INTENTS: OverrideIntents = { headYaw: 0, headPitch: 0, bodyYaw: 0, gazeX: 0, gazeY: 0 };
+/** ParamAngleY units at full pitch (Cubism: the parameter spans +-30, positive = up). A nod stays well inside it. */
+export const HEAD_PITCH_RANGE = 20;
 
 export interface ParamAccess {
   /** Index of an EXISTING parameter id, or -1. Must never create parameters. */
@@ -44,6 +48,7 @@ export const clampIntent = (v: number) => clamp(Number.isFinite(v) ? v : 0, -1, 
 export function mapIntents(i: OverrideIntents, signs: AxisSigns): ParamDelta[] {
   const out: ParamDelta[] = [];
   if (signs.headSign !== 0) out.push({ id: 'ParamAngleX', delta: signs.headSign * clampIntent(i.headYaw) * HEAD_ANGLE_RANGE });
+  if (i.headPitch) out.push({ id: 'ParamAngleY', delta: clampIntent(i.headPitch) * HEAD_PITCH_RANGE });
   if (signs.bodySign !== 0) out.push({ id: 'ParamBodyAngleX', delta: signs.bodySign * clampIntent(i.bodyYaw) * BODY_ANGLE_RANGE });
   if (signs.eyeSign !== 0) out.push({ id: 'ParamEyeBallX', delta: signs.eyeSign * clampIntent(i.gazeX) });
   out.push({ id: 'ParamEyeBallY', delta: clampIntent(i.gazeY) });
@@ -56,7 +61,7 @@ export function addClamped(current: number, delta: number, min: number, max: num
 }
 
 const easeInOutQuad = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-const KEYS = ['headYaw', 'bodyYaw', 'gazeX', 'gazeY'] as const;
+const KEYS = ['headYaw', 'headPitch', 'bodyYaw', 'gazeX', 'gazeY'] as const;
 
 export class ParamOverride {
   private from: OverrideIntents = { ...ZERO_INTENTS };
@@ -79,7 +84,7 @@ export class ParamOverride {
   setTarget(target: Partial<OverrideIntents>, durationSec = 0.4): void {
     this.from = { ...this.cur };
     this.to = { ...this.to };
-    for (const k of KEYS) if (target[k] !== undefined) this.to[k] = clampIntent(target[k]);
+    for (const k of KEYS) { const v = target[k]; if (v !== undefined) this.to[k] = clampIntent(v); }
     this.elapsed = 0;
     this.duration = Math.max(0, durationSec);
     if (this.duration === 0) this.cur = { ...this.to };
@@ -90,7 +95,7 @@ export class ParamOverride {
     if (this.duration === 0 || this.elapsed >= this.duration) return;
     this.elapsed = Math.min(this.duration, this.elapsed + Math.max(0, dt));
     const e = easeInOutQuad(this.elapsed / this.duration);
-    for (const k of KEYS) this.cur[k] = this.from[k] + (this.to[k] - this.from[k]) * e;
+    for (const k of KEYS) { const f = this.from[k] ?? 0; this.cur[k] = f + ((this.to[k] ?? 0) - f) * e; }
   }
 
   /** Add the current overlay onto the live parameter values. Only existing parameters are touched. */
