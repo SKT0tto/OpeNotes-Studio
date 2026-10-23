@@ -58,7 +58,7 @@
   </div>
   <div class="wrap hero-in">
     <div class="hero-copy">
-      <p class="pill-tag"><span>v0.4.0</span>开源 · GPL-3.0 · 非官方同人项目</p>
+      <p class="pill-tag"><span>v0.6.0</span>开源 · GPL-3.0 · 非官方同人项目</p>
       <h1 id="hero-title">Ope<span>Notes</span> Studio</h1>
       <p class="tagline">把小说，演成一场 Live。</p>
       <p class="lead">基于 Live2D 的 AI 剧情演出导演与制作平台。一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出——分场、选景、换装、镜头与表演由 AI 导演完成，每一句、每一帧仍由你精细手调。</p>
@@ -85,6 +85,24 @@
       </div>
       <figcaption>原创示意图：抽象剪影与示例台词，非游戏截图。</figcaption>
     </figure>
+  </div>
+</section>
+
+<!-- MAJOR UPDATE -->
+<section class="section announce" id="v060" aria-labelledby="v060-title">
+  <div class="wrap">
+    <div class="glass ann">
+      <p class="ann-tag"><span>MAJOR UPDATE</span>v0.6.0</p>
+      <h2 id="v060-title">AI 助手来了：说一句话，演出就改好</h2>
+      <p class="ann-lead">用大白话告诉 AI 想怎么改，细到一句台词、一个表情、一次微调。每一处修改都以卡片呈现，由你决定应用还是拒绝。</p>
+      <div class="ann-grid">
+        <div><span class="ann-ico" aria-hidden="true">✦</span><h3>精准找到那几句</h3><p>按选中的内容、引用的原句（记错几个字也行）、说话人或位置定位；拿不准时会先问你。</p></div>
+        <div><span class="ann-ico" aria-hidden="true">✓</span><h3>每处改动都可审阅</h3><p>改前 → 改后加理由；全部应用、部分应用或拒绝，一次 Ctrl+Z 撤销整次修改，说「改回去」即可精确还原。尊重锁定，覆盖前先问你。</p></div>
+        <div><span class="ann-ico" aria-hidden="true">◎</span><h3>它看得见画面</h3><p>可附上截图或短视频，也会自己截取舞台画面，检查自己的改动并在卡片里附上缩略图与结果。使用你已配置的 DeepSeek 即可，独立视觉模型可选。</p></div>
+        <div><span class="ann-ico" aria-hidden="true">▦</span><h3>可停靠的编辑器布局</h3><p>VS Code 风格：拖拽、停靠、缩放、最大化每个面板，内置多种预设；剧本与分镜支持多选和框选，AI 直接处理你选中的部分。</p></div>
+      </div>
+      <p class="ann-note">我们的评测（真实 DeepSeek 调用、原创测试故事）：约 80 条真实指令 99% 正确，9/9 看图用例通过，0 次误改，0 次违反锁定。经典镜头输出与旧项目保持不变。完整说明见 <a href="https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG</a>。</p>
+    </div>
   </div>
 </section>
 
@@ -164,7 +182,7 @@
     <header class="sec-head"><p class="en">HOW TO START</p><h2 id="start-title">开始使用</h2><p class="sub">需要 Node.js 22 及以上（开发使用 24）。不想用命令行？从 <a href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）即可；下面是开发者方式。</p></header>
     <div class="glass dl">
       <div><h3>最简单：下载 zip，双击开演</h3><p>从 Releases 下载最新 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）。</p></div>
-      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载最新版 v0.4.0</a>
+      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载最新版 v0.6.0</a>
     </div>
     <div class="cmds">
       <div class="cmd glass"><div class="cmd-h"><span class="n">1</span><div><h3>获取代码并安装依赖</h3><p>克隆仓库后安装 npm 依赖。</p></div></div><div class="code"><button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true" width="16" height="16"><use href="#i-copy"/></svg><span>复制</span></button><pre><code>git clone https://github.com/SKT0tto/OpeNotes-Studio.git openotes-studio
@@ -236,7 +254,7 @@ cp studio.config.example.json studio.config.json
       <nav aria-label="页脚链接"><a href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub</a><a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0</a><a href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili</a><a href="#top">回到顶部 ↑</a></nav>
     </div>
     <p><strong>免责声明：</strong>OpeNotes Studio 是非官方同人项目。BanG Dream!、Our Notes 及所有相关角色、名称与素材均为 Bushiroad、Craft Egg 及其他权利方的财产；本项目与其无任何关联，亦未获其认可。本项目不包含任何游戏素材与 Live2D Cubism Core，用户须自行准备合法获取的素材并遵守相应条款。本页所有界面与图形均为原创示意。</p>
-    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v0.4.0</p>
+    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v0.6.0</p>
   </div>
 </footer>
 <div class="toast" role="status" aria-live="polite"></div>

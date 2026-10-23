@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.6.0 — major update
+
+Version 0.5.0 was skipped on purpose: this release is a big step, so it jumps straight to 0.6.0. It adds an AI assistant that edits your performance from plain-language instructions, a vision-capable assistant that checks its own work against the picture, and a VS Code-style dockable layout. Classic camera output and existing projects are unchanged.
+
+**AI assistant (agentic mode).** Tell the AI what to change in plain language, down to the finest detail: a line's text, an expression, a small nudge, a pause, an entrance timing, an effect, the background, a camera keyframe, or locks.
+- It finds the exact lines you mean: by your selection, by a quote (even a slightly misremembered one), by speaker or position, and across turns of the conversation.
+- When a request is ambiguous, it asks instead of guessing.
+- Every change is shown as a card (before to after, with the reason). Apply all, apply some, or reject. One Ctrl+Z undoes the whole change.
+- It respects locks and asks before overriding them.
+- Say "改回去" and a previous turn is undone exactly.
+- An optional live mode applies small edits automatically.
+- Token usage is shown.
+
+**It sees the picture.** Attach screenshots or short videos (sampled into frames) and talk about what you see. The assistant can also capture stage frames itself, and it always checks its own picture-changing edits, showing thumbnails and the verification result in the change card. It works with your configured DeepSeek model; a separate vision model is optional.
+
+**Dockable layout.** The editor now has a VS Code-style layout: drag, dock, resize and maximise every panel. Presets (default, AI work, storyboard review), a reset-layout command, and a layout remembered per user.
+
+**Multi-select and box-select.** Select several lines in the script and the storyboard with Ctrl/Shift click or by dragging a box. The AI assistant works on the selection.
+
+**Fixes and additions.**
+- A mid-scene background change now keeps the people visible (the AI used to pick an empty shot).
+- The AI reports who is really on screen.
+- Head tilt (low head / raise head) was added.
+
+**Measured quality.** In our evaluation with real DeepSeek calls on original test stories, about 80 realistic instructions were 99% correct, all 9 picture cases passed, with 0 unintended edits and 0 lock violations.
+
+**Compatibility.** Classic camera output and existing projects are unchanged.
+
 ## 0.4.0
 
 Original-style screen effects. They are generated in code: no game assets are included, and the fog edge is a procedural shader, not a game texture. Existing projects render as before: `memory_glow` is unchanged, and the classic and travel goldens are untouched.
