@@ -1,6 +1,6 @@
 import {
   LlmError, TruncatedError, extractJson, inputText, modelJsonSchema, redact, stableStringify, validateOutput, zeroUsage,
-  type LlmProvider, type StructuredRequest, type StructuredResult, type TestResult,
+  type ChatImage, type ChatToolsRequest, type ChatToolsResult, type DescribeImagesRequest, type LlmProvider, type LlmUsage, type StructuredRequest, type StructuredResult, type TestResult,
 } from './provider';
 
 export interface OpenAiCompatOptions {
@@ -22,6 +22,8 @@ export interface OpenAiCompatOptions {
    * Default: one process-wide memory; tests pass their own. `false` = no memory.
    */
   modeMemory?: Map<string, RememberedMode> | false;
+  /** Where "this endpoint refused function calling" is remembered (key = base|model|tools -> time). Default: process-wide; `false` = no memory. */
+  toolsMemory?: Map<string, number> | false;
   now?: () => number;
 }
 
@@ -32,6 +34,13 @@ export interface RememberedMode { mode: Mode; at: number }
 /** How long a service is believed not to support strict json_schema before it is tried again (a service may add it). */
 export const MODE_MEMORY_MS = 6 * 60 * 60 * 1000;
 const sharedModeMemory = new Map<string, RememberedMode>();
+const sharedToolsMemory = new Map<string, number>();
+/** Forget which endpoints refused function calling (all, or one base URL). */
+export function forgetToolsSupport(baseUrl?: string, memory: Map<string, number> = sharedToolsMemory): void {
+  if (baseUrl === undefined) return void memory.clear();
+  const prefix = `${baseUrl.trim().replace(/\/+$/, '')}|`;
+  for (const k of [...memory.keys()]) if (k.startsWith(prefix)) memory.delete(k);
+}
 const modeKey = (baseUrl: string, model: string) => `${baseUrl.trim().replace(/\/+$/, '')}|${model}`;
 /** Forget what was learned about services (all of them, or one base URL): call it when the endpoint / model setting changes. */
 export function forgetStructuredModes(baseUrl?: string, memory: Map<string, RememberedMode> = sharedModeMemory): void {
@@ -40,8 +49,20 @@ export function forgetStructuredModes(baseUrl?: string, memory: Map<string, Reme
   for (const k of [...memory.keys()]) if (k.startsWith(prefix)) memory.delete(k);
 }
 
+/** Whether a base|model takes pictures (null = the endpoint does not say). */
+const imageMemory = new Map<string, boolean | null>();
+/** OpenAI content parts: the text, then each picture preceded by its label. */
+export function imageContent(text: string, images: ChatImage[]): Array<Record<string, unknown>> {
+  const parts: Array<Record<string, unknown>> = [{ type: 'text', text }];
+  for (const im of images) {
+    if (im.label) parts.push({ type: 'text', text: im.label });
+    parts.push({ type: 'image_url', image_url: { url: im.dataUrl } });
+  }
+  return parts;
+}
+
 interface ChatResponse {
-  choices?: Array<{ finish_reason?: string | null; message?: { content?: string | null; refusal?: string | null } }>;
+  choices?: Array<{ finish_reason?: string | null; message?: { content?: string | null; refusal?: string | null; reasoning_content?: string | null; tool_calls?: Array<{ id?: string; type?: string; function?: { name?: string; arguments?: string } }> } }>;
   usage?: { prompt_tokens?: number; completion_tokens?: number; prompt_cache_hit_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } };
   model?: string;
   error?: { message?: string };
@@ -76,6 +97,93 @@ export class OpenAiCompatProvider implements LlmProvider {
   }
 
   private readonly memory: Map<string, RememberedMode> | null;
+  private get toolsMemory(): Map<string, number> | null {
+    return this.opts.toolsMemory === false ? null : this.opts.toolsMemory ?? sharedToolsMemory;
+  }
+  private toolsKey(): string {
+    return `${this.memoryKey()}|tools`;
+  }
+  /** False when this endpoint (or an earlier provider instance for it) refused function calling and the belief is still fresh. */
+  toolsSupported(): boolean {
+    const at = this.toolsMemory?.get(this.toolsKey());
+    if (at === undefined) return true;
+    if ((this.opts.now ?? Date.now)() - at > MODE_MEMORY_MS) {
+      this.toolsMemory!.delete(this.toolsKey());
+      return true;
+    }
+    return false;
+  }
+  noteToolsUnsupported(): void {
+    this.toolsMemory?.set(this.toolsKey(), (this.opts.now ?? Date.now)());
+  }
+
+  /**
+   * One function-calling round trip. `tool_choice` is always `auto` (a thinking model such as deepseek-flash answers 400 to `required`).
+   * Retries, timeout and key redaction are those of `post()`. A 400 means "tools not supported here": the caller falls back.
+   */
+  async chatTools(req: ChatToolsRequest): Promise<ChatToolsResult> {
+    const body = {
+      model: this.model,
+      max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? 8192),
+      messages: req.messages.map((m) => {
+        if (m.role === 'tool') return { role: 'tool', tool_call_id: m.toolCallId, content: m.content };
+        if (m.role === 'assistant') {
+          return {
+            role: 'assistant', content: m.content || null,
+            ...(m.reasoning ? { reasoning_content: m.reasoning } : {}),
+            ...(m.toolCalls?.length ? { tool_calls: m.toolCalls.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: c.arguments } })) } : {}),
+          };
+        }
+        return { role: m.role, content: m.role === 'user' && m.images?.length ? imageContent(m.content, m.images) : m.content };
+      }),
+      tools: req.tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
+      tool_choice: 'auto',
+    };
+    const res = await this.post(body, req.signal);
+    const choice = res.choices?.[0];
+    if (!choice?.message) throw new LlmError('invalid_output', '接口返回里没有 message');
+    const u = res.usage ?? {};
+    if (choice.message.refusal) throw new LlmError('refusal', `模型拒绝了这次请求：${choice.message.refusal}`);
+    if (choice.finish_reason === 'content_filter') throw new LlmError('refusal', '输出被内容过滤器拦截');
+    return {
+      text: choice.message.content ?? '',
+      toolCalls: (choice.message.tool_calls ?? []).flatMap((c, i) => (c.function?.name ? [{ id: c.id || `call_${i}`, name: c.function.name, arguments: c.function.arguments ?? '{}' }] : [])),
+      ...(choice.message.reasoning_content ? { reasoning: choice.message.reasoning_content } : {}),
+      usage: { ...zeroUsage(), inputTokens: u.prompt_tokens ?? 0, outputTokens: u.completion_tokens ?? 0, cacheReadTokens: u.prompt_cache_hit_tokens ?? u.prompt_tokens_details?.cached_tokens ?? 0 },
+      finish: choice.finish_reason ?? 'stop',
+    };
+  }
+  /** Asks the endpoint's model list once per base|model (OpenAI-style `input_modalities` / `modalities`, as DeepSeek and OpenRouter report it). */
+  async imageInput(signal?: AbortSignal): Promise<boolean | null> {
+    const k = this.memoryKey();
+    if (imageMemory.has(k)) return imageMemory.get(k)!;
+    let answer: boolean | null = null;
+    try {
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 8000);
+      signal?.addEventListener('abort', () => ctl.abort());
+      const res = await this.doFetch(`${this.base}/models`, { headers: this.headers(), signal: ctl.signal }).finally(() => clearTimeout(timer));
+      if (res.ok) {
+        const j = (await res.json()) as { data?: Array<{ id?: string; input_modalities?: string[]; modalities?: string[]; architecture?: { input_modalities?: string[] } }> };
+        const m = j.data?.find((x) => x.id === this.model);
+        const mods = m?.input_modalities ?? m?.architecture?.input_modalities ?? m?.modalities;
+        answer = Array.isArray(mods) ? mods.includes('image') : null;
+      }
+    } catch {
+      answer = null;
+    }
+    imageMemory.set(k, answer);
+    return answer;
+  }
+
+  /** A plain multimodal request (no tools): the separate vision model of the assistant. */
+  async describeImages(req: DescribeImagesRequest): Promise<{ text: string; usage: LlmUsage }> {
+    const res = await this.post({ model: this.model, max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? 8192), messages: [{ role: 'user', content: imageContent(req.prompt, req.images) }] }, req.signal);
+    const choice = res.choices?.[0];
+    const u = res.usage ?? {};
+    return { text: choice?.message?.content ?? '', usage: { ...zeroUsage(), inputTokens: u.prompt_tokens ?? 0, outputTokens: u.completion_tokens ?? 0, cacheReadTokens: u.prompt_cache_hit_tokens ?? u.prompt_tokens_details?.cached_tokens ?? 0 } };
+  }
+
   private memoryKey(): string {
     return modeKey(this.base, this.model);
   }

@@ -43,6 +43,8 @@ interface UiState {
   rate: number;
   /** Storyboard card multi-selection (beat ids). */
   cards: string[];
+  /** A beat that is only highlighted (hovering a row of an AI change card): a visual preview, never the selection. */
+  hoverBeat: string | null;
   set(p: Partial<Omit<UiState, 'set'>>): void;
 }
 
@@ -64,6 +66,7 @@ export const useUi = create<UiState>((set) => ({
   travelNotice: null,
   rate: 1,
   cards: [],
+  hoverBeat: null,
   set: (p) => set(p),
 }));
 

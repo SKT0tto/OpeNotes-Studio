@@ -9,6 +9,8 @@ import { ProjectSchema, type Project } from '../../shared/schema/project';
 import { readTextRetry, renameRetry } from '../util/fsRetry';
 
 export const MAX_HISTORY = 20;
+/** Snapshots taken before an agent run live in history/ as `agent-<stamp>.json`; they are not part of MAX_HISTORY and have their own ceiling. */
+export const MAX_AGENT_SNAPSHOTS = 10;
 export const PROJECT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 
 export class StoreError extends Error {
@@ -117,9 +119,24 @@ export class ProjectStore {
     await fs.mkdir(hist, { recursive: true });
     const stamp = `${Date.now().toString().padStart(14, '0')}-${String(this.seq++ % 1000).padStart(3, '0')}`;
     await fs.writeFile(path.join(hist, `${stamp}.json`), cur.text, 'utf8');
-    const old = (await fs.readdir(hist)).filter((f) => f.endsWith('.json')).sort();
+    const old = (await fs.readdir(hist)).filter((f) => f.endsWith('.json') && !f.startsWith('agent-')).sort();
     for (const f of old.slice(0, Math.max(0, old.length - MAX_HISTORY))) await fs.rm(path.join(hist, f), { force: true });
     return this.write(project);
+  }
+
+  /** A copy of `input` (the project as the editor has it right now, before an agent run) in history/, newest MAX_AGENT_SNAPSHOTS kept. */
+  async snapshot(id: string, input: unknown): Promise<string> {
+    const project = parse(input);
+    if (project.id !== id) throw new StoreError(400, `body id "${project.id}" does not match "${id}"`);
+    if (!(await this.read(id))) throw new StoreError(404, `project "${id}" does not exist`);
+    const hist = path.join(this.dir(id), 'history');
+    await fs.mkdir(hist, { recursive: true });
+    const name = `agent-${Date.now().toString().padStart(14, '0')}-${String(this.seq++ % 1000).padStart(3, '0')}.json`;
+    await fs.writeFile(path.join(hist, name), `${JSON.stringify(project, null, 1)}
+`, 'utf8');
+    const snaps = (await fs.readdir(hist)).filter((f) => f.startsWith('agent-') && f.endsWith('.json')).sort();
+    for (const f of snaps.slice(0, Math.max(0, snaps.length - MAX_AGENT_SNAPSHOTS))) await fs.rm(path.join(hist, f), { force: true });
+    return name;
   }
 
   async remove(id: string): Promise<void> {

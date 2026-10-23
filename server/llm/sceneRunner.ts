@@ -24,6 +24,8 @@ export interface SceneRequest {
   /** Regenerate only these beats (their fields and keys; the text stays). */
   beatIds?: string[] | undefined;
   overwriteUser?: boolean | undefined;
+  /** Optional preference for the shots ("多用双人镜头，少用特写"); only added to the model input when given. */
+  guidance?: string | undefined;
 }
 
 export interface SceneResult {
@@ -126,6 +128,7 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
       previousScene: prev,
       ...(continuation ? { continuation } : {}),
       ...(structure && more ? { sceneContinues: { note: `注意：这一段不是整个场景的结尾，场景在第 ${nextPara} 段之后还会继续（后面还有对白和事件）。所以这一段的最后一拍不要给场尾收束：不要用 release、拉远成群像、pull_out 或黑场式的收尾，镜头和节奏保持「场景正在进行」的状态；真正的场尾由最后一段处理。`, nextParagraph: nextPara } } : {}),
+      ...(req.guidance ? { guidance: { note: '这是用户（或助手）对本场景镜头的倾向：在不违反上面规则的前提下优先满足；不要因此改动对白、节奏、表演。', text: req.guidance } } : {}),
       fixedBeats: fixedHere.map(fixedInput),
       mode: { scopes: req.scopes, ...(req.beatIds ? { focusBeatIds: fixedHere.map((b) => b.id) } : {}) },
     };

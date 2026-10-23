@@ -22,6 +22,10 @@ export function projectRoutes(config: StudioConfig): Router {
     const { project, etag } = await store.save(req.params.id, req.body, req.header('If-Match'));
     res.setHeader('ETag', `"${etag}"`).json(project);
   });
+  /** The project as the editor holds it, saved to history/ before an agent run (never touches project.json). */
+  r.post('/api/projects/:id/snapshot', json, async (req, res) => {
+    res.status(201).json({ name: await store.snapshot(req.params.id, req.body) });
+  });
   r.delete('/api/projects/:id', async (req, res) => {
     await store.remove(req.params.id);
     res.status(204).end();

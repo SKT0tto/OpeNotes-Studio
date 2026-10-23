@@ -1,14 +1,16 @@
 /** Script editor: scenes and lines. Select a line to edit it in place; drag lines to reorder; add / copy / delete with undo. */
-import { useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CompactCatalog } from '@shared/schema/assets';
 import type { Beat } from '@shared/schema/project';
 import type { CompiledProject } from '@shared/timeline/types';
 import type { Player } from '../../engine/Player';
 import { addBeatAfter, addSceneAfter, copyBeat, deleteBeat, deleteScene, editBeat, editScene, reorderBeat, reorderScene } from '../../store/actions';
+import { modsOf, pickBeat } from '../../store/beatPick';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { defaultModelOf } from '../castModel';
 import { LockIcon } from '../ui';
+import { MarqueeBand, useMarquee } from '../useMarquee';
 
 const KIND_LABEL: Record<Beat['kind'], string> = { dialogue: '对白', narration: '旁白', action: '动作', pause: '停顿', establishing: '空镜', silent: '无声', empty: '空景' };
 const KINDS = Object.keys(KIND_LABEL) as Beat['kind'][];
@@ -16,11 +18,33 @@ const KINDS = Object.keys(KIND_LABEL) as Beat['kind'][];
 export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: number) => void; playerRef: RefObject<Player | null>; compiled: CompiledProject | null; catalog: CompactCatalog | null }) {
   const project = useProject((s) => s.project);
   const selection = useProject((s) => s.selection);
+  const hoverBeat = useUi((s) => s.hoverBeat);
+  const cards = useUi((s) => s.cards);
+  const multi = cards.length > 1 ? cards : null;
   const [over, setOver] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+  // A press inside the open line editor must select text, not start dragging the line: the rows are not draggable while that press lasts.
+  const [editPress, setEditPress] = useState(false);
+  useEffect(() => {
+    if (!editPress) return;
+    const end = () => setEditPress(false);
+    window.addEventListener('mouseup', end, true);
+    return () => window.removeEventListener('mouseup', end, true);
+  }, [editPress]);
+  const { band } = useMarquee(root, '[data-beat-id]', 'list');
   if (!project) return null;
-  const go = (sceneId: string, beatId: string | null) => {
-    useProject.getState().select({ sceneId, beatId });
+  const go = (sceneId: string, beatId: string | null, e?: React.MouseEvent) => {
+    // Ctrl/Cmd+click toggles a beat in the multi-selection, Shift+click selects a range; only a plain click moves the playhead.
+    const plain = beatId && e ? pickBeat(sceneId, beatId, modsOf(e)) : true;
+    if (!beatId || !e) {
+      useProject.getState().select({ sceneId, beatId });
+      useUi.getState().set({ cards: [] });
+    }
+    if (!plain) {
+      useUi.getState().set({ inspectorTab: 'beat' });
+      return;
+    }
     useUi.getState().set({ inspectorTab: beatId ? 'beat' : 'scene' });
     const sc = playerRef.current?.compiled.scenes.find((s) => s.id === sceneId);
     const t = beatId ? (sc?.beats.find((b) => b.id === beatId)?.start ?? -1) + 0.01 : sc ? sc.start + 0.01 : undefined;
@@ -35,7 +59,8 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
   };
 
   return (
-    <div className="script" data-testid="script-editor">
+    <div className="script" ref={root} data-testid="script-editor">
+      <MarqueeBand band={band} />
       {project.scenes.length === 0 ? (
         <div className="empty-state" data-testid="outline-empty">
           <p className="empty-title">这个项目还没有场景</p>
@@ -63,11 +88,13 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
                   const held = compiled?.scenes.find((x) => x.id === s.id)?.beats.find((x) => x.id === b.id)?.shotHeld;
                   const who = project.cast.find((c) => c.id === b.speakerId)?.displayName;
                   const sel = selection.beatId === b.id;
+                  const msel = !!multi && multi.includes(b.id);
                   return (
                     <li
                       key={b.id}
                       className={`o-item${over === b.id && dragging && dragging !== b.id ? ' drop' : ''}${dragging === b.id ? ' dragging' : ''}`}
-                      draggable
+                      draggable={!editPress}
+                      onMouseDown={(e) => { if ((e.target as Element).closest('.o-edit')) setEditPress(true); }}
                       onDragStart={(e) => {
                         e.dataTransfer.setData('text/beat', b.id);
                         e.dataTransfer.effectAllowed = 'move';
@@ -91,8 +118,9 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
                         if (id && id !== b.id) reorderBeat(s.id, id, bi);
                       }}
                       data-testid={`outline-item-${b.id}`}
+                      data-beat-id={b.id}
                     >
-                      <button className={`o-beat${sel ? ' sel' : ''}`} onClick={() => go(s.id, b.id)} data-testid={`outline-beat-${b.id}`}>
+                      <button className={`o-beat${sel ? ' sel' : ''}${msel ? ' msel' : ''}${hoverBeat === b.id ? ' hl' : ''}`} ref={hoverBeat === b.id ? (el) => el?.scrollIntoView?.({ block: 'nearest' }) : undefined} onClick={(e) => go(s.id, b.id, e)} aria-pressed={msel || undefined} data-multi={msel ? 'true' : undefined} data-testid={`outline-beat-${b.id}`}>
                         <span className="o-grip" aria-hidden>⋮⋮</span>
                         <span className="o-who">{b.kind === 'pause' ? '停顿' : (who ?? (b.kind === 'dialogue' ? '—' : KIND_LABEL[b.kind]))}</span>
                         <span className="o-text">{b.text || '—'}</span>

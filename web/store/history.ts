@@ -16,6 +16,8 @@ export interface Step {
 
 export interface EditOptions {
   coalesce?: string;
+  /** Skip the lock gate: only for an edit that opens the locks it touches in the same step (the user confirmed it in the AI assistant card). */
+  bypassLocks?: boolean;
 }
 
 export class History<S extends Record<string, unknown>> {

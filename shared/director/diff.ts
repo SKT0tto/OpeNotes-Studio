@@ -8,8 +8,9 @@ import type { Beat, Scene, Track } from '../schema/project';
 import { EMOTION_LABEL, MOVE_LABEL, SHOT_LABEL, TRANSITION_LABEL, expressionLabel, motionLabel } from '../catalog/labels';
 import { SCOPES, SCOPE_LABEL, type ScopeName } from './scope';
 
-export type DiffScope = Exclude<ScopeName, 'scene'> | 'structure';
-export const DIFF_LABEL: Record<DiffScope, string> = { ...SCOPE_LABEL, structure: '台词结构 / 转场 / 音乐' };
+/** `rhythm` (beat pacing: beat.style rhythm overrides) is its own lockable unit, separate from the camera; no regeneration scope writes it. */
+export type DiffScope = Exclude<ScopeName, 'scene'> | 'structure' | 'rhythm';
+export const DIFF_LABEL: Record<DiffScope, string> = { ...SCOPE_LABEL, structure: '台词结构 / 转场 / 音乐', rhythm: '节奏' };
 
 export interface DiffItem {
   scope: DiffScope;
@@ -97,6 +98,8 @@ export function diffScene(old: Scene, fresh: Scene, namesIn: DiffNames | ((id: s
       items.push({ scope: 'structure', where: where(f.id), field: '台词', before: `${o.speakerId ? `${castName(o.speakerId)}：` : ''}${o.text.slice(0, 18)}`, after: `${f.speakerId ? `${castName(f.speakerId)}：` : ''}${f.text.slice(0, 18)}`, beatId: f.id });
     }
     if (shotText(o.shot) !== shotText(f.shot) || o.cutIn !== f.cutIn) items.push({ scope: 'camera', where: where(f.id), field: '景别 / 切入', before: `${shotText(o.shot)} ${CUT_LABEL[o.cutIn] ?? o.cutIn}`, after: `${shotText(f.shot)} ${CUT_LABEL[f.cutIn] ?? f.cutIn}`, beatId: f.id });
+    const rh = (b: Beat) => Object.entries(b.style.overrides).filter(([k]) => k.startsWith('rhythm.')).sort(([x], [y]) => (x < y ? -1 : 1)).map(([k, v]) => `${k.slice(7)}=${String(v)}`).join(' ') || '默认';
+    if (rh(o) !== rh(f) || JSON.stringify(o.duration) !== JSON.stringify(f.duration)) items.push({ scope: 'rhythm', where: where(f.id), field: '节奏 / 时长', before: `${rh(o)}${o.duration.mode === 'fixed' ? ` 固定${o.duration.seconds}s` : ''}`, after: `${rh(f)}${f.duration.mode === 'fixed' ? ` 固定${f.duration.seconds}s` : ''}`, beatId: f.id });
     if ((o.emotion ?? '') !== (f.emotion ?? '')) items.push({ scope: 'performance', where: where(f.id), field: '情绪', before: o.emotion ? (EMOTION_LABEL[o.emotion] ?? o.emotion) : '无', after: f.emotion ? (EMOTION_LABEL[f.emotion] ?? f.emotion) : '无', beatId: f.id });
   }
   for (const o of old.beats) if (!freshIds.has(o.id)) items.push({ scope: 'structure', where: '原第?句', field: '删除台词', before: o.text.slice(0, 24), after: '—', beatId: o.id });

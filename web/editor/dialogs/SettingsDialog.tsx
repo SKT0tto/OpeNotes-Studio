@@ -1,9 +1,15 @@
 /** AI settings: provider switch, model / base URL / key (write-only, shown masked), connection test. */
 import { useCallback, useEffect, useState } from 'react';
-import type { LlmProviderId, PublicLlmSettings } from '@shared/schema/settings';
+import { VISION_MODES, type LlmProviderId, type PublicLlmSettings, type VisionMode } from '@shared/schema/settings';
 import { fetchLlmSettings, saveLlmSettings, testLlm, type TestOutcome } from '../../llmApi';
 import { Modal } from '../ui';
 
+const VISION_LABEL: Record<VisionMode, string> = {
+  auto: '自动：主模型能看图就用它，否则用下面的视觉模型',
+  main: '总是把图片交给主模型',
+  separate: '用下面单独的视觉模型（它把图片描述成文字）',
+  off: '关闭（助手不看截图和附图）',
+};
 const LABEL: Record<LlmProviderId, string> = { anthropic: 'Claude（Anthropic）', openai: 'OpenAI 兼容（LM Studio / DeepSeek …）', fixture: '测试回放（非 AI）' };
 
 export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; onChanged?: (s: PublicLlmSettings) => void }) {
@@ -14,6 +20,10 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
   const [oBase, setOBase] = useState('');
   const [oModel, setOModel] = useState('');
   const [oKey, setOKey] = useState('');
+  const [vMode, setVMode] = useState<VisionMode>('auto');
+  const [vBase, setVBase] = useState('');
+  const [vModel, setVModel] = useState('');
+  const [vKey, setVKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TestOutcome | null>(null);
@@ -24,6 +34,9 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
     setAModel(v.anthropic.model);
     setOBase(v.openai.baseUrl);
     setOModel(v.openai.model);
+    setVMode(v.vision.mode);
+    setVBase(v.vision.baseUrl);
+    setVModel(v.vision.model);
     onChanged?.(v);
   }, [onChanged]);
 
@@ -39,9 +52,11 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
         provider,
         anthropic: { model: aModel, ...(aKey.trim() ? { apiKey: aKey.trim() } : {}) },
         openai: { baseUrl: oBase, model: oModel, ...(oKey.trim() ? { apiKey: oKey.trim() } : {}) },
+        vision: { mode: vMode, baseUrl: vBase, model: vModel, ...(vKey.trim() ? { apiKey: vKey.trim() } : {}) },
       });
       setAKey('');
       setOKey('');
+      setVKey('');
       adopt(v);
       return v;
     } catch (e) {
@@ -50,8 +65,8 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
     }
   };
 
-  const clearKey = async (which: 'anthropic' | 'openai') => {
-    const v = await saveLlmSettings(which === 'anthropic' ? { anthropic: { apiKey: null } } : { openai: { apiKey: null } });
+  const clearKey = async (which: 'anthropic' | 'openai' | 'vision') => {
+    const v = await saveLlmSettings(which === 'anthropic' ? { anthropic: { apiKey: null } } : which === 'openai' ? { openai: { apiKey: null } } : { vision: { apiKey: null } });
     adopt(v);
   };
 
@@ -66,7 +81,7 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
     setBusy(false);
   };
 
-  const keyInfo = (k: PublicLlmSettings['anthropic'], which: 'anthropic' | 'openai') =>
+  const keyInfo = (k: PublicLlmSettings['anthropic'], which: 'anthropic' | 'openai' | 'vision') =>
     k.hasKey ? (
       <span className="hint" data-testid={`${which}-key-state`}>
         已填写 key <code>{k.mask}</code>（{k.source === 'env' ? '来自环境变量 / .env' : '已保存在服务端'}）
@@ -110,6 +125,27 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
               <div className="srow"><span /> {keyInfo(s.openai, 'openai')}</div>
             </>
           )}
+          <details className="settings-vision" data-testid="vision-settings" open={vMode !== 'auto' || !!vBase}>
+            <summary>看图（AI 助手的截图与附图）</summary>
+            <label className="srow">
+              <span>方式</span>
+              <select value={vMode} onChange={(e) => setVMode(e.target.value as VisionMode)} data-testid="vision-mode">
+                {VISION_MODES.map((m) => <option key={m} value={m}>{VISION_LABEL[m]}</option>)}
+              </select>
+            </label>
+            {(vMode === 'auto' || vMode === 'separate') && (
+              <>
+                <label className="srow"><span>视觉模型地址</span><input className="text" placeholder="OpenAI 兼容，例如 http://localhost:1234/v1" value={vBase} onChange={(e) => setVBase(e.target.value)} data-testid="vision-base" /></label>
+                <label className="srow"><span>视觉模型</span><input className="text" placeholder="能看图的模型名" value={vModel} onChange={(e) => setVModel(e.target.value)} data-testid="vision-model" /></label>
+                <label className="srow">
+                  <span>API Key（可空）</span>
+                  <input className="text" type="password" autoComplete="off" placeholder="本地服务无需填写" value={vKey} onChange={(e) => setVKey(e.target.value)} data-testid="vision-key" />
+                </label>
+                <div className="srow"><span /> {keyInfo(s.vision, 'vision')}</div>
+              </>
+            )}
+            <p className="hint">主模型能看图时（例如 deepseek-flash）不必填写视觉模型。都没有时助手照常工作，只是看不到截图和你附的图。</p>
+          </details>
           {provider === 'fixture' && <p className="hint">仅测试环境：回放 tests/fixtures/llm 中录制的模型输出，不调用任何模型。</p>}
           {error && <p className="bad" data-testid="settings-error">{error}</p>}
           {result && (

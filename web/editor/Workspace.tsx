@@ -1,5 +1,6 @@
 /** The editing workspace: top bar, left panel (script / assets), live preview or storyboard, inspector, timeline, status bar. */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { newProjectId } from '@shared/project/blank';
 import type { Project } from '@shared/schema/project';
 import type { Health } from '../api';
@@ -11,17 +12,29 @@ import { CameraSystemSwitch } from './CameraSystemSwitch';
 import { downloadProject } from './io';
 import { AssetBrowser } from './panels/AssetBrowser';
 import { SettingsDialog } from './dialogs/SettingsDialog';
+import { AgentPanel } from './panels/AgentPanel';
 import { AiPanel, type CameraGenerationRequest } from './panels/AiPanel';
+import { useAgent } from '../store/agentStore';
 import { Inspector } from './panels/Inspector';
 import { Outline } from './panels/Outline';
 import { Preview } from './panels/Preview';
 import { Storyboard } from './storyboard/Storyboard';
 import { Timeline } from './timeline/Timeline';
-import { Modal, Splitter, usePanelSize } from './ui';
+import { Dock, type DockController } from './dock/Dock';
+import { LayoutMenu } from './dock/LayoutMenu';
+import { type PanelId } from './dock/layoutModel';
+import { Modal } from './ui';
 import { useCatalog } from './useCatalog';
 import { useRenderState } from './useRenderState';
 import { SHORTCUTS, useShortcuts } from './useShortcuts';
 
+const AGENT_OPEN_KEY = 'studio.agent.open';
+const readAgentOpen = (): boolean => {
+  try { return localStorage.getItem(AGENT_OPEN_KEY) === '1'; } catch { return false; }
+};
+const writeAgentOpen = (on: boolean): void => {
+  try { localStorage.setItem(AGENT_OPEN_KEY, on ? '1' : '0'); } catch { /* storage may be blocked; the state just is not remembered */ }
+};
 const SAVE_TEXT = { saved: '已保存', dirty: '有未保存的更改', saving: '保存中…', error: '保存失败' } as const;
 
 /** What the preview plays: the project without the tracks that are muted (or all but the soloed ones). The project itself is untouched. */
@@ -46,11 +59,39 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   const preview = useMemo(() => previewOf(project, muted, solo), [project, muted, solo]);
   const host = usePlayerHost(health, preview, project.id);
   const { state } = useRenderState(host.playerRef, host.ready);
-  const [leftW, setLeftW] = usePanelSize('left', 320, 220, 640);
-  const [rightW, setRightW] = usePanelSize('right', 340, 260, 560);
-  const [bottomH, setBottomH] = usePanelSize('bottom2', 290, 120, 560);
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [dock, setDock] = useState<DockController | null>(null);
+  const [present, setPresent] = useState<ReadonlySet<PanelId>>(() => new Set());
+  const [wantAgent] = useState(readAgentOpen);
+  const agentOpen = present.has('agent');
+  const leftOpen = present.has('sidebar');
+  const setAgentOpen = (on: boolean) => {
+    if (on) dock?.show('agent');
+    else dock?.hide('agent');
+  };
+  // The stage's DOM host belongs to the workspace, not to a dock panel: the Pixi application is built once and survives every layout change.
+  const [stageHost] = useState(() => {
+    const d = document.createElement('div');
+    d.className = 'center-pane';
+    return d;
+  });
+  const onCenter = useCallback((id: 'stage' | 'storyboard') => {
+    const next = id === 'stage' ? 'preview' : 'storyboard';
+    if (useUi.getState().centerView !== next) useUi.getState().set({ centerView: next });
+  }, []);
+  // The assistant's open flag is remembered on its own too (older versions and the tests read it).
+  useEffect(() => {
+    if (dock) writeAgentOpen(agentOpen);
+  }, [dock, agentOpen]);
+  // The 预览 / 分镜 buttons activate the matching dock tab (adding the storyboard if it was closed); closing the storyboard returns to the preview.
+  useEffect(() => {
+    if (!dock) return;
+    const want = centerView === 'storyboard' ? 'storyboard' : 'stage';
+    if (!dock.has(want)) dock.show(want);
+    else dock.activate(want);
+  }, [dock, centerView]);
+  useEffect(() => {
+    if (dock && centerView === 'storyboard' && !present.has('storyboard')) useUi.getState().set({ centerView: 'preview' });
+  }, [dock, present, centerView]);
   const [tab, setTab] = useState<'script' | 'assets' | 'ai'>('script');
   const [notice, setNotice] = useState<string | null>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraGenerationRequest | null>(null);
@@ -74,7 +115,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
       },
     };
     setCameraRequest(request);
-    setLeftOpen(true);
+    dock?.show('sidebar');
     setTab('ai');
   };
   // The travel notice belongs to one explicit switch; never carry it across mounts or projects.
@@ -83,6 +124,30 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
     return () => useUi.getState().set({ travelNotice: null });
   }, [project.id]);
   useShortcuts(host, project.settings.fps);
+  // Ctrl+K: open the AI assistant panel and focus its input; pressed again while the assistant's input has the focus, it closes the panel (the selection stays as it is).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (agentOpen && (document.activeElement as HTMLElement | null)?.dataset.testid === 'agent-input') {
+          setAgentOpen(false);
+          (document.activeElement as HTMLElement | null)?.blur?.();
+          return;
+        }
+        setAgentOpen(true);
+        useAgent.getState().focusInput();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+  const focusBeat = (sceneId: string, beatId: string | undefined) => {
+    useProject.getState().select({ sceneId, beatId: beatId ?? null });
+    useUi.getState().set({ cards: [] });
+    const sc = host.playerRef.current?.compiled.scenes.find((s) => s.id === sceneId);
+    const t = beatId ? (sc?.beats.find((b) => b.id === beatId)?.start ?? -1) + 0.01 : sc ? sc.start + 0.01 : undefined;
+    if (t !== undefined && t > 0) host.seek(t);
+  };
 
   // The inspector follows the playhead.
   const sceneIndex = host.info.scene;
@@ -123,6 +188,44 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   const problems = host.reloadError ?? saveError;
   const set = useUi.getState().set;
 
+  const renderPanel = (id: PanelId, visible: boolean): ReactNode => {
+    switch (id) {
+      case 'sidebar':
+        return (
+          <div className="ws-left" data-testid="left-panel">
+            <nav className="tabs">
+              <button className={tab === 'script' ? 'active' : ''} onClick={() => selectTab('script')} data-testid="tab-script">剧本</button>
+              <button className={tab === 'assets' ? 'active' : ''} onClick={() => selectTab('assets')} data-testid="tab-assets">素材</button>
+              <button className={tab === 'ai' ? 'active' : ''} onClick={() => selectTab('ai')} data-testid="tab-ai">AI 导演</button>
+            </nav>
+            <div className="panel-scroll">{tab === 'script' ? <Outline seek={host.seek} playerRef={host.playerRef} compiled={host.compiled} catalog={catalog} /> : tab === 'ai' ? <AiPanel cameraRequest={cameraRequest} onBusyChange={setAiBusy} /> : <AssetBrowser />}</div>
+          </div>
+        );
+      case 'storyboard':
+        return <div className="sb-dock"><Storyboard project={project} host={host} active={visible} /></div>;
+      case 'agent':
+        return (
+          <div className="ws-agent" data-testid="agent-dock">
+            <div className="panel-scroll"><AgentPanel onFocusBeat={focusBeat} /></div>
+          </div>
+        );
+      case 'inspector':
+        return (
+          <div className="ws-right" data-testid="right-panel">
+            <div className="panel-scroll"><Inspector catalog={catalog} compiled={host.compiled} state={state} t={state?.t ?? host.info.t} /></div>
+          </div>
+        );
+      case 'timeline':
+        return (
+          <section className="ws-bottom" data-testid="bottom-panel">
+            <Timeline project={project} host={host} catalog={catalog} />
+          </section>
+        );
+      default:
+        return null; // the stage is attached by the dock itself
+    }
+  };
+
   return (
     <div className="ws" data-testid="workspace">
       <header className="ws-top">
@@ -147,45 +250,16 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         {notice && <span className="notice" data-testid="notice">{notice}</span>}
         <button className="btn" onClick={() => setSettingsOpen(true)} data-testid="btn-settings">AI 设置</button>
         <button className="btn" onClick={() => set({ helpOpen: true })} data-testid="btn-help" title="快捷键（?）">？ 快捷键</button>
-        <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => { if (leftOpen) cameraRequest?.consume(); setLeftOpen(!leftOpen); }} aria-pressed={leftOpen} title="左栏">▌◧</button>
-        <button className={`btn toggle${rightOpen ? ' on' : ''}`} onClick={() => setRightOpen(!rightOpen)} aria-pressed={rightOpen} title="检查器">◨▐</button>
+        <button className={`btn toggle${agentOpen ? ' on' : ''}`} onClick={() => { setAgentOpen(!agentOpen); if (!agentOpen) useAgent.getState().focusInput(); }} aria-pressed={agentOpen} data-testid="btn-agent" title="AI 助手（Ctrl+K）">AI 助手</button>
+        <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => { if (leftOpen) cameraRequest?.consume(); dock?.toggle('sidebar'); }} aria-pressed={leftOpen} title="左栏">▌◧</button>
+        <button className={`btn toggle${present.has('inspector') ? ' on' : ''}`} onClick={() => dock?.toggle('inspector')} aria-pressed={present.has('inspector')} title="检查器">◨▐</button>
+        <LayoutMenu dock={dock} present={present} />
       </header>
 
       <div className="ws-mid">
-        {leftOpen && (
-          <>
-            <aside className="ws-left" style={{ width: leftW }} data-testid="left-panel">
-              <nav className="tabs">
-                <button className={tab === 'script' ? 'active' : ''} onClick={() => selectTab('script')} data-testid="tab-script">剧本</button>
-                <button className={tab === 'assets' ? 'active' : ''} onClick={() => selectTab('assets')} data-testid="tab-assets">素材</button>
-                <button className={tab === 'ai' ? 'active' : ''} onClick={() => selectTab('ai')} data-testid="tab-ai">AI 导演</button>
-              </nav>
-              <div className="panel-scroll">{tab === 'script' ? <Outline seek={host.seek} playerRef={host.playerRef} compiled={host.compiled} catalog={catalog} /> : tab === 'ai' ? <AiPanel cameraRequest={cameraRequest} onBusyChange={setAiBusy} /> : <AssetBrowser />}</div>
-            </aside>
-            <Splitter axis="x" label="调整左栏宽度" onDelta={(d) => setLeftW(leftW + d)} />
-          </>
-        )}
-        <main className="ws-center">
-          <div className={`center-pane${centerView === 'storyboard' ? ' behind' : ''}`} aria-hidden={centerView === 'storyboard'}>
-            <Preview host={host} project={project} catalog={catalog} />
-          </div>
-          {centerView === 'storyboard' && <Storyboard project={project} host={host} active />}
-        </main>
-        {rightOpen && (
-          <>
-            <Splitter axis="x" label="调整检查器宽度" onDelta={(d) => setRightW(rightW - d)} />
-            <aside className="ws-right" style={{ width: rightW }} data-testid="right-panel">
-              <div className="panel-title">检查器</div>
-              <div className="panel-scroll"><Inspector catalog={catalog} compiled={host.compiled} state={state} t={state?.t ?? host.info.t} /></div>
-            </aside>
-          </>
-        )}
+        <Dock render={renderPanel} stageHost={stageHost} agentWanted={wantAgent} onController={setDock} onPresent={setPresent} onCenter={onCenter} />
       </div>
-
-      <Splitter axis="y" label="调整底部高度" onDelta={(d) => setBottomH(bottomH - d)} />
-      <section className="ws-bottom" style={{ height: bottomH }} data-testid="bottom-panel">
-        <Timeline project={project} host={host} catalog={catalog} />
-      </section>
+      {createPortal(<Preview host={host} project={project} catalog={catalog} />, stageHost)}
       <footer className="ws-status">
         <span>{project.scenes.length} 个场景 · {total} 句</span>
         <span>选中：{selection.sceneId ?? '—'}{selection.beatId ? ` / ${selection.beatId}` : ''}{selection.castId ? ` / ${selection.castId}` : ''}{keySel.length > 0 ? ` · ${keySel.length} 个关键帧` : ''}</span>

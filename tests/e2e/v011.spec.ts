@@ -90,20 +90,26 @@ test.describe('editor preview keeps the project frame', () => {
     });
   }
 
-  test('dragging the panel splitters and the timeline splitter keeps the shape', async () => {
+  test('dragging every dock divider (side panels and the timeline) keeps the shape', async () => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    for (const [label, dx, dy] of [['调整左栏宽度', 160, 0], ['调整左栏宽度', -300, 0], ['调整检查器宽度', -150, 0], ['调整检查器宽度', 260, 0], ['调整底部高度', 0, -180], ['调整底部高度', 0, 320]] as const) {
-      const s = page.getByRole('separator', { name: label });
-      const b = (await s.boundingBox())!;
-      const x = b.x + b.width / 2;
-      const y = b.y + b.height / 2;
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      await page.mouse.move(x + dx / 2, y + dy / 2, { steps: 4 });
-      await page.mouse.move(x + dx, y + dy, { steps: 4 });
-      await page.mouse.up();
-      await page.waitForTimeout(250);
-      await checkEditorShape(page);
+    const sashes = page.locator('.dock-root .dv-sash');
+    const n = await sashes.count();
+    expect(n).toBeGreaterThanOrEqual(3); // left | stage | inspector, and the timeline above the bottom
+    for (let i = 0; i < n; i++) {
+      for (const sign of [1, -1, 1]) {
+        const b = (await sashes.nth(i).boundingBox())!;
+        const vertical = b.height > b.width; // a vertical divider moves left / right
+        const x = b.x + b.width / 2;
+        const y = b.y + b.height / 2;
+        const d = sign * 140;
+        await page.mouse.move(x, y);
+        await page.mouse.down();
+        await page.mouse.move(x + (vertical ? d / 2 : 0), y + (vertical ? 0 : d / 2), { steps: 4 });
+        await page.mouse.move(x + (vertical ? d : 0), y + (vertical ? 0 : d), { steps: 4 });
+        await page.mouse.up();
+        await page.waitForTimeout(250);
+        await checkEditorShape(page);
+      }
     }
     await page.screenshot({ path: '.verify/v011-editor-dragged.png' });
   });

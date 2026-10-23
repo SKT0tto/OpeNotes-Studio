@@ -72,6 +72,8 @@ export interface SceneDirectionInput {
   };
   /** Only on a span that is NOT the last of its scene: the scene goes on after it, so its last beat must not close the scene. */
   sceneContinues?: { note: string; nextParagraph: number };
+  /** Only on a camera regeneration asked for by the agent / the user: a preference for the shots (absent otherwise, so the request bytes and the cache key of every other run stay as they were). */
+  guidance?: { note: string; text: string };
   fixedBeats: Array<{ keepId: string; paragraph: number; kind: string; speaker: string | null; text: string; lockedFields?: string[] }>;
   mode: { scopes: string[]; focusBeatIds?: string[] };
 }

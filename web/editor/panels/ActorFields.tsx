@@ -5,6 +5,7 @@
  */
 import { costumeLabelZh, expressionLabel, motionLabel } from '@shared/catalog/labels';
 import type { CompactCatalog } from '@shared/schema/assets';
+import { HEAD_DOWN, HEAD_UP } from '@shared/staging/facing';
 import type { Project, Scene } from '@shared/schema/project';
 import type { RenderState } from '@shared/timeline/types';
 import { keyNear, lockKey, positionAt, setSlotDepth, writeKey } from '../../store/actions';
@@ -12,7 +13,7 @@ import { SliderField, Row } from '../ui';
 import { useModelEntry } from '../useModel';
 import { useProject } from '../../store/projectStore';
 
-type Turn = { mode: 'target'; target: string } | { mode: 'angle'; yaw: number; pitch?: number };
+type Turn = { mode: 'target'; target: string; pitch?: number } | { mode: 'angle'; yaw: number; pitch?: number };
 type Gaze = { target: string } | { x: number; y: number };
 
 export interface ActorCtx {
@@ -67,10 +68,29 @@ export function ActorControls({ ctx, compact = false }: { ctx: ActorCtx; compact
             <option value="">{v ? '（—）' : '自动'}</option>
             <option value="camera">看向镜头</option>
             <option value="away">背向对方</option>
+            {channel === 'head' && sel === 'auto' && <option value="auto">自动朝向</option>}
             {others.map((id) => <option key={id} value={id}>看向 {nameOf(project, id)}</option>)}
             <option value="angle">指定角度</option>
           </select>
         </Row>
+        {channel === 'head' && (
+          <Row label="头部俯仰" testid="actor-row-head-pitch" {...meta('head')}>
+            <select
+              value={(v?.pitch ?? 0) < -0.05 ? 'down' : (v?.pitch ?? 0) > 0.05 ? 'up' : 'level'}
+              data-testid="actor-head-pitch"
+              title="低头 / 抬头（ParamAngleY）；保留当前的朝向"
+              onChange={(e) => {
+                const pitch = e.target.value === 'down' ? HEAD_DOWN : e.target.value === 'up' ? HEAD_UP : 0;
+                const facing = v ? (v.mode === 'angle' ? { mode: 'angle' as const, yaw: v.yaw } : { mode: 'target' as const, target: v.target }) : { mode: 'target' as const, target: 'auto' };
+                put('head', { ...facing, ...(pitch !== 0 ? { pitch } : {}) }, '设置头部俯仰', { duration: 0.3 });
+              }}
+            >
+              <option value="level">平视</option>
+              <option value="down">低头</option>
+              <option value="up">抬头</option>
+            </select>
+          </Row>
+        )}
         {!compact || sel === 'angle' ? (
           <Row label="">
             <SliderField

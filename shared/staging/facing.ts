@@ -9,6 +9,9 @@ import type { MotionEntry } from '../schema/assets';
 
 export const HEAD_ANGLE_RANGE = 30;
 export const BODY_ANGLE_RANGE = 10;
+/** Head pitch intents (-1 = down .. 1 = up, on ParamAngleY) of 低头 / 抬头 in the inspector and the agent. */
+export const HEAD_DOWN = -0.6;
+export const HEAD_UP = 0.5;
 /** Share of the head residual that the body follows (body range is a third of the head range). */
 export const BODY_FOLLOW = 0.8;
 
