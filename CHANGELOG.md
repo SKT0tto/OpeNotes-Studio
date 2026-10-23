@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.6.0 — major update
+## 0.6.0
+
+**Major update.**
 
 Version 0.5.0 was skipped on purpose: this release is a big step, so it jumps straight to 0.6.0. It adds an AI assistant that edits your performance from plain-language instructions, a vision-capable assistant that checks its own work against the picture, and a VS Code-style dockable layout. Classic camera output and existing projects are unchanged.
 
