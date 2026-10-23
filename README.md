@@ -16,6 +16,8 @@ Website: <https://skt0tto.github.io/OpeNotes-Studio/> (a static landing page liv
 - One-click generation from a `.txt` / `.md` novel (UTF-8 / GBK detected, chapters, cancel and resume, stats)
 - AI director (Claude, OpenAI-compatible: DeepSeek, LM Studio, vLLM) and a labelled non-AI rule director
 - Editor: script, inspector, stage tools, timeline, storyboard, field locks, undo/redo, diff view with per-scope accept/reject
+- AI assistant: tell the AI in plain language what to change (text, expressions, timing, effects, background, camera, locks); it shows every change as an undoable card, respects locks, and can look at the stage and your screenshots
+- VS Code-style dockable layout (drag, dock, resize, maximise, presets) and multi-select / box-select of lines
 - Original-style staging (framing, two-shot / group layouts, dialogue box) and a player at `/play/<id>`
 - Asset browser and catalog indexer; first-run setup wizard (Cubism Core, asset import, AI key); one-click import of your own asset folder / zip with normalisation, checksums, duplicate detection
 - Project export/import (`.openotes.json`, old `.ournotes.json` files still import); exports hold asset ids only, never asset files
