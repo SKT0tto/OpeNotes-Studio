@@ -114,6 +114,7 @@ test('export, delete, import gives the identical project; a missing background i
   expect(envelope.refs.backgrounds).toContain('adv_bkg_stage_000153');
 
   await page.getByTestId('btn-projects').click();
+  await page.getByTestId('hub-all').click(); // the full project list lives in the 全部项目 overlay
   page.once('dialog', (d) => void d.accept());
   await page.locator(`[data-project-id="${id}"]`).getByTestId('btn-delete').click();
   await expect(page.locator(`[data-project-id="${id}"]`)).toHaveCount(0);
@@ -157,6 +158,9 @@ test('home: start cards, project cards with a cover and counts, search, batch de
   const b = await newFromDemo(page, '首页乙');
   await page.getByTestId('btn-projects').click();
   for (const t of ['btn-ai-breakdown', 'btn-new', 'btn-from-demo', 'btn-import']) await expect(page.getByTestId(t)).toBeVisible();
+  await expect(page.getByTestId('hub-continue')).toBeVisible();
+  await expect(page.getByTestId('recent-item').first()).toBeVisible();
+  await page.getByTestId('hub-all').click(); // search, grid and batch delete live in the 全部项目 overlay
   const card = page.locator(`[data-project-id="${a}"]`);
   await expect(card).toContainText('首页甲');
   await expect(card).toContainText('3 场景');
