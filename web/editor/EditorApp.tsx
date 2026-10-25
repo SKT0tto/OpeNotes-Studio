@@ -14,7 +14,8 @@ import { SettingsDialog } from './dialogs/SettingsDialog';
 import { SetupWizard, useCoreProbe } from '../setup/SetupWizard';
 import { Workspace } from './Workspace';
 import { useCatalog } from './useCatalog';
-import { HubCharacter, pickHubModel } from './HubCharacter';
+import { HubCharacter, HubCharacterMenu, HubModelPicker, useHubCharacterPrefs } from './HubCharacter';
+import { DEFAULT_PLACEMENT, resolveHubModel } from './hubCharacterLogic';
 
 const when = (t: number) => new Date(t).toLocaleString('zh-CN', { hour12: false });
 const ago = (t: number) => {
@@ -75,20 +76,8 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
   const [envOpen, setEnvOpen] = useState(false);
   const [seed] = useState(() => Math.random());
   const wide = useMedia('(min-width: 721px)');
-  // the most recent project's first cast member picks the title-screen character
-  const lastId = list ? ([...list].sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id ?? null) : undefined;
-  const [lastCast, setLastCast] = useState<{ id: string; key: string | null } | null>(null);
-  useEffect(() => {
-    if (project || !lastId) return;
-    let live = true;
-    loadProject(lastId).then(
-      (r) => live && setLastCast({ id: lastId, key: r.project.cast[0]?.characterKey ?? null }),
-      () => live && setLastCast({ id: lastId, key: null }),
-    );
-    return () => {
-      live = false;
-    };
-  }, [project, lastId]);
+  const [charPrefs, setCharPrefs] = useHubCharacterPrefs();
+  const [pickerOpen, setPickerOpen] = useState(false);
   useEffect(() => {
     if (!allOpen && !envOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -195,9 +184,9 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
   const last = recent[0] ?? null;
   const scenes = catalog?.backgrounds.filter((b) => (b.labels?.category ?? b.category) === 'scene') ?? [];
   const stageBg = recentCover ?? scenes[Math.floor(seed * scenes.length)]?.url;
-  const castReady = lastId === null || (lastId !== undefined && lastCast?.id === lastId);
-  const modelId = catalog && castReady ? pickHubModel(catalog, lastId ? (lastCast?.key ?? null) : null) : null;
-  const covered = allOpen || aiOpen || settingsOpen || wizard !== null || imp !== null;
+  const modelId = catalog ? resolveHubModel(catalog, charPrefs.model) : null;
+  const covered = allOpen || aiOpen || settingsOpen || pickerOpen || wizard !== null || imp !== null;
+  const placement = { x: charPrefs.x, y: charPrefs.y, scale: charPrefs.scale };
   const newBlank = () => void make(blankProject(title.trim() || '未命名项目'));
 
   const card = (p: ProjectSummary, strip: boolean) => {
@@ -214,7 +203,16 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
     <div className={`hub${allOpen ? ' all-open' : ''}`} data-testid="hub">
       <div className="stage-bg" style={stageBg ? { backgroundImage: `url("${stageBg}")` } : undefined} aria-hidden="true" />
       <div className="stage-shade" aria-hidden="true" />
-      {wide && <HubCharacter health={health} modelId={modelId} paused={covered} />}
+      {wide && (
+        <HubCharacter
+          health={health}
+          modelId={modelId}
+          placement={placement}
+          onPlacement={(p) => setCharPrefs({ ...charPrefs, ...p })}
+          onPick={() => setPickerOpen(true)}
+          paused={covered}
+        />
+      )}
 
       <main className="title-screen">
         <section className="title-menu" aria-label="开始">
@@ -327,10 +325,20 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
       <div className="corner-tr">
         {error && <p className="bad hub-msg" data-testid="hub-error">{error}</p>}
         {note && <p className="ok hub-msg">{note}</p>}
+        <div className="corner-row">
+        {wide && catalog && (
+          <HubCharacterMenu
+            hidden={charPrefs.model === null}
+            onPick={() => setPickerOpen(true)}
+            onReset={() => setCharPrefs({ ...charPrefs, ...DEFAULT_PLACEMENT })}
+            onToggle={() => setCharPrefs({ ...charPrefs, model: charPrefs.model === null ? undefined : null })}
+          />
+        )}
         <button className={`env-pill ${pending ? '' : ready === checks.length ? 'ok' : 'warn'}`} onClick={() => setEnvOpen(!envOpen)} aria-expanded={envOpen} aria-controls="hub-env" data-testid="env-pill">
           <span className="env-dot" aria-hidden="true" />
           {pending ? '环境检查中…' : ready === checks.length ? '环境就绪' : `${checks.length - ready} 项待配置`}
         </button>
+        </div>
         <section id="hub-env" className="env-pop" data-testid="env-check" hidden={!envOpen} aria-label="环境检查">
           <h3>环境检查</h3>
           <ul className="env-list">
@@ -409,6 +417,14 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
             </div>
           </section>
         </div>
+      )}
+      {pickerOpen && catalog && (
+        <HubModelPicker
+          catalog={catalog}
+          current={charPrefs.model}
+          onPick={(model) => { setCharPrefs({ ...charPrefs, model }); setPickerOpen(false); }}
+          onClose={() => setPickerOpen(false)}
+        />
       )}
       {aiOpen && <AiBreakdownDialog catalog={catalog} onClose={() => setAiOpen(false)} onCreated={(id) => { setAiOpen(false); history.replaceState(null, '', `/editor/${id}`); }} />}
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
