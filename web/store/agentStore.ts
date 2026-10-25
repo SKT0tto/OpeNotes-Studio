@@ -77,6 +77,7 @@ interface AgentState {
   cancel(): void;
   applyItems(runId: number, ids: number[], opts?: { unlock?: boolean; confirm?: boolean }): void;
   toggle(runId: number, itemId: number, checked: boolean): void;
+  toggleMany(runId: number, itemIds: number[], checked: boolean): void;
   reject(runId: number): void;
   skip(runId: number, itemId: number): void;
   undoRun(runId: number): void;
@@ -218,6 +219,11 @@ export const useAgent = create<AgentState>((set, get) => {
 
     toggle(runId, itemId, checked) {
       patchRun(runId, (r) => ({ ...r, items: r.items.map((i) => (i.id === itemId ? { ...i, checked } : i)) }));
+    },
+
+    toggleMany(runId, itemIds, checked) {
+      const ids = new Set(itemIds);
+      patchRun(runId, (r) => ({ ...r, items: r.items.map((i) => (ids.has(i.id) ? { ...i, checked } : i)) }));
     },
 
     reject(runId) {

@@ -12,6 +12,7 @@ Runtime dependencies (exact versions pinned in `package.json`):
 | zustand | 5.0.15 | MIT | editor state store |
 | immer | 11.1.21 | MIT | immutable edits with patches (undo/redo) |
 | @anthropic-ai/sdk | 0.133.0 | MIT | Claude API client (`server/llm/anthropic.ts`) |
+| quickjs-emscripten | 0.32.0 | MIT (QuickJS, MIT, compiled to WebAssembly) | sandbox of the assistant's `run_script` (`server/agent/sandbox.ts`) |
 | yazl | 3.3.1 | MIT | zip writing for `npm run pack-assets` (depends on `buffer-crc32`, MIT) |
 | yauzl | 3.4.0 | MIT | safe zip reading for asset import (`server/assets/import/zip.ts`); depends on `pend` (MIT) |
 
@@ -35,6 +36,11 @@ Licenses as declared by each package (all permissive: MIT, ISC, BSD-3-Clause, Un
 |---|---|---|
 | @anthropic-ai/sdk | 0.133.0 | MIT |
 | @babel/runtime | 7.29.10 | MIT |
+| @jitl/quickjs-ffi-types | 0.32.0 | MIT |
+| @jitl/quickjs-wasmfile-debug-asyncify | 0.32.0 | MIT |
+| @jitl/quickjs-wasmfile-debug-sync | 0.32.0 | MIT |
+| @jitl/quickjs-wasmfile-release-asyncify | 0.32.0 | MIT |
+| @jitl/quickjs-wasmfile-release-sync | 0.32.0 | MIT |
 | @pixi/colord | 2.9.6 | MIT |
 | @pixi/sound | 6.0.1 | MIT |
 | @stablelib/base64 | 1.0.1 | MIT |
@@ -117,6 +123,8 @@ Licenses as declared by each package (all permissive: MIT, ISC, BSD-3-Clause, Un
 | side-channel-map | 1.0.1 | MIT |
 | side-channel-weakmap | 1.0.2 | MIT |
 | standardwebhooks | 1.1.1 | MIT |
+| quickjs-emscripten | 0.32.0 | MIT |
+| quickjs-emscripten-core | 0.32.0 | MIT |
 | statuses | 2.0.2 | MIT |
 | tiny-lru | 11.4.7 | BSD-3-Clause |
 | toidentifier | 1.0.1 | MIT |

@@ -404,6 +404,13 @@
 .agent-tag.warn { border-color: var(--warn, #c93); color: var(--warn, #c93); }
 .agent-said { white-space: pre-wrap; }
 .agent-group > summary { cursor: pointer; padding: 2px 0; }
+.agent-batch > summary { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.agent-batch-label { font-weight: 600; }
+.agent-batch > .agent-row { margin-left: 16px; }
+.agent-script { margin: 2px 0 4px 16px; }
+.agent-script > summary { cursor: pointer; color: var(--text-2); font-size: var(--fs-label); }
+.agent-script pre { margin: 4px 0; padding: 6px 8px; max-height: 220px; overflow: auto; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--radius-s); font: 12px/1.45 ui-monospace, Consolas, monospace; white-space: pre; }
+.agent-pending-batch > summary { cursor: pointer; padding: 2px 0; }
 .agent-row { display: flex; gap: 6px; align-items: flex-start; padding: 3px 0; border-top: 1px solid var(--line); }
 .agent-row.stale { opacity: .55; }
 .agent-row-body { flex: 1; min-width: 0; font-size: var(--fs-label); }

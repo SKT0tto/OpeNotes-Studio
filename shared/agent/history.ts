@@ -13,8 +13,8 @@ export interface PastRun {
   selection?: string | undefined;
   summary: string;
   question?: { question: string; options: string[] } | null | undefined;
-  applied: Array<Pick<OpRecord, 'id' | 'op' | 'changes'>>;
-  pending: Array<Pick<OpRecord, 'id' | 'op' | 'changes'>>;
+  applied: Array<Pick<OpRecord, 'id' | 'op' | 'changes'> & { group?: OpRecord['group'] }>;
+  pending: Array<Pick<OpRecord, 'id' | 'op' | 'changes'> & { group?: OpRecord['group'] }>;
   /** Ids of `applied` records the user really applied (the card). */
   appliedIds: number[];
   /** Ops that take the project back to before this run (present once the card was applied). */
@@ -47,8 +47,18 @@ function changeLines(r: PastRun): string {
   const nApplied = r.applied.filter((x) => applied.has(x.id)).length;
   const state = nApplied === 0 ? '用户还没有应用（项目里没有这些改动）' : nApplied === r.applied.length ? '用户已应用' : `用户只应用了其中 ${nApplied} 项（标 ✓ 的）`;
   const rows: string[] = [];
-  for (const x of r.applied) for (const c of x.changes) rows.push(`- ${applied.has(x.id) && nApplied < r.applied.length ? '✓ ' : ''}${x.op.sceneId} ${c.where}${c.beatId ? `(${c.beatId})` : ''} ${c.field}：${c.before} → ${c.after}`);
-  for (const x of r.pending) for (const c of x.changes) rows.push(`- （待用户确认，没有生效）${x.op.sceneId} ${c.where}${c.beatId ? `(${c.beatId})` : ''} ${c.field}：${c.before} → ${c.after}`);
+  // a batch / script is one line (its label and the beats it touched), not one line per beat
+  const groups = new Map<string, { label: string; beats: Set<string>; pending: boolean }>();
+  const addGroup = (x: { group?: OpRecord['group']; changes: Array<{ beatId?: string | undefined }> }, pending: boolean) => {
+    const g = x.group!;
+    const e = groups.get(g.id) ?? groups.set(g.id, { label: g.label, beats: new Set(), pending }).get(g.id)!;
+    for (const c of x.changes) if (c.beatId) e.beats.add(c.beatId);
+  };
+  for (const x of r.applied) if (x.group) addGroup(x, false);
+  for (const x of r.pending) if (x.group) addGroup(x, true);
+  for (const g of groups.values()) rows.push(`- ${g.pending ? '（含待用户确认）' : ''}批量「${g.label}」：${g.beats.size} 句：${[...g.beats].slice(0, 30).join(',')}${g.beats.size > 30 ? '…' : ''}`);
+  for (const x of r.applied) if (!x.group) for (const c of x.changes) rows.push(`- ${applied.has(x.id) && nApplied < r.applied.length ? '✓ ' : ''}${x.op.sceneId} ${c.where}${c.beatId ? `(${c.beatId})` : ''} ${c.field}：${c.before} → ${c.after}`);
+  for (const x of r.pending) if (!x.group) for (const c of x.changes) rows.push(`- （待用户确认，没有生效）${x.op.sceneId} ${c.where}${c.beatId ? `(${c.beatId})` : ''} ${c.field}：${c.before} → ${c.after}`);
   const shown = rows.slice(0, MAX_LINES);
   return `【这一轮的改动 · ${state}${r.revert?.length ? ' · 可用 revert_turn 精确撤销' : ''}】\n${shown.join('\n')}${rows.length > shown.length ? `\n- …另有 ${rows.length - shown.length} 处` : ''}`;
 }

@@ -22,6 +22,7 @@ import { LlmError, modelJsonSchema, stableStringify, zeroUsage, type ChatImage, 
 import { runScene } from '../llm/sceneRunner';
 import { NO_VERIFICATION, changesPicture, involvesMove, opBeatIds, type Verification } from '../../shared/agent/verify';
 import { AGENT_SYSTEM, FALLBACK_PROTOCOL, VISION_PROMPT, userMessage } from './prompt';
+import { loadSandbox, runInSandbox } from './sandbox';
 
 export interface AgentLimits {
   /** Model steps per turn (a safety ceiling, not a budget). */
@@ -31,7 +32,7 @@ export interface AgentLimits {
   /** Write ops per turn. */
   maxOps: number;
 }
-export const DEFAULT_LIMITS: AgentLimits = { maxSteps: 40, wallMs: 10 * 60_000, maxOps: 300 };
+export const DEFAULT_LIMITS: AgentLimits = { maxSteps: 40, wallMs: 10 * 60_000, maxOps: 600 };
 
 export type { HistoryTurn };
 /** Renders frames of a project (the editor's stage over the SSE bridge, or a headless page): see shared/agent/frames.ts. */
@@ -101,8 +102,8 @@ export interface AgentTurnResult {
 const addUsage = (a: LlmUsage, b: LlmUsage): LlmUsage => ({ inputTokens: a.inputTokens + b.inputTokens, outputTokens: a.outputTokens + b.outputTokens, cacheReadTokens: a.cacheReadTokens + b.cacheReadTokens, cacheCreationTokens: a.cacheCreationTokens + b.cacheCreationTokens });
 
 /** Tool specs for the model; tools that cannot work in this turn (no frames / no history to undo) are left out. */
-export function toolSpecs(have: { frames?: boolean; revert?: boolean } = { frames: true, revert: true }): ToolSpec[] {
-  return TOOLS.filter((t) => (t.name !== 'capture_frames' || have.frames) && (t.name !== 'revert_turn' || have.revert)).map((t) => ({ name: t.name, description: t.description, parameters: modelJsonSchema(t.schema) }));
+export function toolSpecs(have: { frames?: boolean; revert?: boolean; script?: boolean } = { frames: true, revert: true, script: true }): ToolSpec[] {
+  return TOOLS.filter((t) => (t.name !== 'capture_frames' || have.frames) && (t.name !== 'revert_turn' || have.revert) && (t.name !== 'run_script' || have.script)).map((t) => ({ name: t.name, description: t.description, parameters: modelJsonSchema(t.modelSchema ?? t.schema) }));
 }
 
 const Fallback = z.object({ say: z.string().default(''), calls: z.array(z.object({ name: z.string(), args: z.record(z.string(), z.unknown()).default({}) })).default([]), done: z.boolean().default(false) });
@@ -111,7 +112,7 @@ const CHANGE_WORDS = /(已|将|会|我把|帮你|为你)[^。]{0,12}(改|调整|
 
 const brief = (name: string, args: Record<string, unknown>): string => {
   const pick = (k: string) => (args[k] !== undefined ? `${k}=${JSON.stringify(args[k]).slice(0, 40)}` : '');
-  return [name, ...['beatId', 'beatIds', 'castId', 'fx', 'type', 'adjust', 'pace', 'action'].map(pick).filter(Boolean)].join(' ').slice(0, 120);
+  return [name, ...['beatId', 'beatIds', 'castId', 'fx', 'type', 'adjust', 'pace', 'action', 'tool', 'description', 'label', 'filter', 'target'].map(pick).filter(Boolean)].join(' ').slice(0, 160);
 };
 
 export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Promise<AgentTurnResult> {
@@ -124,6 +125,8 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
     sandbox: clone(req.project), catalog: deps.catalog, selection: req.selection, genId, now: () => now(),
     applied: [], pending: [], stats: newStats(), seq: { n: 0 },
   };
+  // the script sandbox (WASM, loaded once per process); without it run_script is not offered
+  if (await loadSandbox()) env.scriptRunner = runInSandbox;
   let usage = zeroUsage();
   let regenUsage = zeroUsage();
   let regenUsed = false;
@@ -157,7 +160,7 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   }
   messages.push({ role: 'user', content: userMessage({ summary: projectSummary(env.sandbox, req.selection), sceneTable: selScene ? sceneTable(env.sandbox, selScene) : null, instruction: req.instruction }) + attachNote, ...(attachments.length && vision?.mode === 'inline' ? { images: attachments } : {}) });
 
-  const specs = toolSpecs({ frames: !!(deps.frames && vision), revert: env.reverts.length > 0 });
+  const specs = toolSpecs({ frames: !!(deps.frames && vision), revert: env.reverts.length > 0, script: !!env.scriptRunner });
   /** Pictures from capture_frames, sent as one user message after the tool results of the step (inline vision). */
   let shots: ChatImage[] = [];
   let stopped: AgentTurnResult['stopped'] = 'done';
@@ -198,7 +201,9 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
     { const n = countPicOps(beforeApplied); if (n > 0) { if (picChecked > 0) sawProblemFixed = true; picOps += n; } }
     const isWrite = toolByName(name)?.kind === 'write';
     if (isWrite && env.applied.length > beforeApplied) { wrote++; verifiedSinceWrite = false; }
-    if (!isWrite && (name === 'get_beat' || name === 'get_scene')) verifiedSinceWrite = true;
+    if (!isWrite && (name === 'get_beat' || name === 'get_scene' || name === 'query_beats')) verifiedSinceWrite = true;
+    // a script that only read the (already changed) project and printed it is a read-back too
+    if (name === 'run_script' && env.applied.length === beforeApplied && out.includes('不计入失败次数')) verifiedSinceWrite = true;
     return out;
   };
 
@@ -329,7 +334,9 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
       // the model stopped: make sure it verified what it wrote, and that "I changed X" was not just words
       if (wrote > 0 && !verifiedSinceWrite && nudges < 2) {
         nudges++;
-        messages.push({ role: 'user', content: '请先用 get_beat（或 get_scene）回读你刚改过的地方，确认与指令一致；不一致就修正，一致就给出最终总结。' });
+        // a batch / script touched many beats: re-run the condition instead of reading every scene
+        const many = env.applied.some((r) => r.group);
+        messages.push({ role: 'user', content: many ? '请回读确认刚才的批量 / 脚本改动：用 query_beats 再查一次同样的条件（或抽查 2–3 句 get_beat），不要逐场读全部；与指令一致就给出最终总结，不一致就修正。' : '请先用 get_beat（或 get_scene）回读你刚改过的地方，确认与指令一致；不一致就修正，一致就给出最终总结。' });
         continue;
       }
       if (canLook && !lookFailed && picDirty() && forced < MAX_FORCED && steps < limits.maxSteps) {

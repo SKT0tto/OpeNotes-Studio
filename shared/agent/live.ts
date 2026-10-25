@@ -28,6 +28,7 @@ export function liveDecision(i: LiveInput): { auto: boolean; reasons: string[] }
   if (i.applied.length > LIVE_MAX_OPS) why.push(`超过 ${LIVE_MAX_OPS} 项改动`);
   if (i.applied.some((a) => liveForbidden(a.op))) why.push('包含进出场 / 背景 / 结构 / 锁定改动');
   if (i.applied.some((a) => a.tool === 'regenerate_scene_camera')) why.push('包含整场镜头重导');
+  if (i.applied.some((a) => a.tool === 'run_script')) why.push('包含 AI 写的脚本（先看一眼脚本再应用）');
   if (i.applied.some((a) => a.overwrote.length > 0)) why.push('会覆盖手改内容');
   if (i.applied.some((a) => a.warnings.length > 0)) why.push('有改动经过了自动修正');
   return { auto: why.length === 0, reasons: why };

@@ -27,3 +27,19 @@ describe('scene table: what blurs or shifts the picture is visible', () => {
     expect(row).toContain('+0.7');
   });
 });
+
+describe('a beat id names its scene', () => {
+  it('a call without sceneId about beats of one other scene goes to that scene; mixed scenes are refused with the way out', async () => {
+    const { call, makeEnv } = await import('./helpers/agentEnv');
+    const env = makeEnv(undefined, { sceneId: 's_1' });
+    const s3 = env.sandbox.scenes[2]!;
+    const b = s3.beats.find((x) => x.kind === 'dialogue')!;
+    expect(String(call(env, 'get_beat', { beatId: b.id }))).toContain(`所在场景 ${s3.id}`);
+    const r = call(env, 'set_timing', { beatIds: [b.id], gapSteps: 1 }) as Record<string, unknown>;
+    expect(r.已放入变更集).toBeDefined();
+    expect(env.applied[0]!.op.sceneId).toBe(s3.id);
+    const mixed = call(env, 'set_timing', { beatIds: [b.id, env.sandbox.scenes[0]!.beats[0]!.id], gapSteps: 1, sceneId: 's_1' }) as { 错误: string[] };
+    expect(mixed.错误[0]).toContain(`在场景 ${s3.id}`);
+    expect(mixed.错误[0]).toContain('分开调用');
+  });
+});

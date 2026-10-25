@@ -5,9 +5,9 @@ import { fxStates, keyValueText, CHANNEL_NAME } from './apply';
 import { onStageIds } from './check';
 import { HIDDEN_REASON_LABEL, scenePresence, type BeatPresence } from '../timeline/presence';
 
-const clip = (s: string, n: number) => ([...s].length > n ? `${[...s].slice(0, n).join('')}…` : s);
-const nameOf = (p: Project, id: string | undefined) => (id ? p.cast.find((c) => c.id === id)?.displayName || id : '—');
-const KIND: Record<Beat['kind'], string> = { dialogue: '对', narration: '旁', action: '动', pause: '停', establishing: '空景', silent: '默', empty: '空' };
+export const clip = (s: string, n: number) => ([...s].length > n ? `${[...s].slice(0, n).join('')}…` : s);
+export const nameOf = (p: Project, id: string | undefined) => (id ? p.cast.find((c) => c.id === id)?.displayName || id : '—');
+export const KIND: Record<Beat['kind'], string> = { dialogue: '对', narration: '旁', action: '动', pause: '停', establishing: '空景', silent: '默', empty: '空' };
 
 export interface AgentSelection {
   sceneId?: string | null | undefined;
@@ -157,9 +157,9 @@ export interface FoundBeat {
   approx?: number;
 }
 
-const PUNCT = /[「」『』“”"'\s…。，、！？!?,.~～—-]/g;
+export const PUNCT = /[「」『』“”"'\s…。，、！？!?,.~～—-]/g;
 /** Longest common subsequence length of two short strings (the quote and a line), for the approximate text match. */
-function lcs(a: string[], b: string[]): number {
+export function lcs(a: string[], b: string[]): number {
   const row = new Array<number>(b.length + 1).fill(0);
   for (let i = 1; i <= a.length; i++) {
     let prev = 0;

@@ -22,6 +22,9 @@ import { applyOp, type Change } from './apply';
 import { KEY_VALUE_SHAPE, checkOp } from './check';
 import { beatDetail, findBeats, sceneTable, type AgentSelection } from './compact';
 import { scopeOf, type AgentOp } from './ops';
+import { BatchModelSchema, BatchSchema, batchEdit } from './batch';
+import { BeatFilterSchema, ModelFilterSchema, buildIndex, queryTable, refOf, runQuery, type BeatFilter, type BeatRef } from './query';
+import { ScriptSchema, runScriptTool, type ScriptRunner } from './script';
 
 /** Fixed step sizes of the relative adjustments ("a little", "a bit more" = 1, 2 steps). */
 export const NUDGE = {
@@ -39,10 +42,20 @@ export const NUDGE = {
   pace: 0.85,
 } as const;
 
+/** Records produced together by one batch_edit / run_script call: the card shows them as ONE collapsible line (expand = per-beat rows). */
+export interface OpGroup {
+  id: string;
+  kind: 'batch' | 'script';
+  /** 「把 12 句的景别改成 mcu」 / the script's one-line description. */
+  label: string;
+  /** The script text (run_script); carried by the first record of the group only. */
+  script?: string;
+}
 export interface OpRecord {
   id: number;
   tool: string;
   op: AgentOp;
+  group?: OpGroup | undefined;
   status: 'ok' | 'needs_unlock' | 'needs_confirm';
   changes: Change[];
   warnings: string[];
@@ -78,6 +91,12 @@ export interface ToolEnv {
   reverts?: Array<{ turnsAgo: number; instruction: string; ops: AgentOp[] }> | undefined;
   /** Beat ids the question of the user names explicitly as hand-made (not used by the pure code, kept for the loop). */
   askedUser?: { question: string; options: string[] } | undefined;
+  /** Full results of query_beats calls of this turn (batch_edit can use them even when the table shown to the model was cut). */
+  queries?: Map<string, BeatRef[]> | undefined;
+  groupSeq?: number | undefined;
+  /** The script sandbox (server side); absent = run_script is not available. */
+  scriptRunner?: ScriptRunner | undefined;
+  scriptFailures?: number | undefined;
 }
 export const newStats = (): ToolStats => ({ toolCalls: 0, badArgs: 0, opsChecked: 0, opsInvalid: 0, writeCalls: 0, writeFirstTryOk: 0 });
 
@@ -94,6 +113,8 @@ export interface ToolDef {
   kind: 'read' | 'write' | 'control';
   description: string;
   schema: z.ZodType;
+  /** What the model is shown when it differs from the validating schema (a compact form of a recursive one). */
+  modelSchema?: z.ZodType;
 }
 
 const slotEnum = z.enum(SLOT_NAMES as unknown as [string, ...string[]]);
@@ -103,6 +124,7 @@ export const TOOLS: ToolDef[] = [
   { name: 'get_scene', kind: 'read', description: '读取一个场景的压缩表格（每句一行：说话人、台词、景别、焦点、运镜、特效、情绪、节奏、锁定/手改标记）和人物进出场。from/to 是第几句（从 1 起）。', schema: z.object({ sceneId: sceneArg, from: z.number().int().min(1).optional(), to: z.number().int().min(1).optional() }) },
   { name: 'get_beat', kind: 'read', description: '读取一句的全部细节（文字、镜头、节奏、此时在台上的人、这一句上所有关键帧及其 id、锁和来源）。改完之后用它回读确认。', schema: z.object({ sceneId: sceneArg, beatId: Id }) },
   { name: 'find_beats', kind: 'read', description: '在整个项目里按说话人（名字或 castId）和/或台词片段搜索，返回场景号、句号、beatId。用来解析「灯说“……”那句」「第三场第二个爱音的台词」。引文不必一字不差：没有完全一致的会返回近似匹配。', schema: z.object({ speaker: z.string().optional(), text: z.string().optional(), sceneId: z.string().optional() }) },
+  { name: 'query_beats', kind: 'read', description: '按结构化条件在整个项目里查句子（只读）：场景 / 句号范围、说话人 / 涉及的人、类型、台词包含 / 正则 / 模糊、字数、情绪、景别 / 意图 / 换镜方式 / 运镜 / 焦点、特效及参数、背景、画面上看得见谁（编译后的在场）、句后停顿 / 时长阈值、是否锁定 / 手改；and / or / not 可以嵌套。返回 queryId + 命中数 + 紧凑表格（太多会截断，但 queryId 保存完整结果）。「所有 / 每个 / 整部 / 凡是」这类指令：先 query_beats，再用 batch_edit 的 target.queryId 批量改。', schema: z.object({ filter: BeatFilterSchema.optional().describe('省略 = 所有句子'), limit: z.number().int().min(1).max(200).optional().describe('表格最多列几行，默认 60') }), modelSchema: z.object({ filter: ModelFilterSchema.optional().describe('省略 = 所有句子'), limit: z.number().int().min(1).max(200).optional().describe('表格最多列几行，默认 60') }) },
   { name: 'list_options', kind: 'read', description: '查询可用的选项：motion/expression=某角色当前服装可用的动作族/表情；background=按关键词搜背景（最多 12 个）；cast=角色表和他们能换的服装；effects=特效词表。', schema: z.object({ kind: z.enum(['motion', 'expression', 'background', 'cast', 'effects']), castId: z.string().optional(), sceneId: sceneArg, query: z.string().optional() }) },
   { name: 'capture_frames', kind: 'read', description: '看渲染出来的画面（舞台截图，不含对白框）。用在：用户说的是画面本身（怼脸、被挡住、出画、画面太空/太挤、背景太糊、人太小）；或者你改了画面（景别/构图/站位/偏移/运镜/背景/特效等）之后必须核对。beatIds=要看的句子（每句取中间一帧）；samples=2–4 时每句沿时间取多帧（看运镜、进场、动作过程）；times=绝对秒数。一次最多 8 帧，width 默认 480（要看细节再用 640/960）。纯文字/节奏/情绪的改动不用截图；画面改动做完后只截涉及的句子。', schema: z.object({ sceneId: sceneArg, beatIds: z.array(Id).max(8).optional(), times: z.array(z.number().min(0)).max(8).optional(), samples: z.number().int().min(1).max(4).optional(), width: z.union([z.literal(320), z.literal(480), z.literal(640), z.literal(960)]).optional(), question: z.string().max(300).optional().describe('想从画面里确认什么（给视觉模型看的问题）') }) },
   { name: 'ask_user', kind: 'control', description: '目标不明确（多个候选、指代不清、数值缺失）时，向用户问一个简短的澄清问题，然后结束本轮。不要猜。', schema: z.object({ question: z.string().min(1).max(200), options: z.array(z.string().max(60)).max(5).optional() }) },
@@ -120,6 +142,8 @@ export const TOOLS: ToolDef[] = [
   { name: 'set_costume', kind: 'write', description: '换服装：不填 atBeatId = 整个场景的服装；填了 = 从这一句起换装（换装关键帧）。modelId 必须是该角色的服装（list_options cast 查）。', schema: z.object({ sceneId: sceneArg, castId: Id, modelId: Id, atBeatId: z.string().optional(), reason, overwriteManual: manual }) },
   { name: 'set_keyframe', kind: 'write', description: '通用时间线关键帧（编辑器能手动改的都能改）：增/改/删/移动。channel: motion|expression|head|body|gaze|position|opacity|costume|camera|fx|fade|background；actor 通道必须给 castId；camera 通道的 value 只能是 {shot, focus}（不允许手动坐标）。keyId 存在=修改它；shiftSeconds 或 shiftSteps（每步 0.1 秒）=平移时间；remove=删除。表情/动作/看向优先用 set_actor。value 的形状：' + KEY_VALUE_SHAPES, schema: z.object({ sceneId: sceneArg, channel: z.enum(['motion', 'expression', 'head', 'body', 'gaze', 'position', 'opacity', 'costume', 'camera', 'fx', 'fade', 'background']), castId: z.string().optional(), keyId: z.string().optional(), beatId: z.string().optional(), offset: z.number().min(-10).max(60).optional(), value: z.unknown().optional(), duration: z.number().min(0).max(30).optional(), ease: z.string().optional(), remove: z.boolean().optional(), shiftSeconds: z.number().min(-30).max(30).optional(), shiftSteps: z.number().int().min(-50).max(50).optional(), reason, overwriteManual: manual }) },
   { name: 'set_lock', kind: 'write', description: '锁定/解锁。unit: scene|beat|shot|rhythm|wardrobe|blocking|track|key；beat/shot/rhythm 需 beatId；wardrobe/blocking 需 castId；locked=true/false；fields=只锁这些字段（beat: text,speakerId,kind,duration,emotion,cutIn；shot: type,focus,move,dof,transition,intent,offsets），空数组=清除字段锁。', schema: z.object({ sceneId: sceneArg, unit: z.enum(['scene', 'beat', 'shot', 'rhythm', 'wardrobe', 'blocking', 'track', 'key']), beatId: z.string().optional(), castId: z.string().optional(), trackId: z.string().optional(), keyId: z.string().optional(), locked: z.boolean().optional(), fields: z.array(z.string()).optional(), reason }) },
+  { name: 'batch_edit', kind: 'write', description: '把【同一个】编辑模板批量用到一批句子上（query_beats 的 queryId / 一个 filter / 明确的 beatId 列表），整批只在卡片上显示成一组（可折叠，展开逐句看），一次应用、一步撤销。用法 A：tool + args = 对每一句调用那个写工具（args 不含 sceneId / beatId / beatIds / fromBeatId / toBeatId，由命中的句子自动填；例如 tool=set_shot args={type:"mcu"}，tool=edit_beat args={emotion:"sad"}，tool=set_timing args={gapSteps:2}，tool=set_fx args={fx:"dim"}（连续句子自动合成一段），tool=nudge_shot / set_actor 需要 args.castId）。用法 B：op = 一个 AgentOp 模板（beat_set / shot_set / shot_offset / timing / fx_range / key_set / beat_delete / lock_set，不含句子 id）。每一项都走和单个工具一样的检查：锁定 / 手改的句子不会被悄悄跳过，会作为「需要你确认」放进卡片。一次最多 400 句。', schema: BatchSchema, modelSchema: BatchModelSchema },
+  { name: 'run_script', kind: 'write', description: '沙箱脚本（最后手段）：工具、query_beats + batch_edit 都表达不了的批量/规则化修改，才写一小段 JavaScript。脚本在隔离沙箱里只读运行（无文件、网络、定时器、import；CPU 约 2 秒、内存 64MB），只能 return 一个 op 数组，不能直接改任何东西；每个 op 照样走检查 / 锁定处理，成为一组变更（卡片上显示「AI 写的脚本」，可展开看源码）。沙箱里有：project（只读 JSON：scenes[].beats[]、cast、tracks…）、scenes()（场景列表）、beats(sceneId 或第几场)（句子行：beatId、beatNo、sceneId、speakerId、speaker、kind、text、chars、emotion、shotType、focus、move、intent、flow、fx、background、visible[]、hidden[]、lineGap、tail、seconds、locked、userEdited）、beat(id)、query(filter)（同 query_beats 的 filter，返回行数组）、visible(beatId)（画面上看得见的 castId 数组）、console.log(...)。op 构造器（sceneId 自动查）：op.setShot(beatId,{type,focus,move,dof,intent,flow:auto|cut|move|glide})、op.setBeat(beatId,{emotion,text,kind,...})、op.setEmotion(beatId,emotion)、op.setTiming(beatIds,{lineGap,tail,readingCps,minLine,textSpeedCps})、op.nudge(beatId,castId,dxSteps,dySteps)、op.setFx(fromBeatId,toBeatId,fx,{tone,edge,strength})、op.insertBeat(afterBeatId|null,{kind,text,speakerId,emotion},sceneId?)（返回的 op.newId 可立刻用于后面的 op）、op.deleteBeat(beatId)、op.moveBeat(beatId,afterBeatId)、op.raw({op:"...",...})。出错（语法、超时、op 不合法）会作为结果返回，修正后可重试（最多约 3 次，失败的脚本不会部分生效）；只 console.log 看数据、return [] 的一次不计入失败。简单需求请用普通工具。', schema: ScriptSchema },
   { name: 'revert_turn', kind: 'write', description: '「改回去 / 撤销 / 不要了 / 算了 / 还是原来的好」：把之前某一轮已应用的改动精确恢复成那一轮之前的值（对话历史里标着「可用 revert_turn」的轮次）。turnsAgo=1 是上一轮（默认），2 是上上轮；scopes 只撤其中某类（camera|performance|fx|rhythm|structure|staging|background|costume|lock，例如「节奏改回去」=[rhythm]）；beatIds 只撤这些句子上的。不要自己反推旧值。', schema: z.object({ turnsAgo: z.number().int().min(1).max(4).optional(), scopes: z.array(z.enum(['camera', 'performance', 'costume', 'staging', 'fx', 'background', 'structure', 'rhythm', 'lock'])).optional(), beatIds: z.array(Id).optional(), reason }) },
   { name: 'regenerate_scene_camera', kind: 'write', description: '让导演按你的倾向重新给整个场景（或一段句子）设计镜头，只重做镜头，不动节奏、表演、台词。适合「多用双人、少点特写」这类整场倾向；每轮最多 1 次，比较贵。guidance 写明倾向（≤200 字）。手改/锁定的镜头不会被覆盖。', schema: z.object({ sceneId: sceneArg, guidance: z.string().min(1).max(200), beatIds: z.array(Id).max(80).optional() }) },
 ];
@@ -219,13 +243,31 @@ export function countWrite(env: ToolEnv, f: () => string): string {
   return out;
 }
 
+/** The scene a beat id lives in (beat ids are unique across the project), or null. */
+const homeScene = (env: ToolEnv, beatId: string): Scene | null => env.sandbox.scenes.find((s) => s.beats.some((b) => b.id === beatId)) ?? null;
+
+/**
+ * A beat id names its scene: when the model left `sceneId` out and every beat the call names lives in one scene other than the selected
+ * one, the call is about that scene (models often query the whole project and then edit a hit of another scene without the id).
+ */
+function withInferredScene(env: ToolEnv, def: ToolDef, a: Args): Args {
+  if (a.sceneId !== undefined || !(def.schema instanceof z.ZodObject) || !('sceneId' in def.schema.shape)) return a;
+  const ids = [a.beatId, a.fromBeatId, a.toBeatId, a.atBeatId, ...(Array.isArray(a.beatIds) ? a.beatIds : [])].filter((x): x is string => typeof x === 'string');
+  if (ids.length === 0) return a;
+  const cur = sceneOf(env);
+  if (cur && ids.every((id) => cur.beats.some((b) => b.id === id))) return a;
+  const homes = new Set(ids.map((id) => homeScene(env, id)?.id ?? null));
+  if (homes.size !== 1 || homes.has(null)) return a;
+  return { ...a, sceneId: [...homes][0] };
+}
+
 function runToolInner(env: ToolEnv, def: ToolDef, name: string, rawArgs: unknown): string {
   const parsed = def.schema.safeParse(rawArgs ?? {});
   if (!parsed.success) {
     env.stats.badArgs++;
     return j({ 错误: parsed.error.issues.slice(0, 4).map((i) => `参数 ${i.path.join('.') || '(根)'}：${i.message}`) });
   }
-  const a = parsed.data as Args;
+  const a = withInferredScene(env, def, parsed.data as Args);
   const sceneIdOrErr = (): Scene | string => sceneOf(env, a.sceneId) ?? j({ 错误: [`场景 ${a.sceneId ?? '(未选中)'} 不存在；当前可用：${env.sandbox.scenes.map((s) => s.id).join(', ')}`] });
   try {
     switch (name) {
@@ -244,12 +286,49 @@ function runToolInner(env: ToolEnv, def: ToolDef, name: string, rawArgs: unknown
         return r.length === 0 ? '没有找到匹配的台词（可以换个更短的片段，或只按说话人查）' : `${r.some((x) => x.approx) ? '没有完全一致的，下面是近似匹配（引文可能记得不准）：\n' : ''}${r.map((x) => `第${x.sceneNo}场(${x.sceneId}) 第${x.beatNo}句 ${x.beatId} ${x.speaker}:「${x.text}」${x.approx ? `（近似 ${Math.round(x.approx * 100)}%）` : ''}`).join('\n')}`;
       }
       case 'list_options': return listOptions(env, a);
+      case 'query_beats': return queryBeatsTool(env, a);
+      case 'batch_edit': return batchEdit(env, parsed.data as never, batchDeps);
+      case 'run_script': return runScriptTool(env, parsed.data as never, scriptDeps);
       default: return writeTool(env, name, a);
     }
   } catch (e) {
     return j({ 错误: [`工具内部错误：${(e as Error).message}`] });
   }
 }
+
+function queryBeatsTool(env: ToolEnv, a: Args): string {
+  const idx = buildIndex(env.sandbox);
+  const res = runQuery(idx, a.filter as BeatFilter | undefined);
+  if (res.problems.length) return j({ 错误: res.problems, 说明: '过滤条件里有无法理解的部分，结果不可信；改正后重新查询' });
+  const queries = (env.queries ??= new Map());
+  const id = `q${queries.size + 1}`;
+  queries.set(id, res.rows.map(refOf));
+  const limit = (a.limit as number | undefined) ?? 60;
+  const ids = res.rows.slice(0, 200).map((r) => r.beatId).join(',');
+  return [`queryId=${id} 命中 ${res.rows.length} 句${res.rows.length > limit ? `（表格只列前 ${limit} 句；batch_edit 用 queryId 会改全部 ${res.rows.length} 句）` : ''}`, res.rows.length ? `beatIds（按剧本顺序${res.rows.length > 200 ? '，前 200' : ''}）：${ids}` : '', queryTable(env.sandbox, res.rows, limit)].filter(Boolean).join('\n');
+}
+
+const batchDeps = {
+  writeTool: (env: ToolEnv, name: string, args: Args) => writeTool(env, name, args),
+  toolSchema: (name: string) => toolByName(name)?.schema,
+  commitOps: (env: ToolEnv, tool: string, ops: AgentOp[], extra?: { continueOnIssue?: boolean }) => commitOps(env, tool, ops, extra),
+};
+const scriptDeps = {
+  commitOps: batchDeps.commitOps,
+  freeBeatId,
+  newStats,
+  queryFn: (project: Project) => {
+    const idx = buildIndex(project);
+    return (filterJson: string): string => {
+      let raw: unknown;
+      try { raw = JSON.parse(filterJson); } catch { return j({ error: ['query(filter) 需要一个条件对象'] }); }
+      const parsed = BeatFilterSchema.safeParse(raw);
+      if (!parsed.success) return j({ error: parsed.error.issues.slice(0, 3).map((i) => `${i.path.join('.') || '(filter)'}: ${i.message}`) });
+      const res = runQuery(idx, parsed.data as BeatFilter);
+      return j(res.problems.length ? { error: res.problems } : { rows: res.rows });
+    };
+  },
+};
 
 function listOptions(env: ToolEnv, a: Args): string {
   const p = env.sandbox;
@@ -290,7 +369,11 @@ function writeTool(env: ToolEnv, name: string, a: Args): string {
   const cam = cameraSystemOf(p, scene);
   const rs = (a.reason as string | undefined)?.slice(0, 200);
   const base = { sceneId: sid, ...(rs ? { reason: rs } : {}) };
-  const beatMissing = (id: string) => (resolveBeat(scene, id) ? null : j({ 错误: [`台词 ${id} 不在场景 ${sid}（用 get_scene 查 id）`] }));
+  const beatMissing = (id: string) => {
+    if (resolveBeat(scene, id)) return null;
+    const home = homeScene(env, id);
+    return j({ 错误: [home ? `台词 ${id} 在场景 ${home.id}，不在 ${sid}：不同场景的句子请分开调用（每次写对应的 sceneId），或用 batch_edit` : `台词 ${id} 不存在（用 get_scene / query_beats 查 id）`] });
+  };
   const done = (ops: AgentOp[]) => commitOps(env, name, ops, { manual: a.overwriteManual });
   // several beats in one call are independent edits: a locked / hand-made one goes to the user and the others still happen
   const doneEach = (ops: AgentOp[]) => commitOps(env, name, ops, { manual: a.overwriteManual, continueOnIssue: true });

@@ -2,7 +2,7 @@
  * 「AI 助手」: talk to the project. One instruction = one change card ("AI 说" next to "实际改动", before -> after with the reason, apply all / some /
  * reject, a 「需要你确认」 group for locked or hand-made content). Applying is one undo step. The 「实时」 switch applies small safe change sets by itself.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import type { Change } from '@shared/agent/apply';
 import { AGENT_SCOPE_LABEL, scopeOf, type AgentScope } from '@shared/agent/ops';
 import { LIVE_MAX_OPS } from '@shared/agent/live';
@@ -82,6 +82,86 @@ function Verification({ v }: { v: NonNullable<RunItem['proposal']>['verification
   );
 }
 
+/** One batch / script as the card shows it: its label, its items (open ones), and the script text when there is one. */
+interface BatchView { id: string; kind: 'batch' | 'script'; label: string; script?: string | undefined; items: CardItem[]; }
+
+function batchesOf(all: CardItem[], open: CardItem[]): BatchView[] {
+  const out = new Map<string, BatchView>();
+  for (const i of open) {
+    const g = i.record.group;
+    if (!g) continue;
+    (out.get(g.id) ?? out.set(g.id, { id: g.id, kind: g.kind, label: g.label, items: [] }).get(g.id)!).items.push(i);
+  }
+  for (const i of all) {
+    const g = i.record.group;
+    if (g?.script && out.has(g.id)) out.get(g.id)!.script = g.script;
+  }
+  return [...out.values()];
+}
+
+interface PendingView extends BatchView { status: 'needs_unlock' | 'needs_confirm'; }
+function pendingBatchesOf(pending: CardItem[]): PendingView[] {
+  const out = new Map<string, PendingView>();
+  for (const i of pending) {
+    const g = i.record.group;
+    if (!g) continue;
+    const status = i.record.status === 'needs_unlock' ? 'needs_unlock' : 'needs_confirm';
+    const key = `${g.id}:${status}`;
+    (out.get(key) ?? out.set(key, { id: g.id, kind: g.kind, label: g.label, status, items: [] }).get(key)!).items.push(i);
+  }
+  return [...out.values()];
+}
+
+/** A batch / script group: one summary line with a tri-state checkbox, expandable into the per-beat rows (rendered only while open). */
+function BatchGroup({ run, batch, renderRow }: { run: RunItem; batch: BatchView; renderRow: (i: CardItem) => ReactElement }) {
+  const a = useAgent.getState();
+  const [shown, setShown] = useState(false);
+  const live = batch.items.filter((i) => i.state !== 'stale');
+  const on = live.filter((i) => i.checked).length;
+  const scopes = [...new Set(batch.items.map((i) => AGENT_SCOPE_LABEL[scopeOf(i.record.op)]))].join('、');
+  return (
+    <details className="agent-group agent-batch" data-testid="agent-batch" data-kind={batch.kind} onToggle={(e) => setShown((e.currentTarget as HTMLDetailsElement).open)}>
+      <summary>
+        <input type="checkbox" aria-label="选择这一组" data-testid="agent-batch-check" disabled={run.rejected || live.length === 0} checked={live.length > 0 && on === live.length}
+          ref={(el) => { if (el) el.indeterminate = on > 0 && on < live.length; }}
+          onClick={(e) => e.stopPropagation()} onChange={(e) => a.toggleMany(run.id, live.map((i) => i.id), e.target.checked)} />
+        <span className="agent-batch-label" data-testid="agent-batch-label">{batch.label}</span>
+        <span className="badge" data-testid="agent-batch-count">{batch.items.length} 项</span>
+        <span className="hint">{scopes}</span>
+        {batch.kind === 'script' && <span className="agent-tag">AI 写的脚本</span>}
+      </summary>
+      {batch.kind === 'script' && batch.script !== undefined && (
+        <details className="agent-script" data-testid="agent-script">
+          <summary>AI 写的脚本（点开看源码）</summary>
+          <pre data-testid="agent-script-code">{batch.script}</pre>
+        </details>
+      )}
+      {shown && batch.items.map(renderRow)}
+    </details>
+  );
+}
+
+/** The locked / hand-made part of a batch: one block with group-wide buttons, expandable into the single items. */
+function PendingBatch({ run, batch, renderPending }: { run: RunItem; batch: PendingView; renderPending: (i: CardItem) => ReactElement }) {
+  const a = useAgent.getState();
+  const [shown, setShown] = useState(false);
+  const ids = batch.items.map((i) => i.id);
+  const isLock = batch.status === 'needs_unlock';
+  return (
+    <details className="agent-pending-batch" data-testid="agent-pending-batch" onToggle={(e) => setShown((e.currentTarget as HTMLDetailsElement).open)}>
+      <summary>
+        <span className="hint warn">{batch.label}：{batch.items.length} 项{isLock ? '被锁定' : '会覆盖手改'}</span>
+      </summary>
+      <div className="agent-buttons">
+        {isLock ? <button className="btn-s" data-testid="agent-unlock-apply-all" onClick={() => a.applyItems(run.id, ids, { unlock: true })}>全部解锁并应用</button>
+          : <button className="btn-s" data-testid="agent-confirm-apply-all" onClick={() => a.applyItems(run.id, ids, { confirm: true })}>全部仍然应用（覆盖手改）</button>}
+        <button className="btn-s" data-testid="agent-skip-all" onClick={() => ids.forEach((id) => a.skip(run.id, id))}>全部跳过</button>
+      </div>
+      {shown && batch.items.map(renderPending)}
+    </details>
+  );
+}
+
 function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFocus: (sceneId: string, beatId: string | undefined) => void }) {
   const a = useAgent.getState();
   const hover = (beatId: string | undefined) => useUi.getState().set({ hoverBeat: beatId ?? null });
@@ -93,9 +173,50 @@ function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFoc
   const pending = run.items.filter((i) => i.origin === 'pending' && (i.state === 'open' || i.state === 'stale'));
   const undoLabel = useProject((s) => s.undoLabel);
   // live view of the items against the project as it is now: a target deleted or locked meanwhile shows as 已失效 / needs confirmation
-  const plan = useMemo(() => planReplay(project, run.items.filter((i) => i.state === 'open' || i.state === 'stale').map((i) => ({ id: i.id, op: i.record.op })), { genId: 'view', now: 0 }), [project, run.items]);
+  // (keyed on which items are still open, not on their checkboxes: a big batch is many ops and must not be re-planned on every tick)
+  const openKey = run.items.filter((i) => i.state === 'open' || i.state === 'stale').map((i) => i.id).join(',');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const plan = useMemo(() => planReplay(project, run.items.filter((i) => i.state === 'open' || i.state === 'stale').map((i) => ({ id: i.id, op: i.record.op })), { genId: 'view', now: 0 }), [project, openKey]);
   const status = new Map(plan.items.map((i) => [i.id, i]));
-  const groups = SCOPE_ORDER.map((s) => ({ s, items: open.filter((i) => scopeOf(i.record.op) === s) })).filter((g) => g.items.length > 0);
+  const loose = open.filter((i) => !i.record.group);
+  const groups = SCOPE_ORDER.map((s) => ({ s, items: loose.filter((i) => scopeOf(i.record.op) === s) })).filter((g) => g.items.length > 0);
+  const batches = batchesOf(run.items, open);
+  const pendingBatches = pendingBatchesOf(pending);
+  const renderPending = (i: CardItem) => {
+    const st = status.get(i.id);
+    const isLock = i.record.status === 'needs_unlock';
+    return (
+      <div key={i.id} className="agent-row" data-testid="agent-pending-row" onMouseEnter={() => hover(i.record.changes[0]?.beatId)} onMouseLeave={() => hover(undefined)} onClick={(e) => { if (!(e.target as HTMLElement).closest('input,button')) onFocus(i.record.op.sceneId, i.record.changes[0]?.beatId); }}>
+        <div className="agent-row-body">
+          <div className="hint warn">{isLock ? `锁定：${i.record.violations.join('、')}` : `会覆盖手改：${i.record.overwrote.join('、')}`}</div>
+          <ChangeLines changes={i.record.changes} />
+          {st?.status === 'stale' && <div className="hint warn">{st.reason}</div>}
+          <div className="agent-buttons">
+            {isLock ? <button className="btn-s" data-testid="agent-unlock-apply" onClick={() => a.applyItems(run.id, [i.id], { unlock: true })}>解锁并应用</button>
+              : <button className="btn-s" data-testid="agent-confirm-apply" onClick={() => a.applyItems(run.id, [i.id], { confirm: true })}>仍然应用（覆盖手改）</button>}
+            <button className="btn-s" data-testid="agent-skip" onClick={() => a.skip(run.id, i.id)}>跳过</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  const renderRow = (i: CardItem) => {
+    const st = status.get(i.id);
+    const stale = i.state === 'stale' || st?.status === 'stale';
+    const askNow = st && (st.status === 'needs_unlock' || st.status === 'needs_confirm');
+    return (
+      <div key={i.id} className={`agent-row${stale ? ' stale' : ''}`} data-testid="agent-row" data-op={i.record.op.op} onMouseEnter={() => hover(i.record.changes[0]?.beatId)} onMouseLeave={() => hover(undefined)} onClick={(e) => { if (!(e.target as HTMLElement).closest('input,button')) onFocus(i.record.op.sceneId, i.record.changes[0]?.beatId); }}>
+        <input type="checkbox" checked={i.checked && !stale} disabled={stale || run.rejected} onChange={(e) => a.toggle(run.id, i.id, e.target.checked)} aria-label="选择这一项" />
+        <div className="agent-row-body">
+          <ChangeLines changes={i.record.changes} />
+          {i.record.op.reason && !i.record.group && <div className="hint">理由：{i.record.op.reason}</div>}
+          {i.record.warnings.length > 0 && <div className="hint warn">{i.record.warnings.join('；')}</div>}
+          {stale && <div className="hint warn" data-testid="agent-stale">{i.reason ?? st?.reason ?? '已失效'}</div>}
+          {askNow && <div className="hint warn">{st.reason}（该项会进入“需要你确认”，请逐项处理）</div>}
+        </div>
+      </div>
+    );
+  };
   const aiSaid = p.summary || (p.question ? p.question.question : '');
   const actual = run.items.filter((i) => i.origin === 'applied').flatMap((i) => i.record.changes).length;
   return (
@@ -115,49 +236,18 @@ function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFoc
       )}
       <Verification v={p.verification} />
       <div className="agent-actual"><span className="agent-tag">实际改动</span>{actual === 0 ? ' 没有' : ` ${actual} 处`}</div>
+      {batches.map((b) => <BatchGroup key={b.id} run={run} batch={b} renderRow={renderRow} />)}
       {groups.map((g) => (
         <details key={g.s} open className="agent-group" data-testid={`agent-group-${g.s}`}>
           <summary>{AGENT_SCOPE_LABEL[g.s]} <span className="badge">{g.items.length}</span></summary>
-          {g.items.map((i) => {
-            const st = status.get(i.id);
-            const stale = i.state === 'stale' || st?.status === 'stale';
-            const askNow = st && (st.status === 'needs_unlock' || st.status === 'needs_confirm');
-            return (
-              <div key={i.id} className={`agent-row${stale ? ' stale' : ''}`} data-testid="agent-row" data-op={i.record.op.op} onMouseEnter={() => hover(i.record.changes[0]?.beatId)} onMouseLeave={() => hover(undefined)} onClick={(e) => { if (!(e.target as HTMLElement).closest('input,button')) onFocus(i.record.op.sceneId, i.record.changes[0]?.beatId); }}>
-                <input type="checkbox" checked={i.checked && !stale} disabled={stale || run.rejected} onChange={(e) => a.toggle(run.id, i.id, e.target.checked)} aria-label="选择这一项" />
-                <div className="agent-row-body">
-                  <ChangeLines changes={i.record.changes} />
-                  {i.record.op.reason && <div className="hint">理由：{i.record.op.reason}</div>}
-                  {i.record.warnings.length > 0 && <div className="hint warn">{i.record.warnings.join('；')}</div>}
-                  {stale && <div className="hint warn" data-testid="agent-stale">{i.reason ?? st?.reason ?? '已失效'}</div>}
-                  {askNow && <div className="hint warn">{st.reason}（该项会进入“需要你确认”，请逐项处理）</div>}
-                </div>
-              </div>
-            );
-          })}
+          {g.items.map(renderRow)}
         </details>
       ))}
       {pending.length > 0 && (
         <div className="agent-confirm" data-testid="agent-pending">
           <div className="agent-tag warn">需要你确认</div>
-          {pending.map((i) => {
-            const st = status.get(i.id);
-            const isLock = i.record.status === 'needs_unlock';
-            return (
-              <div key={i.id} className="agent-row" data-testid="agent-pending-row" onMouseEnter={() => hover(i.record.changes[0]?.beatId)} onMouseLeave={() => hover(undefined)} onClick={(e) => { if (!(e.target as HTMLElement).closest('input,button')) onFocus(i.record.op.sceneId, i.record.changes[0]?.beatId); }}>
-                <div className="agent-row-body">
-                  <div className="hint warn">{isLock ? `锁定：${i.record.violations.join('、')}` : `会覆盖手改：${i.record.overwrote.join('、')}`}</div>
-                  <ChangeLines changes={i.record.changes} />
-                  {st?.status === 'stale' && <div className="hint warn">{st.reason}</div>}
-                  <div className="agent-buttons">
-                    {isLock ? <button className="btn-s" data-testid="agent-unlock-apply" onClick={() => a.applyItems(run.id, [i.id], { unlock: true })}>解锁并应用</button>
-                      : <button className="btn-s" data-testid="agent-confirm-apply" onClick={() => a.applyItems(run.id, [i.id], { confirm: true })}>仍然应用（覆盖手改）</button>}
-                    <button className="btn-s" data-testid="agent-skip" onClick={() => a.skip(run.id, i.id)}>跳过</button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {pendingBatches.map((b) => <PendingBatch key={`${b.id}:${b.status}`} run={run} batch={b} renderPending={renderPending} />)}
+          {pending.filter((i) => !i.record.group).map(renderPending)}
         </div>
       )}
       {p.pending.length > 0 && pending.length === 0 && <p className="hint">需要确认的项目已处理。</p>}

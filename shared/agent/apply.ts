@@ -392,7 +392,7 @@ function applyKeySet(project: Project, scene: Scene, op: Extract<AgentOp, { op: 
 }
 
 /** The continuous effect that is running at the start of beat `index` (the last continuous key before it with strength > 0). */
-type FxValue = { fx: string; strength: number; tone?: string; edge?: string; variant?: string };
+export type FxValue = { fx: string; strength: number; tone?: string; edge?: string; variant?: string };
 function runningFx(scene: Scene, index: number): FxValue | null {
   const order = new Map(scene.beats.map((b, i) => [b.id, i]));
   const keys = tracksOf(scene).filter((t) => t.channel === 'fx').flatMap((t) => t.keys).filter((k) => !(ONE_SHOT_FX as readonly string[]).includes((k.value as { fx: string }).fx) && (order.get(k.at.beatId) ?? 1e9) < index)
@@ -409,13 +409,18 @@ function fxLabel(v: FxValue): string {
 
 /** Effect per beat (running continuous effect plus one-shots keyed on the beat) with its parameters, for the card text and the scene table. */
 export function fxStates(scene: Scene): string[] {
+  return fxValues(scene).map((cur) => (cur ? fxLabel(cur) : '无'));
+}
+
+/** The effect (with its parameters) in force at each beat, or null: the structured form of `fxStates` (used by the beat query). */
+export function fxValues(scene: Scene): Array<FxValue | null> {
   const order = new Map(scene.beats.map((b, i) => [b.id, i]));
   const keys = tracksOf(scene).filter((t) => t.channel === 'fx').flatMap((t) => t.keys);
   return scene.beats.map((_b, i) => {
     const own = keys.filter((k) => order.get(k.at.beatId) === i).map((k) => k.value as FxValue).sort((x, y) => 0 - (x.strength - y.strength));
     let cur: FxValue | null = runningFx(scene, i);
     for (const v of own) cur = v.strength > 0 ? v : (cur?.fx === v.fx ? null : cur);
-    return cur ? fxLabel(cur) : '无';
+    return cur;
   });
 }
 

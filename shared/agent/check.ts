@@ -112,7 +112,7 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
     }
     case 'beat_insert': {
       if (input.afterBeatId !== null) beatOk(input.afterBeatId);
-      if (beatIdx(input.newId) >= 0) s.problems.push(`id ${input.newId} 已存在`);
+      if (beatIdx(input.newId) >= 0 || project.scenes.some((x) => x.beats.some((b) => b.id === input.newId))) s.problems.push(`id ${input.newId} 已存在（beat id 在整个项目里必须唯一）`);
       if (input.beat.speakerId) castOk(input.beat.speakerId, false);
       if (input.beat.emotion && !(EMOTIONS as readonly string[]).includes(input.beat.emotion)) s.problems.push(`情绪只能取：${EMOTIONS.join(' / ')}`);
       if (input.beat.kind === 'dialogue' && !input.beat.speakerId) s.problems.push('对白需要 speakerId');
@@ -125,7 +125,7 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
       beatOk(input.beatId);
       const b = scene.beats.find((x) => x.id === input.beatId);
       if (b && input.at >= [...b.text].length) s.problems.push(`拆分位置 ${input.at} 超出文字长度 ${[...b.text].length}`);
-      if (beatIdx(input.newId) >= 0) s.problems.push(`id ${input.newId} 已存在`);
+      if (beatIdx(input.newId) >= 0 || project.scenes.some((x) => x.beats.some((b) => b.id === input.newId))) s.problems.push(`id ${input.newId} 已存在（beat id 在整个项目里必须唯一）`);
       break;
     }
     case 'beat_merge': beatOk(input.beatId); if (beatIdx(input.beatId) >= 0 && beatIdx(input.beatId) === scene.beats.length - 1) s.problems.push('这是最后一句，没有可以合并的下一句'); break;
