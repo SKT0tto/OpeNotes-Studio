@@ -212,7 +212,11 @@ export function HubCharacter({ health, modelId, placement, onPlacement, onPick, 
 
   const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // the pointer can already be gone (synthetic events, a fast tap); the gesture still works without capture
+    }
     const p = local(e);
     pointers.current.set(e.pointerId, p);
     if (pointers.current.size === 1) gesture.current = { x: p.x, y: p.y, t: performance.now(), place: place.current, moved: false };
