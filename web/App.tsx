@@ -39,10 +39,11 @@ function MainApp() {
     if (health && setup === null) setSetup(!health.assetRoot.ok); // eslint-disable-line react-hooks/set-state-in-effect
   }, [health, setup]);
   const isEditor = location.pathname === '/' || location.pathname.startsWith('/editor');
+  const isPlay = location.pathname.startsWith('/play/');
   if (ready && health && isEditor && !setup) return <EditorApp health={health} onHealthChanged={() => void reload()} />;
   return (
-    <div className="app">
-      <header className="topbar">
+    <div className={`app${isPlay ? ' play-app' : ''}`}>
+      {!isPlay && <header className="topbar">
         <h1>OpeNotes Studio</h1>
         <span className="ver">{health ? `v${health.version}` : ''}</span>
         <nav className="topnav">
@@ -53,7 +54,7 @@ function MainApp() {
           <a href="/play/demo">播放示例</a>
         </nav>
         <HealthBar health={health} error={error} />
-      </header>
+      </header>}
       <main className="main">
         {ready && health && location.pathname === '/lab/actor' ? (
           <ActorLab health={health} />

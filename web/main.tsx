@@ -8,6 +8,7 @@ import './editor/studio.css';
 import './editor/dock/dock.css';
 import './setup/setup.css';
 import './editor/bg/bg.css';
+import './play/play.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

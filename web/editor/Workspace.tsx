@@ -1,5 +1,5 @@
 /** The editing workspace: top bar, left panel (script / assets), live preview or storyboard, inspector, timeline, status bar. */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { newProjectId } from '@shared/project/blank';
 import type { Project } from '@shared/schema/project';
@@ -54,6 +54,8 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   const toast = useUi((s) => s.toast);
   const helpOpen = useUi((s) => s.helpOpen);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [presenting, setPresenting] = useState(false);
+  const presentingRef = useRef(false);
   const keySel = useUi((s) => s.keySel);
   const catalog = useCatalog();
   const preview = useMemo(() => previewOf(project, muted, solo), [project, muted, solo]);
@@ -184,6 +186,25 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
     }
   };
 
+  const presentProject = async () => {
+    if (presentingRef.current || useProject.getState().saveState === 'saving') return;
+    presentingRef.current = true;
+    setPresenting(true);
+    try {
+      if (!await useProject.getState().save()) return;
+      // An edit made while the request was in flight must not play an older saved version.
+      const latest = useProject.getState();
+      if (latest.project?.id !== project.id || latest.saveState !== 'saved') {
+        setNotice('保存期间内容发生变化，请再次点击放映。');
+        return;
+      }
+      location.assign(`/play/${encodeURIComponent(project.id)}`);
+    } finally {
+      presentingRef.current = false;
+      setPresenting(false);
+    }
+  };
+
   const total = useMemo(() => project.scenes.reduce((n, s) => n + s.beats.length, 0), [project.scenes]);
   const problems = host.reloadError ?? saveError;
   const set = useUi.getState().set;
@@ -230,6 +251,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
     <div className="ws" data-testid="workspace">
       <header className="ws-top">
         <button className="btn" onClick={onExit} data-testid="btn-projects" title="返回项目列表">‹ 项目</button>
+        <button className="btn primary" disabled={presenting || saveState === 'saving'} onClick={() => void presentProject()} data-testid="btn-present" title="保存当前项目并进入播放器">{presenting ? '准备放映…' : '▶ 放映'}</button>
         <span className="ws-title" data-testid="ws-title" title={project.id}>{project.title}</span>
         <span className={`save-state s-${saveState}`} data-testid="save-state" title={saveError ?? ''}>{etag === null && saveState !== 'saving' ? '尚未保存' : SAVE_TEXT[saveState]}</span>
         <span className="sep" />

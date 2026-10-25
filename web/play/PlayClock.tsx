@@ -39,5 +39,5 @@ export function PlaySeek({ playerRef, ready, duration, onSeek, className = 'seek
     if (input && input.value !== v && document.activeElement !== input) input.value = v;
   }, []);
   useFollowPlayer(playerRef, ready, write);
-  return <input ref={el} type="range" className={className} min={0} max={Math.max(1, Math.round(duration * 100))} defaultValue={0} disabled={!ready} onChange={(e) => onSeek(Number(e.target.value) / 100)} data-testid={testId} />;
+  return <input ref={el} type="range" aria-label="播放进度" className={className} min={0} max={Math.max(1, Math.round(duration * 100))} defaultValue={0} disabled={!ready} onChange={(e) => onSeek(Number(e.target.value) / 100)} data-testid={testId} />;
 }
