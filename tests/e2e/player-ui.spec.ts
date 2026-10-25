@@ -107,9 +107,12 @@ test('示例播放器适配窗口，原生全屏铺满且控制层可隐藏、�
   await fitted(page);
   await page.mouse.move(50, 100);
   await page.screenshot({ path: '.verify/player-fullscreen-controls-1920x1080.png' });
+  // Entering fullscreen must become immersive even before playback starts.
+  await expect(page.getByTestId('play-deck')).toBeHidden({ timeout: 8000 });
+  await page.mouse.move(60, 120);
   await page.getByTestId('play-toggle').click();
   await expect(page.getByTestId('play-toggle')).toContainText('暂停');
-  await page.mouse.move(60, 120);
+  // A pointer-focused button must not pin the controls open when the pointer stays over it.
   await expect(page.getByTestId('play-deck')).toBeHidden({ timeout: 8000 });
   await page.screenshot({ path: '.verify/player-fullscreen-immersive-1920x1080.png' });
   await page.mouse.move(80, 140);
@@ -120,6 +123,9 @@ test('示例播放器适配窗口，原生全屏铺满且控制层可隐藏、�
   await expect(page.getByTestId('play-deck')).toBeVisible();
   await page.getByTestId('play-toggle').click();
   await expect(page.getByTestId('play-toggle')).toContainText('播放');
+  await expect(page.getByTestId('play-deck')).toBeHidden({ timeout: 8000 });
+  await page.mouse.move(100, 160);
+  await expect(page.getByTestId('play-deck')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
   await expect(page.getByTestId('play-deck')).toBeVisible();

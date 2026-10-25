@@ -43,14 +43,14 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
   const revealControls = useCallback(() => {
     clearTimeout(idleTimer.current);
     setControlsVisible(true);
-    if (fullscreen && playing) {
+    if (fullscreen && ready && !loadError && !error && !fullscreenError) {
       idleTimer.current = setTimeout(() => {
         // Keyboard users keep the controls while operating them; pointer clicks do not pin the toolbar open.
         if (keyboardFocus.current && root.current?.querySelector('.play-chrome:focus-within')) return;
         setControlsVisible(false);
       }, 2600);
     }
-  }, [fullscreen, playing]);
+  }, [fullscreen, ready, loadError, error, fullscreenError]);
 
   useEffect(() => {
     const onFullscreen = () => setFullscreen(document.fullscreenElement === root.current);
@@ -59,11 +59,11 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
   }, []);
 
   useEffect(() => {
-    // Fullscreen / playback transitions reset the idle clock; paused controls always remain visible.
+    // Fullscreen / playback transitions reveal the controls, then idle hides them even while paused.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     revealControls();
     return () => clearTimeout(idleTimer.current);
-  }, [revealControls]);
+  }, [revealControls, playing]);
 
   useEffect(() => {
     if (ready && playerRef.current) playerRef.current.rate = rate;
@@ -71,7 +71,8 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      keyboardFocus.current = true;
+      // Playback shortcuts alone must not pin a previously pointer-focused control open.
+      if (e.key === 'Tab') keyboardFocus.current = true;
       revealControls();
       if (e.key === 'Escape' && document.fullscreenElement === root.current) {
         // Also covers browsers that deliver Escape to the page before handling native fullscreen.
@@ -101,8 +102,8 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
   const err = loadError ?? error;
   return (
     <div className={`play${fullscreen ? ' is-fullscreen' : ''}${controlsVisible ? '' : ' controls-hidden'}`} ref={root} data-testid="play-page"
-      onPointerMove={revealControls} onPointerDown={() => { keyboardFocus.current = false; revealControls(); }}
-      onFocusCapture={revealControls} onBlurCapture={revealControls}>
+      onPointerMove={() => { keyboardFocus.current = false; revealControls(); }} onPointerDown={() => { keyboardFocus.current = false; revealControls(); }}
+      onFocusCapture={revealControls} onBlurCapture={() => { if (keyboardFocus.current) revealControls(); }}>
       <header className="play-header play-chrome">
         <a className="play-back" href={projectId === 'demo' ? '/' : `/editor/${encodeURIComponent(projectId)}`} data-testid="play-back">‹ {projectId === 'demo' ? '项目列表' : '返回编辑器'}</a>
         <div className="play-heading">
