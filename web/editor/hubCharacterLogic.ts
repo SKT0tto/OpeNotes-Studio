@@ -120,6 +120,26 @@ export function reactionPool(motions: readonly MotionEntry[], expressions: reado
   return { motions: (front.length ? front : candidates).map((m) => m.name), expressions: expressions.filter((e) => wantE.has(e.family)).map((e) => e.name) };
 }
 
+/** 'normal': the character only reacts to clicks. 'adjust' (entered explicitly, never persisted): move / scale / reset, no reactions. */
+export type HubCharacterMode = 'normal' | 'adjust';
+
+/** Which gestures a mode allows. In normal mode the wheel is not captured at all, so the page keeps it. */
+export function gesturesFor(mode: HubCharacterMode): { react: boolean; drag: boolean; zoom: boolean; reset: boolean } {
+  return mode === 'adjust' ? { react: false, drag: true, zoom: true, reset: true } : { react: true, drag: false, zoom: false, reset: false };
+}
+
+/**
+ * Corner-handle resize: the handle sits on the right edge of the character box; dragging it away from the character's centre line
+ * scales up, towards it scales down. The centre and the top stay put.
+ */
+export function resizeFromHandle(p: HubPlacement, startX: number, curX: number, w: number): HubPlacement {
+  const ax = p.x * w;
+  const d0 = startX - ax;
+  if (Math.abs(d0) < 4) return p;
+  const ratio = Math.max(0.05, (curX - ax) / d0);
+  return clampPlacement({ ...p, scale: p.scale * ratio });
+}
+
 /** Choose one motion and/or one expression (at least one when the model has any). `rand` is injectable for tests. */
 export function pickReaction(pool: { motions: string[]; expressions: string[] }, rand: () => number = Math.random): { motion: string | null; expression: string | null } {
   const pick = (a: string[]) => (a.length ? a[Math.min(a.length - 1, Math.floor(rand() * a.length))]! : null);

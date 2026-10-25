@@ -201,13 +201,19 @@
 .stage-actor { position: absolute; z-index: -1; inset: 0; pointer-events: none; opacity: 0; transition: opacity 700ms ease-out; }
 .stage-actor.shown { opacity: 1; }
 /* only this box over the model's visible bounds takes pointer input; everything else on the stage passes through */
-.hub-char-hit { position: absolute; z-index: -1; cursor: grab; touch-action: none; border-radius: 18px; transition: box-shadow var(--ease); }
+/* normal mode: click to interact only (no move cursor, the wheel is left to the page) */
+.hub-char-hit { position: absolute; z-index: -1; cursor: pointer; border-radius: 18px; }
 .hub-char-hit[hidden] { display: none; }
-.hub-char-hit:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
-.hub-char-hit:active { cursor: grabbing; }
-.char-swap { position: absolute; top: 10px; right: 10px; padding: 4px 11px; border-radius: 999px; font: inherit; font-size: var(--fs-label); color: var(--text-1); cursor: pointer; background: rgba(10, 12, 16, .78); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(6px); opacity: 0; transition: opacity var(--ease); }
-.hub-char-hit:hover .char-swap { opacity: 1; }
+.char-hover-tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; opacity: 0; transition: opacity var(--ease); }
+.hub-char-hit:hover .char-hover-tools { opacity: 1; }
+.char-swap { padding: 4px 11px; border-radius: 999px; font: inherit; font-size: var(--fs-label); color: var(--text-1); cursor: pointer; background: rgba(10, 12, 16, .78); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(6px); }
 .char-swap:hover { border-color: var(--accent); }
+/* adjust mode: framed, draggable, scalable */
+.hub-char-hit.adjusting { cursor: move; touch-action: none; outline: 2px dashed color-mix(in srgb, var(--accent) 85%, #fff); outline-offset: -2px; background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.char-toolbar { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; white-space: nowrap; cursor: default; background: rgba(10, 12, 16, .88); border: 1px solid var(--line-strong); border-radius: 999px; box-shadow: var(--shadow-pop); backdrop-filter: blur(8px); }
+.char-hint { font-size: var(--fs-label); color: var(--text-2); margin-right: 4px; }
+.hub .char-toolbar .btn { height: 24px; padding: 0 11px; border-radius: 999px; }
+.char-handle { position: absolute; right: -8px; top: 54px; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; border-radius: 5px; background: var(--accent); border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .5); }
 .stage-actor canvas { display: block; width: 100% !important; height: 100% !important; }
 .hub .ico { width: 18px; height: 18px; flex: none; }
 .hub .btn { display: inline-flex; align-items: center; gap: 6px; }

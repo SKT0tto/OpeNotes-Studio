@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CompactCatalog, CompactModel, ExpressionEntry, MotionEntry } from '../../shared/schema/assets';
 import {
-  DEFAULT_PLACEMENT, SCALE_MAX, SCALE_MIN, clampPlacement, dragBy, hitZone, isClick, parsePrefs, pickReaction, reactionPool, resolveHubModel,
+  DEFAULT_PLACEMENT, SCALE_MAX, SCALE_MIN, clampPlacement, dragBy, gesturesFor, hitZone, resizeFromHandle, isClick, parsePrefs, pickReaction, reactionPool, resolveHubModel,
   serializePrefs, zoomAt,
 } from '../../web/editor/hubCharacterLogic';
 
@@ -66,6 +66,24 @@ describe('drag and zoom', () => {
   it('zoom stops at the limits without drifting', () => {
     const p = { x: 0.5, y: 0.1, scale: SCALE_MAX };
     expect(zoomAt(p, 2, 100, 100, 1000, 1000)).toEqual(p);
+  });
+});
+
+describe('modes', () => {
+  it('normal mode only reacts to clicks', () => expect(gesturesFor('normal')).toEqual({ react: true, drag: false, zoom: false, reset: false }));
+  it('adjust mode moves, scales and resets, without reactions', () => expect(gesturesFor('adjust')).toEqual({ react: false, drag: true, zoom: true, reset: true }));
+});
+
+describe('resizeFromHandle', () => {
+  const p = { x: 0.5, y: 0.1, scale: 1 };
+  it('dragging the handle away from the centre line scales up, towards it scales down; centre and top stay', () => {
+    expect(resizeFromHandle(p, 600, 650, 1000)).toEqual({ x: 0.5, y: 0.1, scale: 1.5 });
+    expect(resizeFromHandle(p, 600, 570, 1000).scale).toBeCloseTo(0.7);
+  });
+  it('clamps, and ignores a handle on the centre line', () => {
+    expect(resizeFromHandle(p, 600, 2000, 1000).scale).toBe(SCALE_MAX);
+    expect(resizeFromHandle(p, 600, 300, 1000).scale).toBe(SCALE_MIN);
+    expect(resizeFromHandle(p, 501, 700, 1000)).toBe(p);
   });
 });
 

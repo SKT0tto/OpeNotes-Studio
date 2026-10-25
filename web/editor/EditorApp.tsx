@@ -78,6 +78,7 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
   const wide = useMedia('(min-width: 721px)');
   const [charPrefs, setCharPrefs] = useHubCharacterPrefs();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
   useEffect(() => {
     if (!allOpen && !envOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -209,8 +210,10 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
           modelId={modelId}
           placement={placement}
           onPlacement={(p) => setCharPrefs({ ...charPrefs, ...p })}
-          onPick={() => setPickerOpen(true)}
+          onPick={() => { setAdjusting(false); setPickerOpen(true); }}
           paused={covered}
+          adjusting={adjusting && !covered && charPrefs.model !== null}
+          onAdjust={setAdjusting}
         />
       )}
 
@@ -329,7 +332,8 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
         {wide && catalog && (
           <HubCharacterMenu
             hidden={charPrefs.model === null}
-            onPick={() => setPickerOpen(true)}
+            onPick={() => { setAdjusting(false); setPickerOpen(true); }}
+            onAdjust={() => setAdjusting(true)}
             onReset={() => setCharPrefs({ ...charPrefs, ...DEFAULT_PLACEMENT })}
             onToggle={() => setCharPrefs({ ...charPrefs, model: charPrefs.model === null ? undefined : null })}
           />

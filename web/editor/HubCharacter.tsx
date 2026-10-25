@@ -16,7 +16,7 @@ import { ensureRuntime } from '../engine/runtime';
 import { Live2DActor, NEUTRAL_SIGNS } from '../engine/Live2DActor';
 import { probeModel } from '../engine/ModelProbe';
 import {
-  BASE_HEIGHT, DEFAULT_PLACEMENT, HUB_CHARACTER_KEY, dragBy, hitZone, isClick, parsePrefs, pickReaction, reactionPool,
+  BASE_HEIGHT, DEFAULT_PLACEMENT, HUB_CHARACTER_KEY, dragBy, gesturesFor, resizeFromHandle, hitZone, isClick, parsePrefs, pickReaction, reactionPool,
   resolveHubModel, serializePrefs, usableHubModels, zoomAt, type HubCharacterPrefs, type HubPlacement,
 } from './hubCharacterLogic';
 
@@ -50,13 +50,16 @@ interface Loaded {
   still: boolean;
 }
 
-export function HubCharacter({ health, modelId, placement, onPlacement, onPick, paused }: {
+export function HubCharacter({ health, modelId, placement, onPlacement, onPick, paused, adjusting, onAdjust }: {
   health: Health;
   modelId: string | null;
   placement: HubPlacement;
   onPlacement: (p: HubPlacement) => void;
   onPick: () => void;
   paused: boolean;
+  /** Adjust mode (move / scale); never persisted. */
+  adjusting: boolean;
+  onAdjust: (on: boolean) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const hit = useRef<HTMLDivElement>(null);
@@ -198,9 +201,15 @@ export function HubCharacter({ health, modelId, placement, onPlacement, onPick, 
     done(2800);
   }, []);
 
-  // --- gestures: drag, pinch, click, wheel -----------------------------------------------------------------------------------------
+  // --- gestures -------------------------------------------------------------------------------------------------------------------
+  // normal mode: a click reacts, nothing else. adjust mode: drag moves, wheel / pinch / corner handle scale, double-click resets.
+  const allow = gesturesFor(adjusting ? 'adjust' : 'normal');
+  const allowRef = useRef(allow);
+  useEffect(() => {
+    allowRef.current = allow;
+  });
   const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const gesture = useRef<{ x: number; y: number; t: number; place: HubPlacement; moved: boolean; pinch?: { dist: number; place: HubPlacement } } | null>(null);
+  const gesture = useRef<{ x: number; y: number; t: number; place: HubPlacement; moved: boolean; resize?: boolean; pinch?: { dist: number; place: HubPlacement } } | null>(null);
   const local = (e: { clientX: number; clientY: number }) => {
     const r = host.current?.getBoundingClientRect();
     return { x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0), w: r?.width ?? 1, h: r?.height ?? 1 };
@@ -210,37 +219,41 @@ export function HubCharacter({ health, modelId, placement, onPlacement, onPick, 
     return a && b ? { dist: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 } : null;
   };
 
-  const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const start = (e: ReactPointerEvent<HTMLElement>, resize: boolean) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // the pointer can already be gone (synthetic events, a fast tap); the gesture still works without capture
+    if (allowRef.current.drag) {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // the pointer can already be gone (synthetic events, a fast tap); the gesture still works without capture
+      }
     }
     const p = local(e);
     pointers.current.set(e.pointerId, p);
-    if (pointers.current.size === 1) gesture.current = { x: p.x, y: p.y, t: performance.now(), place: place.current, moved: false };
-    else if (pointers.current.size === 2 && gesture.current) {
+    if (pointers.current.size === 1) gesture.current = { x: p.x, y: p.y, t: performance.now(), place: place.current, moved: false, resize };
+    else if (pointers.current.size === 2 && gesture.current && allowRef.current.zoom) {
       const ps = pinchState();
-      if (ps) gesture.current = { ...gesture.current, moved: true, pinch: { dist: ps.dist, place: place.current } };
+      if (ps) gesture.current = { ...gesture.current, moved: true, resize: false, pinch: { dist: ps.dist, place: place.current } };
     }
   };
-  const onMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const onMove = (e: ReactPointerEvent<HTMLElement>) => {
     if (!pointers.current.has(e.pointerId) || !gesture.current) return;
     const p = local(e);
     pointers.current.set(e.pointerId, p);
     const g = gesture.current;
+    const dx = p.x - g.x;
+    const dy = p.y - g.y;
+    if (!g.moved && !isClick(dx, dy, 0)) g.moved = true;
+    if (!allowRef.current.drag) return; // normal mode: movement only cancels the click
     if (g.pinch && pointers.current.size >= 2) {
       const ps = pinchState();
       if (ps && g.pinch.dist > 0) apply(zoomAt(g.pinch.place, ps.dist / g.pinch.dist, ps.mx, ps.my, p.w, p.h));
       return;
     }
-    const dx = p.x - g.x;
-    const dy = p.y - g.y;
-    if (!g.moved && !isClick(dx, dy, 0)) g.moved = true;
-    if (g.moved) apply(dragBy(g.place, dx, dy, p.w, p.h));
+    if (!g.moved) return;
+    apply(g.resize ? resizeFromHandle(g.place, g.x, p.x, p.w) : dragBy(g.place, dx, dy, p.w, p.h));
   };
-  const onUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const onUp = (e: ReactPointerEvent<HTMLElement>) => {
     if (!pointers.current.has(e.pointerId)) return;
     pointers.current.delete(e.pointerId);
     const g = gesture.current;
@@ -254,13 +267,15 @@ export function HubCharacter({ health, modelId, placement, onPlacement, onPick, 
     if (pointers.current.size > 0) return;
     gesture.current = null;
     const p = local(e);
-    if (!g.moved && e.type === 'pointerup' && isClick(p.x - g.x, p.y - g.y, performance.now() - g.t)) react(p.x, p.y);
-    else if (g.moved) commit.current(place.current);
+    const click = !g.moved && e.type === 'pointerup' && isClick(p.x - g.x, p.y - g.y, performance.now() - g.t);
+    if (click && allowRef.current.react) react(p.x, p.y);
+    else if (g.moved && allowRef.current.drag) commit.current(place.current);
   };
 
+  // the wheel is only taken over in adjust mode; in normal mode it is not even listened to
   useEffect(() => {
     const el = hit.current;
-    if (!el) return;
+    if (!el || !adjusting) return;
     let timer = 0;
     const onWheel = (e: WheelEvent) => {
       if (!loaded.current) return;
@@ -275,34 +290,75 @@ export function HubCharacter({ health, modelId, placement, onPlacement, onPick, 
     return () => {
       el.removeEventListener('wheel', onWheel);
       window.clearTimeout(timer);
+      commit.current(place.current); // leaving adjust mode saves
     };
-  }, [apply]);
+  }, [apply, adjusting]);
 
+  // leave adjust mode with Esc or a press anywhere outside the character (and outside the corner menu)
+  useEffect(() => {
+    if (!adjusting) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onAdjust(false);
+    const onPress = (e: PointerEvent) => {
+      const t = e.target as Element | null;
+      if (t && (hit.current?.contains(t) || t.closest('.char-menu'))) return;
+      onAdjust(false);
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('pointerdown', onPress, true);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('pointerdown', onPress, true);
+    };
+  }, [adjusting, onAdjust]);
+
+  const stop = (e: { stopPropagation(): void }) => e.stopPropagation();
   return (
     <>
       <div ref={host} className={`stage-actor${shown ? ' shown' : ''}`} aria-hidden="true" />
       <div
         ref={hit}
-        className="hub-char-hit"
+        className={`hub-char-hit${adjusting ? ' adjusting' : ''}`}
         hidden={!shown}
-        onPointerDown={onDown}
+        onPointerDown={(e) => start(e, false)}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        onDoubleClick={() => commit.current({ ...DEFAULT_PLACEMENT })}
+        onDoubleClick={() => allow.reset && commit.current({ ...DEFAULT_PLACEMENT })}
         data-testid="hub-character"
-        title="拖动移动 · 滚轮缩放 · 双击复位 · 点击互动"
+        data-mode={adjusting ? 'adjust' : 'normal'}
+        title={adjusting ? undefined : '点击互动'}
       >
-        <button className="char-swap" onPointerDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()} onClick={onPick} tabIndex={-1} aria-hidden="true">
-          换角色
-        </button>
+        {adjusting ? (
+          <>
+            <div className="char-toolbar" onPointerDown={stop} onDoubleClick={stop} data-testid="hub-char-toolbar">
+              <span className="char-hint">拖动移动 · 滚轮/拖角缩放</span>
+              <button className="btn" onClick={() => commit.current({ ...DEFAULT_PLACEMENT })} data-testid="hub-char-adjust-reset">重置</button>
+              <button className="btn primary" onClick={() => onAdjust(false)} data-testid="hub-char-adjust-done">完成</button>
+            </div>
+            <div
+              className="char-handle"
+              onPointerDown={(e) => { e.stopPropagation(); start(e, true); }}
+              onPointerMove={onMove}
+              onPointerUp={(e) => { e.stopPropagation(); onUp(e); }}
+              onPointerCancel={onUp}
+              onDoubleClick={stop}
+              aria-hidden="true"
+              data-testid="hub-char-handle"
+            />
+          </>
+        ) : (
+          <div className="char-hover-tools">
+            <button className="char-swap" onPointerDown={stop} onClick={onPick} tabIndex={-1} aria-hidden="true">换角色</button>
+            <button className="char-swap" onPointerDown={stop} onClick={() => onAdjust(true)} tabIndex={-1} aria-hidden="true">调整</button>
+          </div>
+        )}
       </div>
     </>
   );
 }
 
 /** The always-reachable (keyboard too) character menu shown in the top-right corner. */
-export function HubCharacterMenu({ hidden, onPick, onReset, onToggle }: { hidden: boolean; onPick: () => void; onReset: () => void; onToggle: () => void }) {
+export function HubCharacterMenu({ hidden, onPick, onAdjust, onReset, onToggle }: { hidden: boolean; onPick: () => void; onAdjust: () => void; onReset: () => void; onToggle: () => void }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -330,6 +386,7 @@ export function HubCharacterMenu({ hidden, onPick, onReset, onToggle }: { hidden
       {open && (
         <div className="char-menu-pop" role="menu">
           <button role="menuitem" onClick={run(onPick)} data-testid="hub-char-pick">换角色…</button>
+          <button role="menuitem" onClick={run(onAdjust)} disabled={hidden} data-testid="hub-char-adjust">调整位置</button>
           <button role="menuitem" onClick={run(onReset)} disabled={hidden} data-testid="hub-char-reset">重置位置</button>
           <button role="menuitem" onClick={run(onToggle)} data-testid="hub-char-toggle">{hidden ? '显示角色' : '不显示角色'}</button>
         </div>
