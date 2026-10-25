@@ -2,6 +2,13 @@
 
 ## 0.6.1
 
+### 补充更新（2026-10-25，版本号保持 0.6.1）
+
+- 编辑器新增「放映」入口：先保存当前项目，再打开播放器；保存失败时留在编辑器，避免播放旧内容。
+- 重构播放器界面，统一为工作室的深色风格，集中提供进度、场景切换、播放速度、自动推进和画幅控制。
+- 新增沉浸式原生全屏：播放、暂停和刚进入全屏时，闲置后均会收起外层控制栏；移动鼠标或使用键盘可唤回，Esc 可退出全屏。
+- README 改写为中文，重新整理功能介绍、上手流程、AI 配置与项目管理说明，并加入主页、编辑器、播放器和全屏放映的示例截图。
+
 **New title screen.** The home page is now laid out like a game title screen: the latest project's background fills the screen (a random scene background or a gradient when there is none), one idling Live2D character stands on the right, and a title menu on the left offers 导入小说开始, 继续, 新建空白项目, 打开示例, 导入项目文件 and AI 设置, with arrow-key navigation. Recent projects sit in a strip at the bottom; 全部项目 opens a searchable grid with batch management. The character loads after the first paint, stays still with reduced motion and stays silent when Live2D Core or the model is missing. The layout stacks on narrow windows.
 
 **AI assistant: find and batch-edit.** The assistant can look up lines by scene, range, speaker, kind, text, emotion, shot, intent, focus, effects, background, who is actually on screen, timing or lock state, and change all of them at once ("整部作品里灯的特写都改成中近景"). A batch is one grouped change card and one undo step; locked lines are listed for confirmation.
