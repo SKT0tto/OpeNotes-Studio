@@ -1,136 +1,224 @@
 # OpeNotes Studio
 
-> **Unofficial fan project.** BanG Dream!, "Our Notes" and all related characters, names and assets are the property of Bushiroad, Craft Egg and other rights holders. This project is not affiliated with or endorsed by them.
-> **This repository contains no game assets and no Live2D Cubism Core.** You must supply legally obtained, properly extracted assets yourself and comply with their terms. The Cubism Core must be obtained from Live2D's official site and used under Live2D's license.
+**一个面向 BanG Dream! 同人创作的 Live2D 剧情编辑器。**
 
-OpeNotes Studio turns a novel into a Live2D staged performance in the style of *BanG Dream! Our Notes*: an AI (or rule-based) director splits scenes, picks backgrounds and outfits, writes shots and acting, and you polish every line in a timeline editor, then play it back or export the project.
+把写好的小说或对白，排成一场可以播放的 Live2D 演出。
 
-Author: bilibili [@羽丘魅魔高松灯](https://space.bilibili.com/358479834) · License: [GPL-3.0-or-later](LICENSE)
+OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持角色动作、表情、站位、分镜、运镜、景深和转场。你可以从空白项目开始慢慢制作，也可以让 AI 帮忙完成初稿，再逐句调整到自己满意。
 
-Website: <https://skt0tto.github.io/OpeNotes-Studio/> (a static landing page lives in [`site/`](site/): plain HTML/CSS/JS, no build step). The Pages URL follows GitHub's `https://<user>.github.io/<repo>/` convention; **after deploying, check that the site loads and that `og.png` resolves at `https://skt0tto.github.io/OpeNotes-Studio/og.png`.** To publish, deploy the `site/` folder (a Pages workflow using `actions/upload-pages-artifact` with `path: site`, or a `gh-pages` branch). Only the demo-video button still says "coming soon" and is marked `data-soon`.
+[项目主页](https://skt0tto.github.io/OpeNotes-Studio/) · [下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [使用教程](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md) · [问题反馈](https://github.com/SKT0tto/OpeNotes-Studio/issues)
 
-**New here? Read the step-by-step guide: [docs/GUIDE_ASSETS.md](docs/GUIDE_ASSETS.md)** (install, Cubism Core, getting and importing assets, AI keys, one-click generation, troubleshooting; written in Chinese).
+> 本项目为非官方同人项目。程序不附带游戏素材和 Live2D Cubism Core，使用前需要自行准备素材，并遵守相应的使用许可。
 
-## Features
+![编辑器：剧本、实时预览、镜头检查器与时间轴](docs/screenshots/editor.jpg)
 
-- One-click generation from a `.txt` / `.md` novel (UTF-8 / GBK detected, chapters, cancel and resume, stats)
-- AI director (Claude, OpenAI-compatible: DeepSeek, LM Studio, vLLM) and a labelled non-AI rule director
-- Editor: script, inspector, stage tools, timeline, storyboard, field locks, undo/redo, diff view with per-scope accept/reject
-- AI assistant: tell the AI in plain language what to change (text, expressions, timing, effects, background, camera, locks); it shows every change as an undoable card, respects locks, and can look at the stage and your screenshots
-- VS Code-style dockable layout (drag, dock, resize, maximise, presets) and multi-select / box-select of lines
-- Original-style staging (framing, two-shot / group layouts, dialogue box) and a player at `/play/<id>`
-- Asset browser and catalog indexer; first-run setup wizard (Cubism Core, asset import, AI key); one-click import of your own asset folder / zip with normalisation, checksums, duplicate detection
-- Project export/import (`.openotes.json`, old `.ournotes.json` files still import); exports hold asset ids only, never asset files
+*当前开发版界面。截图使用内置原创示例，发行包功能以对应版本的更新说明为准。图中角色与场景素材的权利归各自权利人所有。*
 
-Screenshots are intentionally not committed because they would contain game assets; run the app to see it.
+## 可以做些什么？
 
-## Setup
+### 从小说开始制作
 
-### Option 1: download package (recommended for beginners)
+粘贴故事，或导入 `.txt`、`.md` 文件，生成场景、台词和演出初稿。支持识别章节、选择背景与服装，并为对白安排镜头和人物表演。
 
-1. Install [Node.js](https://nodejs.org) 22 or newer (LTS).
-2. Download `OpeNotes-Studio-v<version>.zip` from [Releases](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) and unzip it anywhere (a path without spaces is safest).
-3. Windows: double-click `Start-Windows.cmd`. macOS / Linux: run `./start.sh` in a terminal (or `bash start.sh`).
-4. On the first run it installs the dependencies (needs internet) and asks whether you accept the [Live2D Proprietary Software License](https://www.live2d.com/eula/live2d-proprietary-software-license-agreement_en.html) and want the Live2D Cubism Core downloaded from Live2D's official address. Answer `Y` (or `N` and do it later in the web wizard).
-5. The browser opens at <http://127.0.0.1:5274>; follow the setup wizard to import your assets. Keep the window open while you work; closing it stops the server.
+生成过程中可以查看进度，取消后也可以继续处理剩余场景。
 
-The package contains the built app only (no game assets, no Cubism Core). **To upgrade, unzip the new version over the old folder and keep `data/` and `studio.config.json`** (your projects, settings and asset-library path). Automation flags for the start scripts: `--yes` (accept the licence and download the Core), `--no-core` (skip it), `--no-browser`. The port is `API_PORT` or `port` in `studio.config.json` (default 5274). Maintainers: `npm run package-release` builds the same zip locally into `release/`; pushing a `v*` tag publishes it via `.github/workflows/release.yml`. Background labelling: the standalone labelling workbench (thumbnail grid, batch chips, review queue with keyboard shortcuts, undo; every change is saved at once to `asset-labels/backgrounds.json`) is a tool page of its own at http://localhost:5273/label (dev server; port 5274 for a production start). It is deliberately not linked from the editor, the asset browser or the home page.
+### 在编辑器里逐句调整
 
-### Option 2: developers (git clone)
+从一句台词的停顿，到整场戏的镜头节奏，都可以手动修改：
 
-Requires Node.js 22+ (developed on 24) and, for `npm run test:e2e`, Microsoft Edge.
+- 编辑台词、说话人、旁白和句子时长。
+- 调整人物站位、出入场、服装、动作、表情和视线。
+- 修改景别、镜头焦点、取景、景深与转场。
+- 在时间轴上移动关键帧、调整过渡时长。
+- 用分镜视图检查前后镜头的衔接。
+- 锁定已经完成的内容，使用撤销、重做回退修改。
 
-```
+面板可以拖动、停靠、调整大小，也可以切换布局预设，按自己的习惯安排工作区。
+
+### 用自然语言修改演出
+
+配置 AI 后，可以直接告诉助手你想改什么，例如：
+
+> “把这段对话的节奏放慢一点。”
+>
+> “这一句给灯一个近景，素世先不要转头。”
+>
+> “选中的几句都换成同一套服装。”
+
+助手可以查找台词、提出修改，并显示修改前后的内容。支持对选中的多句一起处理，也支持将一组修改整体撤销。
+
+使用支持视觉输入的模型时，还可以结合舞台画面、截图或视频帧讨论演出效果。
+
+### 选择镜头表现方式
+
+提供「经典」和「运镜」两种模式。
+
+经典模式适合以景别和切镜组织对白；运镜模式加入镜头移动、重新取景和人物之间的视角衔接。
+
+运镜的设计方向是跟随说话人、关系变化和情绪推进，让移动有叙事上的理由。生成后仍然可以手动调整，最终以整段演出的观感为准。
+
+**切换模式会沿用现有分镜，不会自动重新设计镜头。** 如果希望重新安排，可以使用重新生成镜头的入口，查看差异后再决定是否接受。
+
+### 放映与保存
+
+编辑器中的「放映」会先保存当前项目，再进入播放器。
+
+播放器支持进度跳转、场景切换、播放速度、自动推进，以及 16:9 和宽画幅。进入全屏后，控制栏会在闲置时收起，移动鼠标即可重新唤出。
+
+![播放器：进度、场景切换与放映控制](docs/screenshots/player.jpg)
+
+*普通窗口下的播放器。*
+
+![沉浸式全屏：闲置后收起外层控制栏](docs/screenshots/fullscreen.png)
+
+*全屏放映效果，外层控制栏已收起。*
+
+项目可以导出为 `.openotes.json` 文件，之后继续导入编辑。
+
+**项目文件只保存演出数据和素材引用，不包含模型、背景或音频。** 分享项目时，对方也需要准备对应素材。
+
+## 第一次使用
+
+需要准备：
+
+- Node.js 22 或更高版本。
+- Chrome、Edge 等支持 WebGL 的现代浏览器。
+- 自行取得并有权使用的 Live2D 模型、背景等素材。
+- Live2D 官方提供的 Cubism Core。
+- AI 接口或本地模型服务，可选。
+
+### 下载运行
+
+1. 安装 [Node.js](https://nodejs.org/)。
+2. 前往 [Releases](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest)，下载发行包并解压。
+3. Windows 双击 `Start-Windows.cmd`；macOS / Linux 在解压目录运行 `bash start.sh`。
+4. 首次启动会安装运行依赖，并提示处理 Cubism Core。
+5. 浏览器打开后，按照配置向导检查运行环境、导入素材，并按需配置 AI。
+
+默认访问地址为 [http://127.0.0.1:5274](http://127.0.0.1:5274)。使用期间请保持启动窗口开启。
+
+关于素材格式、导入步骤和常见报错，请看[完整使用教程](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md)。
+
+### 做出第一段演出
+
+1. 在首页选择「导入小说开始」，粘贴或导入故事。
+2. 选择 AI 导演或规则导演，生成演出初稿。
+3. 在编辑器里检查说话人、背景、服装和镜头。
+4. 修改不合适的部分，锁定已经满意的内容。
+5. 点击「放映」，连起来看一遍，再回来调整。
+
+也可以选择「打开示例」熟悉操作，或从「新建空白项目」开始制作。
+
+## AI 是可选的
+
+不配置 AI，也可以使用手动编辑、规则导演和播放器。
+
+| 方式 | 适合的用途 |
+| --- | --- |
+| 手动编辑 | 已经有明确分镜，想自己安排每个细节 |
+| 规则导演 | 不使用模型接口，先得到一份基础演出 |
+| AI 导演 | 根据故事生成场景与演出，再进行人工调整 |
+| AI 助手 | 在已有项目中查找、修改和批量处理内容 |
+
+目前支持 Claude，以及 OpenAI 兼容接口，例如 DeepSeek、LM Studio、vLLM 等。可在「AI 设置」中填写服务地址、模型名称和密钥，并测试连接。
+
+项目和设置保存在运行程序的电脑上。使用云端 AI 时，请求所需的文本、项目上下文，以及启用视觉功能时的相关图像，会发送给你配置的服务商。接口费用按服务商的规则计算。
+
+AI 生成结果会受到模型能力、提示内容和素材库完整程度影响，建议在放映前检查一次。
+
+## 素材与项目管理
+
+素材可以从已有文件夹或 ZIP 导入。导入工具会识别模型与背景，检查文件、处理重复内容，并显示导入结果。
+
+项目数据默认保存在 `data/`，素材库可以单独放在其他磁盘，通过配置向导设置路径。
+
+升级前建议备份：
+
+- `data/`：项目、设置和缓存。
+- `studio.config.json`：本地配置。
+- 自己的素材库目录。
+
+升级时保留这些内容。项目导出文件也可以作为单个作品的备份。
+
+## 常见问题
+
+**必须购买 AI 服务才能用吗？**
+
+不需要。手动编辑和规则导演都可以直接使用；也可以连接自己运行的本地模型服务。
+
+**为什么导入项目后，人物或背景没有显示？**
+
+项目文件不包含素材。请确认本机已经导入对应模型、服装和背景，并在配置向导中检查素材库状态。
+
+**切换到运镜模式后，为什么镜头没有全部重新生成？**
+
+切换模式会使用现有分镜。重新设计镜头需要另外执行生成操作，也可以手动修改镜头和叙事意图。
+
+**导出得到的是视频吗？**
+
+目前这里的导出指项目文件，用于备份和继续编辑。需要视频时，可以在播放器中放映并使用录屏工具录制。
+
+## 从源码运行
+
+需要 Node.js 22+ 和 npm。
+
+```bash
+git clone https://github.com/SKT0tto/OpeNotes-Studio.git
+cd OpeNotes-Studio
 npm install
-npm run dev        # server on :5274, Vite on :5273 (open http://127.0.0.1:5273)
+npm run dev
 ```
 
-Production-style run from a clone: `npm run build && npm start` (one port, 5274, serves the web app and the API from `dist/`).
+开发模式下，打开 [http://127.0.0.1:5273](http://127.0.0.1:5273)，接口服务默认运行在 `5274` 端口。
 
-### First run: the setup wizard
+构建并运行：
 
-Open the page; the home page "环境检查" card and the **配置向导** walk through three steps with a status each: (1) Cubism Core, (2) import assets, (3) AI key. On a fresh clone the wizard opens by itself because the asset library is empty. Details and screenshots-free walkthrough: [docs/GUIDE_ASSETS.md](docs/GUIDE_ASSETS.md).
-
-### Asset library
-
-The studio reads an asset library (`models/`, `backgrounds/`, `media/`, optional `manifest.json`) from `ASSET_ROOT`, default `./assets` (gitignored). Assets are never part of this repository. Put assets there by:
-
-- **Importing** (recommended): wizard step 2 -> choose a folder or `.zip` you already have. The importer detects models (`*model3.json`) and backgrounds, **normalises** each model (site-style `model3.json` files with absolute texture paths and one big motion group become the layout this project needs; the result is written as a copy, your original files are untouched), validates PNG / `MOC3` headers, computes SHA-256, detects duplicates (identical content is skipped; different content under an existing id is a conflict you must opt in to overwrite), matches background ids with `asset-labels/backgrounds.json`, and shows a report (models, backgrounds, motions, expressions, skipped, errors). A different library folder can be chosen in the same step; it is written to `studio.config.json` and needs a server restart.
-- **Asset pack** (your own library as one zip): `npm run pack-assets -- --out D:\packs\openotes-assets.zip` packs the library at `ASSET_ROOT` (`models/`, `backgrounds/`, `media/`, `manifest.json`) plus an `openotes-pack.json` description (counts, size, per-file SHA-256) into a zip (stored/deflated by type, ZIP64 for >4 GB, never inside the repo). The importer takes such a zip (or the unpacked folder) with the layout at the root or inside one wrapper directory, streams the extraction (no whole-file reads), validates `openotes-pack.json` when present (a mismatch blocks the import), shows progress, and can be cancelled. Format: [docs/GUIDE_ASSETS.md](docs/GUIDE_ASSETS.md#45-整包素材包native-layout--openotes-packjson).
-- **Copying files by hand** into `ASSET_ROOT` (same layout as the importer writes).
-
-Configure with, in priority order:
-
-1. environment variables: `ASSET_ROOT`, `AUDIO_ROOTS` (`;`-separated extra audio folders), `CUBISM_CORE_URL`, `API_PORT`, `DATA_DIR`, `IMPORT_MAX_BYTES` (uncompressed size cap of one import, default 16 GB)
-2. `studio.config.json` (copy `studio.config.example.json`; gitignored; the wizard also writes `assetRoot` / `cubismCoreUrl` here)
-3. built-in defaults (see `server/config.ts`)
-
-`.env.example` documents the variables; copy it to `.env` (gitignored), which the server reads at start-up (variables already set in the shell win).
-
-Runtime data (index cache `data/index/catalog.json`, projects, caches, `data/setup.local.json` with your confirmations) lives in `data/` (gitignored).
-
-**Haneoka manifest (optional, off until you accept a disclaimer).** Wizard step 2 -> "素材清单": reads the public index of haneoka.org (three JSON endpoints, descriptive User-Agent with this repository's URL, cached for 24 h, serial requests), compares it with your library, and lets you tick bands / characters / outfits / backgrounds to produce a checklist (export Markdown or CSV). Every entry links to the matching **page** on Haneoka only. The project **does not download any asset**: the site's terms forbid downloading assets for reuse without the rights holders' permission, so you download manually if and only if you are entitled to, then import locally. The disclaimer is enforced server-side (403 until confirmed, and again when its text changes).
-
-### Cubism Core
-
-Live2D rendering needs the proprietary Cubism Core 5.x, which is not in this repository. By default it is loaded at runtime from Live2D's official URL. Wizard step 1 can also **save a local copy** to `vendor/live2dcubismcore.min.js` (gitignored; fetched only from Live2D's official address, after you confirm the [Live2D Proprietary Software License](https://www.live2d.com/eula/live2d-proprietary-software-license-agreement_en.html)); if the official URL is unavailable, pick a `live2dcubismcore.min.js` from the official Cubism SDK for Web instead. The file is checked for the Live2D header and `csmGetLatestMocVersion`, and the browser verifies it supports moc3 v5. It must never be committed.
-
-## Scripts
-
-| Script | What |
-|---|---|
-| `npm run dev` / `build` / `start` | dev servers / Vite build + server bundle (`dist/web`, `dist/server`) / production server (serves `dist/web` and the API on one port; `start:dev` runs the TypeScript sources with tsx) |
-| `npm run package-release` | build the download zip into `release/` (run `npm run build` first) |
-| `npm run typecheck`, `npm run lint` | tsc, eslint |
-| `npm test` | unit tests (no real assets needed) |
-| `npm run test:integration` | against the real `ASSET_ROOT` (skipped with a notice if unreadable) |
-| `npm run pack-assets -- --out <zip>` | pack the current `ASSET_ROOT` into an importable zip with `openotes-pack.json` |
-| `npm run test:e2e` | Playwright with Microsoft Edge; reuses a running dev server on :5273 |
-
-## AI director (optional)
-
-Without a key everything except the AI features works; the AI entry points then say what is missing (nothing pretends to be AI).
-
-- **Configure**: project list or editor top bar -> `AI 设置`. Pick a provider, fill model / address / key, `测试连接`. The key is written to `data/settings.local.json` (gitignored) and never sent back to the browser (only a mask such as `sk-…087b` is shown).
-  - **Claude**: key from console.anthropic.com (default model `claude-sonnet-5-5`), or `ANTHROPIC_API_KEY` in the environment.
-  - **OpenAI-compatible** (DeepSeek, LM Studio, vLLM ...): base URL (LM Studio `http://localhost:1234/v1`, DeepSeek `https://api.deepseek.com`), model name, optional key. Environment variables / `.env` (`LLM_PROVIDER`, `OPENAI_BASE_URL`, `OPENAI_MODEL`, `OPENAI_API_KEY`) provide defaults; what you save in the dialog wins.
-- **Use**: project list -> `AI 拆解…` (paste a story: scenes, backgrounds, outfits with reasons) -> create the project -> left tab `AI 导演` -> generate the performance of the current / all scenes; choose a scope (camera, performance, outfit, staging, effects) or only the selected line to regenerate part of it. Locked content and content you edited are never overwritten; one generation is one undo step.
-- **One click from a novel**: project list -> `AI 拆解…` -> paste or load a `.txt` / `.md` (UTF-8 or GBK are detected; chapter headings such as `第一章` or `# 标题` are counted) -> `一键生成完整演出`. It breaks the text down, creates the project, then directs every scene (3 at a time), shows progress, can be cancelled and resumed (`继续生成剩余场景`; finished scenes are cached and kept), prints calls / tokens / time, and lists continuity warnings. Then `放映` (`/play/<id>`, with a 16:9 / 2.16:1 frame choice) or `在编辑器中精修`. A sample input is `examples/mygo-rehearsal.txt` (original text, five chapters, outfit changes, a formal performance).
-- **Rule director** (no key needed): pick `规则导演（非 AI）` in the dialog or in the `AI 导演` tab. It splits scenes by chapter / time words, matches backgrounds and outfits by keywords, finds quoted speech and its speaker, and uses a fixed shot rhythm. Everything it makes is marked `规则`, never `AI`.
-- **Review**: every proposal is a diff against the current scene (grouped by line structure / camera / performance / outfit / staging / effects, before -> after). Accept all, accept chosen scopes, or reject; accepting is one undo step and always goes through the lock-enforcing merge. The tab also shows the run log and the continuity check (click a warning to jump to it).
-- Results are cached by input hash in `data/llm-cache/`; a repeat run sends no request.
-- Tests never touch the network: they replay recorded model outputs from `tests/fixtures/llm/`. A manual live check against a real model: `LLM_LIVE=1 npm run test:integration -- llm-live`.
-
-## HTTP API
-
-- `GET/PUT /api/llm/settings`, `POST /api/llm/test` - AI settings (masked keys only) and connection test
-- `POST /api/director/breakdown`, `/scene`, `/scenes` (SSE) - AI breakdown and scene direction
-- `POST /api/import/scan|upload|plan|run` start a job (`{jobId}`); `GET|DELETE /api/import/jobs/:id` - progress / cancel (plan and report arrive in the job); `GET/PUT /api/import/target`
-- `GET /api/sources/haneoka`, `.../list`, `POST .../accept|manifest` - manifest source (403 until the disclaimer is confirmed)
-- `GET /api/setup/core`, `POST /api/setup/core/accept-license|fetch|upload|reset` - Cubism Core
-- `GET /api/health` - version, ASSET_ROOT probe, index state
-- `GET /api/catalog` - compact catalog; `GET /api/catalog/models/:id` - full model entry (motions with orientation stats, expressions)
-- `GET /assets/*` - static files from `ASSET_ROOT` (Range supported, traversal rejected with 400); `GET /audio/:n/*` - files from the n-th `AUDIO_ROOTS` entry
-
-## Tests
-
-`npm run typecheck && npm run lint && npm test` need no assets. `npm run test:integration` needs a readable `ASSET_ROOT`; `npm run test:e2e` needs Microsoft Edge and starts (or reuses) the dev servers; the AI e2e flows use a second server pair in test mode with recorded responses and never touch a real key.
-
-## Project layout
-
-```
-server/    Express API: catalog indexer, projects, LLM providers, director, settings
-shared/    schemas, staging maths, timeline compiler, director logic (used by server and web)
-web/       React editor, Pixi/Live2D engine, player, labs
-tests/     unit, integration, e2e, synthetic fixtures (no real assets)
-examples/  sample novel (original text)
-docs/      user guide (GUIDE_ASSETS) and staging style reference
+```bash
+npm run build
+npm start
 ```
 
-## Acknowledgements
+构建版本默认通过 [http://127.0.0.1:5274](http://127.0.0.1:5274) 访问。
 
-Built on React, Pixi.js, untitled-pixi-live2d-engine, Express, zod, zustand, immer and Vite (see [THIRD_PARTY.md](THIRD_PARTY.md)). Style notes were researched from public descriptions of the original game's presentation; no game code is used.
+常用命令：
 
-## License
+| 命令 | 用途 |
+| --- | --- |
+| `npm run dev` | 启动开发环境 |
+| `npm run build` | 构建前端和服务端 |
+| `npm start` | 运行构建版本 |
+| `npm run typecheck` | 类型检查 |
+| `npm run lint` | 代码检查 |
+| `npm test` | 运行单元测试 |
+| `npm run test:e2e` | 运行浏览器测试，需要 Microsoft Edge |
 
-GPL-3.0-or-later, see [LICENSE](LICENSE). Copyright (C) 2026 bilibili @羽丘魅魔高松灯. Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security notes: [SECURITY.md](SECURITY.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+主要目录：
+
+```text
+web/        编辑器、播放器与 Live2D 渲染
+server/     项目管理、素材索引与 AI 接口
+shared/     数据结构、分镜规则与时间轴计算
+tests/      测试与示例数据
+examples/   示例故事
+docs/       使用教程与说明
+```
+
+配置项可参考仓库中的 `studio.config.example.json` 和 `.env.example`。
+
+## 反馈与参与
+
+欢迎通过 [Issues](https://github.com/SKT0tto/OpeNotes-Studio/issues) 反馈问题，也欢迎分享实际创作中不顺手的地方。
+
+遇到错误时，附上程序版本、浏览器、复现步骤和报错信息，会更容易定位。涉及故事内容或截图时，请先确认其中没有不想公开的信息。
+
+参与开发请参考[贡献指南](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CONTRIBUTING.md)。
+
+作者：bilibili [@羽丘魅魔高松灯](https://space.bilibili.com/358479834)
+
+## 致谢与许可
+
+项目使用 React、Pixi.js、untitled-pixi-live2d-engine、Vite 等开源组件。详细说明见[第三方组件清单](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/THIRD_PARTY.md)。
+
+程序代码采用 **GPL-3.0-or-later** 许可，详见 [LICENSE](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/LICENSE)。
+
+BanG Dream!、Our Notes 及相关角色、名称与游戏素材的权利归各自权利人所有。本项目与官方没有隶属或授权关系。Live2D Cubism Core 适用 Live2D 的独立许可，程序代码的开源许可不包含对游戏素材或 Cubism Core 的授权。
