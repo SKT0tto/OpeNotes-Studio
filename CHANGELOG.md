@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1
+
+**New title screen.** The home page is now laid out like a game title screen: the latest project's background fills the screen (a random scene background or a gradient when there is none), one idling Live2D character stands on the right, and a title menu on the left offers 导入小说开始, 继续, 新建空白项目, 打开示例, 导入项目文件 and AI 设置, with arrow-key navigation. Recent projects sit in a strip at the bottom; 全部项目 opens a searchable grid with batch management. The character loads after the first paint, stays still with reduced motion and stays silent when Live2D Core or the model is missing. The layout stacks on narrow windows.
+
+**AI assistant: find and batch-edit.** The assistant can look up lines by scene, range, speaker, kind, text, emotion, shot, intent, focus, effects, background, who is actually on screen, timing or lock state, and change all of them at once ("整部作品里灯的特写都改成中近景"). A batch is one grouped change card and one undo step; locked lines are listed for confirmation.
+
+**AI assistant: small scripts.** For edits no tool covers ("每隔三句插一个反应镜头", "按台词字数重新分配停顿"), the assistant writes a short script. It runs in a sandbox (QuickJS/WASM) on a read-only copy with time, memory and output limits, and can only propose changes, which go through the usual checks, lock confirmation and change card; the script is shown in the card. Live mode never applies script changes on its own.
+
+In our evaluation with real DeepSeek calls on original test stories: 21 of 23 find-and-batch cases and 8 of 8 script cases correct, no lock violations.
+
 ## 0.6.0
 
 **Major update.**
