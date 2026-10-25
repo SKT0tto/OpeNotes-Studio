@@ -7,7 +7,7 @@ OpeNotes Studio turns a novel into a Live2D staged performance in the style of *
 
 Author: bilibili [@羽丘魅魔高松灯](https://space.bilibili.com/358479834) · License: [GPL-3.0-or-later](LICENSE)
 
-Website: <https://skt0tto.github.io/OpeNotes-Studio/> (a static landing page lives in [`site/`](site/): plain HTML/CSS/JS, no build step). The Pages URL follows GitHub's `https://<user>.github.io/<repo>/` convention; **after deploying, check that the site loads and that `og.png` resolves at `https://skt0tto.github.io/OpeNotes-Studio/og.png`.** To publish, deploy the `site/` folder (a Pages workflow using `actions/upload-pages-artifact` with `path: site`, or a `gh-pages` branch). Only the demo-video button still says "coming soon" and is marked `data-soon`.
+Website: <https://skt0tto.github.io/OpeNotes-Studio/> 
 
 **New here? Read the step-by-step guide: [docs/GUIDE_ASSETS.md](docs/GUIDE_ASSETS.md)** (install, Cubism Core, getting and importing assets, AI keys, one-click generation, troubleshooting; written in Chinese).
 
