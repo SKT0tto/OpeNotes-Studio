@@ -13,6 +13,7 @@ import { INSERT_HINT, MAX_BG_MOVES, MAX_DIM_BEATS, MEMORY_CUE, MONOLOGUE_TEXT, S
 import { stageEvents, stageTimeline } from './stage';
 import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
+import { restorePunctuationDialogue } from './punctuationLines';
 import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
 
 export interface Validated<T> {
@@ -366,6 +367,8 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     if (r.id === curBg) return drop(`已经是背景 ${r.id}`);
     curBg = r.id;
   });
+  // a line made only of punctuation ("……") is dialogue, never a silent beat
+  warnings.push(...restorePunctuationDialogue(d, ctx.cast, ctx.catalog, ctx.paragraphs));
   const paraOf = (i: number) => ctx.paragraphs[i];
   const inRange = (i: number) => i >= ctx.range.start && i <= ctx.range.end;
   let dialogue = 0;

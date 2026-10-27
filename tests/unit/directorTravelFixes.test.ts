@@ -199,15 +199,15 @@ describe('shot.flow is tolerant (change 7)', () => {
 
 describe('the travel prompt explains why (change 5); the classic prompt is byte-identical', () => {
   // scene-4 (v0.4 effects) changed only the fx and cutIn lines of scene-3 (promptScene4.test.ts diffs them line by line); this hash pins the new text
-  it('classic: text, schema, schema name and version are exactly what scene-4 is', () => {
+  it('classic: text, schema, schema name and version are exactly what scene-5 is', () => {
     const c = scenePromptFor('classic');
-    expect(createHash('sha256').update(c.system).digest('hex')).toBe('9116661b213ba4e00ee6d1c7cbfe45b8a13ecb742c6090a09b96899283dbfe2b');
-    expect(c.promptVersion).toBe('scene-4');
+    expect(createHash('sha256').update(c.system).digest('hex')).toBe('ec879a2f5cf12d9375c56de69e6b92e46d74c2d93caf4f82e69c35d5d825a32c');
+    expect(c.promptVersion).toBe('scene-5');
     expect(c.schemaName).toBe('SceneDirection');
     expect(c.schema).toBe(SceneDirectionSchema);
   });
-  it('travel: version scene-4+travel-7; every intent has a question with a right and a wrong example', () => {
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-4+travel-7');
+  it('travel: version scene-5+travel-8; every intent has a question with a right and a wrong example', () => {
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-5+travel-8');
     for (const i of ['continue', 'exchange', 'emphasis', 'reaction', 'reveal', 'release', 'rupture']) expect(SCENE_TRAVEL_SECTION).toContain(`- ${i}：`);
     for (const i of ['continue', 'exchange', 'emphasis', 'reaction', 'reveal', 'release']) {
       const line = SCENE_TRAVEL_SECTION.split('\n').find((l) => l.startsWith(`- ${i}：`))!;

@@ -65,10 +65,45 @@ export interface Segment {
   /** Narration around the quote (used for speaker detection). */
   before: string;
   after: string;
+  /** Set when the speaker is named by the text itself (script style "名字：台词"): the character key. */
+  speakerKey?: string;
+}
+
+const SCRIPT_LINE = /^\s*([^\s：:，。、！？!?“”「」『』"（）()]{1,12})\s*[：:]\s*(.+?)\s*$/;
+const NAME_ONLY_LEAD = /^\s*([^\s：:，。、！？!?“”「」『』"（）()]{1,12})\s*[：:]\s*$/;
+
+/**
+ * Script-style lines ("灯：……", "灯:……") are dialogue when the part before the colon is a present cast member (resolve returns its key);
+ * anything else ("时间：傍晚") stays narration. Content that is only punctuation is a real line too.
+ */
+function scriptLines(segs: Segment[], resolve: (name: string) => string | null): Segment[] {
+  const out: Segment[] = [];
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i]!;
+    if (seg.kind !== 'narration') { out.push(seg); continue; }
+    // "灯：「……」": the name and colon in front of a quote only announce the speaker
+    const lead = NAME_ONLY_LEAD.exec(seg.text);
+    if (lead && segs[i + 1]?.kind === 'dialogue' && resolve(lead[1]!)) continue;
+    let pending: string[] = [];
+    const flush = () => { const t = pending.join('\n').trim(); if (t) out.push({ kind: 'narration', text: t, before: '', after: '' }); pending = []; };
+    for (const line of seg.text.split(/\n/)) {
+      const m = SCRIPT_LINE.exec(line);
+      const key = m ? resolve(m[1]!) : null;
+      if (m && key) { flush(); out.push({ kind: 'dialogue', text: m[2]!, before: m[1]! + '：', after: '', speakerKey: key }); }
+      else pending.push(line);
+    }
+    flush();
+  }
+  return out;
 }
 
 /** Splits a paragraph into narration and quoted speech, in order. */
-export function segments(text: string): Segment[] {
+export function segments(text: string, resolve?: (name: string) => string | null): Segment[] {
+  const segs = quoteSegments(text);
+  return resolve ? scriptLines(segs, resolve) : segs;
+}
+
+function quoteSegments(text: string): Segment[] {
   const out: Segment[] = [];
   let rest = text;
   let before = '';
@@ -145,6 +180,7 @@ export function ruleBreakdown(cat: DirectorCatalog, paras: readonly Paragraph[],
   const minScene = opt.minScene ?? 3;
   const L = lookup(cat);
   const idx = nameIndex(cat);
+  const presentName = (name: string): string | null => idx.names.find((n) => n.text === name)?.key ?? null;
 
   // 1) scene boundaries
   const starts: number[] = [0];
@@ -153,7 +189,7 @@ export function ruleBreakdown(cat: DirectorCatalog, paras: readonly Paragraph[],
     if (i === 0) return;
     const count = i - lastStart;
     const prev = paras[i - 1]!;
-    const dialogue = segments(p.text).some((s) => s.kind === 'dialogue');
+    const dialogue = segments(p.text, presentName).some((s) => s.kind === 'dialogue');
     const brk = isHeading(p.text) || SCENE_BREAK_RE.test(prev.text);
     const shift = !dialogue && SHIFT_RE.test(p.text.trim()) && count >= minScene;
     if (SCENE_BREAK_RE.test(p.text)) return;
@@ -296,7 +332,12 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
   for (const f of input.fixedBeats) fixedBy.set(f.paragraph, [...(fixedBy.get(f.paragraph) ?? []), f]);
   const everyone = input.cast.map((c) => c.castId);
 
+  const castName = (name: string): string | null => {
+    const k = idx.names.find((n) => n.text === name)?.key;
+    return k && byKey.has(k) ? k : null;
+  };
   const speakerOf = (seg: Segment): string | null => {
+    if (seg.speakerKey && byKey.has(seg.speakerKey)) return byKey.get(seg.speakerKey)!.castId;
     const near = (s: string, last: boolean) => {
       const m = mentions(idx, s).filter((x) => byKey.has(x.key));
       return (last ? m.at(-1) : m[0])?.key ?? null;
@@ -402,7 +443,7 @@ export function ruleDirection(idx: NameIndex, cat: DirectorCatalog, input: RuleS
       continue;
     }
     if (isHeading(p.text)) continue;
-    for (const seg of segments(p.text)) {
+    for (const seg of segments(p.text, castName)) {
       const b = directed(p.i, seg);
       if (b.kind === 'dialogue') { lastSpeaker = b.speaker; dialogueCount++; }
       beats.push(b);

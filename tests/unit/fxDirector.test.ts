@@ -15,9 +15,9 @@ import { evaluate } from '../../shared/timeline/evaluate';
 import { compileContext, fixtureCatalog } from './helpers/directorCatalog';
 import { paragraphs, sceneCtx, skeleton } from './helpers/directorFlow';
 
-describe('prompt scene-4 differs from scene-3 only on the fx line and the cutIn line', () => {
+describe('prompt scene-4 (fixture) differs from scene-3 only on the fx line and the cutIn line', () => {
   const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-3.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
-  const now = SCENE_SYSTEM.split('\n');
+  const now = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-4.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
 
   it('same number of lines, and exactly the two lines changed', () => {
     expect(now.length).toBe(old.length);
@@ -39,11 +39,11 @@ describe('prompt scene-4 differs from scene-3 only on the fx line and the cutIn 
     expect(AI_FX).toEqual(['none', 'vignette_anxiety', 'memory', 'dim', 'flash', 'shake', 'daze', 'dutch']);
   });
 
-  it('versions: scene-4 for classic, scene-4+travel-7 for travel', () => {
-    expect(SCENE_PROMPT_VERSION).toBe('scene-4');
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-4+travel-7');
-    expect(scenePromptFor('classic').promptVersion).toBe('scene-4');
-    expect(scenePromptFor('travel').promptVersion).toBe('scene-4+travel-7');
+  it('versions: scene-5 for classic, scene-5+travel-8 for travel', () => {
+    expect(SCENE_PROMPT_VERSION).toBe('scene-5');
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-5+travel-8');
+    expect(scenePromptFor('classic').promptVersion).toBe('scene-5');
+    expect(scenePromptFor('travel').promptVersion).toBe('scene-5+travel-8');
   });
 
   it('an old answer with memory_glow still parses (it is read as memory later), the new words parse in both schemas', () => {
@@ -54,6 +54,17 @@ describe('prompt scene-4 differs from scene-3 only on the fx line and the cutIn 
       expect(SceneDirectionSchema.parse(raw).beats[0]!.fx).toBe(fx);
       expect(SceneDirectionTravelSchema.parse(raw).beats[0]!.cutIn).toBe('dip_white');
     }
+  });
+});
+
+describe('prompt scene-5 differs from scene-4 only by the punctuation-only dialogue rule', () => {
+  const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-4.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
+  const now = SCENE_SYSTEM.split('\n');
+  it('exactly one line added, none changed or removed', () => {
+    expect(now.length).toBe(old.length + 1);
+    expect(old.filter((l) => !now.includes(l))).toEqual([]);
+    expect(now.filter((l) => !old.includes(l)).length).toBe(1);
+    expect(now.find((l) => !old.includes(l))).toContain('只有标点的台词也是台词');
   });
 });
 
