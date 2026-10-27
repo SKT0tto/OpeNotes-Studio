@@ -11,7 +11,7 @@ import { applyOp } from '../../shared/agent/apply';
 import { projectSummary, sceneTable, type AgentSelection } from '../../shared/agent/compact';
 import { DEFAULT_FRAME_WIDTH, planFrames, type CaptureRequest, type CapturedFrame } from '../../shared/agent/frames';
 import type { HistoryTurn } from '../../shared/agent/history';
-import { activeMemories, memoryPromptBlock, visibleMemories, type Memory, type MemoryEvent, type MemoryKind } from '../../shared/agent/memory';
+import { activeMemories, isDontCareMemory, looksLikeGeneralPreference, memoryPromptBlock, visibleMemories, type Memory, type MemoryEvent, type MemoryKind } from '../../shared/agent/memory';
 import type { AgentOp } from '../../shared/agent/ops';
 import { pruneRoundTrips } from '../../shared/agent/prune';
 import { TOOLS, commitOps, newStats, runTool, toolByName, type OpRecord, type ToolEnv, type ToolStats } from '../../shared/agent/tools';
@@ -184,6 +184,11 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   let steps = 0;
   let nudges = 0;
   let talkNudges = 0;
+  // a general style statement ("别一直用双人") is a preference: remember it first, don't edit the project (guard once before writes, once at the end)
+  const prefStated = !!deps.memory && looksLikeGeneralPreference(req.instruction);
+  let prefGuards = 0;
+  let prefNudges = 0;
+  const rememberedStated = () => memoryEvents.some((e) => e.action === 'saved' || e.action === 'updated');
   let verifiedSinceWrite = true;
   let wrote = 0;
   // picture check: edits that change the picture must be followed by a capture_frames call (forced by the loop when the model forgets)
@@ -203,12 +208,22 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
     const before = env.applied.length + env.pending.length;
     const beforeApplied = env.applied.length;
     let out: string;
+    if (name === 'ask_user' && prefStated && prefGuards < 2 && !rememberedStated()) {
+      prefGuards = 2;
+      env.stats.toolCalls++;
+      return JSON.stringify({ 错误: ['用户这句话是长期风格偏好，不需要追问具体位置：先调用 remember(how=stated，text 忠实于用户原话)，保存后再在总结里说明，必要时提议「按偏好检查本场」。'] });
+    }
     if (name === 'ask_user') {
       const a = toolByName('ask_user')!.schema.safeParse(args);
       if (!a.success) return JSON.stringify({ 错误: ['ask_user 需要 question'] });
       env.askedUser = { question: (a.data as { question: string }).question, options: (a.data as { options?: string[] }).options ?? [] };
       emit({ type: 'ask', ...env.askedUser });
       return '已向用户提问；本轮到此结束。';
+    }
+    if (prefStated && prefGuards < 1 && !rememberedStated() && toolByName(name)?.kind === 'write') {
+      prefGuards = 1;
+      env.stats.toolCalls++;
+      return JSON.stringify({ 错误: ['用户这句话是不针对具体某一句的长期偏好，不是编辑指令：这一步先调用 remember(how=stated，text 忠实于用户原话)，不要改项目；用户没有明确要求现在就改的话就只保存，并在总结里提议用「按偏好检查本场」应用到当前场景。如果用户确实同时要求现在就改，保存之后再重新调用这个写入工具。'] });
     }
     if (toolByName(name)?.kind === 'memory') out = await memoryTool(name, args);
     else if (name === 'capture_frames') out = await capture(args);
@@ -249,6 +264,8 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
       }
       const p = a.data as { text: string; how: 'stated' | 'inferred'; kind: MemoryKind; scope?: 'global' | 'project'; castId?: string; replaces?: string; why?: string };
       const text = p.text.trim();
+      // "don't care / go with the flow" is a withdrawal of a preference: it must be forget, never a memory of its own
+      if (isDontCareMemory(text)) return JSON.stringify({ 错误: ['「不用管 / 随意 / 顺其自然」不是偏好：用户是想撤销已有的那条偏好，请改用 forget 删除它（id 见记忆列表，或先 list_memories），不要保存这条。'] });
       // a one-off edit names a line or a scene: that is an edit, not a preference
       if (ONE_OFF.test(text)) return JSON.stringify({ 错误: ['记忆只存长期偏好；点名某一句 / 某一场的是一次性编辑，不要记住（直接用编辑工具改）'] });
       const cast = p.castId ? req.project.cast.find((c) => c.id === p.castId || c.displayName === p.castId) : undefined;
@@ -412,6 +429,11 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
         const beats = [...new Set(recs.flatMap((r) => [...opBeatIds(r.op), ...r.changes.map((c) => c.beatId ?? '')]).filter(Boolean))].slice(0, 8);
         const move = recs.some((r) => involvesMove(r.op));
         messages.push({ role: 'user', content: `请截图核对刚才的画面改动：调用 capture_frames${beats.length ? `（beatIds=${JSON.stringify(beats)}）` : ''}只看改动涉及的句子${move ? '；有运镜/走位的句子用 samples=3 沿时间取几帧' : ''}，对照用户的指令${(req.attachments ?? []).length ? '和参考图' : ''}判断；不符合就修正，修正后再看一次；确实改不了就在总结里如实说明。` });
+        continue;
+      }
+      if (prefStated && !rememberedStated() && !env.askedUser && prefNudges < 1) {
+        prefNudges++;
+        messages.push({ role: 'user', content: '用户这句话是不针对具体某一句的通用风格偏好（长期有效），你还没有保存。请现在调用 remember(how=stated)：text 忠实于用户的原话（只做轻微整理，不要加用户没说的内容）；不要因此去改项目，只在总结里提议用「按偏好检查本场」应用到当前场景。' });
         continue;
       }
       if (env.applied.length + env.pending.length === 0 && !env.askedUser && memoryEvents.length === 0 && CHANGE_WORDS.test(text) && talkNudges < 1) {
