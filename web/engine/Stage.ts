@@ -137,6 +137,8 @@ export class Stage {
   }
   private readonly actorLayer = new Container();
   private readonly fadeRect = new Graphics();
+  /** The inner-voice dim: a black veil between the background and the actors, so only the background darkens. */
+  private readonly dimRect = new Graphics();
   private readonly transitions: Transitions;
   private readonly screenFx: ScreenFxFilter;
   private readonly memoryEdge: MemoryEdgeLayer;
@@ -161,7 +163,9 @@ export class Stage {
     this.camera = new Camera({ width: this.width, height: this.height, ground: { horizonY: 0, floorY: 1 } }, this.height, aspect);
     this.bgLayer = new BackgroundLayer(this.width, this.height, app.renderer);
     this.actorLayer.sortableChildren = true;
-    this.sceneRoot.addChild(this.bgLayer, this.actorLayer);
+    this.dimRect.rect(0, 0, this.width, this.height).fill(0x000000);
+    this.dimRect.visible = false;
+    this.sceneRoot.addChild(this.bgLayer, this.dimRect, this.actorLayer);
     this.sceneRoot.pivot.set(this.width / 2, this.height / 2);
     this.sceneRoot.position.set(this.width / 2, this.height / 2);
     this.screenFx = new ScreenFxFilter(aspect);
@@ -410,7 +414,7 @@ export class Stage {
         bgState.next && nx ? { assetId: bgState.next.assetId, texture: nx, framing: bgState.next.framing, src: bgState.next.src, alpha: bgState.next.alpha } : undefined,
         scene.travel === true ? (this.lowQuality ? 0.25 : true) : false,
         // no cache on a rolled screen (the picture is clipped differently) or under the screen effects (they amplify the one-level rounding of the cache)
-        state.fx.roll === 0 && state.fx.anxiety <= 0.002 && state.fx.glow <= 0.002 && (state.fx.memory ?? 0) <= 0.002 && (state.fx.dim ?? 0) <= 0.002 && (state.fx.daze ?? 0) <= 0.002 && !(globalThis as { __noBgCache?: boolean }).__noBgCache,
+        state.fx.roll === 0 && state.fx.anxiety <= 0.002 && state.fx.glow <= 0.002 && (state.fx.memory ?? 0) <= 0.002 && (state.fx.daze ?? 0) <= 0.002 && !(globalThis as { __noBgCache?: boolean }).__noBgCache,
       );
     }
 
@@ -445,15 +449,17 @@ export class Stage {
     const memory = fx.memory ?? 0;
     this.memoryEdge.set(memory, fx.memoryEdge ?? 'fog');
     const dim = (fx.dim ?? 0) * DIM_LEVEL;
+    this.dimRect.visible = dim > 0.001;
+    this.dimRect.alpha = dim;
     const daze = fx.daze ?? 0;
     this.eyelids.set(fx.blink ?? 0);
-    const on = fx.anxiety > 0.002 || fx.glow > 0.002 || memory > 0.002 || dim > 0.001 || daze > 0.002;
+    const on = fx.anxiety > 0.002 || fx.glow > 0.002 || memory > 0.002 || daze > 0.002;
     if (on) {
       this.screenFx.set({
         anxiety: fx.anxiety, desat: p.anxietyDesat, inset: p.anxietyInset, dark: p.anxietyDarkness,
         glow: fx.glow, lift: p.glowBlackLift, chroma: p.glowChroma, bloom: p.glowBloom,
         smoke: p.anxietySmoke, tint: hexToRgb01(p.anxietyTint), time: state.t * p.anxietySmokeSpeed,
-        memory, tone: Math.max(0, MEMORY_TONES.indexOf(fx.memoryTone ?? 'cool')), dim, sat: 1 - DAZE_DESAT * daze,
+        memory, tone: Math.max(0, MEMORY_TONES.indexOf(fx.memoryTone ?? 'cool')), dim: 0, sat: 1 - DAZE_DESAT * daze,
       });
       this.sceneRoot.filterArea = this.fxArea;
     }

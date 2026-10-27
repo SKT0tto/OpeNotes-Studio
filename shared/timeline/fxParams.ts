@@ -24,8 +24,11 @@ export const MEMORY_FOG_ALPHA_H = 0.7;
 export const MEMORY_FOG_POWER = 1.3;
 export const MEMORY_FOG_UNDULATION = 1.1;
 
-/** Dim (the inner-voice darkening, the original's brightness 0.5): the scene (not the dialogue, HUD or banner) is multiplied by 1 - level * strength. */
-export const DIM_LEVEL = 0.5;
+/**
+ * Dim (the inner-voice darkening): only the background is multiplied by 1 - level * strength (a black veil under the actors); the
+ * characters, dialogue, HUD and banner stay lit. 0.35 by the maintainer's review (0.5 over the whole scene read too strong).
+ */
+export const DIM_LEVEL = 0.35;
 
 /** Flash (a white fade up to FLASH_PEAK in FLASH_RISE seconds and back down; FLASH_SECONDS is the length when the key has none). */
 export const FLASH_PEAK = 0.85;
