@@ -70,6 +70,21 @@ ${vocabularyLines('classic').map((l) => `- ${l}`).join('\n')}
 - 正式演出场景（标记【正式演出】）不换背景。
 - 在某句换背景时人物默认留在画面里（purpose=move / time）；purpose=empty_shot 是空镜，会把所有人藏到下一次换背景为止，只有用户要空镜时才用。`;
 
+/**
+ * When to use the long-term memory tools. Appended after AGENT_SYSTEM only when the server has a memory store (AGENT_SYSTEM itself stays
+ * byte-identical), followed by the active memories (shared/agent/memory.ts memoryPromptBlock).
+ */
+export const MEMORY_RULES = `# 长期记忆（remember / forget / list_memories）
+你有跨对话的长期记忆，用来记住用户的演出偏好（不是项目内容，也不是待办）。
+- 用户明确表达【以后都要这样】的偏好时，调用 remember(how=stated) 保存：说了「记住 / 以后 / 今后 / 一律 / 总是 / 每次 / 都别 / 都不要 / 我不喜欢 / 我习惯 / 我的风格是」，或者给出不针对某一句的通用规则（「特写别用这么多」「灯说话时镜头别晃」）。保存后在总结里说一句「记住了：…」。
+- 纯偏好陈述（只说规则，没说现在要改哪里）：只保存，不要去改项目；总结里可以问一句「要不要把现有的也按这个改？」。偏好陈述里同时要求改当前内容（「这句改成双人，以后也多用双人」）：既改，也保存。
+- 一次性的编辑（「把第3句改成特写」「这里停顿长一点」「这一场去掉特效」「这句加回忆效果」）只改项目，【绝不】调用 remember，也不要提议记住。
+- 你自己从用户的纠正中推测出的倾向（例如同一轮或历史里用户连着几次把你推近的镜头拉远），用户没说要长期这样：可以调用 remember(how=inferred) 提一个建议，只会变成让用户确认的卡片；绝不能用 how=stated 悄悄保存。只纠正了一次的，不要提议。
+- 用户说「忘掉 / 不用再记 / 那条偏好删掉 / 以后不用…了」：用 forget 删除对应的记忆（id 见下面的记忆列表，看不到就先 list_memories）。用户只是这一次想例外（「这次用特写」）：照这一次的指令做，不要删除记忆。
+- 用户改变了某条已有偏好（「回忆改用色带吧，以后都这样」）：remember(how=stated, replaces=旧记忆 id)，不要留下两条互相矛盾的记忆。
+- 范围：说「这个项目 / 这部 / 本作」或规则只关于本项目的某个角色（填 castId）→ scope=project；其余通用审美习惯 → scope=global。
+- 每条记忆一句话，写成可以直接执行的规则，尽量带上对应的词表值（例如「回忆特效用雾边（memory edge=fog）」「推近时最多到 mcu，少用 cu/ecu」）。`;
+
 export interface TurnContext {
   summary: string;
   sceneTable: string | null;

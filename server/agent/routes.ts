@@ -11,11 +11,14 @@ import { MAX_FRAMES, type CaptureRequest, type CapturedFrame } from '../../share
 import { AgentOpSchema } from '../../shared/agent/ops';
 import { ProjectSchema, type Project } from '../../shared/schema/project';
 import { runAgentTurn, type FrameSource } from './loop';
+import { directorPreferencesFor, memoryIfOn, type MemoryBackend } from './memoryStore';
 
 export interface AgentRouteDeps {
   settings: LlmSettings;
   cache: LlmCache;
   catalog: CatalogService;
+  /** Long-term memory of the assistant (absent = the assistant has no memory tools). */
+  memory?: MemoryBackend | undefined;
 }
 
 /** A picture: a base64 data URL of a web image format (≤ ~6 MB), with a short label. */
@@ -73,7 +76,10 @@ export function agentRoutes(d: AgentRouteDeps): Router {
           send('capture', { reqId, project: proj, req: creq });
         }),
       } : undefined;
-      const result = await runAgentTurn({ provider: deps.provider, catalog: deps.catalog, director: deps, signal, emit: (e) => send(e.type, e), frames, vision }, {
+      // the memory system is experimental and can be switched off: then no memory tools, no prompt block, no director preferences
+      const memory = await memoryIfOn(d.memory);
+      const preferences = await directorPreferencesFor(memory, pid);
+      const result = await runAgentTurn({ provider: deps.provider, catalog: deps.catalog, director: preferences ? { ...deps, preferences } : deps, signal, emit: (e) => send(e.type, e), frames, vision, ...(memory ? { memory } : {}) }, {
         project: project.data, selection: body.data.selection, instruction: body.data.instruction, history: body.data.history, attachments: body.data.attachments, limits: body.data.limits,
       });
       d.settings.noteResult(true);

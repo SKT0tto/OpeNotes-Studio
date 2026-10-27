@@ -9,6 +9,7 @@ import type { CompactCatalog } from '@shared/schema/assets';
 import type { PublicLlmSettings } from '@shared/schema/settings';
 import { costumeLabel } from '@shared/catalog/costume';
 import { DirectorApiError, postBreakdown, postScenes, type BatchProgress, type BreakdownResponse, type RunInfo, type SceneResponse } from '../../directorApi';
+import { DirectorMemoryLine } from '../panels/MemoryPanel';
 import { fetchLlmSettings } from '../../llmApi';
 import type { Project } from '@shared/schema/project';
 import { createProject, loadProject, saveProject } from '../../projectsApi';
@@ -47,6 +48,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
   const [settings, setSettings] = useState<PublicLlmSettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [engine, setEngine] = useState<Engine>('ai');
+  const [useMem, setUseMem] = useState(true);
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [fileInfo, setFileInfo] = useState('');
@@ -150,7 +152,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
       if (todo.length > 0) {
         setStage(`逐场景生成演出（${todo.length} 个场景，并发 3）…`);
         try {
-          await postScenes(current, { scopes: ['scene'], sceneIds: todo, ...(eng ? { engine: eng.engine } : {}) }, (p) => {
+          await postScenes(current, { scopes: ['scene'], sceneIds: todo, ...(eng ? { engine: eng.engine } : useMem ? {} : { useMemories: false }) }, (p) => {
             setProgress((x) => ({ ...x, [p.sceneId]: p }));
             if (p.state === 'done' && p.result) {
               results.push(p.result);
@@ -247,6 +249,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
                   <option value="rule">规则导演（非 AI）</option>
                 </select>
               </label>
+              {!useRule && <DirectorMemoryLine projectId={null} on={useMem} setOn={setUseMem} />}
               <button className="btn" onClick={() => file.current?.click()}>载入 .txt / .md…</button>
               <input ref={file} type="file" accept=".txt,.md,text/plain,text/markdown" hidden data-testid="ai-file" onChange={async (e) => {
                 const f = e.target.files?.[0];

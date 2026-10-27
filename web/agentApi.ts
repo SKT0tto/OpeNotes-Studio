@@ -4,6 +4,7 @@ import type { HistoryTurn } from '@shared/agent/history';
 import type { CaptureRequest } from '@shared/agent/frames';
 import type { Project } from '@shared/schema/project';
 import type { Verification } from '@shared/agent/verify';
+import type { MemoryEvent } from '@shared/agent/memory';
 import { answerCapture } from './agentFrames';
 
 export interface Usage { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }
@@ -12,7 +13,8 @@ export type AgentStreamEvent =
   | { type: 'tool'; name: string; summary: string }
   | { type: 'op'; record: OpRecord }
   | { type: 'usage'; usage: Usage; total: Usage }
-  | { type: 'ask'; question: string; options: string[] };
+  | { type: 'ask'; question: string; options: string[] }
+  | { type: 'memory'; event: MemoryEvent };
 
 /** The final answer of a turn (see server/agent/loop.ts AgentTurnResult). */
 export interface AgentProposal {
@@ -29,6 +31,8 @@ export interface AgentProposal {
   mode: 'tools' | 'json';
   stats: ToolStats;
   verification?: Verification;
+  /** Long-term memory saved / updated / forgotten / proposed in this turn. */
+  memory?: MemoryEvent[];
   stopped: string;
   elapsedMs: number;
   model?: string;

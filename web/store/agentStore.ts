@@ -16,6 +16,7 @@ import { AgentApiError, postAgentTurn, postSnapshot, type AgentProposal, type Ag
 import { hasFrameGrabber } from '../agentFrames';
 import { useProject } from './projectStore';
 import { notify, useUi } from './uiStore';
+import { useMemories } from '../memoryApi';
 
 export interface CardItem {
   id: number;
@@ -50,6 +51,8 @@ export interface RunItem {
   revert?: AgentOp[];
   /** Pictures sent with the instruction (thumbnails for the conversation). */
   attachments?: AgentAttachment[];
+  /** What the user did with the memory cards of this run (index into proposal.memory). */
+  memoryDone?: Record<number, 'saved' | 'dismissed' | 'removed'>;
 }
 /** A picture the user attached (a video arrives as a few frames, each its own attachment with the time in its label). */
 export interface AgentAttachment {
@@ -83,6 +86,7 @@ interface AgentState {
   undoRun(runId: number): void;
   restoreSnapshot(): void;
   focusInput(): void;
+  decideMemory(runId: number, index: number, d: 'saved' | 'dismissed' | 'removed'): void;
 }
 
 let seq = 0;
@@ -155,6 +159,10 @@ export const useAgent = create<AgentState>((set, get) => {
       set({ live: on });
     },
 
+    decideMemory(runId, index, d) {
+      patchRun(runId, (r) => ({ ...r, memoryDone: { ...r.memoryDone, [index]: d } }));
+    },
+
     focusInput() {
       set((s) => ({ focusTick: s.focusTick + 1 }));
     },
@@ -182,6 +190,10 @@ export const useAgent = create<AgentState>((set, get) => {
           if (e.type === 'tool') return { ...r, progress: [...r.progress.slice(-30), e.summary] };
           if (e.type === 'usage') return { ...r, usage: e.total };
           if (e.type === 'ask') return { ...r, progress: [...r.progress, `提问：${e.question}`] };
+          if (e.type === 'memory') {
+            void useMemories.getState().load(project.id);
+            return { ...r, progress: [...r.progress.slice(-30), e.event.action === 'proposed' ? `建议记住：${e.event.proposal.text}` : `${e.event.action === 'forgotten' ? '忘掉' : '记住'}：${e.event.memory.text}`] };
+          }
           return r;
         });
       };

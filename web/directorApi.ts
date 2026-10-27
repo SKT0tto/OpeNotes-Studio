@@ -56,7 +56,8 @@ export async function postBreakdown(text: string, title: string, refresh = false
   return (await res.json()) as BreakdownResponse;
 }
 
-export interface SceneOptions { scopes: ScopeName[]; beatIds?: string[]; overwriteUser?: boolean; refresh?: boolean; engine?: 'rule' }
+/** useMemories=false: generate without the user's saved style preferences (experimental memory; default: with them). */
+export interface SceneOptions { scopes: ScopeName[]; beatIds?: string[]; overwriteUser?: boolean; refresh?: boolean; engine?: 'rule'; useMemories?: boolean }
 
 export async function postScene(project: Project, sceneId: string, o: SceneOptions, signal?: AbortSignal): Promise<SceneResponse> {
   const res = await postJson('/api/director/scene', { project, sceneId, ...o }, signal);

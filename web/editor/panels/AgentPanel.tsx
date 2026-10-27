@@ -16,6 +16,11 @@ import { useAgent, type AgentAttachment, type CardItem, type RunItem } from '../
 import { notify } from '../../store/uiStore';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
+import { directorMemories, memoryReviewInstruction } from '@shared/agent/memory';
+import { useMemories } from '../../memoryApi';
+import { EXPERIMENTAL_TIP, ExperimentalBadge, MemoryCards, MemoryManager } from './MemoryPanel';
+
+
 
 const SCOPE_ORDER: AgentScope[] = ['camera', 'performance', 'costume', 'staging', 'fx', 'background', 'structure', 'rhythm', 'lock'];
 const fmt = (n: number) => (n >= 10_000 ? `${(n / 1000).toFixed(1)}k` : String(n));
@@ -222,7 +227,7 @@ function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFoc
   return (
     <div className="agent-card" data-testid="agent-card" data-run={run.id}>
       <div className="agent-card-head">
-        <strong data-testid="agent-card-title">{titleOf(project, run.items)}</strong>
+        <strong data-testid="agent-card-title">{run.items.length === 0 && p.memory?.length ? '长期记忆' : titleOf(project, run.items)}</strong>
         <span className="hint">{p.stopped === 'steps' ? '（达到步数上限）' : ''}</span>
       </div>
       {run.liveNote && <p className="hint warn" data-testid="agent-live-note">{run.liveNote}</p>}
@@ -234,6 +239,7 @@ function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFoc
           <div className="agent-options">{p.question.options.map((o) => <button key={o} className="btn-s" data-testid="agent-option" onClick={() => void a.send(o)}>{o}</button>)}</div>
         </div>
       )}
+      {p.memory && p.memory.length > 0 && <MemoryCards events={p.memory} projectId={project.id} decisions={run.memoryDone ?? {}} onDecide={(i, d) => a.decideMemory(run.id, i, d)} />}
       <Verification v={p.verification} />
       <div className="agent-actual"><span className="agent-tag">实际改动</span>{actual === 0 ? ' 没有' : ` ${actual} 处`}</div>
       {batches.map((b) => <BatchGroup key={b.id} run={run} batch={b} renderRow={renderRow} />)}
@@ -280,6 +286,10 @@ export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, bea
   // pictures / video frames for the next instruction (attach button, drop on the input, paste)
   const [attach, setAttach] = useState<AgentAttachment[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [showMemory, setShowMemory] = useState(false);
+  const mem = useMemories();
+  useEffect(() => { void useMemories.getState().load(project.id); }, [project.id]);
+  const styleMemories = mem.enabled ? directorMemories(mem.memories, project.id).length : 0;
   const fileInput = useRef<HTMLInputElement>(null);
   const addFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -314,11 +324,13 @@ export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, bea
         </label>
         <span className="hint" data-testid="agent-context" title="指令里的“这里 / 这一句”指这个选区；多选时“这几句 / 这段 / 选中的”指选中的句子">选区：{ctxText}</span>
         <span className="grow" />
+        <button className={`btn-s${showMemory ? ' on' : ''}`} data-testid="agent-memory" title={mem.enabled ? `长期记忆（${EXPERIMENTAL_TIP}）` : '长期记忆已关闭'} onClick={() => setShowMemory((v) => !v)}>{showMemory ? '返回对话' : '记忆'}{!showMemory && mem.enabled && mem.memories.some((m) => m.enabled) ? ` ${mem.memories.filter((m) => m.enabled).length}` : ''}</button>
         <span className="hint" data-testid="agent-cost" title="本条指令的 token 用量 / 本次会话累计（含缓存命中）">
           本条 {fmt((last?.usage.inputTokens ?? 0) + (last?.usage.outputTokens ?? 0))} · 本次共 {fmt(session.inputTokens + session.outputTokens)} tokens
         </span>
       </div>
-      <div className="agent-flow" data-testid="agent-flow">
+      {showMemory && <MemoryManager projectId={project.id} />}
+      <div className="agent-flow" data-testid="agent-flow" hidden={showMemory}>
         {runs.length === 0 && <p className="hint">用一句话指挥 AI 修改当前项目，例如“第二场多用双人，少点特写”“这一句加回忆效果”“让爱音在这里进场”“这句停顿长一点”。每次修改先给你看变更，可勾选应用，Ctrl+Z 一步撤销。</p>}
         {runs.map((r) => (
           <div key={r.id} className="agent-turn" data-testid="agent-turn">
@@ -332,7 +344,14 @@ export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, bea
         <div ref={end} />
       </div>
       {snapshot && <div className="agent-snap hint"><button className="btn-s" data-testid="agent-restore" onClick={() => a.restoreSnapshot()}>恢复到 AI 助手开始前</button></div>}
-      <div className="agent-suggest">{suggestions(project, selection, !!multi).map((s) => <button key={s} className="btn-s" disabled={running || !scene} onClick={() => send(s)}>{s}</button>)}</div>
+      <div className="agent-suggest">
+        {suggestions(project, selection, !!multi).map((s) => <button key={s} className="btn-s" disabled={running || !scene} onClick={() => send(s)}>{s}</button>)}
+        {scene && styleMemories > 0 && (
+          <button className="btn-s" data-testid="agent-review-memory" disabled={running} title={`让助手按你保存的 ${styleMemories} 条风格偏好检查这一场，只改明显违反的地方（每处都是普通的变更卡片，可勾选、可撤销）。${EXPERIMENTAL_TIP}`} onClick={() => send(memoryReviewInstruction(sceneNo(project, scene.id)))}>
+            按偏好检查本场 <ExperimentalBadge />
+          </button>
+        )}
+      </div>
       {attach.length > 0 && (
         <div className="agent-attachments" data-testid="agent-attachments" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', padding: '2px 0' }}>
           {attach.map((x, i) => (
