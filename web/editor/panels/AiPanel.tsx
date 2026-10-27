@@ -13,6 +13,7 @@ import type { CompactCatalog } from '@shared/schema/assets';
 import type { Project } from '@shared/schema/project';
 import type { PublicLlmSettings } from '@shared/schema/settings';
 import { DirectorApiError, postScene, postScenes, type BatchProgress, type SceneResponse } from '../../directorApi';
+import { DirectorMemoryLine } from './MemoryPanel';
 import { fetchLlmSettings } from '../../llmApi';
 import { useProject } from '../../store/projectStore';
 import { notify } from '../../store/uiStore';
@@ -59,6 +60,7 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
   const [scope, setScope] = useState<ScopeName>('scene');
   const [onlyBeat, setOnlyBeat] = useState(false);
   const [overwriteUser, setOverwriteUser] = useState(false);
+  const [useMem, setUseMem] = useState(true);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<Record<string, BatchProgress>>({});
   const [total, setTotal] = useState(0);
@@ -179,7 +181,7 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
     const scopes: ScopeName[] = all ? ['scene'] : [runScope];
     const beatIds = !all && runOnlyBeat && selection.beatId ? [selection.beatId] : undefined;
     meta.current = { scopes, ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, label: all ? '全部场景' : multi ? `${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}` : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}` };
-    const eng = runUseRule ? ({ engine: 'rule' } as const) : {};
+    const eng = runUseRule ? ({ engine: 'rule' } as const) : useMem ? {} : { useMemories: false };
     const got: SceneResponse[] = [];
     try {
       if (all) {
@@ -297,6 +299,7 @@ export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?
         <label className="chk"><input type="checkbox" checked={onlyBeat} disabled={!selection.beatId} onChange={(e) => setOnlyBeat(e.target.checked)} data-testid="ai-only-beat" /> 只重做选中的台词</label>
         <label className="chk"><input type="checkbox" checked={overwriteUser} onChange={(e) => setOverwriteUser(e.target.checked)} data-testid="ai-overwrite" /> 也覆盖我手改过的内容（锁定的永不覆盖）</label>
         <label className="chk"><input type="checkbox" checked={preview} onChange={(e) => setPreview(e.target.checked)} data-testid="ai-preview" /> 先预览差异，再逐项接受 / 拒绝</label>
+        {!useRule && <DirectorMemoryLine projectId={project.id} on={useMem} setOn={setUseMem} disabled={busy} />}
         <div className="ai-buttons">
           <button className="btn primary" disabled={!canGenerate || !scene} onClick={() => void run(false)} data-testid="ai-regen-scene">
             {scene && scene.beats.some((b) => b.meta.source !== 'rule') ? '重新生成' : '生成演出'}：{scene?.title ?? '—'}

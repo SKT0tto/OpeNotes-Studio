@@ -431,6 +431,7 @@
 .agent-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .agent-top .chk { display: flex; gap: 4px; align-items: center; color: var(--text-1); cursor: pointer; }
 .agent-flow { flex: 1 1 auto; min-height: 120px; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+.agent-flow[hidden] { display: none; }
 .agent-turn { display: flex; flex-direction: column; gap: 6px; }
 .agent-user { align-self: flex-end; max-width: 92%; background: var(--accent-weak); border: 1px solid var(--accent); border-radius: 10px; padding: 4px 8px; white-space: pre-wrap; }
 .agent-card { border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--bg-2); padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; }
@@ -468,4 +469,26 @@
 .agent-thumbs { display: flex; flex-wrap: wrap; gap: 4px; }
 .agent-thumb { width: 84px; aspect-ratio: 16 / 9; object-fit: cover; border: 1px solid var(--line); border-radius: 3px; cursor: zoom-in; }
 .agent-lightbox { position: fixed; inset: 0; z-index: 1000; background: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; cursor: zoom-out; }
+.agent-tag.exp { border-color: var(--accent, #6aa0ff); color: var(--accent, #6aa0ff); font-size: 10px; padding: 0 4px; margin-left: 2px; }
+.memory-manager { border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--bg-2); padding: 6px 8px; display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-height: 120px; overflow: auto; }
+.memory-head { display: flex; gap: 6px; align-items: center; }
+.memory-head .chk { display: flex; gap: 4px; align-items: center; cursor: pointer; }
+.memory-section { display: flex; flex-direction: column; }
+.memory-row { display: flex; gap: 6px; align-items: flex-start; padding: 3px 0; border-top: 1px solid var(--line); }
+.memory-row.off .memory-text { opacity: .5; text-decoration: line-through; }
+.memory-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.memory-text { overflow-wrap: anywhere; }
+.memory-text.del { text-decoration: line-through; opacity: .7; }
+.memory-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: var(--fs-label); }
+.memory-meta select, .memory-add select { font-size: var(--fs-label); background: var(--bg-1); color: var(--text-1); border: 1px solid var(--line); border-radius: 4px; }
+.memory-edit, .memory-add input { flex: 1; min-width: 0; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 2px 6px; font: inherit; }
+.memory-add { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.memory-cards { display: flex; flex-direction: column; gap: 4px; }
+.memory-card { border: 1px solid var(--line); border-left: 3px solid var(--accent, #6aa0ff); border-radius: var(--radius-s); background: var(--bg-1); padding: 4px 6px; display: flex; flex-direction: column; gap: 2px; }
+.memory-card.proposed { border-left-color: var(--warn, #c93); border-style: dashed; border-left-style: solid; }
+.memory-card.forgotten { border-left-color: var(--text-2); }
+.director-memory { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-label); }
+.director-memory .chk { display: flex; gap: 4px; align-items: center; cursor: pointer; }
+.director-memory summary { cursor: pointer; color: var(--text-2); }
+.director-memory-list { margin: 2px 0 0 16px; padding: 0; }
 .agent-lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 4px; }

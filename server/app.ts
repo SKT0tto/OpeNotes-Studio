@@ -13,6 +13,8 @@ import { FixtureProvider } from './llm/fixtureProvider';
 import { LlmCache } from './llm/cache';
 import { directorRoutes } from './director/routes';
 import { agentRoutes } from './agent/routes';
+import { MemoryStore } from './agent/memoryStore';
+import { memoryRoutes } from './agent/memoryRoutes';
 import { llmRoutes } from './llm/routes';
 import { LlmSettings } from './settings/store';
 import { DEFAULT_LABELS_FILE, LabelStore, labelRoutes, readLabelFile } from './assets/labels';
@@ -77,8 +79,10 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
   });
   const llmCache = new LlmCache(path.join(config.dataDir, 'llm-cache'));
   app.use(llmRoutes(llm));
-  app.use(directorRoutes({ settings: llm, cache: llmCache, catalog }));
-  app.use(agentRoutes({ settings: llm, cache: llmCache, catalog }));
+  const memory = new MemoryStore(path.resolve(env.MEMORY_FILE ?? path.join(config.dataDir, 'memories.json')));
+  app.use(memoryRoutes(memory));
+  app.use(directorRoutes({ settings: llm, cache: llmCache, catalog, memory }));
+  app.use(agentRoutes({ settings: llm, cache: llmCache, catalog, memory }));
 
   const setupStore = new SetupStore(path.resolve(env.SETUP_FILE ?? path.join(config.dataDir, 'setup.local.json')));
   const haneoka = new HaneokaSource({

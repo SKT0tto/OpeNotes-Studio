@@ -10,6 +10,7 @@ import { DirectorError } from '../llm/pipeline';
 import { LlmError } from '../llm/provider';
 import type { LlmSettings } from '../settings/store';
 import { RuleProvider } from '../llm/ruleProvider';
+import { directorPreferencesFor, type MemoryBackend } from '../agent/memoryStore';
 
 const isLocal = (url: string) => /^https?:\/\/(localhost|127\.|\[::1\]|192\.168\.|10\.)/i.test(url.trim());
 
@@ -24,6 +25,8 @@ export interface DirectorRouteDeps {
   settings: LlmSettings;
   cache: LlmCache;
   catalog: CatalogService;
+  /** The assistant's long-term memory: its active entries steer AI scene direction (not the rule director) when the user allows it. */
+  memory?: MemoryBackend | undefined;
 }
 
 /** Resolves provider + catalog for one request; null when no AI is configured (the response is already sent). */
@@ -81,7 +84,7 @@ export function directorRoutes(d: DirectorRouteDeps): Router {
 
   const ScopeList = z.array(z.enum(SCOPE_NAMES as unknown as [string, ...string[]])).default(['scene']);
   const SceneBody = z.object({
-    project: z.unknown(), sceneId: z.string(), scopes: ScopeList, beatIds: z.array(z.string()).optional(), overwriteUser: z.boolean().optional(), refresh: z.boolean().optional(), engine: z.literal('rule').optional(),
+    project: z.unknown(), sceneId: z.string(), scopes: ScopeList, beatIds: z.array(z.string()).optional(), overwriteUser: z.boolean().optional(), refresh: z.boolean().optional(), engine: z.literal('rule').optional(), useMemories: z.boolean().optional(),
   });
   const parseProject = (v: unknown) => {
     const p = ProjectSchema.safeParse(v);
@@ -96,6 +99,7 @@ export function directorRoutes(d: DirectorRouteDeps): Router {
     try {
       const deps = await directorDeps(d, res, abortOnClose(res), body.data.refresh === true, body.data.engine);
       if (!deps) return;
+      if (body.data.engine !== 'rule' && body.data.useMemories !== false) deps.preferences = await directorPreferencesFor(d.memory, project.id);
       const result = await runScene(deps, { project, sceneId: body.data.sceneId, scopes: body.data.scopes as never, beatIds: body.data.beatIds, overwriteUser: body.data.overwriteUser }, `g_${Date.now().toString(36)}`);
       if (body.data.engine !== 'rule') d.settings.noteResult(true);
       res.json({ ...result, cached: result.runs.every((x) => x.cached) });
@@ -107,12 +111,13 @@ export function directorRoutes(d: DirectorRouteDeps): Router {
 
   /** Several scenes, 2-3 at a time, with one Server-Sent Event per scene state change and a final `done` event. */
   r.post('/api/director/scenes', json, async (req, res) => {
-    const body = z.object({ project: z.unknown(), sceneIds: z.array(z.string()).optional(), scopes: ScopeList, concurrency: z.number().int().min(1).max(4).optional(), overwriteUser: z.boolean().optional(), refresh: z.boolean().optional(), engine: z.literal('rule').optional() }).safeParse(req.body);
+    const body = z.object({ project: z.unknown(), sceneIds: z.array(z.string()).optional(), scopes: ScopeList, concurrency: z.number().int().min(1).max(4).optional(), overwriteUser: z.boolean().optional(), refresh: z.boolean().optional(), engine: z.literal('rule').optional(), useMemories: z.boolean().optional() }).safeParse(req.body);
     const project = body.success ? parseProject(body.data.project) : null;
     if (!body.success || !project) return void res.status(400).json({ error: { kind: 'bad_request', message: '需要合法的 project' } });
     try {
       const deps = await directorDeps(d, res, abortOnClose(res), body.data.refresh === true, body.data.engine);
       if (!deps) return;
+      if (body.data.engine !== 'rule' && body.data.useMemories !== false) deps.preferences = await directorPreferencesFor(d.memory, project.id);
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
       const send = (event: string, data: unknown) => res.write(`event: ${event}
 data: ${JSON.stringify(data)}

@@ -19,6 +19,8 @@ export interface DirectorDeps {
   backgroundLimit?: number | undefined;
   refresh?: boolean | undefined;
   signal?: AbortSignal | undefined;
+  /** The user's long-term preferences (assistant memory) for scene direction; absent / null = none, and the scene input stays byte-identical. */
+  preferences?: { note: string; items: string[] } | null | undefined;
   now?: () => number;
 }
 

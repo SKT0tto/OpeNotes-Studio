@@ -74,6 +74,8 @@ export interface SceneDirectionInput {
   sceneContinues?: { note: string; nextParagraph: number };
   /** Only on a camera regeneration asked for by the agent / the user: a preference for the shots (absent otherwise, so the request bytes and the cache key of every other run stay as they were). */
   guidance?: { note: string; text: string };
+  /** Only when the user has saved preferences (assistant memory) and lets the director use them; absent otherwise (same bytes, same cache key). */
+  preferences?: { note: string; items: string[] };
   fixedBeats: Array<{ keepId: string; paragraph: number; kind: string; speaker: string | null; text: string; lockedFields?: string[] }>;
   mode: { scopes: string[]; focusBeatIds?: string[] };
 }

@@ -11,6 +11,7 @@ import { applyOp } from '../../shared/agent/apply';
 import { projectSummary, sceneTable, type AgentSelection } from '../../shared/agent/compact';
 import { DEFAULT_FRAME_WIDTH, planFrames, type CaptureRequest, type CapturedFrame } from '../../shared/agent/frames';
 import type { HistoryTurn } from '../../shared/agent/history';
+import { activeMemories, memoryPromptBlock, visibleMemories, type Memory, type MemoryEvent, type MemoryKind } from '../../shared/agent/memory';
 import type { AgentOp } from '../../shared/agent/ops';
 import { pruneRoundTrips } from '../../shared/agent/prune';
 import { TOOLS, commitOps, newStats, runTool, toolByName, type OpRecord, type ToolEnv, type ToolStats } from '../../shared/agent/tools';
@@ -21,7 +22,8 @@ import type { DirectorDeps } from '../llm/director';
 import { LlmError, modelJsonSchema, stableStringify, zeroUsage, type ChatImage, type ChatTurn, type LlmProvider, type LlmUsage, type ToolSpec } from '../llm/provider';
 import { runScene } from '../llm/sceneRunner';
 import { NO_VERIFICATION, changesPicture, involvesMove, opBeatIds, type Verification } from '../../shared/agent/verify';
-import { AGENT_SYSTEM, FALLBACK_PROTOCOL, VISION_PROMPT, userMessage } from './prompt';
+import { AGENT_SYSTEM, FALLBACK_PROTOCOL, MEMORY_RULES, VISION_PROMPT, userMessage } from './prompt';
+import type { MemoryBackend } from './memoryStore';
 import { loadSandbox, runInSandbox } from './sandbox';
 
 export interface AgentLimits {
@@ -56,7 +58,8 @@ export type AgentEvent =
   | { type: 'tool'; name: string; summary: string }
   | { type: 'op'; record: OpRecord }
   | { type: 'usage'; usage: LlmUsage; total: LlmUsage }
-  | { type: 'ask'; question: string; options: string[] };
+  | { type: 'ask'; question: string; options: string[] }
+  | { type: 'memory'; event: MemoryEvent };
 
 export interface AgentDeps {
   provider: LlmProvider;
@@ -71,6 +74,8 @@ export interface AgentDeps {
   frames?: FrameSource | undefined;
   /** The assistant's eyes; null / absent = no pictures at all. */
   vision?: VisionChannel | null | undefined;
+  /** Long-term memory (remember / forget / list_memories and the memory block of the system prompt); absent = no memory at all. */
+  memory?: MemoryBackend | undefined;
 }
 
 export interface AgentTurnResult {
@@ -95,6 +100,8 @@ export interface AgentTurnResult {
   verification: Verification;
   stopped: 'done' | 'steps' | 'time' | 'ops' | 'aborted' | 'ask';
   elapsedMs: number;
+  /** What happened to the long-term memory in this turn (saved / updated / forgotten / proposed to the user). */
+  memory: MemoryEvent[];
   /** Raw calls, for the evaluation log. */
   trace: Array<{ step: number; text: string; calls: Array<{ name: string; args: unknown; result: string }> }>;
 }
@@ -102,11 +109,14 @@ export interface AgentTurnResult {
 const addUsage = (a: LlmUsage, b: LlmUsage): LlmUsage => ({ inputTokens: a.inputTokens + b.inputTokens, outputTokens: a.outputTokens + b.outputTokens, cacheReadTokens: a.cacheReadTokens + b.cacheReadTokens, cacheCreationTokens: a.cacheCreationTokens + b.cacheCreationTokens });
 
 /** Tool specs for the model; tools that cannot work in this turn (no frames / no history to undo) are left out. */
-export function toolSpecs(have: { frames?: boolean; revert?: boolean; script?: boolean } = { frames: true, revert: true, script: true }): ToolSpec[] {
-  return TOOLS.filter((t) => (t.name !== 'capture_frames' || have.frames) && (t.name !== 'revert_turn' || have.revert) && (t.name !== 'run_script' || have.script)).map((t) => ({ name: t.name, description: t.description, parameters: modelJsonSchema(t.modelSchema ?? t.schema) }));
+export function toolSpecs(have: { frames?: boolean; revert?: boolean; script?: boolean; memory?: boolean } = { frames: true, revert: true, script: true, memory: true }): ToolSpec[] {
+  return TOOLS.filter((t) => (t.name !== 'capture_frames' || have.frames) && (t.name !== 'revert_turn' || have.revert) && (t.name !== 'run_script' || have.script) && (t.kind !== 'memory' || have.memory)).map((t) => ({ name: t.name, description: t.description, parameters: modelJsonSchema(t.modelSchema ?? t.schema) }));
 }
 
 const Fallback = z.object({ say: z.string().default(''), calls: z.array(z.object({ name: z.string(), args: z.record(z.string(), z.unknown()).default({}) })).default([]), done: z.boolean().default(false) });
+
+/** Text that names one line / one scene: a one-off edit, never a memory. */
+export const ONE_OFF = /\b[a-z]+_\d+b_\d+\b|第\s*[0-9一二三四五六七八九十百]+\s*场\s*第/;
 
 const CHANGE_WORDS = /(已|将|会|我把|帮你|为你)[^。]{0,12}(改|调整|设置|设为|添加|加上|推近|拉远|换成|移到|放慢|加快|删除|插入|锁定)/;
 
@@ -133,7 +143,13 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   const trace: AgentTurnResult['trace'] = [];
 
   const selScene = req.selection.sceneId && env.sandbox.scenes.some((s) => s.id === req.selection.sceneId) ? req.selection.sceneId : null;
-  const messages: ChatTurn[] = [{ role: 'system', content: AGENT_SYSTEM }];
+  // long-term memory: the rules for remembering + every active memory, after the stable prompt (its cache prefix stays the same)
+  const memoryEvents: MemoryEvent[] = [];
+  let memories: Memory[] = [];
+  if (deps.memory) memories = (await deps.memory.read().catch(() => null))?.memories ?? [];
+  const memBlock = deps.memory ? memoryPromptBlock(activeMemories(memories, req.project.id)) : '';
+  const system = deps.memory ? `${AGENT_SYSTEM}\n\n${MEMORY_RULES}${memBlock ? `\n\n${memBlock}` : ''}` : AGENT_SYSTEM;
+  const messages: ChatTurn[] = [{ role: 'system', content: system }];
   const history = (req.history ?? []).slice(-8);
   for (const h of history) messages.push({ role: h.role, content: h.content.slice(0, 2000) });
   // earlier applied turns that can be undone exactly, most recent first
@@ -160,7 +176,7 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   }
   messages.push({ role: 'user', content: userMessage({ summary: projectSummary(env.sandbox, req.selection), sceneTable: selScene ? sceneTable(env.sandbox, selScene) : null, instruction: req.instruction }) + attachNote, ...(attachments.length && vision?.mode === 'inline' ? { images: attachments } : {}) });
 
-  const specs = toolSpecs({ frames: !!(deps.frames && vision), revert: env.reverts.length > 0, script: !!env.scriptRunner });
+  const specs = toolSpecs({ frames: !!(deps.frames && vision), revert: env.reverts.length > 0, script: !!env.scriptRunner, memory: !!deps.memory });
   /** Pictures from capture_frames, sent as one user message after the tool results of the step (inline vision). */
   let shots: ChatImage[] = [];
   let stopped: AgentTurnResult['stopped'] = 'done';
@@ -194,7 +210,8 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
       emit({ type: 'ask', ...env.askedUser });
       return '已向用户提问；本轮到此结束。';
     }
-    if (name === 'capture_frames') out = await capture(args);
+    if (toolByName(name)?.kind === 'memory') out = await memoryTool(name, args);
+    else if (name === 'capture_frames') out = await capture(args);
     else if (name === 'regenerate_scene_camera') { env.stats.writeCalls++; out = await regenerate(args); if (!out.includes('"错误"')) env.stats.writeFirstTryOk++; }
     else out = runTool(env, name, args);
     for (const r of [...env.applied, ...env.pending].slice(before)) emit({ type: 'op', record: r });
@@ -205,6 +222,56 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
     // a script that only read the (already changed) project and printed it is a read-back too
     if (name === 'run_script' && env.applied.length === beforeApplied && out.includes('不计入失败次数')) verifiedSinceWrite = true;
     return out;
+  };
+
+  /** remember / forget / list_memories: the server's memory store (not the project); every change is reported as a memory event. */
+  const memoryTool = async (name: string, args: Record<string, unknown>): Promise<string> => {
+    env.stats.toolCalls++;
+    const store = deps.memory;
+    if (!store) return JSON.stringify({ 错误: ['这里没有长期记忆'] });
+    const a = toolByName(name)!.schema.safeParse(args);
+    if (!a.success) { env.stats.badArgs++; return JSON.stringify({ 错误: a.error.issues.slice(0, 3).map((i) => `参数 ${i.path.join('.')}：${i.message}`) }); }
+    const pid = req.project.id;
+    const visible = async () => visibleMemories((await store.read()).memories, pid);
+    const note = (ev: MemoryEvent) => { memoryEvents.push(ev); emit({ type: 'memory', event: ev }); };
+    try {
+      if (name === 'list_memories') {
+        const list = await visible();
+        return JSON.stringify({ 记忆: list.length ? list.map((m) => ({ id: m.id, 内容: m.text, 范围: m.scope === 'global' ? '全局' : '本项目', ...(m.castId ? { 角色: m.castName ?? m.castId } : {}), 启用: m.enabled })) : '（还没有记忆）' });
+      }
+      if (name === 'forget') {
+        const p = a.data as { id: string };
+        const m = (await visible()).find((x) => x.id === p.id);
+        if (!m) return JSON.stringify({ 错误: [`没有这条记忆：${p.id}（用 list_memories 查 id）`] });
+        const gone = await store.remove(m.id);
+        note({ action: 'forgotten', memory: gone });
+        return JSON.stringify({ 结果: `已删除记忆「${gone.text}」` });
+      }
+      const p = a.data as { text: string; how: 'stated' | 'inferred'; kind: MemoryKind; scope?: 'global' | 'project'; castId?: string; replaces?: string; why?: string };
+      const text = p.text.trim();
+      // a one-off edit names a line or a scene: that is an edit, not a preference
+      if (ONE_OFF.test(text)) return JSON.stringify({ 错误: ['记忆只存长期偏好；点名某一句 / 某一场的是一次性编辑，不要记住（直接用编辑工具改）'] });
+      const cast = p.castId ? req.project.cast.find((c) => c.id === p.castId || c.displayName === p.castId) : undefined;
+      if (p.castId && !cast) return JSON.stringify({ 错误: [`角色 ${p.castId} 不在角色表里`] });
+      const scope = cast ? 'project' : p.scope ?? 'global';
+      const old = p.replaces ? (await visible()).find((x) => x.id === p.replaces) : undefined;
+      if (p.replaces && !old) return JSON.stringify({ 错误: [`没有这条记忆：${p.replaces}`] });
+      if (p.how === 'inferred') {
+        if (memoryEvents.some((e) => e.action === 'proposed' && e.proposal.text === text)) return JSON.stringify({ 结果: '这条建议已经给用户了' });
+        note({ action: 'proposed', proposal: { text, scope, kind: p.kind, ...(cast ? { castId: cast.id, castName: cast.displayName } : {}), ...(p.why ? { why: p.why } : {}), ...(old ? { replaces: old.id } : {}) } });
+        return JSON.stringify({ 结果: '已作为「要记住吗？」建议卡片交给用户确认，还没有保存。总结里用一句话问用户要不要记住。' });
+      }
+      if (old) {
+        const m = await store.update(old.id, { text, scope, kind: p.kind, ...(scope === 'project' ? { projectId: pid, castId: cast?.id ?? null, castName: cast?.displayName ?? null } : {}), enabled: true });
+        note({ action: 'updated', memory: m });
+        return JSON.stringify({ 结果: `已更新记忆 ${m.id}：「${m.text}」（${m.scope === 'global' ? '全局' : '本项目'}）` });
+      }
+      const m = await store.add({ text, origin: 'stated', kind: p.kind, scope, ...(scope === 'project' ? { projectId: pid } : {}), ...(cast ? { castId: cast.id, castName: cast.displayName } : {}) });
+      note({ action: 'saved', memory: m });
+      return JSON.stringify({ 结果: `已记住 ${m.id}：「${m.text}」（${m.scope === 'global' ? '全局，所有项目' : '只在本项目'}）。以后的指令会自动遵守。` });
+    } catch (e) {
+      return JSON.stringify({ 错误: [`记忆操作失败：${(e as Error).message}`] });
+    }
   };
 
   /** Frames of the sandbox (what the user would see after applying), shown to the model or described by the vision model. */
@@ -316,9 +383,9 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
       });
       assistant = { role: 'assistant', content: text, toolCalls: r.toolCalls, ...(r.reasoning ? { reasoning: r.reasoning } : {}) };
     } else {
-      const system = `${AGENT_SYSTEM}\n\n# 可用工具（参数是 JSON Schema）\n${specs.map((t) => `## ${t.name}\n${t.description}\n参数：${stableStringify(t.parameters)}`).join('\n')}\n\n# 输出协议\n${FALLBACK_PROTOCOL}`;
+      const fbSystem = `${system}\n\n# 可用工具（参数是 JSON Schema）\n${specs.map((t) => `## ${t.name}\n${t.description}\n参数：${stableStringify(t.parameters)}`).join('\n')}\n\n# 输出协议\n${FALLBACK_PROTOCOL}`;
       const transcript = messages.slice(1).map((m) => ({ role: m.role, content: m.content }));
-      const r = await deps.provider.generateStructured({ system, input: { 对话: transcript }, schema: Fallback, schemaName: 'AgentStep', maxTokens: 8000, signal: deps.signal });
+      const r = await deps.provider.generateStructured({ system: fbSystem, input: { 对话: transcript }, schema: Fallback, schemaName: 'AgentStep', maxTokens: 8000, signal: deps.signal });
       usage = addUsage(usage, r.usage);
       emit({ type: 'usage', usage: r.usage, total: usage });
       text = r.data.say;
@@ -347,7 +414,7 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
         messages.push({ role: 'user', content: `请截图核对刚才的画面改动：调用 capture_frames${beats.length ? `（beatIds=${JSON.stringify(beats)}）` : ''}只看改动涉及的句子${move ? '；有运镜/走位的句子用 samples=3 沿时间取几帧' : ''}，对照用户的指令${(req.attachments ?? []).length ? '和参考图' : ''}判断；不符合就修正，修正后再看一次；确实改不了就在总结里如实说明。` });
         continue;
       }
-      if (env.applied.length + env.pending.length === 0 && !env.askedUser && CHANGE_WORDS.test(text) && talkNudges < 1) {
+      if (env.applied.length + env.pending.length === 0 && !env.askedUser && memoryEvents.length === 0 && CHANGE_WORDS.test(text) && talkNudges < 1) {
         talkNudges++;
         messages.push({ role: 'user', content: '你只是在描述要做什么，还没有调用任何工具。请用工具执行；如果确实做不到，直接说明原因。' });
         continue;
@@ -387,9 +454,9 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   }
   const verification: Verification = picOps === 0 ? NO_VERIFICATION
     : { status: !canLook ? 'unavailable' : picDirty() || verifyFrames.length === 0 ? 'unchecked' : sawProblemFixed ? 'fixed' : 'verified', frames: picDirty() ? [] : verifyFrames, forced };
-  const claimed = env.applied.length + env.pending.length === 0 && !env.askedUser && CHANGE_WORDS.test(summary) ? summary.slice(0, 160) : null;
+  const claimed = env.applied.length + env.pending.length === 0 && !env.askedUser && memoryEvents.length === 0 && CHANGE_WORDS.test(summary) ? summary.slice(0, 160) : null;
   return {
     genId, summary, applied, pending: env.pending, question: env.askedUser ?? null, unverified, claimedWithoutOps: claimed,
-    usage, regenUsage, steps, mode, stats: env.stats, verification, stopped, elapsedMs: Date.now() - t0, trace,
+    usage, regenUsage, steps, mode, stats: env.stats, verification, stopped, elapsedMs: Date.now() - t0, memory: memoryEvents, trace,
   };
 }
