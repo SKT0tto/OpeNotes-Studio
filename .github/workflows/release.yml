@@ -29,5 +29,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: OpeNotes Studio ${{ github.ref_name }}
+          # a tag with a suffix (v1.0.0-beta.1) is a test version: a pre-release, never "latest"
+          prerelease: ${{ contains(github.ref_name, '-') }}
           body_path: release/RELEASE_NOTES.md
           files: release/OpeNotes-Studio-${{ github.ref_name }}.zip

@@ -8,6 +8,8 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 
 [项目主页](https://skt0tto.github.io/OpeNotes-Studio/) · [下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [使用教程](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md) · [问题反馈](https://github.com/SKT0tto/OpeNotes-Studio/issues)
 
+> **v1.0.0 测试版**已发布：[下载 v1.0.0-beta.1](https://github.com/SKT0tto/OpeNotes-Studio/releases/tag/v1.0.0-beta.1)（预发布版；「下载」链接仍指向稳定版 0.6.1）。
+
 > 本项目为非官方同人项目。程序不附带游戏素材和 Live2D Cubism Core，使用前需要自行准备素材，并遵守相应的使用许可。
 
 ![主页：Live2D 角色、开始菜单与最近的项目](docs/screenshots/home.jpg)
@@ -51,7 +53,11 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 
 助手可以查找台词、提出修改，并显示修改前后的内容。支持对选中的多句一起处理，也支持将一组修改整体撤销。
 
-使用支持视觉输入的模型时，还可以结合舞台画面、截图或视频帧讨论演出效果。
+使用支持视觉输入的模型时，还可以结合舞台画面、截图或视频帧讨论演出效果；助手改动画面后会自己截图核对结果。
+
+范围是一类句子时（「整部作品里灯的特写都改成中近景」），助手会先按条件查出来再批量修改；现成工具做不到的规律性修改（「每隔三句插一个反应镜头」），它会写一段在沙盒里运行的小脚本，产出的修改同样要经过检查和你的确认。
+
+**长期记忆（实验性）**：助手可以跨对话记住你的演出偏好，例如「对话中不要一直使用双人」「回忆一律用雾边」。一次性的修改不会被记住；AI 导演生成整场时也会参考这些偏好（可关闭）。记忆可以在助手面板里查看、编辑、删除，或整体关闭。
 
 ### 选择镜头表现方式
 
@@ -60,6 +66,8 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 经典模式适合以景别和切镜组织对白；运镜模式加入镜头移动、重新取景和人物之间的视角衔接。
 
 运镜的设计方向是跟随说话人、关系变化和情绪推进，让移动有叙事上的理由。生成后仍然可以手动调整，最终以整段演出的观感为准。
+
+两种模式都可以使用原作风格的演出特效：回忆（柔和雾边，可选白带和多种色调）、心声压暗（只暗背景）、白闪与白场转场、短促抖动和恍惚模糊。特效由程序生成，不包含游戏素材。
 
 **切换模式会沿用现有分镜，不会自动重新设计镜头。** 如果希望重新安排，可以使用重新生成镜头的入口，查看差异后再决定是否接受。
 
@@ -73,7 +81,7 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 
 *普通窗口下的播放器。*
 
-![沉浸式全屏：闲置后收起外层控制栏](docs/screenshots/fullscreen.png)
+![沉浸式全屏：闲置后收起外层控制栏](docs/screenshots/fullscreen.jpg)
 
 *全屏放映效果，外层控制栏已收起。*
 
