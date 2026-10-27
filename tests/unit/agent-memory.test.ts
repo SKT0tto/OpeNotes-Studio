@@ -15,7 +15,7 @@ import { InMemoryMemories, MemoryStore, directorPreferencesFor, memoryIfOn } fro
 import { AGENT_SYSTEM } from '../../server/agent/prompt';
 import { FixtureProvider } from '../../server/llm/fixtureProvider';
 import { runScene } from '../../server/llm/sceneRunner';
-import { DIRECTOR_PREFERENCE_NOTE, activeMemories, directorMemories, directorPreferences, memoryPromptBlock, type Memory } from '../../shared/agent/memory';
+import { DIRECTOR_PREFERENCE_NOTE, activeMemories, isDontCareMemory, looksLikeGeneralPreference, memoryReviewInstruction, directorMemories, directorPreferences, memoryPromptBlock, type Memory } from '../../shared/agent/memory';
 import { FIXTURE_DIR } from './helpers/directorCatalog';
 import { cat, directedProject, skeleton } from './helpers/directorFlow';
 import { ScriptedProvider, call, reply } from './helpers/scriptedProvider';
@@ -280,5 +280,80 @@ describe('POST /api/agent/turn with the memory switch', () => {
     expect(on).toContain('少用特写');
     expect(off).toBe(plain);
     await fs.rm(tmp, { recursive: true, force: true });
+  });
+});
+
+describe('general preference safety net', () => {
+  it('looksLikeGeneralPreference: general style statements yes, ordinary edits / withdrawals / questions no', () => {
+    for (const t of ['对话中不要一直使用双人，参考原作适当插入单人看镜头', '一般不要连续用特写', '回忆段落参考原作加雾边', '特写少用一点', '别总用双人'])
+      expect(looksLikeGeneralPreference(t), t).toBe(true);
+    for (const t of ['这句用特写', '把第3句改成特写', '这场不要一直用双人', '这段都用双人', '选中的这句多用点推近', '以后别管双人单人的事了', '算了，那条不用了', '为什么总是用双人？', '', '把灯的表情改成开心'])
+      expect(looksLikeGeneralPreference(t), t).toBe(false);
+  });
+
+  it('isDontCareMemory: only pure "don\'t care / go with the flow" texts', () => {
+    for (const t of ['双人和单人顺其自然，不用管', '不用管双人单人的事', '镜头随意'])
+      expect(isDontCareMemory(t), t).toBe(true);
+    for (const t of ['对话中少用双人，适当插入单人', '回忆特效用雾边（memory edge=fog）', '少用特写，最多到 mcu'])
+      expect(isDontCareMemory(t), t).toBe(false);
+  });
+
+  it('remember rejects a "go with the flow" text and points to forget', async () => {
+    const store = new InMemoryMemories({ memories: [mem({ id: 'm_f', text: '少用双人' })] });
+    const p = new ScriptedProvider([
+      reply('', [call('remember', { text: '双人单人顺其自然，不用管', how: 'stated', kind: 'camera', replaces: 'm_f' })]),
+      reply('', [call('forget', { id: 'm_f' })]),
+      reply('已忘掉。'),
+    ]);
+    const r = await turn(p, '以后别管双人单人的事了', store);
+    expect(p.toolRequests[1]!.messages.at(-1)!.content).toContain('forget');
+    expect(store.file.memories).toEqual([]);
+    expect(r.memory).toMatchObject([{ action: 'forgotten' }]);
+  });
+
+  it('a general preference: a write before remember is refused once, then remember saves and nothing is edited', async () => {
+    const store = new InMemoryMemories();
+    const p = new ScriptedProvider([
+      reply('', [call('shot_set', { beatId: b(2).id, type: 'cu', reason: 'x' })]),
+      reply('', [call('remember', { text: '对话中少用双人，参考原作适当插入单人镜头', how: 'stated', kind: 'camera' })]),
+      reply('记住了。要不要按偏好检查本场？'),
+    ]);
+    const r = await turn(p, '对话中不要一直使用双人，参考原作适当插入单人看镜头', store);
+    expect(p.toolRequests[1]!.messages.at(-1)!.content).toContain('remember');
+    expect(r.applied).toEqual([]);
+    expect(store.file.memories).toHaveLength(1);
+  });
+
+  it('a general preference: ask_user before remember is refused once (no need to ask where)', async () => {
+    const store = new InMemoryMemories();
+    const p = new ScriptedProvider([
+      reply('', [call('ask_user', { question: '指哪一段？' })]),
+      reply('', [call('remember', { text: '回忆段落参考原作加雾边', how: 'stated', kind: 'fx' })]),
+      reply('记住了。'),
+    ]);
+    const r = await turn(p, '回忆段落参考原作加雾边', store);
+    expect(r.question).toBeNull();
+    expect(store.file.memories).toHaveLength(1);
+  });
+
+  it('a general preference with no tool calls is nudged once to remember; an ordinary edit is not', async () => {
+    const store = new InMemoryMemories();
+    const p = new ScriptedProvider([
+      reply('好的。'),
+      reply('', [call('remember', { text: '一般不要连续用特写', how: 'stated', kind: 'camera' })]),
+      reply('记住了。'),
+    ]);
+    await turn(p, '一般不要连续用特写', store);
+    expect(store.file.memories).toHaveLength(1);
+    const q = new ScriptedProvider([reply('好的。')]);
+    await turn(q, '这句用特写', new InMemoryMemories());
+    expect(q.toolRequests).toHaveLength(1);
+  });
+
+  it('the review instruction is preference-neutral (no "emotional peak is exempt")', () => {
+    const t = memoryReviewInstruction(2);
+    expect(t).not.toContain('按偏好改反而不合理（例如情绪顶点那一句）');
+    expect(t).toContain('情绪顶点');
+    expect(t).toContain('不要为了满足偏好把所有句子都改掉');
   });
 });
