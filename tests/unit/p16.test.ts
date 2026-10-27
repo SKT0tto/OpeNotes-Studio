@@ -37,7 +37,7 @@ describe('M2: a truncated request is remembered', () => {
 });
 
 describe('H2: an insert needs something to show', () => {
-  it('becomes cu when the line has no gesture, prop or instrument; stays with a prop (and gets a target)', () => {
+  it('becomes cu when nobody is playing an instrument, even with a gesture or prop in the text', () => {
     const project = skeleton();
     const ctx = sceneCtx(project, project.scenes[0]!);
     const d = SceneDirectionSchema.parse(JSON.parse(JSON.stringify(recordedDirection(0))));
@@ -52,8 +52,8 @@ describe('H2: an insert needs something to show', () => {
     const b1 = v.value.beats.find((b) => b.text === dlg[1]!.text)!;
     expect(b0.shot.type).toBe('cu');
     expect(v.warnings.join('\n')).toContain('插入镜头');
-    expect(b1.shot.type).toBe('insert');
-    expect(b1.shot.insertTarget).toBe('hands');
+    expect(b1.shot.type).toBe('cu'); // v0.6.2: a prop in the text no longer justifies a person insert
+    expect(b1.shot.insertTarget).toBeNull();
   });
 });
 

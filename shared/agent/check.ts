@@ -9,7 +9,7 @@ import { autoSelectable, bgCategoryOf } from '../director/bgCategory';
 import { lookup, selectable, type DirectorCatalog, type Lookup } from '../director/resources';
 import { categoryProblem } from '../director/validate';
 import { expressionLabel, motionLabel } from '../catalog/labels';
-import { AI_FX, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, EMOTIONS, MAX_DIM_BEATS, MEMORY_CUE, ONE_SHOT_FX, SPECIAL_ATTENTION } from '../director/vocab';
+import { AI_FX, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, EMOTIONS, INSERT_BOX, MAX_DIM_BEATS, MEMORY_CUE, ONE_SHOT_FX, SPECIAL_ATTENTION } from '../director/vocab';
 import { findLockViolations, type LockViolation } from '../project/locks';
 import { clone } from '../project/mutate';
 import { TrackSchema, cameraSystemOf, type Project, type Scene } from '../schema/project';
@@ -40,6 +40,25 @@ export interface CheckResult {
 const RHYTHM_PATHS = ['rhythm.readingCps', 'rhythm.tail', 'rhythm.lineGap', 'rhythm.minLine', 'rhythm.textSpeedCps'];
 export const BEAT_LOCK_FIELDS = ['text', 'speakerId', 'kind', 'duration', 'emotion', 'cutIn'];
 export const SHOT_LOCK_FIELDS = ['type', 'focus', 'move', 'dof', 'transition', 'intent', 'offsets'];
+
+export const INSERT_NEEDS_INSTRUMENT = '插入镜头只用于正在演奏的乐器特写；这里没有乐器，建议用 cu / ecu';
+/** Is `castId` playing an instrument at beat `i`: a live-mode costume whose latest motion key (at or before the beat) is a play* / action* / finish* motion. Without a catalog the costume mode cannot be read, so only the motion counts. */
+export function playingAt(scene: Scene, castId: string, i: number, L: Lookup | null): boolean {
+  const idx = (id: string) => scene.beats.findIndex((b) => b.id === id);
+  const latest = <T,>(channel: string, pick: (v: never) => T): T | undefined => {
+    let best = -1, out: T | undefined;
+    for (const t of scene.tracks) {
+      if (t.channel !== channel || t.target.kind !== 'actor' || t.target.castId !== castId) continue;
+      for (const k of t.keys) { const bi = idx(k.at.beatId); if (bi >= 0 && bi <= i && bi >= best) { best = bi; out = pick(k.value as never); } }
+    }
+    return out;
+  };
+  const motion = latest('motion', (v: { name: string }) => v.name);
+  if (!motion || !/^(play|action|finish)/.test(motion)) return false;
+  if (!L) return true;
+  const modelId = latest('costume', (v: { modelId: string }) => v.modelId) ?? scene.wardrobe[castId]?.modelId;
+  return (modelId ? L.models.get(modelId)?.mode : undefined) === 'live';
+}
 
 /** Who is on stage while beat `i` plays (enter / exit of the blocking), as the compiler reads it. */
 export function onStageIds(scene: Scene, i: number): Set<string> {
@@ -147,6 +166,17 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
       }
       const type = set.type ?? b?.shot.type;
       const focus = set.focus ?? b?.shot.focus ?? [];
+      if (type === 'insert' && i >= 0 && (set.type === 'insert' || set.insertBox !== undefined)) {
+        const box = set.insertBox ?? b?.shot.insertBox;
+        const sc = INSERT_BOX.scene;
+        const isScene = !!box && box.x === sc.x && box.y === sc.y && box.w === sc.w && box.h === sc.h;
+        if (!isScene) {
+          const ib = INSERT_BOX.instrument;
+          const isInstrument = !box || (box.x === ib.x && box.y === ib.y && box.w === ib.w && box.h === ib.h);
+          const who = focus.length > 0 ? focus : [...onStageIds(scene, i)];
+          if (!isInstrument || !who.some((c) => playingAt(scene, c, i, L))) s.problems.push(INSERT_NEEDS_INSTRUMENT);
+        }
+      }
       if (type === 'two_shot' && focus.length !== 2) s.problems.push('two_shot 的 focus 必须正好是 2 个人');
       if (type && ['ms', 'mcu', 'cu', 'ecu'].includes(type) && focus.length > 1) s.warnings.push('单人景别只会对准第一个焦点');
       if (Object.keys(set).length === 0 && Object.keys(input.set).length === 0) s.problems.push('set 是空的');

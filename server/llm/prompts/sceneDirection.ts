@@ -3,9 +3,9 @@ import type { Paragraph } from '../../../shared/director/paragraphs';
 import type { ZodType } from 'zod';
 import { SceneDirectionSchema, SceneDirectionTravelSchema, type SceneDirection } from '../../../shared/schema/ai';
 import type { CameraSystem } from '../../../shared/schema/project';
-import { AI_FX, AI_MOVES, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../../../shared/director/vocab';
+import { AI_FX, AI_MOVES, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, SLOT_NAMES } from '../../../shared/director/vocab';
 
-export const SCENE_PROMPT_VERSION = 'scene-5';
+export const SCENE_PROMPT_VERSION = 'scene-6';
 
 export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导」。你会拿到一个场景的原文段落、在场角色（含该服装真实可用的动作与表情清单）和上一场景的结束状态，请把这个场景一次性导成一组节拍（beats），只输出 JSON。
 
@@ -21,9 +21,9 @@ export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导�
 - 一个场景只调用一次，不要逐句等待；也不要每句都换镜头。
 
 # 镜头 shot（只表达意图，节奏由程序兜底）
-- type 只能是：${AI_SHOT_TYPES.join(' / ')}。group=多人同框交代全体；two_shot=两人对话（focus 填两人）；mcu=单人中景（默认的对白镜头）；cu=情绪升高时的近景；ecu=情绪高点/强烈反应的大特写；insert=手部/乐器/物件特写（很少用，整个场景最多 1 个）。
+- type 只能是：${AI_SHOT_TYPES.join(' / ')}。group=多人同框交代全体；two_shot=两人对话（focus 填两人）；mcu=单人中景（默认的对白镜头）；cu=情绪升高时的近景；ecu=情绪高点/强烈反应的大特写；insert=正在演奏的乐器特写（很少用，整个场景最多 1 个）。
 - 普通对白多用 mcu / two_shot；情绪高点用 cu 或 ecu；交代环境或多人同时在场用 group；沉默/反应用 silent + cu。focus 是镜头对准的 castId（对白里通常是说话人，two_shot 填两人，group 可留空数组）。
-- insert 只在这一节拍确实有可拍的东西时才用：角色正在做手势/握拿东西、演奏乐器，或原文明确写到手和物件。insert 必须同时填 insertTarget：${INSERT_TARGETS.join(' / ')}（hands=手部动作，instrument=乐器/演奏，face_lower=嘴与下巴）。其他景别 insertTarget 填 null。没有可拍之物就不要用 insert，改用 cu。画面里绝不能是没有头也没有手的躯干或裙摆。
+- insert 只用于「这个人正在演出里演奏乐器」的乐器特写，并且 insertTarget 必须填 instrument。不要用 insert 拍手、拿着的东西、嘴或下巴：角色模型不持物，也不知道手在哪里，画面会拍到腰腿；这类镜头一律改用 cu / mcu。其他景别 insertTarget 填 null。
 - move 默认 static，需要强调时才用 ${AI_MOVES.slice(1).join(' / ')}。dof 填 null（交给程序）或 0–6。
 - cutIn：默认 cut（硬切）；时间或情绪发生跳转时才用 dip_black；强光、白场式的转场用 dip_white（回忆的进出已自动加白场，不用再写）。
 - fx：${AI_FX.join(' / ')}。memory=回忆或闪回段落（白边+褪色，进出自动加白场），整段回忆的每个节拍都写 memory，回到现在时改回 none，可选 memoryTone=cool(默认)/warm(很久以前)/sepia(旧照片)/mono(定格)；dim=角色心声、括号里的内心独白（画面压暗），只用在独白那一两拍；flash=顿悟、惊觉的一瞬白光；shake=受惊、拍桌、冲击的短促抖动；daze=头晕、刚醒、泪眼模糊；vignette_anxiety=不安/紧张；dutch=失衡/强烈不安的倾斜。绝大多数节拍用 none，持续的氛围用同一个值，之后改回 none。
@@ -98,7 +98,7 @@ export const TRAVEL_EXAMPLE_PARAGRAPHS = [
 ];
 export const TRAVEL_EXAMPLE_BEATS = [
   { paragraph: 0, kind: 'narration', speaker: null, text: '夕阳把天台的栏杆染成橘色。', shot: { type: 'group', focus: [], intent: 'continue', flow: 'auto' }, reason: '交代地点和在场的两个人（小冬还藏着，不在台上）' },
-  { paragraph: 0, kind: 'silent', speaker: null, text: '', shot: { type: 'insert', focus: ['cA'], insertTarget: 'hands', intent: 'reveal', flow: 'cut' }, reason: '小夏放下生锈的钥匙，第一次露出的物件' },
+  { paragraph: 0, kind: 'silent', speaker: null, text: '', shot: { type: 'cu', focus: ['cA'], intent: 'emphasis', flow: 'cut' }, reason: '小夏放下生锈的钥匙，第一次露出的物件' },
   { paragraph: 1, kind: 'dialogue', speaker: 'cA', text: '这是你上次丢的吧。', shot: { type: 'two_shot', focus: ['cA', 'cB'], intent: 'exchange', flow: 'cut' }, reason: '小夏对阿秋说话，两人正在对话' },
   { paragraph: 2, kind: 'silent', speaker: null, text: '', shot: { type: 'cu', focus: ['cB'], intent: 'reaction', flow: 'cut' }, reason: '阿秋愣住，只拍反应' },
   { paragraph: 3, kind: 'dialogue', speaker: 'cB', text: '……不是我的。', shot: { type: 'cu', focus: ['cB'], intent: 'continue', flow: 'auto' }, reason: '同一个人接着说，镜头留在她身上' },
@@ -108,7 +108,7 @@ export const TRAVEL_EXAMPLE_BEATS = [
   { paragraph: 7, kind: 'narration', speaker: null, text: '风停了。三个人谁也没有再说话。', shot: { type: 'group', focus: [], intent: 'release', flow: 'auto' }, reason: '场尾拉开，交代三个人的距离' },
 ];
 
-export const SCENE_TRAVEL_VERSION = 'scene-5+travel-8';
+export const SCENE_TRAVEL_VERSION = 'scene-6+travel-9';
 export const SCENE_TRAVEL_SECTION = `# 叙事镜头与运镜（本场景使用「运镜」系统，以下镜头规则优先）
 先想清楚：此刻观众该看谁、为什么。程序会按真实机位和叙事规则核对你的意图，写错的标签会被程序改标，所以要写「这一拍实际是什么」，不要写你希望它是什么。
 
@@ -133,7 +133,7 @@ reason 写这一拍的具体原因，不能只写“需要运镜”。
 - 藏着的人、稍后出现的人：在「观众第一次看到他」的那一拍，给这个人的 actors 项写 enter=true，并用 reveal；在这之前不要把他放进 focus。
 - 离场的人：离开的那一拍写 exit=true，之后不再拍他。
 - 只有标点的台词（「……」「——」「！？」）仍是 dialogue，speaker 是说话的人、text 原样保留，镜头按台词来拍（如示范里的「……不是我的。」），不要因为没有实际词语就当成 silent 反应镜头。
-- 无声的物件拍（拿起、摊开、放下东西）：用 silent + insert（insertTarget=hands），并且在 reason 里写出物件名，例如「摊开手掌，露出石头」；原文没有可拍的东西就不要用 insert。
+- 无声的物件拍（拿起、摊开、放下东西）：用 silent + cu（或 ms）拍这个人，不要用 insert，并且在 reason 里写出物件名，例如「摊开手掌，露出石头」；insert 只留给正在演奏的乐器。
 
 ## 流向 shot.flow
 - flow 只能是 auto / cut / move 三个词之一，不要把 intent 的词写到这里。多数用 auto。move 表示希望从上一镜移到本拍焦点，但仍须符合 intent 的叙事理由、同一背景和安全条件；AI 的 move 不是用户手动指定。cut 只是建议：反应、断裂、或换人进入特写时程序才照单硬切，其他情况由程序按机位和叙事规则决定。

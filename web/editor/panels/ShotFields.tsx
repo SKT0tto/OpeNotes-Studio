@@ -1,5 +1,6 @@
 /** The shot of the selected line: size, move, cut / glide, depth of field, focus, hand-made camera and per-person offsets. */
 import { MOVE_LABEL, SHOT_LABEL, SHOT_TRANSITION_LABEL, TRAVEL_KIND_LABEL, travelReasonText } from '@shared/catalog/labels';
+import { INSERT_BOX } from '@shared/director/vocab';
 import { CAMERA_MOVES, DEFAULT_INSERT_BOX, normalizeShotType, shotTypeChoices } from '@shared/staging/framing';
 import { SHOT_INTENTS, SHOT_INTENT_LABEL } from '@shared/staging/shotIntent';
 import { resolveStyle } from '@shared/style/ournotes';
@@ -35,6 +36,23 @@ export function ShotFields({ project, scene, beat, compiled }: { project: Projec
       </Row>
       {normalizeShotType(beat.shot.type).type === 'insert' && (
         <>
+          <Row label="目标">
+            {(() => {
+              const box = beat.shot.insertBox ?? DEFAULT_INSERT_BOX;
+              const same = (t: { x: number; y: number; w: number; h: number }) => t.x === box.x && t.y === box.y && t.w === box.w && t.h === box.h;
+              const cur = same(INSERT_BOX.instrument) ? 'instrument' : same(INSERT_BOX.scene) ? 'scene' : same(INSERT_BOX.hands) ? 'hands' : same(INSERT_BOX.face_lower) ? 'face_lower' : 'custom';
+              return (
+                <select value={cur} data-testid="insp-insert-target" onChange={(e) => { if (e.target.value === 'instrument' || e.target.value === 'scene') sh('修改插入镜头目标', (x) => void (x.insertBox = { ...INSERT_BOX[e.target.value as 'instrument' | 'scene'] })); }}>
+                  <option value="instrument">乐器（正在演奏）</option>
+                  {cur === 'scene' && <option value="scene">空镜</option>}
+                  {cur === 'hands' && <option value="hands">手部（旧）</option>}
+                  {cur === 'face_lower' && <option value="face_lower">下半脸（旧）</option>}
+                  {cur === 'custom' && <option value="custom">自定义</option>}
+                </select>
+              );
+            })()}
+          </Row>
+          <Row label=""><span className="ro">插入镜头只用于正在演奏的乐器特写；没有乐器请改用近景 / 特写。</span></Row>
           {(['x', 'y', 'w', 'h'] as const).map((k) => {
             const box = beat.shot.insertBox ?? DEFAULT_INSERT_BOX;
             return (

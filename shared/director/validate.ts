@@ -9,7 +9,7 @@ import { EMOTION_EXPR } from '../timeline/compile';
 import { canon, familyOfName, isIdleFamily, mapExpressionName, mapMotionFamily } from '../timeline/motionMap';
 import { traceability, type Paragraph } from './paragraphs';
 import { defaultModel, lookup, rankBackgrounds, selectable, type DirectorCatalog, type Lookup } from './resources';
-import { INSERT_HINT, MAX_BG_MOVES, MAX_DIM_BEATS, MEMORY_CUE, MONOLOGUE_TEXT, SPECIAL_ATTENTION, TRAVEL_INSERT_HINT } from './vocab';
+import { MAX_BG_MOVES, MAX_DIM_BEATS, MEMORY_CUE, MONOLOGUE_TEXT, SPECIAL_ATTENTION } from './vocab';
 import { stageEvents, stageTimeline } from './stage';
 import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
@@ -510,7 +510,7 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
       }
       if (a.attention === a.castId) a.attention = null;
     }
-    // an insert only makes sense when there is something to show: a gesture, an instrument being played, a prop named in the text
+    // a person insert only makes sense for an instrument being played; a scene insert is a cut-away background
     if (b.shot.type === 'insert' && b.shot.insertTarget === 'scene') {
       // a cut-away to a sky / signal / crossing: no person in it
       if (sceneInserts.has(bi)) {
@@ -528,17 +528,14 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     } else if (b.shot.type === 'insert') {
       const who = b.shot.focus[0] ?? b.speaker ?? '';
       const playing = b.actors.some((a) => a.motion !== null && /^(play|action|finish)/.test(a.motion) && modelAt(a.castId, bi)?.mode === 'live');
-      // travel: a silent / narration beat has no text of its own, so the paragraph it belongs to and the model's reason say what there is to show
-      const hinted = ctx.cameraSystem === 'travel' ? TRAVEL_INSERT_HINT.test([b.text, b.reason, b.kind === 'dialogue' ? '' : paraOf(b.paragraph)?.text ?? ''].join(' ')) : INSERT_HINT.test(b.text);
-      if (!playing && !hinted) {
+      // v0.4.x: the models hold no props and we do not know where the hands are, so a person insert is only for an instrument being played
+      if (!playing) {
         const fallback = ctx.cameraSystem === 'travel' ? 'ms' : 'cu';
-        warnings.push(`${where}的插入镜头没有可拍的手/物件/乐器，已改为 ${fallback}`);
+        warnings.push(`${where}的插入镜头只用于正在演奏的乐器特写；这里没有乐器，已改为 ${fallback}`);
         b.shot.type = fallback;
         b.shot.insertTarget = null;
         if (!b.shot.focus.includes(who) && who) b.shot.focus = [who];
-      } else if (!b.shot.insertTarget) {
-        b.shot.insertTarget = playing ? 'instrument' : 'hands';
-      }
+      } else b.shot.insertTarget = 'instrument';
     } else if (b.shot.insertTarget) b.shot.insertTarget = null;
   });
   // screen effects (v0.4): the old `memory_glow` is read as `memory`; a memory needs a cue in the text; dim is for inner voice and never runs long;
