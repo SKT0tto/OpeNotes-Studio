@@ -5,7 +5,7 @@ import { SceneDirectionSchema, SceneDirectionTravelSchema, type SceneDirection }
 import type { CameraSystem } from '../../../shared/schema/project';
 import { AI_FX, AI_MOVES, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, INSERT_TARGETS, SLOT_NAMES } from '../../../shared/director/vocab';
 
-export const SCENE_PROMPT_VERSION = 'scene-4';
+export const SCENE_PROMPT_VERSION = 'scene-5';
 
 export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导」。你会拿到一个场景的原文段落、在场角色（含该服装真实可用的动作与表情清单）和上一场景的结束状态，请把这个场景一次性导成一组节拍（beats），只输出 JSON。
 
@@ -15,6 +15,7 @@ export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导�
 # 节拍 beats
 - 把原文拆成一连串节拍，按原文顺序。一个段落可以拆成多个节拍：每句对白一个 dialogue 节拍（speaker 是说话人的 castId，text 尽量原样取自原文引号内的话）；叙述用 narration（text 可以精简，但必须来自该段原文）；需要让观众只看角色反应、不显示文字时用 silent（text 为空，speaker=null）。
 - 节奏要像游戏里的剧情演出，不是朗读小说：对白是主体，旁白（narration）整个场景里只占约 20%，最多 25%。凡是「某某低下头 / 笑了 / 握紧拳头 / 站起来」这类动作、表情、神态描写，不要写成旁白，而是并入前后对白的 actors（motion / expression / attention），或单独做一个 silent 节拍表现反应。只有交代时间地点、必须靠文字才能理解的心理活动或转折，才保留 narration，且尽量精简到一两句。相邻的几句叙述请合并成一个 narration。
+- **只有标点的台词也是台词**：角色说的话哪怕只有标点（「……」「——」「！？」「……！」，或剧本式的 “灯：……”），也是 dialogue 节拍，speaker=该角色，text 原样保留（如 "……"），对话框和名牌照常显示。原文里每一条这样的台词都要有自己的 dialogue 节拍（叙述节拍里不能夹带或省略它）；绝不能因为文字里没有实际词语就改成 silent 或丢掉；silent 只用于原文里没有任何人说话的反应。例：原文 “灯：……” 应输出 kind=dialogue、speaker=灯的 castId、text="……"。
 - paragraph 是该节拍所在的段落编号（必须在给定范围内，且文本能在该段原文里找到）。不要编造原文没有的台词。
 - 每个 beat 都要有 emotion，只能取：${EMOTIONS.join(' / ')}。reason 用不超过 20 个字写理由（情绪、关系、节奏）。输出要紧凑，不要多余的文字。
 - 一个场景只调用一次，不要逐句等待；也不要每句都换镜头。
@@ -107,7 +108,7 @@ export const TRAVEL_EXAMPLE_BEATS = [
   { paragraph: 7, kind: 'narration', speaker: null, text: '风停了。三个人谁也没有再说话。', shot: { type: 'group', focus: [], intent: 'release', flow: 'auto' }, reason: '场尾拉开，交代三个人的距离' },
 ];
 
-export const SCENE_TRAVEL_VERSION = 'scene-4+travel-7';
+export const SCENE_TRAVEL_VERSION = 'scene-5+travel-8';
 export const SCENE_TRAVEL_SECTION = `# 叙事镜头与运镜（本场景使用「运镜」系统，以下镜头规则优先）
 先想清楚：此刻观众该看谁、为什么。程序会按真实机位和叙事规则核对你的意图，写错的标签会被程序改标，所以要写「这一拍实际是什么」，不要写你希望它是什么。
 
@@ -131,6 +132,7 @@ reason 写这一拍的具体原因，不能只写“需要运镜”。
 - 没有署名的连续对白：先看前一段写了谁在做什么。前一段写某人在笑、在做动作，紧跟着的问句多半是另一个人在问，回答再换回来；不要把一连串对白都算给同一个人。speaker 填真正说话的人，focus 对准他。
 - 藏着的人、稍后出现的人：在「观众第一次看到他」的那一拍，给这个人的 actors 项写 enter=true，并用 reveal；在这之前不要把他放进 focus。
 - 离场的人：离开的那一拍写 exit=true，之后不再拍他。
+- 只有标点的台词（「……」「——」「！？」）仍是 dialogue，speaker 是说话的人、text 原样保留，镜头按台词来拍（如示范里的「……不是我的。」），不要因为没有实际词语就当成 silent 反应镜头。
 - 无声的物件拍（拿起、摊开、放下东西）：用 silent + insert（insertTarget=hands），并且在 reason 里写出物件名，例如「摊开手掌，露出石头」；原文没有可拍的东西就不要用 insert。
 
 ## 流向 shot.flow
