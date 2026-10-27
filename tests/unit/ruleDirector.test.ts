@@ -174,3 +174,17 @@ describe('travel two-shot pairing (v10)', () => {
     expect(shotLabel(prev('mcu', ['a']), 'ms', ['a'])).toBe('release');
   });
 });
+
+describe('rule director never emits a person insert (v0.6.2: only a played instrument justifies one)', () => {
+  for (const sys of ['classic', 'travel'] as const) {
+    it(`${sys}: no beat of the example novel is an insert`, async () => {
+      const d = deps();
+      const { project } = await runBreakdown(d, STORY, '示例', 'g1');
+      const p = { ...project, settings: { ...project.settings, cameraSystem: sys } };
+      const items = await runScenes(d, p, p.scenes.map((s) => s.id), ['scene'], 'g2', 3);
+      const beats = items.flatMap((i) => i.result?.scene.beats ?? []);
+      expect(beats.length).toBeGreaterThan(5);
+      expect(beats.filter((b) => b.shot.type === 'insert')).toEqual([]);
+    });
+  }
+});

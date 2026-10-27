@@ -39,11 +39,11 @@ describe('prompt scene-4 (fixture) differs from scene-3 only on the fx line and 
     expect(AI_FX).toEqual(['none', 'vignette_anxiety', 'memory', 'dim', 'flash', 'shake', 'daze', 'dutch']);
   });
 
-  it('versions: scene-5 for classic, scene-5+travel-8 for travel', () => {
-    expect(SCENE_PROMPT_VERSION).toBe('scene-5');
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-5+travel-8');
-    expect(scenePromptFor('classic').promptVersion).toBe('scene-5');
-    expect(scenePromptFor('travel').promptVersion).toBe('scene-5+travel-8');
+  it('versions: scene-6 for classic, scene-6+travel-9 for travel', () => {
+    expect(SCENE_PROMPT_VERSION).toBe('scene-6');
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-6+travel-9');
+    expect(scenePromptFor('classic').promptVersion).toBe('scene-6');
+    expect(scenePromptFor('travel').promptVersion).toBe('scene-6+travel-9');
   });
 
   it('an old answer with memory_glow still parses (it is read as memory later), the new words parse in both schemas', () => {
@@ -57,9 +57,9 @@ describe('prompt scene-4 (fixture) differs from scene-3 only on the fx line and 
   });
 });
 
-describe('prompt scene-5 differs from scene-4 only by the punctuation-only dialogue rule', () => {
+describe('prompt scene-5 (fixture) differs from scene-4 only by the punctuation-only dialogue rule', () => {
   const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-4.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
-  const now = SCENE_SYSTEM.split('\n');
+  const now = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-5.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   it('exactly one line added, none changed or removed', () => {
     expect(now.length).toBe(old.length + 1);
     expect(old.filter((l) => !now.includes(l))).toEqual([]);
@@ -194,5 +194,18 @@ describe('the rule director (travel only) derives memory, dim and shake', () => 
   it('classic: the same novel gets no new effect at all (the rule output stays as it was)', async () => {
     const keys = (await direct(false)).flatMap(fxOf);
     expect(keys).toEqual([]);
+  });
+});
+
+describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
+  const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-5.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
+  const now = SCENE_SYSTEM.split('\n');
+  it('same number of lines; the type line and the insert line changed', () => {
+    expect(now.length).toBe(old.length);
+    const changed = now.filter((l, i) => l !== old[i]);
+    expect(changed.length).toBe(2);
+    expect(changed.some((l) => l.startsWith('- insert 只用于'))).toBe(true);
+    expect(SCENE_SYSTEM).not.toContain('hands');
+    expect(SCENE_SYSTEM).not.toContain('face_lower');
   });
 });

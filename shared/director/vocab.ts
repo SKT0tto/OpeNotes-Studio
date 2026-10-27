@@ -62,7 +62,3 @@ export const AI_BG_TRANSITIONS = ['cut', 'dip_black', 'dip_white', 'crossfade'] 
 /** Most background moves one scene may have (Pass 1), and the most switches the continuity check tolerates. */
 export const MAX_BG_MOVES = 3;
 export const MAX_BG_SWITCHES = 6;
-/** Text that gives an insert something to show (hands, gestures, props, instruments). */
-export const INSERT_HINT = /手|指|掌|拳|握|攥|拿|捏|抱着|琴|吉他|贝斯|鼓|键盘|话筒|麦克风|拨片|琴弦|琴键|杯|书|笔|信|手机|票|门把|纸|耳机|线缆|乐谱/;
-/** Travel: also the props that show up in stories (a stone, a can, a leaf, a receipt ...) - the object of a silent insert is usually named in the paragraph, not in the beat. */
-export const TRAVEL_INSERT_HINT = new RegExp(`${INSERT_HINT.source}|石头|石子|鹅卵石|罐|树叶|叶子|收据|小票|冰棍|冰淇淋|硬币|钥匙|照片|雨伞|瓶|盒|糖|花束|花瓣|相机|胶卷|围巾|便当|蛋糕|吊坠|戒指|手链|纸条`);

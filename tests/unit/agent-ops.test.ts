@@ -3,6 +3,7 @@ import { applyOp } from '../../shared/agent/apply';
 import { checkOp } from '../../shared/agent/check';
 import { AgentOpSchema, liveForbidden, scopeOf, type AgentOp } from '../../shared/agent/ops';
 import { beatDetail, findBeats, passageOf, sceneTable } from '../../shared/agent/compact';
+import { INSERT_BOX } from '../../shared/director/vocab';
 import { NUDGE } from '../../shared/agent/tools';
 import { findLockViolations } from '../../shared/project/locks';
 import { clone } from '../../shared/project/mutate';
@@ -23,6 +24,32 @@ describe('passageOf: what "this passage" means', () => {
     expect(passageOf(beats, 3)).toEqual([1, 6]);
     expect(passageOf(beats, 0)).toEqual([0, 0]);
     expect(passageOf(beats, 8)).toEqual([8, 8]);
+  });
+});
+
+describe('checkOp: a person insert needs an instrument being played', () => {
+  const id = beat(2).id;
+  const ins = (box: { x: number; y: number; w: number; h: number }, p = P) => checkOp(p, { op: 'shot_set', sceneId: 's_3', beatId: id, set: { type: 'insert', insertBox: box } }, ctx);
+  it('rejects a hands / face_lower insert with the Chinese hint', () => {
+    for (const k of ['hands', 'face_lower'] as const) {
+      const r = ins(INSERT_BOX[k]);
+      expect(r.status).toBe('invalid');
+      expect(r.problems[0]).toContain('插入镜头只用于正在演奏的乐器特写；这里没有乐器，建议用 cu / ecu');
+    }
+  });
+  it('rejects an instrument insert when nobody is playing, accepts the scene insert box', () => {
+    expect(ins(INSERT_BOX.instrument).status).toBe('invalid');
+    expect(ins(INSERT_BOX.scene).problems).toEqual([]);
+  });
+  it('accepts an instrument insert once the actor plays in a live-mode costume', () => {
+    const p = clone(P);
+    const sc = p.scenes[2]!;
+    const castId = Object.keys(sc.wardrobe)[0]!;
+    const live = cat.models.find((m) => m.mode === 'live' && m.characterKey === p.cast.find((c) => c.id === castId)!.characterKey)!;
+    sc.tracks.push({ id: 'tk_m', target: { kind: 'actor', castId }, channel: 'motion', keys: [{ id: 'k_m', at: { beatId: sc.beats[0]!.id, offset: 0 }, value: { name: 'play01_01' }, duration: 0, ease: 'inOutQuad' }] } as never);
+    sc.tracks.push({ id: 'tk_c', target: { kind: 'actor', castId }, channel: 'costume', keys: [{ id: 'k_c', at: { beatId: sc.beats[0]!.id, offset: 0 }, value: { modelId: live.id }, duration: 0, ease: 'inOutQuad' }] } as never);
+    const r = checkOp(p, { op: 'shot_set', sceneId: 's_3', beatId: id, set: { type: 'insert', focus: [castId], insertBox: INSERT_BOX.instrument } }, ctx);
+    expect(r.problems).toEqual([]);
   });
 });
 
@@ -113,8 +140,8 @@ describe('applyOp: every op group, with before -> after', () => {
     const b = sceneOf(env).beats[7]!;
     call(env, 'set_shot', { beatIds: [b.id], type: 'cu', move: 'push_in', dof: 3, flow: 'cut', reason: 'r' });
     expect(b.shot).toMatchObject({ type: 'cu', move: 'push_in', dof: 3, transition: 'cut' });
-    call(env, 'set_shot', { beatIds: [b.id], type: 'insert', insertTarget: 'hands', reason: 'r' });
-    expect(b.shot.insertBox).toEqual({ x: 0.12, y: 0.4, w: 0.76, h: 0.26 });
+    call(env, 'set_shot', { beatIds: [b.id], type: 'insert', insertTarget: 'scene', reason: 'r' });
+    expect(b.shot.insertBox).toEqual({ x: 0.15, y: 0.26, w: 0.7, h: 0.26 });
     call(env, 'nudge_shot', { beatId: b.id, castId: 'c_001', dxSteps: -2, dySteps: 1 });
     expect(b.shot.offsets!.c_001).toEqual({ x: -2 * NUDGE.offset, y: NUDGE.offset });
     call(env, 'nudge_shot', { beatId: b.id, castId: 'c_001', dxSteps: -1 });

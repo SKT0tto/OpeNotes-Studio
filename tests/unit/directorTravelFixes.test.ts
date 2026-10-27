@@ -74,31 +74,37 @@ describe('travel two-shot pairs keep their meaning (change 2)', () => {
 });
 
 
-describe('an insert keeps its object (change 3)', () => {
-  const objectPara = paragraphs.findIndex((p, i) => i >= base.range.start && i <= base.range.end && !/手|指|掌|拳|握|攥|拿|捏|琴|吉他|贝斯|鼓|杯|书|笔|信|手机|票|纸/.test(p.text));
-  const handPara = paragraphs.findIndex((p, i) => i >= base.range.start && i <= base.range.end && /手|指|掌|拳|握|攥|拿|捏|琴|吉他|贝斯|鼓|杯|书|笔|票|纸/.test(p.text));
-  it('travel: a silent insert reads the paragraph it belongs to (the beat itself has no text)', () => {
-    expect(handPara).toBeGreaterThanOrEqual(0);
-    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'hands', reason: '特写', para: handPara, focus: [A] })));
-    expect(v.value.beats[0]!.shot.type).toBe('insert');
-    expect(v.warnings.join('\n')).not.toContain('插入镜头没有可拍');
-  });
+describe('a person insert is only for an instrument being played (change 3, v0.6.2)', () => {
+  const para = P0;
+  const liveId = `${base.cast[0]!.modelId.split('_')[0]}_live-mode_live_01`;
+  const liveCast = base.cast.map((c, n) => (n === 0 ? { ...c, modelId: liveId } : c));
+  const playing = (b: SceneDirection['beats'][number]) => ({ ...b, actors: [{ ...actor(A), motion: 'play01_01' }] });
 
-  it('travel: the reason alone names the object ("石头") when neither text nor paragraph does', () => {
-    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'hands', reason: '捡起石头', para: objectPara, focus: [A] })));
-    expect(v.value.beats[0]!.shot.type).toBe('insert');
-  });
-
-  it('travel: still downgraded to a medium shot when there is nothing to show', () => {
-    const para = objectPara;
-    expect(/石|手/.test(paragraphs[para]!.text)).toBe(false);
-    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'hands', reason: '气氛凝重', para, focus: [A] })));
+  it('travel: a hands insert (even with a prop in the paragraph and the reason) becomes ms', () => {
+    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'hands', reason: '捡起石头，握紧手', para, focus: [A] })));
     expect(v.value.beats[0]!.shot.type).toBe('ms');
-    expect(v.warnings.join('\n')).toContain('插入镜头没有可拍');
+    expect(v.value.beats[0]!.shot.insertTarget).toBeNull();
+    expect(v.warnings.join('\n')).toContain('只用于正在演奏的乐器特写');
   });
 
-  it('classic keeps its old test (the beat text only) and falls back to cu', () => {
-    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'hands', reason: '捡起石头', para: objectPara, focus: [A] })), { cameraSystem: undefined });
+  it('travel: an instrument insert without a playing motion also becomes ms (live costume alone is not enough)', () => {
+    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'instrument', reason: '弹吉他', para, focus: [A] })), { cast: liveCast });
+    expect(v.value.beats[0]!.shot.type).toBe('ms');
+  });
+
+  it('travel: playing in a live-mode costume keeps the insert and forces insertTarget=instrument', () => {
+    const v = run(direction(playing(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'face_lower', reason: '拨弦', para, focus: [A] }))), { cast: liveCast });
+    expect(v.value.beats[0]!.shot.type).toBe('insert');
+    expect(v.value.beats[0]!.shot.insertTarget).toBe('instrument');
+  });
+
+  it('travel: a play motion in a non-live costume is not playing', () => {
+    const v = run(direction(playing(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'instrument', reason: '拨弦', para, focus: [A] }))));
+    expect(v.value.beats[0]!.shot.type).toBe('ms');
+  });
+
+  it('classic falls back to cu', () => {
+    const v = run(direction(beat({ speaker: null, kind: 'silent', type: 'insert', insertTarget: 'hands', reason: '捡起石头', para, focus: [A] })), { cameraSystem: undefined });
     expect(v.value.beats[0]!.shot.type).toBe('cu');
   });
 });
@@ -199,15 +205,15 @@ describe('shot.flow is tolerant (change 7)', () => {
 
 describe('the travel prompt explains why (change 5); the classic prompt is byte-identical', () => {
   // scene-4 (v0.4 effects) changed only the fx and cutIn lines of scene-3 (promptScene4.test.ts diffs them line by line); this hash pins the new text
-  it('classic: text, schema, schema name and version are exactly what scene-5 is', () => {
+  it('classic: text, schema, schema name and version are exactly what scene-6 is', () => {
     const c = scenePromptFor('classic');
-    expect(createHash('sha256').update(c.system).digest('hex')).toBe('ec879a2f5cf12d9375c56de69e6b92e46d74c2d93caf4f82e69c35d5d825a32c');
-    expect(c.promptVersion).toBe('scene-5');
+    expect(createHash('sha256').update(c.system).digest('hex')).toBe('21aa09577f6149602f6349e8ac0018a723393ab869f86575d03e75a550bbfdb2');
+    expect(c.promptVersion).toBe('scene-6');
     expect(c.schemaName).toBe('SceneDirection');
     expect(c.schema).toBe(SceneDirectionSchema);
   });
-  it('travel: version scene-5+travel-8; every intent has a question with a right and a wrong example', () => {
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-5+travel-8');
+  it('travel: version scene-6+travel-9; every intent has a question with a right and a wrong example', () => {
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-6+travel-9');
     for (const i of ['continue', 'exchange', 'emphasis', 'reaction', 'reveal', 'release', 'rupture']) expect(SCENE_TRAVEL_SECTION).toContain(`- ${i}：`);
     for (const i of ['continue', 'exchange', 'emphasis', 'reaction', 'reveal', 'release']) {
       const line = SCENE_TRAVEL_SECTION.split('\n').find((l) => l.startsWith(`- ${i}：`))!;
@@ -228,7 +234,7 @@ describe('the travel prompt explains why (change 5); the classic prompt is byte-
 describe('the few-shot example in the travel prompt (change 6)', () => {
   it('is shown in the prompt and is a valid, self-consistent answer', () => {
     expect(SCENE_TRAVEL_SECTION).toContain('示范');
-    expect(SCENE_TRAVEL_SECTION).toContain('"insertTarget":"hands"');
+    expect(SCENE_TRAVEL_SECTION).not.toContain('"insertTarget":"hands"');
     expect(SCENE_TRAVEL_SECTION).toContain('"enter":true');
     expect(SCENE_TRAVEL_SECTION).toContain('"intent":"release"');
     expect(SCENE_TRAVEL_SECTION.length - SCENE_TRAVEL_SECTION.indexOf('## 示范')).toBeLessThan(2400);
