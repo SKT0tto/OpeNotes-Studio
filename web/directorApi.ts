@@ -101,7 +101,7 @@ export async function postScenes(project: Project, o: SceneOptions & { sceneIds?
 export interface SplitLinesResponse {
   sceneId: string;
   engine: 'ai' | 'rule';
-  splits: Array<{ beatId: string; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; emotion: string; why: string }> }>;
+  splits: Array<{ beatId: string; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; emotion: string; why: string; camera?: 'closer' | 'reaction'; reactionOf?: string; motion?: string; expression?: string; attention?: string }> }>;
   skipped: Array<{ beatId: string; reason: string }>;
   warnings: string[];
   runs: RunInfo[];

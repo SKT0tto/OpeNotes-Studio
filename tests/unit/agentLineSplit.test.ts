@@ -155,6 +155,95 @@ describe('split_line', () => {
     env2.asks = ASK;
     expect((call(env2, 'split_line', { beatId: q.id, pieces: [PA, PB] }) as Ans).待用户确认).toHaveLength(1);
   });
+  describe('the editor auto split carries the performance and camera of the model (F3)', () => {
+    const P1 = '……不过，钱的事';
+    const P2 = '我还没跟大家商量。';
+    const run = (travel: boolean, pieceExtra: Record<string, unknown>[]) => {
+      const { p, id } = withLong();
+      p.scenes[2]!.beats[1]!.kind = 'dialogue';
+      p.scenes[2]!.beats[1]!.speakerId = 'c_005';
+      p.settings = { ...p.settings, cameraSystem: travel ? 'travel' : 'classic' };
+      const s = p.scenes[2]!;
+      const head = s.beats[1]!;
+      const speaker = head.speakerId!;
+      const listener = Object.keys(s.wardrobe).find((c) => c !== speaker)!;
+      const op = {
+        op: 'beat_split_pieces' as const, sceneId: s.id, beatId: id, newIds: ['x_b1', 'x_b2'],
+        pieces: [{ text: PA }, { text: P1, ...pieceExtra[0] }, { text: P2, ...pieceExtra[1] }],
+      };
+      const r = checkOp(p, op as never, { allowLineSplit: true });
+      expect(r.status, JSON.stringify(r.problems)).not.toBe('invalid');
+      const after = clone(p);
+      const ar = applyOp(after, r.op, { genId: 'g', now: 5 });
+      expect(ar.ok).toBe(true);
+      return { p, after, r, id, speaker, listener, head, scene: after.scenes[2]! };
+    };
+
+    it('a closer piece takes one step tighter, a hold after it keeps that framing, the performance keys sit in the piece (travel)', () => {
+      const x = run(true, [{ camera: 'closer', why: '说到钱的事，语气一沉', motion: 'thinking01', expression: 'sad01', attention: 'down' }, {}]);
+      const [h, a, b] = x.scene.beats.slice(1, 4);
+      expect(h!.id).toBe(x.id);
+      expect(a!.id).toBe('x_b1');
+      const tight = { ms: 'mcu', mcu: 'cu', cu: 'ecu', ecu: 'ecu', group: 'mcu', two_shot: 'mcu' }[x.head.shot.type as string];
+      expect(a!.shot).toMatchObject({ type: tight, focus: [x.speaker], move: 'static', intent: 'emphasis' });
+      expect(b!.shot).toMatchObject({ type: tight, focus: [x.speaker], move: 'static', intent: 'continue' });
+      expect(h!.shot.type).toBe(x.head.shot.type);
+      expect(a!.meta.reason).toBe('说到钱的事，语气一沉');
+      const keys = (ch: string) => (x.scene.tracks as unknown as Array<{ channel: string; target: { kind: string; castId?: string }; keys: Array<{ at: { beatId: string }; value: unknown }> }>).filter((t) => t.channel === ch && t.target.kind === 'actor' && t.target.castId === x.speaker).flatMap((t) => t.keys).filter((k) => k.at.beatId === 'x_b1');
+      expect(keys('motion').map((k) => k.value)).toEqual([{ name: 'thinking01' }]);
+      expect(keys('expression').map((k) => k.value)).toEqual([{ name: 'sad01' }]);
+      expect(keys('gaze').map((k) => k.value)).toEqual([{ target: 'down' }]);
+      expect(x.r.warnings.join()).not.toContain('降级');
+    });
+
+    it('classic: no intent on the pieces; a reaction is a close-up of the listener', () => {
+      const x0 = run(false, [{ camera: 'closer', why: '说到钱的事，语气一沉' }, {}]);
+      const [, a0, b0] = x0.scene.beats.slice(1, 4);
+      expect(a0!.shot.intent).toBeUndefined();
+      expect(b0!.shot.intent).toBeUndefined();
+      expect(b0!.shot.type).toBe(a0!.shot.type);
+      const probe = run(false, [{}, {}]);
+      const x = run(true, [{ camera: 'reaction', reactionOf: probe.listener, why: '听到钱的事对方愣住' }, {}]);
+      const [, a, b] = x.scene.beats.slice(1, 4);
+      expect(a!.shot).toMatchObject({ type: 'cu', focus: [x.listener], intent: 'reaction', transition: 'cut' });
+      // after a reaction the speaker's own framing is back
+      expect(b!.shot).toMatchObject({ type: x.head.shot.type, intent: 'continue' });
+    });
+
+    it('the same soft repair as the generation: a vague reason, a second camera change and a listener that is not on stage drop to hold, with warnings', () => {
+      const x = run(true, [{ camera: 'closer', why: '强调' }, { camera: 'reaction', reactionOf: 'c_nobody', why: '对方愣住了很久' }]);
+      const [, a, b] = x.scene.beats.slice(1, 4);
+      expect(a!.shot).toMatchObject({ type: x.head.shot.type, intent: 'continue' });
+      expect(b!.shot).toMatchObject({ type: x.head.shot.type, intent: 'continue' });
+      expect(x.r.warnings.join()).toContain('没有写出具体的故事理由');
+      expect(x.r.warnings.join()).toContain('听者不在台上');
+    });
+
+    it('without any extra fields it is exactly the old behaviour, and revertOps restores the line exactly', () => {
+      const x = run(true, [{}, {}]);
+      const [, a, b] = x.scene.beats.slice(1, 4);
+      expect([a!.shot.type, b!.shot.type]).toEqual([x.head.shot.type, x.head.shot.type]);
+      const back = clone(x.after);
+      for (const op of revertOps(x.p, x.after)) {
+        const r = checkOp(back, op, { allowLineSplit: true, allowDialogExpand: true });
+        expect(r.status, JSON.stringify(r.problems)).not.toBe('invalid');
+        applyOp(back, r.op, { genId: 'r', now: 9 });
+      }
+      expect(JSON.stringify(back.scenes[2]!.beats.map((q) => [q.id, q.text, q.splitFrom]))).toBe(JSON.stringify(x.p.scenes[2]!.beats.map((q) => [q.id, q.text, q.splitFrom])));
+    });
+    it('a closer with performance keys reverts exactly (keys included)', () => {
+      const x = run(true, [{ camera: 'closer', why: '说到钱的事，语气一沉', motion: 'thinking01', attention: 'down' }, {}]);
+      const back = clone(x.after);
+      for (const op of revertOps(x.p, x.after)) {
+        const r = checkOp(back, op, { allowLineSplit: true, allowDialogExpand: true });
+        expect(r.status, JSON.stringify(r.problems)).not.toBe('invalid');
+        applyOp(back, r.op, { genId: 'r', now: 9 });
+      }
+      const norm = (q: typeof back) => JSON.stringify({ b: q.scenes[2]!.beats.map((z) => [z.id, z.text, z.splitFrom]), k: q.scenes[2]!.tracks.map((t) => [t.channel, t.keys.map((k) => k.at.beatId)]).filter((t) => (t[1] as string[]).length) });
+      expect(norm(back)).toBe(norm(x.p));
+    });
+  });
+
   it('is one undo step when replayed, and revertOps takes the project back exactly', () => {
     const { p, id } = withLong();
     const env = makeEnv(p);

@@ -11,6 +11,7 @@ import { categoryProblem } from '../director/validate';
 import { expressionLabel, motionLabel } from '../catalog/labels';
 import { AI_FX, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, EMOTIONS, INSERT_BOX, MAX_DIM_BEATS, MEMORY_CUE, ONE_SHOT_FX, SPECIAL_ATTENTION } from '../director/vocab';
 import { checkPieces } from '../director/splitLines';
+import { repairPieces } from '../director/splitPieces';
 import { findLockViolations, type LockViolation } from '../project/locks';
 import { clone } from '../project/mutate';
 import { TrackSchema, cameraSystemOf, type Project, type Scene } from '../schema/project';
@@ -20,7 +21,7 @@ import { styleField } from '../style/ournotes';
 import { TEXT_KINDS } from '../timeline/time';
 import { applyOp, fxStates, type Change } from './apply';
 import { beatLineInfo, dialogMetricsOf } from './lines';
-import { AgentOpSchema, type AgentOp } from './ops';
+import { AgentOpSchema, type AgentOp, type SplitPieceInput } from './ops';
 
 export type CheckStatus = 'ok' | 'needs_unlock' | 'needs_confirm' | 'invalid';
 export interface CheckCtx {
@@ -187,7 +188,30 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
       const c = checkPieces(b.text, input.pieces.map((p) => p.text), dialogMetricsOf(project, scene, b), b.variant, { maxPieces: 4, maxExtra: 2 });
       if (!c.ok) { s.problems.push(...c.problems.map((p) => `拆分不合格：${p}`)); break; }
       if (c.repairs.length) s.warnings.push(...c.repairs);
-      s.op = { ...input, pieces: input.pieces.map((p, i) => ({ ...p, text: c.pieces[i]! })) };
+      // the performance and camera intent of the later pieces get the same soft repair as the generation's split step; the names of the
+      // motions / expressions were resolved where they were decided (the server), so they pass through here
+      const bi = beatIdx(input.beatId);
+      const rep = repairPieces(
+        input.pieces.map((p, i) => ({
+          text: c.pieces[i]!, why: p.why ?? '', emotion: (p.emotion || b.emotion || 'neutral') as 'neutral', camera: p.camera ?? 'hold', reactionOf: p.reactionOf ?? null,
+          actor: p.motion || p.expression || p.attention ? { motion: p.motion ?? null, expression: p.expression ?? null, attention: p.attention ?? null } : null,
+        })),
+        c.pieces,
+        { speaker: b.kind === 'dialogue' && b.speakerId ? b.speakerId : null, onStage: onStageIds(scene, bi), emotion: b.emotion ?? 'neutral', resolveMotion: (w) => w, resolveExpression: (w) => w, where: `第${bi + 1}句` },
+      );
+      s.warnings.push(...rep.warnings);
+      s.op = {
+        ...input,
+        pieces: input.pieces.map((p, i): SplitPieceInput => {
+          const r = rep.pieces[i]!;
+          return {
+            text: c.pieces[i]!, ...(p.emotion ? { emotion: p.emotion } : {}), ...(i > 0 && r.why ? { why: r.why } : {}),
+            ...(i > 0 && r.camera !== 'hold' ? { camera: r.camera } : {}), ...(i > 0 && r.reactionOf ? { reactionOf: r.reactionOf } : {}),
+            ...(i > 0 && r.actor?.motion ? { motion: r.actor.motion } : {}), ...(i > 0 && r.actor?.expression ? { expression: r.actor.expression } : {}),
+            ...(i > 0 && r.actor?.attention ? { attention: r.actor.attention } : {}),
+          };
+        }),
+      };
       break;
     }
     case 'dialog_expand': {

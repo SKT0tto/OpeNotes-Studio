@@ -107,7 +107,7 @@ export function repairPieces(pieces: readonly RawPiece[], texts: readonly string
 }
 
 /** One step tighter, speaker alone (a `closer` continuation). */
-const TIGHTER: Partial<Record<DirectedBeat['shot']['type'], DirectedBeat['shot']['type']>> = { group: 'mcu', two_shot: 'mcu', ms: 'mcu', mcu: 'cu', cu: 'ecu', ecu: 'ecu' };
+export const TIGHTER: Partial<Record<DirectedBeat['shot']['type'], DirectedBeat['shot']['type']>> = { group: 'mcu', two_shot: 'mcu', ms: 'mcu', mcu: 'cu', cu: 'ecu', ecu: 'ecu' };
 
 const CONTINUOUS_FX_BLOCK = new Set<string>(ONE_SHOT_FX);
 

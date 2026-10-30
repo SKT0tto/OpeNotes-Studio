@@ -19,6 +19,16 @@ import { BG_PURPOSES, BG_TRANSITIONS, DAZE_VARIANTS, EaseSchema, MEMORY_EDGES, M
 
 const Id = z.string().min(1);
 const Ref = { sceneId: Id };
+/**
+ * One piece of a cut line. Only `text` is needed; the rest is what the editor's auto split takes from the model (see `repairPieces`): why
+ * the cut is here, a camera intent (hold = nothing, at most one closer / reaction per line) and the speaker's performance in this piece.
+ */
+const SplitPiece = z.object({
+  text: z.string().min(1), emotion: z.string().optional(), why: z.string().max(60).optional(),
+  camera: z.enum(['hold', 'closer', 'reaction']).optional(), reactionOf: Id.optional(),
+  motion: z.string().max(60).optional(), expression: z.string().max(60).optional(), attention: z.string().max(40).optional(),
+});
+export type SplitPieceInput = z.infer<typeof SplitPiece>;
 const common = { reason: z.string().max(200).optional(), overrideUser: z.boolean().optional() };
 
 export const BEAT_KINDS = ['dialogue', 'narration', 'action', 'pause', 'silent', 'empty'] as const;
@@ -47,8 +57,8 @@ export const AgentOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('beat_move'), ...Ref, beatId: Id, afterBeatId: Id.nullable(), ...common }),
   z.object({ op: z.literal('beat_split'), ...Ref, beatId: Id, at: z.number().int().min(1), newId: Id, ...common }),
   z.object({ op: z.literal('beat_merge'), ...Ref, beatId: Id, ...common }),
-  /** The assistant's own cut of a line that does not fit the dialogue area: `pieces` (2-4, verbatim from the text) and one new id per later piece. The later pieces get `splitFrom` = the first piece. */
-  z.object({ op: z.literal('beat_split_pieces'), ...Ref, beatId: Id, pieces: z.array(z.object({ text: z.string().min(1), emotion: z.string().optional() })).min(2).max(4), newIds: z.array(Id).min(1).max(3), ...common }),
+  /** The assistant's own cut of a line that does not fit the dialogue area (the later pieces may also carry the performance and a camera intent the editor's auto split got from the model): `pieces` (2-4, verbatim from the text) and one new id per later piece. The later pieces get `splitFrom` = the first piece. */
+  z.object({ op: z.literal('beat_split_pieces'), ...Ref, beatId: Id, pieces: z.array(SplitPiece).min(2).max(4), newIds: z.array(Id).min(1).max(3), ...common }),
   /** `on` = show the whole line (`Beat.overflow = 'expand'`); false clears it. Only when the user asked (CheckCtx.allowDialogExpand). */
   z.object({ op: z.literal('dialog_expand'), ...Ref, beatId: Id, on: z.boolean(), ...common }),
   z.object({ op: z.literal('shot_set'), ...Ref, beatId: Id, ...common, set: SHOT_SET }),

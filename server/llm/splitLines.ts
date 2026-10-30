@@ -15,7 +15,7 @@ import { runSplitPass } from './splitPass';
 
 export interface SplitLinesResult {
   sceneId: string;
-  splits: Array<{ beatId: string; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; emotion: string; why: string }> }>;
+  splits: Array<{ beatId: string; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; emotion: string; why: string; camera?: 'closer' | 'reaction'; reactionOf?: string; motion?: string; expression?: string; attention?: string }> }>;
   skipped: Array<{ beatId: string; reason: string }>;
   warnings: string[];
   runs: RunInfo[];
@@ -65,7 +65,13 @@ export async function runSplitLines(d: DirectorDeps, project: Project, sceneId: 
   });
   const splits = sp.plans.map((p) => ({
     beatId: scene.beats[p.index]!.id, by: p.by,
-    pieces: p.pieces.map((x) => ({ text: x.text, emotion: x.emotion, why: x.why })),
+    // the camera intent and the performance the model decided (after the soft repair) travel with the cut: the editor replays them as part of the op
+    pieces: p.pieces.map((x, k) => ({
+      text: x.text, emotion: x.emotion, why: x.why,
+      ...(k > 0 && x.camera !== 'hold' ? { camera: x.camera } : {}), ...(k > 0 && x.reactionOf ? { reactionOf: x.reactionOf } : {}),
+      ...(k > 0 && x.actor?.motion ? { motion: x.actor.motion } : {}), ...(k > 0 && x.actor?.expression ? { expression: x.actor.expression } : {}),
+      ...(k > 0 && x.actor?.attention ? { attention: x.actor.attention } : {}),
+    })),
   }));
   for (const id of free) if (!splits.some((s) => s.beatId === id)) skipped.push({ beatId: id, reason: '没有找到合适的断点' });
   return { sceneId, splits, skipped, warnings: sp.warnings, runs: sp.runs };

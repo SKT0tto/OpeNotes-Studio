@@ -13,7 +13,7 @@ import { expandPlan } from '@shared/style/dialogLayout';
 export interface SplitPlan {
   beatId: string;
   by: 'ai' | 'retry' | 'rule';
-  pieces: Array<{ text: string; emotion?: string; why?: string }>;
+  pieces: Array<{ text: string; emotion?: string; why?: string; camera?: 'closer' | 'reaction'; reactionOf?: string; motion?: string; expression?: string; attention?: string }>;
 }
 
 export interface LongRow {
@@ -81,7 +81,7 @@ export function splitOps(project: Project, sceneId: string, splits: SplitPlan[],
     const newIds = freeBeatIds(work, pieces.length - 1);
     // reserve the ids so that the next split of this batch takes others
     for (const id of newIds) work.beats.push({ id } as Beat);
-    ops.push({ op: 'beat_split_pieces', sceneId, beatId: sp.beatId, pieces: pieces.map((p) => ({ text: p.text, ...(p.emotion ? { emotion: p.emotion } : {}) })), newIds, reason } as AgentOp);
+    ops.push({ op: 'beat_split_pieces', sceneId, beatId: sp.beatId, pieces: pieces.map((p) => ({ text: p.text, ...(p.emotion ? { emotion: p.emotion } : {}), ...(p.why ? { why: p.why } : {}), ...(p.camera ? { camera: p.camera } : {}), ...(p.reactionOf ? { reactionOf: p.reactionOf } : {}), ...(p.motion ? { motion: p.motion } : {}), ...(p.expression ? { expression: p.expression } : {}), ...(p.attention ? { attention: p.attention } : {}) })), newIds, reason } as AgentOp);
   }
   return ops;
 }

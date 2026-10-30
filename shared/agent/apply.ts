@@ -13,6 +13,7 @@ import { cameraSystemOf, type Beat, type MemoryTone, type Meta, type Project, ty
 import { resolveStyle } from '../style/ournotes';
 import { FLASH_SECONDS } from '../timeline/fxParams';
 import { ONE_SHOT_FX } from '../director/vocab';
+import { TIGHTER } from '../director/splitPieces';
 import { scopeOf, type AgentOp, type AgentScope } from './ops';
 
 export interface ApplyCtx {
@@ -206,15 +207,37 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       const travel = cameraSystemOf(project, scene) === 'travel';
       const head = b.splitFrom ?? b.id;
       const before = clip(b.text, 24);
+      // a deliberate closer (one step tighter, the speaker alone) or reaction (the listener in a close-up) from the model; a hold after the
+      // closer keeps the closer's framing, the same rule as the generation's split step (`continuation` in director/splitPieces.ts)
+      const dialogue = b.kind === 'dialogue' && !!b.speakerId;
+      let closerShot: Beat['shot'] | null = null;
       const conts: Beat[] = op.pieces.slice(1).map((p, k) => {
         const c: Beat = { ...clone(b), id: op.newIds[k]!, text: p.text, splitFrom: head, cutIn: 'cut', cutInKeepDialog: false, meta: freshMeta(op, ctx), style: { overrides: clone(b.style.overrides), meta: freshMeta(op, ctx) } };
         delete c.sourceOffset;
         delete c.overflow;
         if (p.emotion) c.emotion = p.emotion;
+        if (p.why) c.meta.reason = p.why;
         // the same shot as the first piece, held (no move, no new framing)
-        c.shot = { ...clone(b.shot), move: 'static', meta: freshMeta(op, ctx) };
+        c.shot = { ...clone(p.camera === 'hold' || !p.camera ? closerShot ?? b.shot : b.shot), move: 'static', meta: freshMeta(op, ctx) };
         delete c.shot.transition;
-        if (travel) c.shot.intent = 'continue'; else delete c.shot.intent;
+        let intent: NonNullable<Beat['shot']['intent']> = 'continue';
+        const tighter = (TIGHTER as Record<string, Beat['shot']['type'] | undefined>)[b.shot.type];
+        if (p.camera === 'closer' && dialogue && b.shot.type !== 'insert' && tighter) {
+          c.shot = { ...clone(b.shot), type: tighter, focus: [b.speakerId!], move: 'static', meta: freshMeta(op, ctx) };
+          delete c.shot.transition;
+          delete c.shot.dof;
+          delete c.shot.insertBox;
+          intent = 'emphasis';
+          if (c.shot.type !== b.shot.type) closerShot = c.shot;
+        } else if (p.camera === 'reaction' && dialogue && p.reactionOf) {
+          c.shot = { ...clone(b.shot), type: 'cu', focus: [p.reactionOf], move: 'static', meta: freshMeta(op, ctx) };
+          delete c.shot.dof;
+          delete c.shot.insertBox;
+          intent = 'reaction';
+          if (travel) c.shot.transition = 'cut';
+          closerShot = null;
+        }
+        if (travel) c.shot.intent = intent; else delete c.shot.intent;
         if (fixed) c.duration = { mode: 'fixed', seconds: share[k + 1]! };
         return c;
       });
@@ -225,6 +248,26 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       push('拆成几句', before, texts.map((t) => clip(t, 14)).join(' ｜ '), b.id);
       stamp(b.meta, op, ctx, res, beatLabel(b));
       scene.beats.splice(scene.beats.indexOf(b) + 1, 0, ...conts);
+      // the speaker's performance in a piece (the keys sit in the piece they belong to, like the generation's: motion shortly after the
+      // start, expression at the start, a look at the addressee)
+      if (b.speakerId) {
+        const who = b.speakerId;
+        const add = (channel: 'motion' | 'expression' | 'head' | 'gaze', beatId: string, offset: number, value: unknown, duration = 0, ease = 'inOutQuad') => {
+          const tr = ensureTrack(scene, { kind: 'actor', castId: who }, channel as never) as unknown as AnyTrack;
+          if (tr.keys.length === 0) tr.meta = freshMeta(op, ctx);
+          tr.keys.push({ id: newKeyId(scene), at: { beatId, offset }, value, duration, ease, meta: freshMeta(op, ctx) } as AnyKey);
+        };
+        op.pieces.slice(1).forEach((p, k) => {
+          const id = op.newIds[k]!;
+          if (p.motion) add('motion', id, 0.05, { name: p.motion });
+          if (p.expression) add('expression', id, 0, { name: p.expression });
+          if (p.attention) {
+            if (p.attention !== 'down') add('head', id, 0, { mode: 'target', target: p.attention }, 0.3, 'inOutSine');
+            add('gaze', id, 0.1, { target: p.attention });
+          }
+          if (p.motion || p.expression || p.attention) push('表演', '无', [p.motion && motionLabel(p.motion), p.expression && expressionLabel(p.expression), p.attention && '视线'].filter(Boolean).join('·'), id);
+        });
+      }
       return res;
     }
     case 'dialog_expand': {
