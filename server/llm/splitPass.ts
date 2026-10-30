@@ -27,6 +27,16 @@ import { LineSplitSchema, SPLIT_PROMPT_VERSION, SPLIT_SCHEMA_NAME, SPLIT_SYSTEM,
 /** Lines per call: more than this are sent in several calls. */
 export const MAX_LINES_PER_CALL = 20;
 
+/**
+ * The output budget of one call: every line is answered with its pieces repeated verbatim plus a reason / emotion / camera each, about
+ * `300 + 1.3 x characters` tokens (a real 13-line scene came to ~410 per line), with 40% headroom and a base for the wrapper. A budget
+ * that is too tight cuts the answer off and costs a second, halved call.
+ */
+export function splitOutputBudget(textLengths: readonly number[], cap: number): number {
+  const need = textLengths.reduce((s, n) => s + 300 + 1.3 * n, 0);
+  return Math.min(cap, Math.ceil(600 + 1.4 * need));
+}
+
 export interface SplitPassArgs {
   d: DirectorDeps;
   direction: SceneDirection;
@@ -210,13 +220,13 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
   const fallback: ModelOutcome['fallback'] = new Map();
   const text = new Map(candidates.map((c) => [c.id, c.text]));
 
-  const request = (inp: Record<string, unknown>, n: number): StructuredRequest<LineSplit> => ({
-    system: SPLIT_SYSTEM, input: inp, schema: LineSplitSchema, schemaName: SPLIT_SCHEMA_NAME, maxTokens: Math.min(cap, 800 + 380 * n), signal: d.signal,
+  const request = (inp: Record<string, unknown>, ids: string[]): StructuredRequest<LineSplit> => ({
+    system: SPLIT_SYSTEM, input: inp, schema: LineSplitSchema, schemaName: SPLIT_SCHEMA_NAME, maxTokens: splitOutputBudget(ids.map((id) => [...(text.get(id) ?? '')].length), cap), signal: d.signal,
   });
   /** One call; a cut-off answer is asked again for each half of the lines (a single line that is cut off throws). */
   const call = async (ids: string[], mk: (ids: string[]) => Record<string, unknown>): Promise<LineSplit[]> => {
     try {
-      const r = await generateCached(d.provider, d.cache, SPLIT_PROMPT_VERSION, request(mk(ids), ids.length), d.refresh ? { refresh: true } : {});
+      const r = await generateCached(d.provider, d.cache, SPLIT_PROMPT_VERSION, request(mk(ids), ids), d.refresh ? { refresh: true } : {});
       usage = { inputTokens: usage.inputTokens + r.usage.inputTokens, outputTokens: usage.outputTokens + r.usage.outputTokens, cacheReadTokens: usage.cacheReadTokens + r.usage.cacheReadTokens, cacheCreationTokens: usage.cacheCreationTokens + r.usage.cacheCreationTokens };
       cachedAll &&= r.cached;
       callWarnings.push(...r.warnings);
@@ -268,7 +278,7 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
       const mk = (x: string[]) => splitRequestInput({ ...input, lines: input.lines.filter((l) => x.includes(l.id)) });
       const answers = await call(b, mk);
       previous.push(...answers);
-      firstReqInputs.push({ ids: b, req: request(mk(b), b.length) });
+      firstReqInputs.push({ ids: b, req: request(mk(b), b) });
       for (const [id, p] of judge(answers, b, 'ai')) failing.set(id, p);
     } catch (e) {
       if (isAbort(d, e)) throw e;
