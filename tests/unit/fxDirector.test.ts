@@ -39,11 +39,11 @@ describe('prompt scene-4 (fixture) differs from scene-3 only on the fx line and 
     expect(AI_FX).toEqual(['none', 'vignette_anxiety', 'memory', 'dim', 'flash', 'shake', 'daze', 'dutch']);
   });
 
-  it('versions: scene-7 for classic, scene-7+travel-9 for travel', () => {
-    expect(SCENE_PROMPT_VERSION).toBe('scene-7');
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-7+travel-9');
-    expect(scenePromptFor('classic').promptVersion).toBe('scene-7');
-    expect(scenePromptFor('travel').promptVersion).toBe('scene-7+travel-9');
+  it('versions: scene-8 for classic, scene-8+travel-9 for travel', () => {
+    expect(SCENE_PROMPT_VERSION).toBe('scene-8');
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-8+travel-9');
+    expect(scenePromptFor('classic').promptVersion).toBe('scene-8');
+    expect(scenePromptFor('travel').promptVersion).toBe('scene-8+travel-9');
   });
 
   it('an old answer with memory_glow still parses (it is read as memory later), the new words parse in both schemas', () => {
@@ -199,7 +199,7 @@ describe('the rule director (travel only) derives memory, dim and shake', () => 
 
 describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
   const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-5.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
-  // the frozen scene-6 text (tests/fixtures/prompts/scene-6.system.txt); scene-7 adds one line to it (next block)
+  // the frozen scene-6 text (tests/fixtures/prompts/scene-6.system.txt); scene-8 adds one line to it (next block)
   const now = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   it('same number of lines; the type line and the insert line changed', () => {
     expect(now.length).toBe(old.length);
@@ -211,7 +211,7 @@ describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
   });
 });
 
-describe('prompt scene-7 differs from scene-6 only by the long-line rule', () => {
+describe('prompt scene-8 differs from scene-6 only by the long-line rule', () => {
   const six = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   const seven = SCENE_SYSTEM.split('\n');
   it('exactly one added line, at the end of the beats section; every other line is byte-identical', () => {
@@ -220,6 +220,11 @@ describe('prompt scene-7 differs from scene-6 only by the long-line rule', () =>
     expect(added).toHaveLength(1);
     expect(added[0]).toContain('对话框最多显示两行');
     expect(added[0]).toContain('不要为了放进对话框而删字');
+    // step 1 keeps every spoken line whole (the split step cuts it by meaning and checks the text); a paragraph of several lines is still one beat per line
+    expect(added[0]).toContain('不要为此把一句台词拆成几个节拍');
+    expect(added[0]).toContain('下一步按意思和情绪再拆开');
+    expect(added[0]).toContain('照常每句一个节拍');
+    expect(added[0]).not.toContain('你可以按原文的停顿拆成');
     expect(seven.filter((l) => six.includes(l))).toEqual(six);
     expect(seven[seven.indexOf(added[0]!) - 1]).toMatch(/^- 一个场景只调用一次/);
   });
