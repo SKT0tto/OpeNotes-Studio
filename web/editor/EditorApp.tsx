@@ -16,6 +16,8 @@ import { Workspace } from './Workspace';
 import { useCatalog } from './useCatalog';
 import { HubCharacter, HubCharacterMenu, HubModelPicker, useHubCharacterPrefs } from './HubCharacter';
 import { DEFAULT_PLACEMENT, resolveHubModel } from './hubCharacterLogic';
+import { HubBackgroundMenu, HubBackgroundPicker, useHubBackgroundPrefs, useHubCustomImage, StageBackground } from './HubBackground';
+import { effectiveBackgroundPrefs, resolveHubBackground, shouldPersistBackgroundFallback } from './hubBackgroundLogic';
 
 const when = (t: number) => new Date(t).toLocaleString('zh-CN', { hour12: false });
 const ago = (t: number) => {
@@ -79,6 +81,15 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
   const [charPrefs, setCharPrefs] = useHubCharacterPrefs();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
+  const [storedBgPrefs, setBgPrefs] = useHubBackgroundPrefs();
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const customBg = useHubCustomImage();
+  // the choice that really applies (a deleted picture / a vanished library background is 自动): the menu checks it and it is what is stored
+  const bgPrefs = effectiveBackgroundPrefs(storedBgPrefs, catalog?.backgrounds ?? null, customBg.info);
+  const bgFellBack = bgPrefs !== storedBgPrefs && shouldPersistBackgroundFallback(storedBgPrefs, catalog?.backgrounds.length ?? 0, customBg.info);
+  useEffect(() => {
+    if (bgFellBack) setBgPrefs(bgPrefs);
+  }, [bgFellBack, bgPrefs, setBgPrefs]);
   useEffect(() => {
     if (!allOpen && !envOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -184,9 +195,10 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
   const recent = [...(list ?? [])].sort((a, b) => b.updatedAt - a.updatedAt);
   const last = recent[0] ?? null;
   const scenes = catalog?.backgrounds.filter((b) => (b.labels?.category ?? b.category) === 'scene') ?? [];
-  const stageBg = recentCover ?? scenes[Math.floor(seed * scenes.length)]?.url;
+  const autoBg = recentCover ?? scenes[Math.floor(seed * scenes.length)]?.url;
+  const bgChoice = resolveHubBackground(bgPrefs, catalog?.backgrounds ?? null, customBg.info);
   const modelId = catalog ? resolveHubModel(catalog, charPrefs.model) : null;
-  const covered = allOpen || aiOpen || settingsOpen || pickerOpen || wizard !== null || imp !== null;
+  const covered = allOpen || aiOpen || settingsOpen || pickerOpen || bgPickerOpen || wizard !== null || imp !== null;
   const placement = { x: charPrefs.x, y: charPrefs.y, scale: charPrefs.scale };
   const newBlank = () => void make(blankProject(title.trim() || '未命名项目'));
 
@@ -202,8 +214,9 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
 
   return (
     <div className={`hub${allOpen ? ' all-open' : ''}`} data-testid="hub">
-      <div className="stage-bg" style={stageBg ? { backgroundImage: `url("${stageBg}")` } : undefined} aria-hidden="true" />
+      <StageBackground choice={bgChoice} autoUrl={autoBg} />
       <div className="stage-shade" aria-hidden="true" />
+      {bgPrefs.dim > 0 && <div className="stage-dim" style={{ opacity: bgPrefs.dim }} aria-hidden="true" />}
       {wide && (
         <HubCharacter
           health={health}
@@ -329,6 +342,15 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
         {error && <p className="bad hub-msg" data-testid="hub-error">{error}</p>}
         {note && <p className="ok hub-msg">{note}</p>}
         <div className="corner-row">
+        <HubBackgroundMenu
+          prefs={bgPrefs}
+          onChange={setBgPrefs}
+          image={customBg.info}
+          onUpload={async (f) => { const err = await customBg.upload(f); setError(err ? `我的图片：${err}` : null); return !err; }}
+          onRemove={customBg.remove}
+          canPick={!!catalog && catalog.backgrounds.length > 0}
+          onPick={() => setBgPickerOpen(true)}
+        />
         {wide && catalog && (
           <HubCharacterMenu
             hidden={charPrefs.model === null}
@@ -428,6 +450,14 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
           current={charPrefs.model}
           onPick={(model) => { setCharPrefs({ ...charPrefs, model }); setPickerOpen(false); }}
           onClose={() => setPickerOpen(false)}
+        />
+      )}
+      {bgPickerOpen && catalog && (
+        <HubBackgroundPicker
+          backgrounds={catalog.backgrounds}
+          current={bgPrefs.asset}
+          onPick={(id) => { setBgPrefs({ ...bgPrefs, mode: 'asset', asset: id }); setBgPickerOpen(false); }}
+          onClose={() => setBgPickerOpen(false)}
         />
       )}
       {aiOpen && <AiBreakdownDialog catalog={catalog} onClose={() => setAiOpen(false)} onCreated={(id) => { setAiOpen(false); history.replaceState(null, '', `/editor/${id}`); }} />}
