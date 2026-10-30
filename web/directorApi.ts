@@ -3,7 +3,7 @@ import type { Breakdown, SceneDirection } from '@shared/schema/ai';
 import type { Project, Scene } from '@shared/schema/project';
 
 export interface RunInfo {
-  pass: 'breakdown' | 'scene';
+  pass: 'breakdown' | 'scene' | 'split';
   label: string;
   provider: string;
   model: string;
@@ -18,6 +18,8 @@ export interface BreakdownResponse {
   project: Project;
   warnings: string[];
   runs: RunInfo[];
+  /** Long lines that were cut into consecutive lines (absent when none were). */
+  splits?: Array<{ beatId: string; pieceBeatIds: string[]; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; why: string }> }>;
   cached: boolean;
 }
 export interface MergeConflict { kind: string; label: string }
@@ -30,10 +32,12 @@ export interface SceneResponse {
   direction: SceneDirection;
   warnings: string[];
   runs: RunInfo[];
+  /** Long lines that were cut into consecutive lines (absent when none were). */
+  splits?: Array<{ beatId: string; pieceBeatIds: string[]; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; why: string }> }>;
   cached: boolean;
 }
 export interface BatchItem { sceneId: string; result?: SceneResponse; error?: { kind: string; message: string } }
-export interface BatchProgress { sceneId: string; title: string; state: 'start' | 'done' | 'error'; message?: string; kind?: string; cached?: boolean; result?: SceneResponse }
+export interface BatchProgress { sceneId: string; title: string; state: 'start' | 'done' | 'error'; /** With `start`: the scene is cutting `count` long lines (its second step). */ phase?: 'split'; count?: number; message?: string; kind?: string; cached?: boolean; result?: SceneResponse }
 
 /** A failed AI request: `kind` (not_configured, auth, network, truncated, repair_failed, ...) and a message safe to show. */
 export class DirectorApiError extends Error {

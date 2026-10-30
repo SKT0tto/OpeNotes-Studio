@@ -158,7 +158,7 @@ export const useDirectorRun = create<DirectorState>((set, get) => {
         },
       });
       fresh[r.sceneId] = { sceneId: r.sceneId, title: old.title, result: r, diff, scopes: turn.scopes, state: 'pending', checked: Object.keys(diff.counts) as DiffScope[] };
-      say(turnId, 'info', `${old.title}：${r.runs.length} 次调用，${r.runs.reduce((n, x) => n + x.ms, 0)} ms，${diff.items.length} 项变化${r.warnings.length ? `，${r.warnings.length} 条修复/警告` : ''}${r.runs.some((x) => x.repaired) ? '，含修复调用' : ''}`);
+      say(turnId, 'info', `${old.title}：${r.runs.length} 次调用，${r.runs.reduce((n, x) => n + x.ms, 0)} ms，${diff.items.length} 项变化${r.splits?.length ? `，拆分 ${r.splits.length} 句长台词（${[['ai', 'AI'], ['retry', '重试后 AI'], ['rule', '按标点']].map(([k, n]) => [n, r.splits!.filter((x) => x.by === k).length] as const).filter(([, c]) => c > 0).map(([n, c]) => `${n} ${c}`).join('，')}）` : ''}${r.warnings.length ? `，${r.warnings.length} 条修复/警告` : ''}${r.runs.some((x) => x.repaired) ? '，含修复调用' : ''}`);
     }
     // the cards in scene order, whatever order the answers came in
     const order = new Map(snapshot.scenes.map((s, i) => [s.id, i]));

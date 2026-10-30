@@ -107,14 +107,14 @@ export function GenerateTurn({ turn, env, onRefine, onRouteUndo, onOpenSettings 
             <span className="hint">{finished} / {turn.total} 个场景</span>
           </div>
         )}
-        {turn.status === 'running' && Object.keys(turn.progress).length === 0 && <p className="hint">请求中…（每个场景只调用一次模型）</p>}
+        {turn.status === 'running' && Object.keys(turn.progress).length === 0 && <p className="hint">请求中…（每个场景一次模型调用；有放不下的长台词时再调用一次来拆分）</p>}
         {Object.keys(turn.progress).length > 1 || (turn.status === 'running' && Object.keys(turn.progress).length > 0) ? (
           <details open={showProgress} className="ai-progress-fold">
             <summary className="hint">逐场状态 · {finished} / {turn.total}</summary>
             <ul className="ai-progress" data-testid="ai-progress">
               {Object.values(turn.progress).map((p) => (
                 <li key={p.sceneId} className={p.state === 'error' ? 'bad' : p.state === 'done' ? 'ok' : ''} data-state={p.state}>
-                  {p.state === 'start' ? '生成中…' : p.state === 'done' ? `完成${p.cached ? '（缓存）' : ''}` : `失败：${p.message}`} · {p.title}
+                  {p.state === 'start' ? (p.phase === 'split' ? `拆分长句（${p.count ?? 0} 句）…` : '生成中…') : p.state === 'done' ? `完成${p.cached ? '（缓存）' : ''}` : `失败：${p.message}`} · {p.title}
                 </li>
               ))}
             </ul>
