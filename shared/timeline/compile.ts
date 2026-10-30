@@ -729,10 +729,19 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     // a continuation of a split line keeps the camera exactly as its head left it, also after the head's push / pull (which `same` would
     // call a new shot); a hand-set shot, a closer size, another focus, a move or a dip all still count as the author's choice
     const head = i > 0 ? list[i - 1] : undefined;
+    // The head may have been held on another shot by the minimum-shot rule (`held`): then the camera is not the head's written shot, and a
+    // continuation that asks for exactly what the head wrote keeps the camera the viewer sees instead of cutting in the middle of the sentence.
+    // A deliberate closer or reaction (another size / focus than the head's own) still changes it.
+    const writtenAsHead = (h: ListBeat | undefined, t: ShotType, ids2: string[]): boolean => {
+      if (!h) return false;
+      const w = shotOf(h);
+      return w.type === t && w.type !== 'establishing' && w.ids.length === ids2.length && w.ids.every((x) => ids2.includes(x));
+    };
     const continues =
       beat.splitFrom !== undefined && head !== undefined && (head.id === beat.splitFrom || head.splitFrom === beat.splitFrom) &&
-      !entering && !userShot && TEXT_KINDS.includes(beat.kind) && beat.cutIn === 'cut' && beat.shot.move === 'static' && sameFocus &&
-      prevShot !== null && prevShot.type === type && prevShot.type !== 'establishing';
+      !entering && !userShot && TEXT_KINDS.includes(beat.kind) && beat.cutIn === 'cut' && beat.shot.move === 'static' &&
+      prevShot !== null && prevShot.type !== 'establishing' &&
+      ((sameFocus && prevShot.type === type) || writtenAsHead(head, type, ids));
     return held || same || continues;
   };
   /** Travel, medium shots: speakers of beat i and of the following beats that keep its shot (who is in the conversation of this shot). */

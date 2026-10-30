@@ -9,6 +9,7 @@ type Raw = Record<string, unknown>;
 const dlg = (id: string, speakerId: string, text: string, shot: Raw, extra: Raw = {}): Raw => ({ id, kind: 'dialogue', speakerId, text, shot, duration: { mode: 'fixed', seconds: 3 }, ...extra });
 const mcu = (focus: string[], extra: Raw = {}) => ({ type: 'mcu', focus, move: 'static', ...extra });
 const run = (beats: Raw[], scene: Raw = {}) => compileProject(miniProject({ beats, scene }), MINI_CTX).scenes[0]!;
+const runMin = (beats: Raw[], scene: Raw = {}) => compileProject(miniProject({ beats, scene, style: { 'rhythm.enforceMinShot': true } }), MINI_CTX).scenes[0]!;
 const SYSTEMS: Array<[string, Raw]> = [['classic', {}], ['travel', { cameraSystem: 'travel' }]];
 
 describe('schema: splitFrom / overflow are optional and never defaulted', () => {
@@ -106,6 +107,25 @@ describe.each(SYSTEMS)('compile: a split continuation keeps the head camera (%s)
     const other = dlg('o', 'b', '别人说。', { type: 'mcu', focus: ['b'], move: 'static' });
     const r = run([head({ move: 'push_in' }), other, cont()], scene);
     expect(r.beats[2]!.shotHeld).toBe(false);
+  });
+
+  it('M2: a head held on the previous shot by the minimum-shot rule: the continuation that asks for the head own shot holds that camera too', () => {
+    const prev = dlg('p', 'a', '前一句。', { type: 'cu', focus: ['a'], move: 'static' }, { duration: { mode: 'fixed', seconds: 3 } });
+    const h = dlg('h', 'a', '前半句。', mcu(['a']), { duration: { mode: 'fixed', seconds: 2 } });
+    const c = dlg('c', 'a', '后半句。', mcu(['a']), { splitFrom: 'h', duration: { mode: 'fixed', seconds: 1 } });
+    const r = runMin([prev, h, c], scene);
+    expect(r.beats.map((b) => b.shotHeld)).toEqual([false, true, true]);
+    expect(r.beats.map((b) => b.shotType)).toEqual(['cu', 'cu', 'cu']);
+    // without splitFrom the old rules apply: the third line is past the minimum shot length and cuts to mcu
+    const plain = runMin([prev, h, { ...c, splitFrom: undefined }], scene);
+    expect(plain.beats[2]!.shotType).toBe('mcu');
+  });
+
+  it('M2: a closer or a reaction after such a held head still changes the shot', () => {
+    const prev = dlg('p', 'a', '前一句。', { type: 'cu', focus: ['a'], move: 'static' }, { duration: { mode: 'fixed', seconds: 3 } });
+    const h = dlg('h', 'a', '前半句。', mcu(['a']), { duration: { mode: 'fixed', seconds: 2 } });
+    const ecu = dlg('c', 'a', '后半句。', { type: 'ecu', focus: ['a'], move: 'static' }, { splitFrom: 'h', duration: { mode: 'fixed', seconds: 1 } });
+    expect(runMin([prev, h, ecu], scene).beats[2]!.shotType).toBe('ecu');
   });
 
   it('beats without splitFrom compile exactly as before (the new rule is off for them)', () => {
