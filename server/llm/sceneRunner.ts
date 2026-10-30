@@ -1,5 +1,5 @@
 /** Pass 2: one model call per scene (two for a very long one), validation / repair, expansion, merge with the locks. */
-import { actorResources } from '../../shared/director/catalogDigest';
+import { actorResources, type ActorResources } from '../../shared/director/catalogDigest';
 import { expandScene } from '../../shared/director/expand';
 import { mergeLocks, type MergeConflict, type MergeReport } from '../../shared/director/mergeLocks';
 import type { Paragraph } from '../../shared/director/paragraphs';
@@ -12,10 +12,13 @@ import { downgradeChunkEnd } from '../../shared/director/intentNormalize';
 import { validateDirection } from '../../shared/director/validate';
 import type { SceneDirection } from '../../shared/schema/ai';
 import { cameraSystemOf, type Beat, type Project, type Scene } from '../../shared/schema/project';
+import { resolveStyle } from '../../shared/style/ournotes';
+import type { SplitBy } from '../../shared/director/splitPieces';
 import type { DirectorDeps } from './director';
 import { DirectorError, runStep, type RunInfo } from './pipeline';
 import { LlmError, isModelAi } from './provider';
 import { scenePromptFor, sceneInput, type SceneDirectionInput } from './prompts/sceneDirection';
+import { runSplitPass, type SplitPassResult } from './splitPass';
 
 export interface SceneRequest {
   project: Project;
@@ -39,6 +42,19 @@ export interface SceneResult {
   direction: SceneDirection;
   warnings: string[];
   runs: RunInfo[];
+  /** Present only when long lines were cut (`splitLongLines`): which lines, by whom and where. */
+  splits?: LineSplitInfo[];
+}
+
+/** A long line that was cut into consecutive lines. */
+export interface LineSplitInfo {
+  /** The first piece (it keeps the id of the original line). */
+  beatId: string;
+  /** The later pieces. */
+  pieceBeatIds: string[];
+  /** ai = the model's cut passed on the first answer, retry = after one repair call, rule = cut by punctuation (the deterministic splitter). */
+  by: SplitBy;
+  pieces: Array<{ text: string; why: string }>;
 }
 
 const MAX_PARAS_PER_CALL = 45;
@@ -52,7 +68,7 @@ const MAX_TOKENS_PER_PARA = 900;
 /** Measured tokens per paragraph get this much head room before they size the next span. */
 const MEASURED_HEADROOM = 1.3;
 
-const protectedBeat = (b: Beat, overwrite: boolean) => b.meta.locked || (b.meta.lockedFields?.length ?? 0) > 0 || (!overwrite && b.meta.source === 'user');
+const protectedBeat = (b: Beat, overwrite: boolean) => b.meta.locked || (b.meta.lockedFields?.length ?? 0) > 0 || (!overwrite && b.meta.source === 'user') || b.overflow === 'expand';
 
 function endSummary(project: Project, index: number): SceneDirectionInput['previousScene'] {
   const prev = project.scenes[index - 1];
@@ -69,7 +85,8 @@ const combine = (a: SceneDirection, b: SceneDirection): SceneDirection => ({
   blocking: a.blocking.length > 0 ? a.blocking : b.blocking,
 });
 
-export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string): Promise<SceneResult> {
+/** `onSplitStart`: the long lines have been measured and `n` of them are about to be cut (the progress stream shows it). */
+export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string, hooks: { onSplitStart?: (n: number) => void } = {}): Promise<SceneResult> {
   const { project } = req;
   const index = project.scenes.findIndex((s) => s.id === req.sceneId);
   const scene = project.scenes[index];
@@ -251,7 +268,27 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
     }
   }
   if (!direction) throw new DirectorError('repair_failed', '没有得到导演结果');
-  const dir: SceneDirection = direction;
+  let dir: SceneDirection = direction;
+  const splitWarnings: string[] = [];
+  let splitPlans: SplitPassResult['plans'] = [];
+  if (d.splitLongLines && structure) {
+    const style = resolveStyle(project.style, scene.style).values.dialog;
+    const costume = (castId: string, at: number): string | undefined => dir.costumeChanges.filter((c) => c.castId === castId && c.beatIndex <= at).at(-1)?.modelId ?? scene.wardrobe[castId]?.modelId;
+    const sp = await runSplitPass({
+      d, direction: dir, scene: { title: scene.title, mood: scene.brief?.mood ?? '' }, cameraSystem, style, castIds: cast.map((c) => c.castId), label: scene.title, onStart: hooks.onSplitStart,
+      actorAt: (castId, at) => {
+        const m = project.cast.find((c) => c.id === castId);
+        const modelId = costume(castId, at);
+        const model = modelId ? L.models.get(modelId) : undefined;
+        const res: ActorResources | null = m && modelId ? actorResources(d.catalog, castId, m.characterKey, modelId) : null;
+        return res && model ? { res, model } : null;
+      },
+    });
+    dir = sp.direction;
+    splitPlans = sp.plans;
+    splitWarnings.push(...sp.warnings);
+    runs.push(...sp.runs);
+  }
 
   const playMotionOf = (castId: string): string | null => {
     const m = L.models.get(scene.wardrobe[castId]?.modelId ?? '');
@@ -260,14 +297,30 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   };
   const { scene: fresh, warnings: expandWarnings } = expandScene({ base: scene, direction: dir, paragraphs, genId, now, playMotionOf, isInsertBg: (id) => { const b = L.backgrounds.get(id); return !!b && bgCategoryOf(b) === 'insert'; }, decisions: isModelAi(d.provider) ? 'ai' : 'rule' });
   const merged = mergeLocks(scene, fresh, { scopes: req.scopes, beatIds: req.beatIds, overwriteUser: overwrite });
-  const warnings = [...runs.flatMap((r) => r.warnings), ...chunkWarnings, ...expandWarnings, ...merged.conflicts.map((c) => `锁定冲突：${c.label}`)];
-  return { sceneId: scene.id, scene: merged.scene, applied: merged.applied, conflicts: merged.conflicts, report: merged.report, direction: dir, warnings, runs };
+  const warnings = [...runs.flatMap((r) => r.warnings), ...chunkWarnings, ...splitWarnings, ...expandWarnings, ...merged.conflicts.map((c) => `锁定冲突：${c.label}`)];
+  return {
+    sceneId: scene.id, scene: merged.scene, applied: merged.applied, conflicts: merged.conflicts, report: merged.report, direction: dir, warnings, runs,
+    ...(splitPlans.length > 0 ? { splits: splitInfos(fresh, dir, splitPlans) } : {}),
+  };
+}
+
+/** Which beats of the expanded scene are the pieces of each cut line (`fresh.beats` follow `dir.beats` one to one). */
+function splitInfos(fresh: Scene, dir: SceneDirection, plans: SplitPassResult['plans']): LineSplitInfo[] {
+  return plans.map((p) => ({
+    beatId: fresh.beats[p.headAt]!.id,
+    pieceBeatIds: dir.beats.flatMap((b, i) => (b.splitOf === p.headAt ? [fresh.beats[i]!.id] : [])),
+    by: p.by,
+    pieces: p.pieces.map((x) => ({ text: x.text, why: x.why })),
+  }));
 }
 
 export interface BatchProgress {
   sceneId: string;
   title: string;
   state: 'start' | 'done' | 'error';
+  /** With `start`: the scene is now in its second step, cutting `count` long lines (a second `start` after the first). */
+  phase?: 'split';
+  count?: number;
   message?: string;
   /** With `error`: the failure class (auth, network, timeout, ...), so the UI can say what to fix. */
   kind?: string;
@@ -296,7 +349,7 @@ export async function runScenes(
       const title = project.scenes.find((s) => s.id === sceneId)?.title ?? sceneId;
       onProgress({ sceneId, title, state: 'start' });
       try {
-        const result = await runScene(d, { project, sceneId, scopes, overwriteUser }, genId);
+        const result = await runScene(d, { project, sceneId, scopes, overwriteUser }, genId, { onSplitStart: (count) => onProgress({ sceneId, title, state: 'start', phase: 'split', count }) });
         out[i] = { sceneId, result };
         onProgress({ sceneId, title, state: 'done', cached: result.runs.every((r) => r.cached), result });
       } catch (e) {

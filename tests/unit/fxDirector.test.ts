@@ -39,11 +39,11 @@ describe('prompt scene-4 (fixture) differs from scene-3 only on the fx line and 
     expect(AI_FX).toEqual(['none', 'vignette_anxiety', 'memory', 'dim', 'flash', 'shake', 'daze', 'dutch']);
   });
 
-  it('versions: scene-6 for classic, scene-6+travel-9 for travel', () => {
-    expect(SCENE_PROMPT_VERSION).toBe('scene-6');
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-6+travel-9');
-    expect(scenePromptFor('classic').promptVersion).toBe('scene-6');
-    expect(scenePromptFor('travel').promptVersion).toBe('scene-6+travel-9');
+  it('versions: scene-7 for classic, scene-7+travel-9 for travel', () => {
+    expect(SCENE_PROMPT_VERSION).toBe('scene-7');
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-7+travel-9');
+    expect(scenePromptFor('classic').promptVersion).toBe('scene-7');
+    expect(scenePromptFor('travel').promptVersion).toBe('scene-7+travel-9');
   });
 
   it('an old answer with memory_glow still parses (it is read as memory later), the new words parse in both schemas', () => {
@@ -199,7 +199,8 @@ describe('the rule director (travel only) derives memory, dim and shake', () => 
 
 describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
   const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-5.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
-  const now = SCENE_SYSTEM.split('\n');
+  // the frozen scene-6 text (tests/fixtures/prompts/scene-6.system.txt); scene-7 adds one line to it (next block)
+  const now = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').split('\n');
   it('same number of lines; the type line and the insert line changed', () => {
     expect(now.length).toBe(old.length);
     const changed = now.filter((l, i) => l !== old[i]);
@@ -207,5 +208,19 @@ describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
     expect(changed.some((l) => l.startsWith('- insert 只用于'))).toBe(true);
     expect(SCENE_SYSTEM).not.toContain('hands');
     expect(SCENE_SYSTEM).not.toContain('face_lower');
+  });
+});
+
+describe('prompt scene-7 differs from scene-6 only by the long-line rule', () => {
+  const six = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').split('\n');
+  const seven = SCENE_SYSTEM.split('\n');
+  it('exactly one added line, at the end of the beats section; every other line is byte-identical', () => {
+    expect(seven.length).toBe(six.length + 1);
+    const added = seven.filter((l) => !six.includes(l));
+    expect(added).toHaveLength(1);
+    expect(added[0]).toContain('对话框最多显示两行');
+    expect(added[0]).toContain('不要为了放进对话框而删字');
+    expect(seven.filter((l) => six.includes(l))).toEqual(six);
+    expect(seven[seven.indexOf(added[0]!) - 1]).toMatch(/^- 一个场景只调用一次/);
   });
 });

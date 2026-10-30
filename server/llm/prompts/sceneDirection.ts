@@ -5,7 +5,7 @@ import { SceneDirectionSchema, SceneDirectionTravelSchema, type SceneDirection }
 import type { CameraSystem } from '../../../shared/schema/project';
 import { AI_FX, AI_MOVES, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, DEPTH_NAMES, EMOTIONS, SLOT_NAMES } from '../../../shared/director/vocab';
 
-export const SCENE_PROMPT_VERSION = 'scene-6';
+export const SCENE_PROMPT_VERSION = 'scene-7';
 
 export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导」。你会拿到一个场景的原文段落、在场角色（含该服装真实可用的动作与表情清单）和上一场景的结束状态，请把这个场景一次性导成一组节拍（beats），只输出 JSON。
 
@@ -19,6 +19,7 @@ export const SCENE_SYSTEM = `你是 BanG Dream! 同人动画的「演出指导�
 - paragraph 是该节拍所在的段落编号（必须在给定范围内，且文本能在该段原文里找到）。不要编造原文没有的台词。
 - 每个 beat 都要有 emotion，只能取：${EMOTIONS.join(' / ')}。reason 用不超过 20 个字写理由（情绪、关系、节奏）。输出要紧凑，不要多余的文字。
 - 一个场景只调用一次，不要逐句等待；也不要每句都换镜头。
+- 对话框最多显示两行（每行约 31 个汉字）。不要为了放进对话框而删字、改写或缩写台词，也不要在句子中间随意截断。一个人的一段话里情绪、语气或话题明显转折时（比如先逞强、后泄气；先惊叫、后回过神），你可以按原文的停顿拆成同一说话人的连续几个 dialogue 节拍：文字原样、按顺序、不重复、不漏字，后面的节拍镜头通常与上一拍相同，只在情绪真正升高时才收紧。仍然放不下的台词，程序会在下一步按语义再拆，你不用数字数。
 
 # 镜头 shot（只表达意图，节奏由程序兜底）
 - type 只能是：${AI_SHOT_TYPES.join(' / ')}。group=多人同框交代全体；two_shot=两人对话（focus 填两人）；mcu=单人中景（默认的对白镜头）；cu=情绪升高时的近景；ecu=情绪高点/强烈反应的大特写；insert=正在演奏的乐器特写（很少用，整个场景最多 1 个）。
@@ -108,7 +109,7 @@ export const TRAVEL_EXAMPLE_BEATS = [
   { paragraph: 7, kind: 'narration', speaker: null, text: '风停了。三个人谁也没有再说话。', shot: { type: 'group', focus: [], intent: 'release', flow: 'auto' }, reason: '场尾拉开，交代三个人的距离' },
 ];
 
-export const SCENE_TRAVEL_VERSION = 'scene-6+travel-9';
+export const SCENE_TRAVEL_VERSION = 'scene-7+travel-9';
 export const SCENE_TRAVEL_SECTION = `# 叙事镜头与运镜（本场景使用「运镜」系统，以下镜头规则优先）
 先想清楚：此刻观众该看谁、为什么。程序会按真实机位和叙事规则核对你的意图，写错的标签会被程序改标，所以要写「这一拍实际是什么」，不要写你希望它是什么。
 

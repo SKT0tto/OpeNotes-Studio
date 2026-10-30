@@ -87,13 +87,31 @@ export function diffScene(old: Scene, fresh: Scene, namesIn: DiffNames | ((id: s
   const where = (id: string) => `第${idx.get(id) ?? '?'}句`;
   let structural = old.beats.length !== fresh.beats.length || old.beats.some((b) => !freshIds.has(b.id));
 
+  // A long line cut into pieces is ONE row: its first piece plus the pieces that did not exist before ("拆成 3 句"), not a changed line and
+  // two added ones. The pieces that already existed (the same split made earlier) are compared as ordinary lines.
+  const newPieces = new Map<string, Beat[]>();
+  for (const f of fresh.beats) {
+    if (f.splitFrom === undefined || oldBeats.has(f.id)) continue;
+    newPieces.set(f.splitFrom, [...(newPieces.get(f.splitFrom) ?? []), f]);
+  }
+  const groupHeads = new Set([...newPieces.keys()].filter((id) => freshIds.has(id) && oldBeats.has(id)));
+  const inGroup = new Set([...groupHeads].flatMap((h) => newPieces.get(h)!.map((p) => p.id)));
+  const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n)}…` : t);
+
   for (const f of fresh.beats) {
     const o = oldBeats.get(f.id);
+    if (!o && inGroup.has(f.id)) continue;
+    if (o && groupHeads.has(f.id)) {
+      const rest = newPieces.get(f.id)!;
+      const all = fresh.beats.filter((b) => b.id === f.id || b.splitFrom === f.id);
+      structural = true;
+      items.push({ scope: 'structure', where: where(f.id), field: `拆成 ${all.length} 句`, before: clip(o.text, 18), after: [f, ...rest].map((p) => clip(p.text, 12)).join('｜'), beatId: f.id });
+    }
     if (!o) {
       items.push({ scope: 'structure', where: where(f.id), field: '新增台词', before: '—', after: f.text.slice(0, 24), beatId: f.id });
       continue;
     }
-    if (o.text !== f.text || o.speakerId !== f.speakerId || o.kind !== f.kind) {
+    if (!groupHeads.has(f.id) && (o.text !== f.text || o.speakerId !== f.speakerId || o.kind !== f.kind)) {
       structural = true;
       items.push({ scope: 'structure', where: where(f.id), field: '台词', before: `${o.speakerId ? `${castName(o.speakerId)}：` : ''}${o.text.slice(0, 18)}`, after: `${f.speakerId ? `${castName(f.speakerId)}：` : ''}${f.text.slice(0, 18)}`, beatId: f.id });
     }

@@ -34,7 +34,7 @@ export async function directorDeps(d: DirectorRouteDeps, res: Response, signal: 
   if (engine === 'rule') {
     // the deterministic rule director: no key needed, no cache, answers are labelled `rule`
     const catalog = await d.catalog.get();
-    return { provider: new RuleProvider(catalog), cache: null, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal };
+    return { provider: new RuleProvider(catalog), cache: null, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal, splitLongLines: true };
   }
   const p = d.settings.provider();
   if (!p.provider) {
@@ -44,7 +44,7 @@ export async function directorDeps(d: DirectorRouteDeps, res: Response, signal: 
   const catalog = await d.catalog.get();
   const eff = d.settings.effective();
   return {
-    provider: p.provider, cache: d.cache, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal,
+    provider: p.provider, cache: d.cache, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal, splitLongLines: true,
     ...(eff.provider === 'openai' && isLocal(eff.openai.baseUrl) ? { backgroundLimit: 60 } : {}),
   };
 }

@@ -74,9 +74,15 @@ export function memoryThroughWhite(key: KeyFn, bi: number, strength: 0 | 1, meta
   key(null, 'fade', bi, strength === 1 ? MEMORY_WHITE_HOLD_IN : MEMORY_WHITE_HOLD_OUT, { color: 'white', alpha: 0 }, metaFade, MEMORY_WHITE_OUT, 'inOutSine');
 }
 
-/** Which existing beat each directed beat reproduces: by keepId, then paragraph + speaker + ordinal, then identical text. */
+/**
+ * Which existing beat each directed beat reproduces: by keepId, then paragraph + speaker + ordinal, then identical text.
+ * The later pieces of a split line (`splitOf`) do not take part in the ordinal count (so a model that cuts a line one more or one less
+ * time does not shift the ids of the ordinary lines after it); they are matched by their first piece: the first piece's old id plus the
+ * piece number, among the old beats that were its continuations (`splitFrom`). The old continuations stay out of the ordinal count too.
+ */
 export function matchBeats(oldBeats: readonly Beat[], directed: readonly DirectedBeat[], paras: readonly Paragraph[]): Array<string | null> {
   const claimed = new Set<string>();
+  const isPiece = (b: DirectedBeat) => b.splitOf !== undefined;
   const out: Array<string | null> = directed.map((b) => {
     if (b.keepId && oldBeats.some((o) => o.id === b.keepId)) {
       claimed.add(b.keepId);
@@ -92,9 +98,10 @@ export function matchBeats(oldBeats: readonly Beat[], directed: readonly Directe
   };
   const oldByKey = new Map<string, string>();
   const seenOld = new Map<string, number>();
-  for (const o of oldBeats) oldByKey.set(ordKey(paragraphOfOffset(paras, o.sourceOffset), o.speakerId, seenOld), o.id);
+  for (const o of oldBeats) if (o.splitFrom === undefined) oldByKey.set(ordKey(paragraphOfOffset(paras, o.sourceOffset), o.speakerId, seenOld), o.id);
   const seenNew = new Map<string, number>();
   directed.forEach((b, i) => {
+    if (isPiece(b)) return;
     const k = ordKey(b.paragraph, b.speaker, seenNew);
     if (out[i] !== null) return;
     const id = oldByKey.get(k);
@@ -104,9 +111,25 @@ export function matchBeats(oldBeats: readonly Beat[], directed: readonly Directe
     }
   });
   directed.forEach((b, i) => {
-    if (out[i] !== null || !b.text) return;
-    const o = oldBeats.find((x) => !claimed.has(x.id) && x.text === b.text);
+    if (out[i] !== null || !b.text || isPiece(b)) return;
+    const o = oldBeats.find((x) => !claimed.has(x.id) && x.splitFrom === undefined && x.text === b.text);
     if (o) {
+      out[i] = o.id;
+      claimed.add(o.id);
+    }
+  });
+  // the later pieces: the k-th old continuation of the first piece's old beat
+  const pieceNo = new Map<number, number>();
+  directed.forEach((b, i) => {
+    if (!isPiece(b)) return;
+    const head = b.splitOf!;
+    const k = (pieceNo.get(head) ?? 0) + 1;
+    pieceNo.set(head, k);
+    if (out[i] !== null) return;
+    const headId = out[head];
+    if (!headId) return;
+    const o = oldBeats.filter((x) => x.splitFrom === headId)[k - 1];
+    if (o && !claimed.has(o.id)) {
       out[i] = o.id;
       claimed.add(o.id);
     }
@@ -137,6 +160,12 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
   const beatIds: string[] = d.beats.map((_, i) => matched[i] ?? nextId(`${scene.id}b`, usedBeat, holder));
   beatIds.forEach((id) => usedBeat.add(id));
   const memoryEdges = memoryBoundaries(d.beats);
+  /** A later piece of a split line points at its first piece; a fixed beat that was a continuation before keeps pointing where it did (the director never writes `overflow`). */
+  const splitFromOf = (b: DirectedBeat): { splitFrom?: string } => {
+    if (b.splitOf !== undefined) return { splitFrom: beatIds[b.splitOf]! };
+    const old = b.keepId ? oldBeats.find((o) => o.id === b.keepId) : undefined;
+    return old?.splitFrom !== undefined && beatIds.includes(old.splitFrom) ? { splitFrom: old.splitFrom } : {};
+  };
   d.beats.forEach((b, i) => {
     const para = paragraphs[b.paragraph];
     const beat: Beat = {
@@ -154,6 +183,7 @@ export function expandScene(inp: ExpandInput): { scene: Scene; warnings: string[
       style: { overrides: {}, meta: rule() },
       meta: ai(b.reason),
       ...(b.kind === 'dialogue' && b.speaker ? { speakerId: b.speaker } : {}),
+      ...splitFromOf(b),
     };
     scene.beats.push(beat);
   });
