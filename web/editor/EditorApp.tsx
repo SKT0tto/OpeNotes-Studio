@@ -17,7 +17,7 @@ import { useCatalog } from './useCatalog';
 import { HubCharacter, HubCharacterMenu, HubModelPicker, useHubCharacterPrefs } from './HubCharacter';
 import { DEFAULT_PLACEMENT, resolveHubModel } from './hubCharacterLogic';
 import { HubBackgroundMenu, HubBackgroundPicker, useHubBackgroundPrefs, useHubCustomImage, StageBackground } from './HubBackground';
-import { resolveHubBackground } from './hubBackgroundLogic';
+import { effectiveBackgroundPrefs, resolveHubBackground } from './hubBackgroundLogic';
 
 const when = (t: number) => new Date(t).toLocaleString('zh-CN', { hour12: false });
 const ago = (t: number) => {
@@ -81,9 +81,15 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
   const [charPrefs, setCharPrefs] = useHubCharacterPrefs();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
-  const [bgPrefs, setBgPrefs] = useHubBackgroundPrefs();
+  const [storedBgPrefs, setBgPrefs] = useHubBackgroundPrefs();
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const customBg = useHubCustomImage();
+  // the choice that really applies (a deleted picture / a vanished library background is 自动): the menu checks it and it is what is stored
+  const bgPrefs = effectiveBackgroundPrefs(storedBgPrefs, catalog?.backgrounds ?? null, customBg.info);
+  const bgFellBack = bgPrefs !== storedBgPrefs && (storedBgPrefs.mode === 'image' || (catalog?.backgrounds.length ?? 0) > 0);
+  useEffect(() => {
+    if (bgFellBack) setBgPrefs(bgPrefs);
+  }, [bgFellBack, bgPrefs, setBgPrefs]);
   useEffect(() => {
     if (!allOpen && !envOpen) return;
     const onKey = (e: KeyboardEvent) => {

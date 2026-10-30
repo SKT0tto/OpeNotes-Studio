@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DEFAULT_BACKGROUND_PREFS, DIM_MAX, hubImageUrl, parseBackgroundPrefs, resolveHubBackground, serializeBackgroundPrefs,
+  DEFAULT_BACKGROUND_PREFS, DIM_MAX, effectiveBackgroundPrefs, hubImageUrl, parseBackgroundPrefs, resolveHubBackground, serializeBackgroundPrefs,
 } from '../../web/editor/hubBackgroundLogic';
 
 const bgs = [{ id: 'bg_a', url: '/a.png' }, { id: 'bg_b', url: '/b.png' }];
@@ -43,5 +43,25 @@ describe('resolveHubBackground', () => {
     expect(hubImageUrl({ exists: true, version: '123' })).toBe('/api/hub/background/image?v=123');
     expect(resolveHubBackground(p('image'), bgs, { exists: false })).toEqual({ kind: 'auto' });
     expect(resolveHubBackground(p('image'), bgs, null)).toEqual({ kind: 'image', url: null });
+  });
+});
+
+describe('effectiveBackgroundPrefs: the menu check mark follows what is really shown', () => {
+  const prefs = (mode: 'auto' | 'asset' | 'image' | 'gradient', asset?: string) => ({ mode, ...(asset ? { asset } : {}), dim: 0.3 });
+  it('a deleted personal picture becomes 自动 (the dimming is kept)', () => {
+    expect(effectiveBackgroundPrefs(prefs('image'), bgs, { exists: false })).toEqual({ mode: 'auto', dim: 0.3 });
+    expect(effectiveBackgroundPrefs(prefs('image'), bgs, { exists: true, version: '1' })).toEqual(prefs('image'));
+  });
+  it('a vanished library background becomes 自动; a present one stays', () => {
+    expect(effectiveBackgroundPrefs(prefs('asset', 'bg_zzz'), bgs, null)).toEqual({ mode: 'auto', dim: 0.3 });
+    expect(effectiveBackgroundPrefs(prefs('asset', 'bg_a'), bgs, null)).toEqual(prefs('asset', 'bg_a'));
+  });
+  it('nothing changes while the sources load, nor for 自动 / 纯色', () => {
+    const img = prefs('image');
+    expect(effectiveBackgroundPrefs(img, bgs, null)).toBe(img);
+    const asset = prefs('asset', 'bg_a');
+    expect(effectiveBackgroundPrefs(asset, null, null)).toBe(asset);
+    expect(effectiveBackgroundPrefs(prefs('gradient'), bgs, { exists: false })).toEqual(prefs('gradient'));
+    expect(effectiveBackgroundPrefs(prefs('auto'), bgs, { exists: false })).toEqual(prefs('auto'));
   });
 });

@@ -71,3 +71,16 @@ export function resolveHubBackground(
   }
   return { kind: 'auto' };
 }
+
+/**
+ * The preference as it really applies: a choice whose source is gone (the personal picture was deleted, the library background vanished)
+ * is 自动, so the menu's check mark follows what is on screen. Nothing changes while the sources are still loading (null).
+ */
+export function effectiveBackgroundPrefs(
+  prefs: HubBackgroundPrefs,
+  backgrounds: ReadonlyArray<{ id: string; url: string }> | null,
+  image: HubImageInfo | null,
+): HubBackgroundPrefs {
+  if (prefs.mode !== 'asset' && prefs.mode !== 'image') return prefs;
+  return resolveHubBackground(prefs, backgrounds, image).kind === 'auto' ? { mode: 'auto', dim: prefs.dim } : prefs;
+}
