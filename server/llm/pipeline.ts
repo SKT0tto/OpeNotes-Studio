@@ -5,7 +5,7 @@ import { LlmCache, generateCached } from './cache';
 import type { Validated } from '../../shared/director/validate';
 
 export interface RunInfo {
-  pass: 'breakdown' | 'scene';
+  pass: 'breakdown' | 'scene' | 'split';
   label: string;
   provider: string;
   model: string;
