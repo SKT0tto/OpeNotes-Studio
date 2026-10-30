@@ -86,9 +86,12 @@ export function splitOps(project: Project, sceneId: string, splits: SplitPlan[],
   return ops;
 }
 
-/** Ops of several scenes as replay items (ids from 1). */
+/**
+ * Ops as replay items (ids from 1). The person pressed the button on these very lines, so cutting a line they edited by hand is confirmed
+ * (`confirm`: the text stays, it is only cut); a LOCKED line still asks (needs_unlock) and is left alone.
+ */
 export function replayItems(ops: AgentOp[]): ReplayItem[] {
-  return ops.map((op, i) => ({ id: i + 1, op }));
+  return ops.map((op, i) => ({ id: i + 1, op, confirm: true }));
 }
 
 /** Scenes (ids, in order) that have at least one over-long line. */

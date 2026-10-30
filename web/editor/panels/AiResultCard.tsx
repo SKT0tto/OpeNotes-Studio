@@ -60,6 +60,7 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
           <ul className="ai-warn">{r.report.protectedKept.map((t, i) => <li key={i}>{t}</li>)}</ul>
         </details>
       )}
+      {r.splits && r.splits.length > 0 && <SplitSection splits={r.splits} />}
       {r.applied && shown !== 'pending' && scopes.length > 0 && (
         <p className="hint ai-diff-line">{scopes.map((sc) => `${DIFF_LABEL[sc]} ${diff.counts[sc]}`).join(' · ')}</p>
       )}
@@ -96,7 +97,6 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
           )}
         </div>
       )}
-      {r.splits && r.splits.length > 0 && <SplitSection splits={r.splits} />}
       {r.warnings.length > 0 && (
         <details>
           <summary data-testid="ai-warnings">{r.warnings.length} 条修复 / 警告</summary>

@@ -56,7 +56,8 @@ export async function splitLongLines(req: SplitRequest): Promise<SplitSummary> {
       if (wanted.length === 0) continue;
       const r = await postSplitLines(project, sceneId, wanted.map((w) => w.beatId));
       sum.skipped += r.skipped.length;
-      if (r.splits.length > 0) sum.by = r.engine;
+      // who cut them: the rule splitter is also the fallback of a model call that failed, so say AI only when a model really decided one
+      if (r.splits.length > 0) sum.by = r.splits.some((s) => s.by !== 'rule') || sum.by === 'ai' ? 'ai' : 'rule';
       plans.push({ sceneId, splits: r.splits.map((s) => ({ beatId: s.beatId, by: s.by, pieces: s.pieces })) });
     }
     // ids are taken from the project as it is NOW (it may have been edited while the requests ran)

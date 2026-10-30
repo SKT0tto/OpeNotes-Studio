@@ -149,6 +149,17 @@ describe('applying a batch is one undo step', () => {
     expect(overLongRows(st().project!)).toEqual([]);
   });
 
+  it('a line the person edited by hand is cut when they press the button (the text stays); only a lock stops it', () => {
+    const p = clone(st().project!);
+    const s = p.scenes[2]!;
+    for (const b of s.beats) b.meta.source = 'user';
+    st().open(p, 'etag');
+    const { plan, applied } = st().applyAgentOps(replayItems(splitOps(p, s.id, plansOf(p, s))), '自动拆分长句', 'g_test');
+    expect(applied).toBe(2);
+    expect(plan.items.every((i) => i.status === 'ok')).toBe(true);
+    expect(overLongRows(st().project!)).toEqual([]);
+  });
+
   it('a locked line is reported and left alone; the rest still splits', () => {
     const p = clone(st().project!);
     const s = p.scenes[2]!;
