@@ -200,7 +200,7 @@ describe('the rule director (travel only) derives memory, dim and shake', () => 
 describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
   const old = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-5.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   // the frozen scene-6 text (tests/fixtures/prompts/scene-6.system.txt); scene-7 adds one line to it (next block)
-  const now = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').split('\n');
+  const now = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   it('same number of lines; the type line and the insert line changed', () => {
     expect(now.length).toBe(old.length);
     const changed = now.filter((l, i) => l !== old[i]);
@@ -212,7 +212,7 @@ describe('prompt scene-6 differs from scene-5 only on the insert lines', () => {
 });
 
 describe('prompt scene-7 differs from scene-6 only by the long-line rule', () => {
-  const six = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').split('\n');
+  const six = fs.readFileSync(path.resolve('tests/fixtures/prompts/scene-6.system.txt'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   const seven = SCENE_SYSTEM.split('\n');
   it('exactly one added line, at the end of the beats section; every other line is byte-identical', () => {
     expect(seven.length).toBe(six.length + 1);
