@@ -23,7 +23,11 @@ const sceneNo = (project: Project, id: string) => project.scenes.findIndex((s) =
 
 function titleOf(project: Project, items: CardItem[]): string {
   const recs = items.filter((i) => i.origin === 'applied');
-  if (recs.length === 0) return '没有改动';
+  if (recs.length === 0) {
+    // only things that wait for the person (locked / hand-made content): not 「没有改动」, which reads as 「nothing was done」
+    const waiting = items.filter((i) => i.origin === 'pending').length;
+    return waiting > 0 ? `${waiting} 项需要你确认` : '没有改动';
+  }
   const scenes = [...new Set(recs.map((i) => i.record.op.sceneId))];
   const byScope = new Map<string, number>();
   for (const i of recs) byScope.set(AGENT_SCOPE_LABEL[scopeOf(i.record.op)], (byScope.get(AGENT_SCOPE_LABEL[scopeOf(i.record.op)]) ?? 0) + 1);

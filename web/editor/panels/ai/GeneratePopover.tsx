@@ -2,7 +2,7 @@
  * 「生成 ▾」: the compact options of a generation (what to generate, which part, which engine, preview / overwrite / memory). The values live in
  * `useDirectorRun().controls`, not in a section of the panel; the 「生成」 button runs the request (`generateActions.ts`).
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { SCOPE_LABEL, SCOPE_NAMES, type ScopeName } from '@shared/director/scope';
 import { useProject } from '../../../store/projectStore';
 import { useUi } from '../../../store/uiStore';
@@ -21,6 +21,24 @@ export function GeneratePopover({ env, onClose, onOpenSettings }: { env: Directo
   const settingsReady = useAiSettings((s) => !s.loading && !s.error);
   const { engine, scope, target, onlyBeat, overwriteUser, preview, useMem } = d.controls;
   const ref = useRef<HTMLDivElement>(null);
+  // The popover opens upward from the composer: its height is what is left between the top of the panel (the part of it that is on screen)
+  // and the composer, so it always fits and scrolls inside itself.
+  const [room, setRoom] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const host = ref.current?.offsetParent as HTMLElement | null;
+    const panel = host?.closest<HTMLElement>('.ai-panel-root') ?? host?.parentElement;
+    if (!host || !panel) return;
+    const measure = () => {
+      const top = Math.max(panel.getBoundingClientRect().top, 0);
+      setRoom(Math.max(96, Math.floor(host.getBoundingClientRect().top - top - 8)));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    ro?.observe(panel);
+    ro?.observe(host);
+    return () => { window.removeEventListener('resize', measure); ro?.disconnect(); };
+  }, []);
   const scene = project.scenes.find((s) => s.id === selection.sceneId) ?? project.scenes[0];
   const beats = beatTarget(project, selection, picked);
   const missing = missingScenes(project);
@@ -62,7 +80,7 @@ export function GeneratePopover({ env, onClose, onOpenSettings }: { env: Directo
   const runTestId = which === 'all' ? 'ai-gen-all' : 'ai-regen-scene';
 
   return (
-    <div className="ai-pop" ref={ref} role="dialog" aria-label="生成" data-testid="ai-gen-popover">
+    <div className="ai-pop" ref={ref} role="dialog" aria-label="生成" data-testid="ai-gen-popover" style={room === null ? undefined : { maxHeight: room }}>
       <div className="ai-pop-title">生成</div>
       {!hasText && <p className="hint" data-testid="ai-no-source">这个项目没有原文（不是由小说创建的），不能生成。请在项目列表里用「导入小说开始」创建项目。</p>}
       <div className="ai-pop-targets" role="radiogroup" aria-label="生成什么">

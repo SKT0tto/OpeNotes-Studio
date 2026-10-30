@@ -76,12 +76,18 @@ export interface GenTurn {
   steps: Array<{ stepId: number; sceneIds: string[] }>;
 }
 
-export type TurnState = 'running' | 'failed' | 'cancelled' | 'empty' | 'pending' | 'applied' | 'partial' | 'undone' | 'rejected' | 'conflict';
+export type TurnState = 'running' | 'failed' | 'cancelled' | 'empty' | 'unchanged' | 'pending' | 'applied' | 'partial' | 'undone' | 'rejected' | 'conflict';
+
+/** A result that is waiting but would change nothing: the scene already is what the generator produced. There is nothing to confirm. */
+export const isUnchanged = (c: Card): boolean => c.state === 'pending' && c.result.applied && c.diff.items.length === 0;
 
 export function turnState(t: GenTurn, live: (stepId: number) => boolean): TurnState {
   if (t.status === 'running') return 'running';
-  const cards = Object.values(t.cards);
-  if (cards.length === 0) return t.status === 'failed' ? 'failed' : t.status === 'cancelled' ? 'cancelled' : 'empty';
+  const all0 = Object.values(t.cards);
+  if (all0.length === 0) return t.status === 'failed' ? 'failed' : t.status === 'cancelled' ? 'cancelled' : 'empty';
+  // results with no difference are settled; the rest decides the state of the turn
+  const cards = all0.filter((c) => !isUnchanged(c));
+  if (cards.length === 0) return 'unchanged';
   const shown = cards.map((c) => shownState(c, live));
   const all = (s: ShownState) => shown.every((x) => x === s);
   if (all('accepted')) return 'applied';
@@ -92,7 +98,7 @@ export function turnState(t: GenTurn, live: (stepId: number) => boolean): TurnSt
 }
 
 export const TURN_STATE_LABEL: Record<TurnState, string> = {
-  running: '生成中', failed: '失败', cancelled: '已取消', empty: '没有结果', pending: '待确认', applied: '已应用', partial: '部分应用', undone: '已撤销', rejected: '已拒绝', conflict: '未应用：锁定冲突',
+  running: '生成中', failed: '失败', cancelled: '已取消', empty: '没有结果', unchanged: '没有变化', pending: '待确认', applied: '已应用', partial: '部分应用', undone: '已撤销', rejected: '已拒绝', conflict: '未应用：锁定冲突',
 };
 
 /** The undo step of this turn that 「撤销这次」 would revert: its newest step, and only while that one is on top of the undo stack. */
@@ -111,6 +117,7 @@ export function turnHistoryText(t: GenTurn, ref: (sceneId: string) => SceneRef |
   if (t.status === 'running' || t.status === 'failed' || t.status === 'cancelled') return null;
   const cards = Object.values(t.cards);
   if (cards.length === 0) return null;
+  if (cards.every(isUnchanged)) return `${t.who}生成了 ${cards.length} 场，与项目里现有的内容没有差别（没有改动）`;
   const refs = (list: Card[]) => list.flatMap((c) => { const r = ref(c.sceneId); return r ? [r] : []; }).sort((a, b) => a.no - b.no);
   const name = (list: SceneRef[]) => {
     const named = list.slice(0, 6).map((s) => `第${s.no}场「${s.title}」`).join('、');

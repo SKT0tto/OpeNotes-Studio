@@ -64,6 +64,9 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
     setErrorKind(m === null ? undefined : kind);
   };
   const [asked, setAsked] = useState('');
+  // 「先分场看看 → 生成全部」: the breakdown card stays and the second step is its own message, so the history says what was done
+  const [viaReview, setViaReview] = useState(false);
+  const [askedFull, setAskedFull] = useState('');
   const [res, setRes] = useState<BreakdownResponse | null>(null);
   const [ms, setMs] = useState(0);
   // one-click run
@@ -97,6 +100,8 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
     setBusy(true);
     setError(null);
     setAsked('先分场看看');
+    setViaReview(false);
+    setAskedFull('');
     const t = performance.now();
     try {
       setRes(await runBreakdown({ text, title, refresh, engine: firstEngine }));
@@ -136,7 +141,9 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
     setBusy(true);
     setError(null);
     setFinishedAt(0);
-    if (!projectId) setAsked('分场并生成整部演出');
+    if (!projectId) {
+      if (phase === 'review' || viaReview) { setViaReview(true); setAskedFull('生成全部'); } else { setViaReview(false); setAsked('分场并生成整部演出'); }
+    }
     ctl.current = new AbortController();
     if (!projectId) {
       statsRef.current = zero();
@@ -229,12 +236,12 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
       const titles = r.project.scenes.map((s) => s.title);
       if (doneCount > 0) {
         useAiFlow.getState().queue(id, [
-          breakdownEntry({ who: runWho, userText: '分场并生成整部演出', scenes: titles, cast: r.project.cast.length, warnings: res?.warnings.length ?? 0 }),
-          generateEntry({ who: runWho, done: doneCount, total, failed: failed.length, warnings: continuityOf(r.project, catalog).length, notes }),
+          breakdownEntry({ who: runWho, userText: viaReview ? '先分场看看' : '分场并生成整部演出', scenes: titles, cast: r.project.cast.length, warnings: res?.warnings.length ?? 0 }),
+          generateEntry({ who: runWho, done: doneCount, total, failed: failed.length, warnings: continuityOf(r.project, catalog).length, notes, ...(viaReview ? { userText: '生成全部' } : {}) }),
         ]);
       } else if (titles.length > 0) {
         useAiFlow.getState().queue(id, [
-          breakdownEntry({ who: runWho, userText: '分场并生成整部演出', scenes: titles, cast: r.project.cast.length, warnings: res?.warnings.length ?? 0 }),
+          breakdownEntry({ who: runWho, userText: viaReview ? '先分场看看' : '分场并生成整部演出', scenes: titles, cast: r.project.cast.length, warnings: res?.warnings.length ?? 0 }),
           skeletonEntry({ who: runWho, scenes: titles.length }),
         ]);
       }
@@ -290,13 +297,13 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
                 )}
               </AiCard>
             )}
-            {phase === 'review' && res && (
+            {(phase === 'review' || (phase === 'full' && viaReview)) && res && (
               <AiCard
-                state="pending" title={`分场 · ${res.project.scenes.length} 场`} who={provider === 'rule' ? '规则' : provider === 'fixture' ? '回放' : 'AI'} stateLabel="待确认" tone="warn"
+                state={phase === 'review' ? 'pending' : 'applied'} title={`分场 · ${res.project.scenes.length} 场`} who={provider === 'rule' ? '规则' : provider === 'fixture' ? '回放' : 'AI'} stateLabel={phase === 'review' ? '待确认' : '已分场'} tone={phase === 'review' ? 'warn' : 'ok'}
                 bodyTestId="breakdown-view"
                 said={`${res.project.scenes.length} 个场景 · ${res.project.cast.length} 个角色。先看看分得对不对：不满意就改原文重分，满意就建项目（稍后生成）或直接生成全部。`}
                 meta={<>{res.cached && <span className="badge" data-testid="ai-cached">缓存</span>}</>}
-                actions={(
+                actions={phase !== 'review' ? undefined : (
                   <>
                     <button className="btn primary" disabled={busy} onClick={() => void create()} data-testid="ai-create">建项目，稍后生成</button>
                     <button className="btn" disabled={busy || !text.trim()} onClick={() => void full()} data-testid="ai-review-full">生成全部</button>
@@ -327,6 +334,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
                 </ol>
               </AiCard>
             )}
+            {phase === 'full' && viaReview && askedFull && <UserBubble text={askedFull} />}
             {phase === 'full' && (
               <AiCard
                 state={progressState} title={`生成演出${sceneTotal > 0 ? ` · ${doneCount}/${sceneTotal}` : ''}`} who={runWho} stateLabel={progressLabel} tone={progressTone}
@@ -336,7 +344,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
                     {busy && <button className="btn danger" onClick={() => ctl.current?.abort()} data-testid="full-cancel">停止</button>}
                     {!busy && remaining > 0 && local && <button className="btn primary" onClick={() => void full()} data-testid="full-resume">{failed.length > 0 ? `重试失败的 ${failed.length} 场` : `继续生成剩余 ${remaining} 场`}</button>}
                     {!busy && !local && hasFailure && <button className="btn primary" onClick={() => void full()} data-testid="full-retry">重试</button>}
-                    {!busy && !local && hasFailure && <button className="btn" onClick={() => { setError(null); setPhase('input'); }} data-testid="full-back">返回修改</button>}
+                    {!busy && !local && hasFailure && <button className="btn" onClick={() => { setError(null); setViaReview(false); setAskedFull(''); setPhase('input'); }} data-testid="full-back">返回修改</button>}
                     {!busy && projectId && <a className="btn" href={`/play/${projectId}`} target="_blank" rel="noreferrer" data-testid="full-play">放映</a>}
                     {!busy && projectId && <button className="btn primary" onClick={() => void openEditor(projectId)} data-testid="full-edit">进入编辑器继续</button>}
                   </>
@@ -362,8 +370,8 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
                   ))}
                 </ul>
                 <p className="hint" data-testid="full-stats">
-                  <span className={`src ${useRule ? 'src-rule' : 'src-ai'}`}>{useRule ? '规则' : 'AI'}</span>
-                  {' '}{useRule ? '规则运算，没有调用模型' : `${stats.calls} 次调用（缓存命中 ${stats.cached}，修复 ${stats.repairs}）`} · 输入 {stats.inTok} / 输出 {stats.outTok} tokens · {Math.round(stats.ms / 100) / 10} s
+                  <span className={`src ${useRule ? 'src-rule' : 'src-ai'}`}>{runWho}</span>
+                  {' '}{useRule ? '规则运算，没有调用模型' : runWho === '回放' ? '回放测试数据，没有调用模型' : `${stats.calls} 次调用（缓存命中 ${stats.cached}，修复 ${stats.repairs}）`} · 输入 {stats.inTok} / 输出 {stats.outTok} tokens · {Math.round(stats.ms / 100) / 10} s
                 </p>
                 {error && <pre className="bad ai-error" data-testid="ai-error">{error}</pre>}
                 {!busy && finishedAt > 0 && failed.length > 0 && (

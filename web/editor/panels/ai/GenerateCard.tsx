@@ -8,9 +8,9 @@ import { useProject, stepIsLive } from '../../../store/projectStore';
 import { SceneResult } from '../AiResultCard';
 import { useDirectorRun, type DirectorEnv } from '../directorRun';
 import { AiCard, type CardTone } from './AiCard';
-import { TURN_STATE_LABEL, turnState, undoableStep, type GenTurn, type TurnState } from './genTurn';
+import { TURN_STATE_LABEL, isUnchanged, turnState, undoableStep, type GenTurn, type TurnState } from './genTurn';
 
-const TONE: Record<TurnState, CardTone> = { running: 'hint', failed: 'bad', cancelled: 'hint', empty: 'hint', pending: 'warn', applied: 'ok', partial: 'warn', undone: 'hint', rejected: 'hint', conflict: 'bad' };
+const TONE: Record<TurnState, CardTone> = { running: 'hint', failed: 'bad', cancelled: 'hint', empty: 'hint', unchanged: 'hint', pending: 'warn', applied: 'ok', partial: 'warn', undone: 'hint', rejected: 'hint', conflict: 'bad' };
 
 export function UserBubble({ text, children }: { text: string; children?: React.ReactNode }) {
   return (
@@ -21,9 +21,11 @@ export function UserBubble({ text, children }: { text: string; children?: React.
   );
 }
 
-export function GenerateTurn({ turn, env, onRefine, onRouteUndo }: {
+export function GenerateTurn({ turn, env, onRefine, onRouteUndo, onOpenSettings }: {
   turn: GenTurn;
   env: DirectorEnv;
+  /** Opens the AI settings (the rule card offers it when no AI model is set up). */
+  onOpenSettings?: () => void;
   onRefine: (sceneId: string) => void;
   /** The typed command was routed here by mistake: drop the turn and send the words to the assistant. */
   onRouteUndo: (turn: GenTurn) => void;
@@ -35,7 +37,7 @@ export function GenerateTurn({ turn, env, onRefine, onRouteUndo }: {
   const live = stepIsLive;
   const state = turnState(turn, live);
   const cards = Object.values(turn.cards);
-  const pending = cards.filter((c) => c.state === 'pending' && c.result.applied);
+  const pending = cards.filter((c) => c.state === 'pending' && c.result.applied && !isUnchanged(c));
   const finished = Object.values(turn.progress).filter((p) => p.state !== 'start').length;
   const no = (id: string) => project.scenes.findIndex((s) => s.id === id) + 1;
   const first = turn.sceneIds[0];
@@ -49,9 +51,13 @@ export function GenerateTurn({ turn, env, onRefine, onRouteUndo }: {
   const nUndone = cards.filter((c) => c.state === 'accepted' && c.stepId !== undefined && !live(c.stepId)).length;
   const routable = !!turn.routed && !hasSteps;
   const busy = useDirectorRun((s) => s.busy);
-  // 「AI 说」: the generator's own reason for one scene; otherwise what the card is
-  const reason = cards.length === 1 ? cards[0]!.result.direction.reason : '';
-  const said = reason || (turn.who === '规则' ? '规则生成（非 AI）：对白按引号识别，说话人按名字匹配，镜头按固定节奏。' : cards.length > 1 ? `生成好了 ${cards.length} 个场景，先看差异，再决定应用哪些。` : '生成好了，先看差异，再决定应用哪些。');
+  // 「AI 说」: the model's own reason for one scene. A rule result is not the AI speaking: it gets a plain, honest note instead (the rule
+  // engine's reason text is for the run record only)
+  const isRule = turn.who === '规则';
+  const reason = !isRule && cards.length === 1 ? cards[0]!.result.direction.reason : '';
+  const said = isRule
+    ? <>{env.configured ? '这次用的是规则生成（非 AI）' : '还没有设置 AI 模型，这次用规则生成（非 AI）排好了'}：对白按引号识别，说话人按名字匹配，镜头按固定节奏。可以手改。{!env.configured && onOpenSettings && <>{' '}<button className="btn-link" onClick={onOpenSettings} data-testid="ai-rule-setup">设置 AI</button>{' '}后可重新生成。</>}</>
+    : reason || (cards.length > 1 ? `生成好了 ${cards.length} 个场景，先看差异，再决定应用哪些。` : '生成好了，先看差异，再决定应用哪些。');
 
   const topActions = pending.length > 1 ? (
     <span data-testid="ai-batchbar" className="ai-batchbar">
@@ -76,14 +82,17 @@ export function GenerateTurn({ turn, env, onRefine, onRouteUndo }: {
       <UserBubble text={turn.userText}>
         {routable && (
           <div className="hint ai-route" data-testid="ai-route-note">
-            按生成处理 · <button className="btn-link" data-testid="ai-route-undo" onClick={() => onRouteUndo(turn)}>改成发给 AI</button>
+            按生成处理 · {env.configured
+              ? <button className="btn-link" data-testid="ai-route-undo" onClick={() => onRouteUndo(turn)}>改成发给 AI</button>
+              : <span data-testid="ai-route-noai" title="发给 AI 需要 AI 模型：先到「AI 设置」配置">发给 AI 需要先设置 AI 模型</span>}
           </div>
         )}
       </UserBubble>
       <AiCard
         state={state} title={title} who={turn.who} stateLabel={stateLabel} tone={TONE[state]}
         bodyTestId="ai-panel" bodyAttrs={{ 'data-turn': String(turn.id) }}
-        said={state === 'applied' || state === 'pending' || state === 'partial' || state === 'undone' ? said : undefined}
+        saidLabel={isRule ? null : undefined} saidTestId={isRule ? 'ai-rule-note' : undefined}
+        said={state === 'applied' || state === 'pending' || state === 'unchanged' || state === 'partial' || state === 'undone' ? said : undefined}
         topActions={topActions} actions={hasActions ? actions : undefined}
         detail={turn.log.length > 0 ? (
           <ul className="ai-log" data-testid="ai-log">

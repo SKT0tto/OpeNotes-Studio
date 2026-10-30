@@ -478,14 +478,21 @@
 .ai-result.single { border-top: 0; padding-top: 0; }
 .ai-result.single > summary { list-style: none; cursor: default; }
 .ai-result.single > summary::-webkit-details-marker { display: none; }
+.ai-result > summary > .src { display: none; } /* the card header says the source once */
 .ai-result.single > summary > strong, .ai-result.single > summary > .src, .ai-result.single > summary > [data-testid="ai-state"] { display: none; }
 .ai-result-head { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .ai-continuity-block { flex: none; border: 1px solid var(--line); border-radius: var(--radius-s); padding: 4px 8px; background: var(--bg-2); }
 /* the composer */
 .ai-composer { flex: none; position: relative; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 6px; }
-.ai-context { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: var(--fs-label); }
+.ai-context { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; font-size: var(--fs-label); min-width: 0; white-space: nowrap; }
+.ai-context > .hint:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ai-context > [data-testid="agent-cost"] { margin-left: auto; flex: none; }
 .ai-context .chk { display: flex; gap: 4px; align-items: center; color: var(--text-1); cursor: pointer; }
-.agent-suggest { display: flex; gap: 4px; flex-wrap: wrap; }
+.agent-suggest { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.agent-suggest > .btn-s { flex: none; white-space: nowrap; }
+.agent-suggest:empty { display: none; }
+/* a short screen: the stream keeps the height (the suggestions are also one tap away in 「生成 ▾」 and as typed words) */
+@media (max-height: 760px) { .agent-suggest { display: none; } }
 .btn-s.accent { border-color: var(--accent); color: var(--accent); }
 .agent-attachments { display: flex; gap: 4px; flex-wrap: wrap; padding: 2px 0; }
 .agent-attachment { position: relative; }
@@ -493,13 +500,14 @@
 .agent-attachment .btn-s { position: absolute; top: 0; right: 0; padding: 0 4px; }
 .agent-input { display: flex; gap: 6px; align-items: stretch; }
 .agent-input.drop { outline: 2px dashed var(--accent, #6aa0ff); }
-.ai-buttons-col { display: flex; flex-direction: column; gap: 4px; flex: none; }
-.ai-buttons-col .btn { min-width: 62px; }
-.ai-buttons-col .btn.on { background: var(--accent-weak); border-color: var(--accent); }
+.ai-buttons-row { display: flex; gap: 6px; align-items: center; }
+.ai-buttons-row .grow { flex: 1; }
+.ai-buttons-row .btn { min-width: 62px; }
+.ai-buttons-row .on { background: var(--accent-weak); border-color: var(--accent); }
 .ai-reason { margin: 0; }
-.agent-input textarea { flex: 1; resize: none; min-height: 52px; max-height: 120px; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 4px 6px; font: inherit; }
+.agent-input textarea { flex: 1; resize: none; min-height: 30px; max-height: 110px; overflow-y: auto; background: var(--bg-1); color: var(--text-1); border: 1px solid var(--line); border-radius: var(--radius-s); padding: 4px 6px; font: inherit; }
 /* the 「生成 ▾」 popover */
-.ai-pop { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: 4px; z-index: 20; max-height: min(430px, 62vh); overflow: auto; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: var(--bg-3); border: 1px solid var(--line); border-radius: var(--radius-s); box-shadow: 0 -6px 22px rgba(0, 0, 0, .4); }
+.ai-pop { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: 4px; z-index: 20; max-height: 60vh; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: var(--bg-3); border: 1px solid var(--line); border-radius: var(--radius-s); box-shadow: 0 -6px 22px rgba(0, 0, 0, .4); }
 .ai-pop-title { font-weight: 600; }
 .ai-pop-targets { display: flex; flex-direction: column; gap: 3px; }
 .ai-pop .chk { display: flex; gap: 6px; align-items: center; color: var(--text-1); cursor: pointer; }

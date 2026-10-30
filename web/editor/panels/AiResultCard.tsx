@@ -39,8 +39,10 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
   const selectable = scopes.filter((s) => s !== 'structure');
   const allChecked = selectable.every((s) => card.checked.includes(s));
   const nSel = selectable.filter((s) => card.checked.includes(s)).length;
-  const stateText = shown === 'pending' && !r.applied ? '未应用（锁定冲突）' : STATE_TEXT[shown];
-  const tone = shown === 'accepted' ? 'ok' : shown === 'pending' ? (r.applied ? 'warn' : 'bad') : 'hint';
+  // nothing differs from the scene as it is: there is nothing to confirm, so the result is settled (no 待确认, no 应用)
+  const unchanged = shown === 'pending' && r.applied && diff.items.length === 0;
+  const stateText = unchanged ? '没有变化' : shown === 'pending' && !r.applied ? '未应用（锁定冲突）' : STATE_TEXT[shown];
+  const tone = shown === 'accepted' ? 'ok' : shown === 'pending' ? (unchanged ? 'hint' : r.applied ? 'warn' : 'bad') : 'hint';
   return (
     <details className={`ai-result ai-card-${shown}${single ? ' single' : ''}`} open={open} data-testid="ai-result" data-scene={r.sceneId} data-state={shown === 'undone' ? 'undone' : card.state}>
       <summary className="ai-result-head">
@@ -50,7 +52,6 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
         {r.cached && <span className="badge" data-testid="ai-cached" title="输入没有变化，直接用了上次的结果；想要不同的结果请点「换一版」">缓存</span>}
         {diff.items.length > 0 && <span className="hint">{diff.items.length} 项变化</span>}
       </summary>
-      {isRule && <p className="hint" data-testid="ai-rule-note">规则生成（非 AI）：对白按引号识别，说话人按名字匹配，镜头按固定节奏。可手改，也可配置 AI 后重新生成。</p>}
       {r.conflicts.length > 0 && <ul className="bad" data-testid="ai-conflicts">{r.conflicts.map((c, i) => <li key={i}>{c.label}</li>)}</ul>}
       {r.report.protectedKept.length > 0 && (
         <details>
@@ -61,7 +62,8 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
       {r.applied && shown !== 'pending' && scopes.length > 0 && (
         <p className="hint ai-diff-line">{scopes.map((sc) => `${DIFF_LABEL[sc]} ${diff.counts[sc]}`).join(' · ')}</p>
       )}
-      {r.applied && shown === 'pending' && (
+      {unchanged && <p className="hint" data-testid="ai-unchanged">与当前内容没有差别，没有需要应用的改动。</p>}
+      {r.applied && shown === 'pending' && !unchanged && (
         <div className="ai-diff" data-testid="ai-diff">
           {scopes.length === 0 ? <p className="hint">与当前内容没有差别。</p> : (
             <>
@@ -101,7 +103,7 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
       )}
       {(card.state === 'pending' || onRefine) && (
         <div className="ai-actions">
-          {card.state === 'pending' && r.applied && (
+          {card.state === 'pending' && r.applied && !unchanged && (
             <>
               <button className="btn primary" onClick={() => onAccept(true)} data-testid="ai-accept-all">应用全部</button>
               {selectable.length > 0 && (diff.structural || selectable.length > 1) && <button className="btn" disabled={nSel === 0 || (!diff.structural && allChecked)} onClick={() => onAccept(false)} data-testid="ai-accept-sel">应用所选 ({nSel})</button>}
@@ -113,7 +115,7 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
       )}
       <details className="ai-detail">
         <summary>{isRule ? '规则给出的演出意图' : '模型给出的演出意图'}（{r.direction.beats.length} 个节拍） · {run ? providerLabel(run.provider, run.model) : ''} · {r.runs.length} 次调用 · {ms} ms{tokens > 0 ? ` · ${tokens} tokens` : ''}{r.runs.some((x) => x.repaired) ? ' · 含一次修复调用' : ''}</summary>
-        <p className="hint">{r.direction.reason}</p>
+        {!isRule && <p className="hint">{r.direction.reason}</p>}
         <pre className="ai-json" data-testid="ai-intent">{JSON.stringify(r.direction, null, 1)}</pre>
       </details>
     </details>

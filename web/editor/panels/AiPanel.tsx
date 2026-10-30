@@ -191,7 +191,7 @@ function AiPanelBody({ onFocusBeat, cameraRequest }: { onFocusBeat: (sceneId: st
             }
             if (it.node === 'generate') {
               const t = turns.find((x) => x.id === it.id);
-              return t ? <GenerateTurn key={it.key} turn={t} env={env} onRefine={refine} onRouteUndo={routeUndo} /> : null;
+              return t ? <GenerateTurn key={it.key} turn={t} env={env} onRefine={refine} onRouteUndo={routeUndo} onOpenSettings={() => setShowSettings(true)} /> : null;
             }
             const e = entries.find((x) => x.id === it.id);
             return e ? <OnboardTurn key={it.key} entry={e} env={env} /> : null;

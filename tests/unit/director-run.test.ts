@@ -3,7 +3,7 @@ import { clone } from '../../shared/project/mutate';
 import type { Project } from '../../shared/schema/project';
 import { postScene } from '../../web/directorApi';
 import { DEFAULT_CONTROLS, isDirectedScene, useDirectorRun, usesRule, whoLabel, type RunOptions } from '../../web/editor/panels/directorRun';
-import { shownState, turnHistoryText, turnState, undoableStep } from '../../web/editor/panels/ai/genTurn';
+import { isUnchanged, shownState, turnHistoryText, turnState, undoableStep } from '../../web/editor/panels/ai/genTurn';
 import { beatTarget, missingScenes } from '../../web/editor/panels/ai/generateActions';
 import { useAgent } from '../../web/store/agentStore';
 import { stepIsLive, useProject } from '../../web/store/projectStore';
@@ -386,3 +386,26 @@ describe('a typed command routed to generation', () => {
     expect(useDirectorRun.getState().busy).toBe(false);
   });
 });
+
+describe('a result that changes nothing is settled, not 「待确认」', () => {
+  const ref = (sid: string) => { const i = project.scenes.findIndex((s) => s.id === sid); return i < 0 ? null : { no: i + 1, title: project.scenes[i]!.title }; };
+  it('turn state 「没有变化」 and an honest history line; a card that does change something still waits', async () => {
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(true, {}, env, api);
+    const turn = last();
+    expect(turnState(turn, stepIsLive)).toBe('pending');
+    const cards = Object.values(turn.cards);
+    for (const c of cards) c.diff = { ...c.diff, items: [] };
+    expect(cards.every(isUnchanged)).toBe(true);
+    expect(turnState(turn, stepIsLive)).toBe('unchanged');
+    expect(turnHistoryText(turn, ref, stepIsLive)).toContain('没有差别');
+    expect(turnHistoryText(turn, ref, stepIsLive)).not.toContain('等待用户确认');
+    // one card with a real difference decides the state of the turn again
+    const [first] = Object.values(turn.cards);
+    first!.diff = answerDiffItem(first!.diff);
+    expect(turnState(turn, stepIsLive)).toBe('pending');
+  });
+});
+function answerDiffItem(d: Parameters<typeof isUnchanged>[0]['diff']) {
+  return { ...d, items: [{ scope: 'camera', where: 'x', field: 'f', before: 'a', after: 'b' }] as unknown as typeof d.items };
+}

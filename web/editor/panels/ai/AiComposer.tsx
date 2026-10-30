@@ -3,7 +3,7 @@
  * generation), the one input box with 附图, the 「生成 ▾」 popover and 发送 / 停止. A typed command that means exactly one generation action
  * goes to generation (see `intent.ts`); everything else is an instruction for the assistant, which needs an AI model.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { LIVE_MAX_OPS } from '@shared/agent/live';
 import { directorMemories, memoryReviewInstruction } from '@shared/agent/memory';
 import { MAX_FRAMES } from '@shared/agent/frames';
@@ -48,6 +48,13 @@ export function AiComposer({ env, popoverOpen, setPopoverOpen, onOpenSettings }:
   const input = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { void useMemories.getState().load(project.id); }, [project.id]);
   useEffect(() => { input.current?.focus(); }, [focusTick]);
+  // one line to start with, growing with what is typed (up to the CSS max-height); the stream keeps the height
+  useLayoutEffect(() => {
+    const el = input.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight + 2}px`;
+  }, [text]);
   const styleMemories = mem.enabled ? directorMemories(mem.memories, project.id).length : 0;
   const scene = project.scenes.find((s) => s.id === selection.sceneId);
   const beatIdx = scene?.beats.findIndex((b) => b.id === selection.beatId) ?? -1;
@@ -146,18 +153,19 @@ export function AiComposer({ env, popoverOpen, setPopoverOpen, onOpenSettings }:
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => { if (e.dataTransfer.files.length) { e.preventDefault(); setDragging(false); void addFiles([...e.dataTransfer.files]); } }}>
         <input ref={fileInput} type="file" accept="image/*,video/*" multiple hidden data-testid="agent-attach-input" onChange={(e) => { void addFiles([...(e.target.files ?? [])]); e.target.value = ''; }} />
-        <textarea ref={input} value={text} rows={2} data-testid="agent-input"
-          placeholder={without ? '未配置 AI：只能输入「重新生成这一场」「生成第2场」「生成全部场景」；改写需要 AI 模型' : '对 AI 说点什么…（Enter 发送，Shift+Enter 换行，Ctrl+K 聚焦；可以拖入或粘贴截图）'}
+        <textarea ref={input} value={text} rows={1} data-testid="agent-input"
+          placeholder={without ? '未配置 AI：可输入「生成这一场」「生成全部场景」' : '对 AI 说点什么…（Enter 发送，Shift+Enter 换行）'}
           onPaste={(e) => { const files = [...e.clipboardData.files].filter((f) => f.type.startsWith('image/')); if (files.length) { e.preventDefault(); void addFiles(files); } }}
           onChange={(e) => a.setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(text); } }} />
-        <div className="ai-buttons-col">
-          <button className={`btn${popoverOpen ? ' on' : ''}`} aria-expanded={popoverOpen} data-testid="ai-gen-chip" onClick={() => setPopoverOpen(!popoverOpen)} title="生成：重新生成场景的演出，先看差异再应用">生成 ▾</button>
-          {genBusy ? <button className="btn danger" data-testid="ai-cancel" onClick={() => useDirectorRun.getState().cancel()}>停止</button>
-            : running ? <button className="btn" data-testid="agent-stop" onClick={() => a.cancel()}>停止</button>
-              : <button className="btn primary" data-testid="agent-send" disabled={!canSend} title={reason || undefined} onClick={() => submit(text)}>发送</button>}
-          <button className="btn-s" data-testid="agent-attach" title={`附上截图或短视频（拖进来、粘贴也可以；最多 ${MAX_FRAMES} 张，视频取几帧）`} disabled={running || attach.length >= MAX_FRAMES} onClick={() => fileInput.current?.click()}>附图</button>
-        </div>
+      </div>
+      <div className="ai-buttons-row">
+        <button className="btn-s" data-testid="agent-attach" title={`附上截图或短视频（拖进来、粘贴也可以；最多 ${MAX_FRAMES} 张，视频取几帧）`} disabled={running || attach.length >= MAX_FRAMES} onClick={() => fileInput.current?.click()}>附图</button>
+        <button className={`btn-s${popoverOpen ? ' on' : ''}`} aria-expanded={popoverOpen} data-testid="ai-gen-chip" onClick={() => setPopoverOpen(!popoverOpen)} title="生成：重新生成场景的演出，先看差异再应用">生成 ▾</button>
+        <span className="grow" />
+        {genBusy ? <button className="btn danger" data-testid="ai-cancel" onClick={() => useDirectorRun.getState().cancel()}>停止</button>
+          : running ? <button className="btn" data-testid="agent-stop" onClick={() => a.cancel()}>停止</button>
+            : <button className="btn primary" data-testid="agent-send" disabled={!canSend} title={reason || undefined} onClick={() => submit(text)}>发送</button>}
       </div>
       {reason && <p className="hint ai-reason" data-testid="ai-send-reason">{reason}</p>}
     </div>

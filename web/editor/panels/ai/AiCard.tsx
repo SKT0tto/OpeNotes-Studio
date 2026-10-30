@@ -18,6 +18,8 @@ export interface AiCardProps {
   tone?: CardTone | undefined;
   /** 「AI 说」 line. */
   said?: ReactNode;
+  /** The tag in front of `said`: 「AI 说」 by default; null for a line that is not the AI speaking (a plain note, e.g. a rule result). */
+  saidLabel?: string | null;
   /** Right of the state: small grey facts (provider, calls, ms). */
   meta?: ReactNode;
   /** Right under 「AI 说」 (batch actions that are about the whole card, like 应用全部 N 场). */
@@ -44,7 +46,7 @@ export function whoClass(who: string | undefined): string {
 export function AiCard(p: AiCardProps) {
   const body = (
     <>
-      {p.said !== undefined && p.said !== null && <div className="ai-said" data-testid={p.saidTestId}><span className="agent-tag">AI 说</span>{p.said}</div>}
+      {p.said !== undefined && p.said !== null && <div className="ai-said" data-testid={p.saidTestId}>{p.saidLabel !== null && <span className="agent-tag">{p.saidLabel ?? 'AI 说'}</span>}{p.said}</div>}
       {p.topActions && <div className="ai-actions">{p.topActions}</div>}
       {p.children}
       {p.actions && <div className="ai-actions">{p.actions}</div>}
@@ -58,9 +60,9 @@ export function AiCard(p: AiCardProps) {
   );
   const head = (
     <div className="ai-card-head">
-      <span className="ai-card-who" data-testid={p.who === 'AI' ? 'ai-badge' : undefined}>AI</span>
+      {/* the source is said once: 「AI」, or 「规则」 / 「回放」 in its place, never both */}
+      <span className={`ai-card-who${p.who && p.who !== 'AI' ? ` src ${whoClass(p.who)}` : ''}`} data-testid="ai-badge">{p.who ?? 'AI'}</span>
       <strong className="ai-card-title" data-testid={p.titleTestId}>{p.title}</strong>
-      {p.who && p.who !== 'AI' && <span className={`src ${whoClass(p.who)}`} data-testid="ai-badge">{p.who}</span>}
       {p.stateLabel && <span className={`ai-card-state ${p.tone ?? 'hint'}`} data-testid="ai-card-state">{p.stateLabel}</span>}
       {p.meta && <span className="hint ai-card-meta">{p.meta}</span>}
     </div>

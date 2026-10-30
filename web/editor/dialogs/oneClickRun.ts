@@ -119,10 +119,10 @@ export function breakdownEntry(p: { who: string; userText: string; scenes: strin
 }
 
 /** The one-click generation as the second card. */
-export function generateEntry(p: { who: string; done: number; total: number; failed: number; warnings: number; notes: string[] }): OnboardEntry {
+export function generateEntry(p: { who: string; done: number; total: number; failed: number; warnings: number; notes: string[]; userText?: string }): OnboardEntry {
   const rest = p.total - p.done;
   return makeEntry({
-    kind: 'generate', title: `生成演出 · ${p.done}/${p.total} 场`, who: p.who, state: p.failed > 0 ? 'partial' : rest > 0 ? 'partial' : 'done',
+    kind: 'generate', ...(p.userText ? { userText: p.userText } : {}), title: `生成演出 · ${p.done}/${p.total} 场`, who: p.who, state: p.failed > 0 ? 'partial' : rest > 0 ? 'partial' : 'done',
     summary: `${p.done} 场已生成${p.failed > 0 ? `，${p.failed} 场失败` : rest > 0 ? `，还有 ${rest} 场没生成` : ''} · 连续性提示 ${p.warnings} 条`,
     lines: p.notes, canResume: p.failed > 0 || rest > 0,
     historyText: oneClickText({ who: p.who, done: p.done, total: p.total, failed: p.failed, warnings: p.warnings }),
