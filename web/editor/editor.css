@@ -198,6 +198,7 @@
   linear-gradient(90deg, rgba(7, 8, 12, .94) 0%, rgba(7, 8, 12, .8) 26%, rgba(7, 8, 12, .32) 52%, rgba(7, 8, 12, .1) 70%, rgba(7, 8, 12, .3) 100%),
   linear-gradient(0deg, rgba(7, 8, 12, .92) 0%, rgba(7, 8, 12, .5) 22%, transparent 42%),
   radial-gradient(130% 100% at 60% 40%, transparent 55%, rgba(0, 0, 0, .55) 100%); }
+.stage-dim { position: absolute; inset: 0; z-index: -2; pointer-events: none; background: #07080c; }
 .stage-actor { position: absolute; z-index: -1; inset: 0; pointer-events: none; opacity: 0; transition: opacity 700ms ease-out; }
 .stage-actor.shown { opacity: 1; }
 /* only this box over the model's visible bounds takes pointer input; everything else on the stage passes through */
@@ -290,6 +291,12 @@
 .char-menu-pop button { padding: 7px 10px; text-align: left; border: 0; border-radius: 6px; background: none; color: var(--text-1); font: inherit; cursor: pointer; }
 .char-menu-pop button:hover:not(:disabled), .char-menu-pop button:focus-visible { background: var(--accent-weak); }
 .char-menu-pop button:disabled { color: var(--text-3); cursor: default; }
+.char-menu-pop .bg-opt { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.char-menu-pop .bg-opt .tick { width: 12px; flex: none; color: var(--accent); }
+.char-menu-pop .bg-opt.sub { color: var(--text-2); }
+.bg-menu .char-menu-pop { min-width: 176px; }
+.bg-dim { display: grid; gap: 4px; margin-top: 4px; padding: 8px 10px 4px; border-top: 1px solid var(--line); font-size: var(--fs-label); color: var(--text-2); }
+.bg-dim input { width: 100%; accent-color: var(--accent); }
 .hub-picker { display: flex; flex-direction: column; width: min(880px, 94vw); overflow: hidden; }
 .hub-picker-top { display: flex; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); }
 .hub-picker-top .text { flex: 1; min-width: 0; height: 28px; padding: 0 10px; }

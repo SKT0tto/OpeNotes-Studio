@@ -5,6 +5,7 @@ import pkg from '../package.json';
 import { assetRoutes, probeAssetRoot } from './assets/routes';
 import { CatalogService } from './assets/indexer';
 import { backgroundRoutes } from './backgrounds/routes';
+import { hubBackgroundRoutes } from './hub/routes';
 import { thumbRoutes } from './assets/thumbs';
 import { calibrationRoutes } from './calibration/routes';
 import { projectRoutes } from './projects/routes';
@@ -102,6 +103,7 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
   app.use(assetRoutes(config, catalog));
   app.use(calibrationRoutes(config));
   app.use(backgroundRoutes(config));
+  app.use(hubBackgroundRoutes(config));
   app.use(thumbRoutes(config, env.THUMB_SHEET_DIR ? { sheetDir: env.THUMB_SHEET_DIR } : {}));
   app.use(projectRoutes(config));
 
