@@ -2,7 +2,8 @@
  * 「改回去」: the ops that take a project back from `after` to `before`, for the units an earlier assistant turn changed.
  * Computed by diffing the two projects (not by inverting each op), so it works for every op kind and is exact for the fields the
  * agent edits: beat fields, shot, per-person offsets, rhythm overrides, timeline keys (by key id), entrances / exits / start positions,
- * presence, outfits, scene settings, the opening background and inserted / deleted lines. Provenance (`meta.source`) is not restored.
+ * presence, outfits, scene settings, the opening background and inserted / deleted lines (so also the pieces a split added), and `overflow` through `dialog_expand`.
+ * Provenance (`meta.source`) is not restored.
  */
 import type { Beat, Project, Scene } from '../schema/project';
 import type { AgentOp } from './ops';
@@ -98,6 +99,8 @@ function beatRevert(sceneId: string, bb: Beat, ba: Beat, reason: string): AgentO
   const set: Record<string, unknown> = {};
   for (const f of BEAT_FIELDS) if (!same(bb[f], ba[f])) set[f] = f === 'speakerId' || f === 'emotion' ? bb[f] ?? null : bb[f];
   if (Object.keys(set).length) ops.push({ op: 'beat_set', sceneId, beatId: bb.id, set, reason } as AgentOp);
+  // a line shown in full (or not): its own op, because beat_set never writes `overflow`
+  if ((bb.overflow === 'expand') !== (ba.overflow === 'expand')) ops.push({ op: 'dialog_expand', sceneId, beatId: bb.id, on: bb.overflow === 'expand', reason });
   const shot: Record<string, unknown> = {};
   for (const f of SHOT_FIELDS) if (!same(bb.shot[f], ba.shot[f])) shot[f] = bb.shot[f] ?? null;
   if (Object.keys(shot).length) ops.push({ op: 'shot_set', sceneId, beatId: bb.id, set: shot, reason } as AgentOp);

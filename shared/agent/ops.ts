@@ -5,6 +5,7 @@
  *
  * A small number of generic, schema-driven ops cover every field the editor exposes:
  *   beat_set / beat_insert / beat_delete / beat_move / beat_split / beat_merge   text, speaker, kind, emotion, duration, cut-in, structure
+ *   beat_split_pieces / dialog_expand                                           a too-long line cut into consecutive beats of the same speaker / shown in full (only when the user asked)
  *   shot_set / shot_offset                                                      size, focus, move, dof, intent, flow, insert box, per-person offsets
  *   key_set / key_shift                                                         ANY timeline key (motion, expression, head, body, gaze, position, costume, camera, fx, fade, background ...)
  *   fx_range                                                                    an effect over a span of beats (memory enters through white)
@@ -46,6 +47,10 @@ export const AgentOpSchema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('beat_move'), ...Ref, beatId: Id, afterBeatId: Id.nullable(), ...common }),
   z.object({ op: z.literal('beat_split'), ...Ref, beatId: Id, at: z.number().int().min(1), newId: Id, ...common }),
   z.object({ op: z.literal('beat_merge'), ...Ref, beatId: Id, ...common }),
+  /** The assistant's own cut of a line that does not fit the dialogue area: `pieces` (2-4, verbatim from the text) and one new id per later piece. The later pieces get `splitFrom` = the first piece. */
+  z.object({ op: z.literal('beat_split_pieces'), ...Ref, beatId: Id, pieces: z.array(z.object({ text: z.string().min(1), emotion: z.string().optional() })).min(2).max(4), newIds: z.array(Id).min(1).max(3), ...common }),
+  /** `on` = show the whole line (`Beat.overflow = 'expand'`); false clears it. Only when the user asked (CheckCtx.allowDialogExpand). */
+  z.object({ op: z.literal('dialog_expand'), ...Ref, beatId: Id, on: z.boolean(), ...common }),
   z.object({ op: z.literal('shot_set'), ...Ref, beatId: Id, ...common, set: SHOT_SET }),
   z.object({ op: z.literal('shot_offset'), ...Ref, beatId: Id, castId: Id, offset: z.object({ x: z.number().min(-2).max(2), y: z.number().min(-2).max(2) }).nullable(), ...common }),
   z.object({ op: z.literal('key_set'), ...Ref, target: TrackTargetSchema, channel: z.enum(KEY_CHANNELS), keyId: Id.optional(), newKeyId: Id.optional(), at: z.object({ beatId: Id, offset: z.number().min(-10).max(60) }).optional(), value: z.unknown().optional(), duration: z.number().min(0).max(30).optional(), ease: EaseSchema.optional(), remove: z.boolean().optional(), ...common }),
@@ -82,7 +87,7 @@ export function scopeOf(op: AgentOp): AgentScope {
       if (k.length > 0 && k.every((x) => x === 'duration')) return 'rhythm';
       return 'structure';
     }
-    case 'beat_insert': case 'beat_delete': case 'beat_move': case 'beat_split': case 'beat_merge': case 'scene_set': return 'structure';
+    case 'beat_insert': case 'beat_delete': case 'beat_move': case 'beat_split': case 'beat_split_pieces': case 'dialog_expand': case 'beat_merge': case 'scene_set': return 'structure';
     case 'key_shift': return 'performance';
     case 'key_set': return op.channel === 'camera' ? 'camera' : op.channel === 'fx' || op.channel === 'fade' ? 'fx' : op.channel === 'background' ? 'background' : op.channel === 'costume' ? 'costume' : op.channel === 'position' || op.channel === 'opacity' ? 'staging' : 'performance';
     case 'fx_range': return 'fx';
@@ -96,7 +101,7 @@ export function scopeOf(op: AgentOp): AgentScope {
 
 /** Op kinds the 「实时」 auto-apply never takes: entrances, exits, background and structure changes, locks. */
 export function liveForbidden(op: AgentOp): boolean {
-  if (op.op === 'bg_set' || op.op === 'actor_presence' || op.op === 'beat_insert' || op.op === 'beat_delete' || op.op === 'beat_split' || op.op === 'beat_merge' || op.op === 'beat_move' || op.op === 'lock_set') return true;
+  if (op.op === 'bg_set' || op.op === 'actor_presence' || op.op === 'beat_insert' || op.op === 'beat_delete' || op.op === 'beat_split' || op.op === 'beat_split_pieces' || op.op === 'dialog_expand' || op.op === 'beat_merge' || op.op === 'beat_move' || op.op === 'lock_set') return true;
   if (op.op === 'stage_set') return op.enter !== undefined || op.exit !== undefined;
   if (op.op === 'key_set') return op.channel === 'background' || op.channel === 'opacity';
   return false;

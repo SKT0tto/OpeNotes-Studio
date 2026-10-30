@@ -2,6 +2,8 @@
  * Which agent edits change the PICTURE (and so must be looked at after the edit), and the shape of the verification the change card shows.
  * Pure: the loop (server/agent/loop.ts) uses it to force a capture_frames call; the card reads `Verification`.
  */
+import type { Project } from '../schema/project';
+import { beatLineInfo } from './lines';
 import type { AgentOp } from './ops';
 
 /** Key channels that change what is on screen. Motion / expression / gaze are performance details and are not re-checked by picture. */
@@ -35,6 +37,28 @@ export function involvesMove(op: AgentOp): boolean {
   if (op.op === 'key_set') return op.channel === 'camera' || op.channel === 'position';
   if (op.op === 'stage_set') return !!op.enter || !!op.exit || op.slot !== undefined;
   return false;
+}
+
+/** A line that does not fit the dialogue area (and is not expanded). */
+export interface LongLine {
+  sceneId: string;
+  beatId: string;
+  /** 1-based position in its scene. */
+  beatNo: number;
+  lines: number;
+  max: number;
+}
+
+/** Lines that are too long in `after` and were not (or were fewer lines) in `before`: what a turn newly broke, for the card's hint. */
+export function newLongLines(before: Project, after: Project): LongLine[] {
+  const was = new Map<string, number>();
+  for (const s of before.scenes) for (const b of s.beats) { const i = beatLineInfo(before, s, b); if (i?.over) was.set(b.id, i.lines); }
+  const out: LongLine[] = [];
+  for (const s of after.scenes) s.beats.forEach((b, k) => {
+    const i = beatLineInfo(after, s, b);
+    if (i?.over && (was.get(b.id) ?? 0) < i.lines) out.push({ sceneId: s.id, beatId: b.id, beatNo: k + 1, lines: i.lines, max: i.max });
+  });
+  return out;
 }
 
 export type VerificationStatus =

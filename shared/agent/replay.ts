@@ -46,8 +46,8 @@ export function planReplay(project: Project, items: ReplayItem[], ctx: ApplyCtx)
   for (const it of items) {
     const op = it.confirm ? ({ ...it.op, overrideUser: true } as AgentOp) : it.op;
     const base = { id: it.id, op, scope: scopeOf(op), changes: [] as Change[], warnings: [] as string[], lockPaths: [] as Seg[][], lockLabels: [] as string[], overwrote: [] as string[], skipped: [] as string[] };
-    // the server vetted these ops against the user's own words already (S6: dialog_expand); replay only checks they still apply
-    const r = checkOp(work, op, { allowDialogExpand: true });
+    // the server vetted these ops against the user's own words already (asksForLineSplit / asksForDialogExpand); replay only checks they still apply
+    const r = checkOp(work, op, { allowDialogExpand: true, allowLineSplit: true });
     if (r.status === 'invalid') {
       out.push({ ...base, status: 'stale', reason: `已失效：${r.problems[0] ?? '目标已变化'}` });
       continue;

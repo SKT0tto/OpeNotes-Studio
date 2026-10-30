@@ -9,7 +9,7 @@ import { bgSwitchValue } from '../director/bgKeys';
 import { memoryThroughWhite } from '../director/expand';
 import { EMOTION_LABEL, SHOT_LABEL, MOVE_LABEL, TRANSITION_LABEL, expressionLabel, motionLabel } from '../catalog/labels';
 import { SHOT_INTENT_LABEL } from '../staging/shotIntent';
-import type { Beat, MemoryTone, Meta, Project, Scene } from '../schema/project';
+import { cameraSystemOf, type Beat, type MemoryTone, type Meta, type Project, type Scene } from '../schema/project';
 import { resolveStyle } from '../style/ournotes';
 import { FLASH_SECONDS } from '../timeline/fxParams';
 import { ONE_SHOT_FX } from '../director/vocab';
@@ -170,6 +170,70 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       b.text = chars.slice(0, op.at).join('');
       stamp(b.meta, op, ctx, res, beatLabel(b));
       scene.beats.splice(scene.beats.indexOf(b) + 1, 0, copy);
+      return res;
+    }
+    case 'beat_split_pieces': {
+      const b = need(op.beatId);
+      if (!b) return fail(`台词 ${op.beatId} 不存在`);
+      if (op.newIds.length !== op.pieces.length - 1) return fail('newIds 的数量要比 pieces 少一个');
+      if (op.newIds.some((id) => beatOf(id))) return fail(`台词 id ${op.newIds.find((id) => beatOf(id))} 已被占用`);
+      const texts = op.pieces.map((p) => p.text);
+      const ids = [b.id, ...op.newIds];
+      const lens = texts.map((t) => Math.max(1, [...t].length));
+      const total = lens.reduce((x, y) => x + y, 0);
+      const rhythm = resolveStyle(project.style, scene.style, b.style).values.rhythm;
+      const fixed = b.duration.mode === 'fixed';
+      // seconds the whole line takes now; the pieces share it by their length (the hand-set duration is shared out the same way)
+      const span = fixed ? b.duration.seconds : Math.max(rhythm.minLine, total / rhythm.readingCps);
+      const starts: number[] = [];
+      let acc = 0;
+      lens.forEach((n) => { starts.push(Math.round(span * (acc / total) * 100) / 100); acc += n; });
+      const share = lens.map((n, k) => (k < lens.length - 1 ? Math.round(b.duration.seconds * (n / total) * 100) / 100 : 0));
+      share[share.length - 1] = Math.round((b.duration.seconds - share.slice(0, -1).reduce((x, y) => x + y, 0)) * 100) / 100;
+      // the person's keys inside the line follow the piece they fall in (a locked key stays where it is)
+      for (const t of tracksOf(scene)) {
+        if (t.target.kind !== 'actor') continue;
+        for (const k of t.keys) {
+          if (k.at.beatId !== b.id || k.at.offset <= 0) continue;
+          let to = 0;
+          for (let j = 1; j < starts.length; j++) if (k.at.offset >= starts[j]! - 1e-9) to = j;
+          if (to === 0) continue;
+          if (t.meta.locked || k.meta.locked) { res.skipped.push(`${where(b.id)}上锁定的关键帧 ${k.id}（留在第一段）`); continue; }
+          k.at = { beatId: ids[to]!, offset: Math.round((k.at.offset - starts[to]!) * 100) / 100 };
+        }
+      }
+      const travel = cameraSystemOf(project, scene) === 'travel';
+      const head = b.splitFrom ?? b.id;
+      const before = clip(b.text, 24);
+      const conts: Beat[] = op.pieces.slice(1).map((p, k) => {
+        const c: Beat = { ...clone(b), id: op.newIds[k]!, text: p.text, splitFrom: head, cutIn: 'cut', cutInKeepDialog: false, meta: freshMeta(op, ctx), style: { overrides: clone(b.style.overrides), meta: freshMeta(op, ctx) } };
+        delete c.sourceOffset;
+        delete c.overflow;
+        if (p.emotion) c.emotion = p.emotion;
+        // the same shot as the first piece, held (no move, no new framing)
+        c.shot = { ...clone(b.shot), move: 'static', meta: freshMeta(op, ctx) };
+        delete c.shot.transition;
+        if (travel) c.shot.intent = 'continue'; else delete c.shot.intent;
+        if (fixed) c.duration = { mode: 'fixed', seconds: share[k + 1]! };
+        return c;
+      });
+      if (fixed) b.duration = { mode: 'fixed', seconds: share[0]! };
+      if (b.overflow === 'expand') { res.overwrote.push(`已展开的${beatLabel(b)}`); delete b.overflow; }
+      b.text = texts[0]!;
+      if (op.pieces[0]!.emotion) b.emotion = op.pieces[0]!.emotion;
+      push('拆成几句', before, texts.map((t) => clip(t, 14)).join(' ｜ '), b.id);
+      stamp(b.meta, op, ctx, res, beatLabel(b));
+      scene.beats.splice(scene.beats.indexOf(b) + 1, 0, ...conts);
+      return res;
+    }
+    case 'dialog_expand': {
+      const b = need(op.beatId);
+      if (!b) return fail(`台词 ${op.beatId} 不存在`);
+      const was = b.overflow === 'expand';
+      if (was === op.on) return res;
+      push('对话框', was ? '展开显示全部' : '默认（限行）', op.on ? '展开显示全部' : '默认（限行）', b.id);
+      if (op.on) b.overflow = 'expand'; else delete b.overflow;
+      stamp(b.meta, op, ctx, res, beatLabel(b));
       return res;
     }
     case 'beat_merge': {
