@@ -60,7 +60,7 @@ export function agentRoutes(d: AgentRouteDeps): Router {
     const signal = abortOnClose(res);
     const deps = await directorDeps({ settings: d.settings, cache: d.cache, catalog: d.catalog }, res, signal, false);
     if (!deps) return;
-    if (!deps.provider.chatTools && deps.provider.id === 'rule') return void res.status(503).json({ error: { kind: 'not_configured', message: '助手需要 AI 模型（规则生成不支持）' } });
+    if (!deps.provider.chatTools && deps.provider.id === 'rule') return void res.status(503).json({ error: { kind: 'not_configured', message: 'AI 需要先设置模型（规则生成不支持）' } });
     running.add(pid);
     res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
     const send = (event: string, data: unknown) => { if (!res.writableEnded) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };

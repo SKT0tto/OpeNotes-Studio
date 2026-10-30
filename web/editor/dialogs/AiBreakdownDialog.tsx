@@ -301,6 +301,7 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
               <AiCard
                 state={phase === 'review' ? 'pending' : 'applied'} title={`分场 · ${res.project.scenes.length} 场`} who={provider === 'rule' ? '规则' : provider === 'fixture' ? '回放' : 'AI'} stateLabel={phase === 'review' ? '待确认' : '已分场'} tone={phase === 'review' ? 'warn' : 'ok'}
                 bodyTestId="breakdown-view"
+                saidLabel={provider === 'rule' ? null : undefined}
                 said={`${res.project.scenes.length} 个场景 · ${res.project.cast.length} 个角色。先看看分得对不对：不满意就改原文重分，满意就建项目（稍后生成）或直接生成全部。`}
                 meta={<>{res.cached && <span className="badge" data-testid="ai-cached">缓存</span>}</>}
                 actions={phase !== 'review' ? undefined : (

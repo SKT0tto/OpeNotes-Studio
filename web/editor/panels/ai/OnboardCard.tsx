@@ -31,7 +31,7 @@ export function OnboardTurn({ entry, env }: { entry: OnboardEntry; env: Director
         state={entry.state} title={entry.title} who={entry.who} stateLabel={STATE_TEXT[entry.state]} tone={TONE[entry.state]}
         bodyTestId="ai-onboard-card" bodyAttrs={{ 'data-kind': entry.kind }}
         collapsible={pendingWork ? undefined : { summary: entry.summary }}
-        said={pendingWork ? entry.summary : undefined}
+        said={pendingWork ? entry.summary : undefined} saidLabel={entry.who === '规则' ? null : undefined}
         actions={!pendingWork ? undefined : entry.canGenerateAll ? <button className="btn primary" disabled={busy} onClick={generate} data-testid="ai-onboard-generate-all">生成全部场景</button>
           : <button className="btn primary" disabled={busy} onClick={resume} data-testid="ai-onboard-resume">继续生成剩余 {missing.length} 场</button>}
         detail={entry.lines.length > 0 ? <ul className="ai-warn">{entry.lines.map((l, i) => <li key={i}>{l}</li>)}</ul> : undefined}

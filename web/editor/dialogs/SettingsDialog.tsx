@@ -8,7 +8,7 @@ const VISION_LABEL: Record<VisionMode, string> = {
   auto: '自动：主模型能看图就用它，否则用下面的视觉模型',
   main: '总是把图片交给主模型',
   separate: '用下面单独的视觉模型（它把图片描述成文字）',
-  off: '关闭（助手不看截图和附图）',
+  off: '关闭（AI 不看截图和附图）',
 };
 const LABEL: Record<LlmProviderId, string> = { anthropic: 'Claude（Anthropic）', openai: 'OpenAI 兼容（LM Studio / DeepSeek …）', fixture: '测试回放（非 AI）' };
 
@@ -126,7 +126,7 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
             </>
           )}
           <details className="settings-vision" data-testid="vision-settings" open={vMode !== 'auto' || !!vBase}>
-            <summary>看图（AI 助手的截图与附图）</summary>
+            <summary>看图（AI 的截图与附图）</summary>
             <label className="srow">
               <span>方式</span>
               <select value={vMode} onChange={(e) => setVMode(e.target.value as VisionMode)} data-testid="vision-mode">
@@ -144,7 +144,7 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
                 <div className="srow"><span /> {keyInfo(s.vision, 'vision')}</div>
               </>
             )}
-            <p className="hint">主模型能看图时（例如 deepseek-flash）不必填写视觉模型。都没有时助手照常工作，只是看不到截图和你附的图。</p>
+            <p className="hint">主模型能看图时（例如 deepseek-flash）不必填写视觉模型。都没有时 AI 照常工作，只是看不到截图和你附的图。</p>
           </details>
           {provider === 'fixture' && <p className="hint">仅测试环境：回放 tests/fixtures/llm 中录制的模型输出，不调用任何模型。</p>}
           {error && <p className="bad" data-testid="settings-error">{error}</p>}
