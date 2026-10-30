@@ -62,6 +62,31 @@ describe('asksForLineSplit / asksForDialogExpand', () => {
   it.each([
     '把第3句改成特写', '展开讲讲这个场景', '显示全部角色', '这句台词太长了', '拆开这句', '把台词改成“显示全部”', '', '情绪改成 sad',
   ])('not expand: %s', (t) => expect(asksForDialogExpand(t)).toBe(false));
+  // The acceptance reviewer's 30 phrasings: [text, asks split, asks expand]
+  it.each<[string, boolean, boolean]>([
+    ['第5句太长了，帮我拆一下', true, false], ['这句放不下，处理一下', true, false], ['把过长的台词都修一下', true, false], ['这句话分两次说吧', true, false],
+    ['第3句显示不全，帮我断一下句', true, false], ['这句台词太长了，切一下', true, false], ['这句话太长，分开说', true, false], ['能不能把这段独白拆成三句', true, false],
+    ['这一句超出对话框了，帮我分段', true, false], ['长台词按情绪断开', true, false],
+    ['这句不要拆，完整显示就行', false, true], ['这句全部显示出来，超出屏幕也没关系', false, true], ['让这句台词展开显示', false, true], ['对话框显示四行也可以', false, true],
+    ['这句话一次性显示完整，别拆开', false, true],
+    ['把第3句的镜头切成特写', false, false], ['第3句切成近景', false, false], ['这个停顿太长了，处理一下', false, false], ['这个镜头太长了，修一下', false, false],
+    ['让所有人都完整显示在画面里', false, false], ['让情绪在这一句慢慢展开', false, false], ['把这个场景拆成两个场景', false, false], ['把第二章分成两段', false, false],
+    ['爱音和灯的对话之间断开一下，加个停顿', false, false], ['把第5句改短一点', false, false], ['这句台词太长了，精简一下', false, false], ['显示全部角色的表情', false, false],
+    ['第4句的推镜太长了，弄短点', false, false], ['把“拆开”这个词改成“分开”', false, false], ['把背景切成夜晚', false, false],
+  ])('reviewer phrasing: %s', (t, split, expand) => {
+    expect(asksForLineSplit(t)).toBe(split);
+    expect(asksForDialogExpand(t)).toBe(expand);
+  });
+  it.each([
+    '切一下这句', '这句分开说', '帮我把这句分段', '这句话帮我断一下句', '把这句台词切开', '这句独白拆成两句',
+    '别的不用管，把第2句拆开', '这句话太长了，别拆开，帮我把第4句拆开',
+  ])('more split requests: %s', (t) => expect(asksForLineSplit(t)).toBe(true));
+  it.each([
+    '别拆开', '不要拆', '这句话不用拆', '先不要分句', '不要把这句断开', '别切', '镜头切一下', '把镜头切成两段', '把第三场分成两段', '把背景拆开', '人物分开站',
+    '把这两个人分成两组', '对话之间停顿久一点', '这句停顿太长，处理一下', '节奏太长了，整理一下', '场景切换太长了修一下',
+  ])('not a split request: %s', (t) => expect(asksForLineSplit(t)).toBe(false));
+  it.each(['让情绪慢慢展开', '让所有人完整显示在镜头里', '全员完整显示在画面里', '表情展开一点'])('not an expand request: %s', (t) => expect(asksForDialogExpand(t)).toBe(false));
+  it.each(['让这个人的台词完整显示', '把角色的字幕全部显示'])('still an expand request: %s', (t) => expect(asksForDialogExpand(t)).toBe(true));
   it('a short 好 after the assistant asked 要不要拆 / 展开 counts; without that question it does not', () => {
     const hist = [{ role: 'user', content: '第3句有点长' }, { role: 'assistant', content: '这句有 3 行，放不下。要不要把它拆开？' }];
     expect(requestFlags('要', hist)).toEqual({ lineSplit: true, dialogExpand: false });
