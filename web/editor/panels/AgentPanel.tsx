@@ -12,6 +12,7 @@ import type { Project } from '@shared/schema/project';
 import { MAX_FRAMES } from '@shared/agent/frames';
 import { VERIFICATION_LINE } from '@shared/agent/verify';
 import { filesToAttachments } from '../../agentMedia';
+import { interleave } from '../../store/agentNotes';
 import { useAgent, type AgentAttachment, type CardItem, type RunItem } from '../../store/agentStore';
 import { notify } from '../../store/uiStore';
 import { useProject } from '../../store/projectStore';
@@ -280,9 +281,9 @@ export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, bea
   const selection = useProject((s) => s.selection);
   const hoverBeat = useUi((st) => st.hoverBeat);
   const cards = useUi((st) => st.cards);
-  const { runs, running, live, session, snapshot, focusTick } = useAgent();
+  const { runs, notes, draft: text, running, live, session, snapshot, focusTick } = useAgent();
   const a = useAgent.getState();
-  const [text, setText] = useState('');
+  const setText = a.setDraft; // the draft lives in the store: another dock tab in front unmounts this panel, and what was typed must stay
   // pictures / video frames for the next instruction (attach button, drop on the input, paste)
   const [attach, setAttach] = useState<AgentAttachment[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -301,7 +302,7 @@ export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, bea
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => { useAgent.getState().bindProject(project.id); }, [project.id]);
   useEffect(() => { input.current?.focus(); }, [focusTick]);
-  const tailKey = `${runs.length}:${runs.at(-1)?.progress.length ?? 0}:${runs.at(-1)?.status ?? ''}`;
+  const tailKey = `${runs.length}:${notes.length}:${runs.at(-1)?.progress.length ?? 0}:${runs.at(-1)?.status ?? ''}`;
   useEffect(() => { end.current?.scrollIntoView?.({ block: 'end' }); }, [tailKey]);
   const scene = project.scenes.find((s) => s.id === selection.sceneId);
   const beatIdx = scene?.beats.findIndex((b) => b.id === selection.beatId) ?? -1;
@@ -331,16 +332,21 @@ export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, bea
       </div>
       {showMemory && <MemoryManager projectId={project.id} />}
       <div className="agent-flow" data-testid="agent-flow" hidden={showMemory}>
-        {runs.length === 0 && <p className="hint">用一句话指挥 AI 修改当前项目，例如“第二场多用双人，少点特写”“这一句加回忆效果”“让爱音在这里进场”“这句停顿长一点”。每次修改先给你看变更，可勾选应用，Ctrl+Z 一步撤销。</p>}
-        {runs.map((r) => (
-          <div key={r.id} className="agent-turn" data-testid="agent-turn">
-            <div className="agent-user" data-testid="agent-user">{r.instruction}{r.attachments?.length ? <div data-testid="agent-user-attachments">{r.attachments.map((x, i) => <img key={i} src={x.dataUrl} alt={x.label} title={x.label} style={{ height: 40, marginRight: 4, borderRadius: 3 }} />)}</div> : null}</div>
-            {r.status === 'running' && <div className="agent-progress" data-testid="agent-progress">{r.progress.slice(-4).map((p, i) => <div key={i} className="hint">{p}</div>)}</div>}
-            {r.status === 'failed' && <p className="bad" data-testid="agent-error">{r.error}</p>}
-            {r.status === 'cancelled' && <p className="hint">已取消</p>}
-            {r.status === 'done' && r.proposal && <Card run={r} project={project} onFocus={onFocusBeat} />}
-          </div>
-        ))}
+        {runs.length === 0 && <p className="hint">用一句话指挥 AI 修改当前项目，例如“第二场多用双人，少点特写”“这一句加回忆效果”“让爱音在这里进场”“这句停顿长一点”。每次修改先给你看变更，可勾选应用，Ctrl+Z 一步撤销。整场重新生成请用上面的「生成」。</p>}
+        {interleave(runs, notes).map((row) => {
+          // what the AI director did (an accepted result, a one-click generation): the assistant knows it, so 「刚生成的第二场…」 works
+          if (row.note) return <div key={`note${row.note.id}`} className="agent-note" data-testid="agent-director-note"><span className="agent-tag">AI 导演</span>{row.note.text}</div>;
+          const r = row.run!;
+          return (
+            <div key={r.id} className="agent-turn" data-testid="agent-turn">
+              <div className="agent-user" data-testid="agent-user">{r.instruction}{r.attachments?.length ? <div data-testid="agent-user-attachments">{r.attachments.map((x, i) => <img key={i} src={x.dataUrl} alt={x.label} title={x.label} style={{ height: 40, marginRight: 4, borderRadius: 3 }} />)}</div> : null}</div>
+              {r.status === 'running' && <div className="agent-progress" data-testid="agent-progress">{r.progress.slice(-4).map((p, i) => <div key={i} className="hint">{p}</div>)}</div>}
+              {r.status === 'failed' && <p className="bad" data-testid="agent-error">{r.error}</p>}
+              {r.status === 'cancelled' && <p className="hint">已取消</p>}
+              {r.status === 'done' && r.proposal && <Card run={r} project={project} onFocus={onFocusBeat} />}
+            </div>
+          );
+        })}
         <div ref={end} />
       </div>
       {snapshot && <div className="agent-snap hint"><button className="btn-s" data-testid="agent-restore" onClick={() => a.restoreSnapshot()}>恢复到 AI 助手开始前</button></div>}

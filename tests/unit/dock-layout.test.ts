@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LAYOUT_KEY, LAYOUT_VERSION, PANEL_IDS, PRESETS, REQUIRED, SHOW_PLACEMENT, forgetLayout, loadSavedLayout, parseSavedLayout, presetProblems, resolvePlacement, saveLayout, serializeLayout, type PanelId } from '../../web/editor/dock/layoutModel';
+import { LAYOUT_KEY, LAYOUT_VERSION, LEGACY_PANEL_ALIASES, PANEL_IDS, PANEL_TITLE, PRESETS, REQUIRED, SHOW_PLACEMENT, aiRestorePlacement, forgetLayout, loadMigratedLayout, loadSavedLayout, migrateLayout, parseSavedLayout, presetProblems, resolvePlacement, saveLayout, serializeLayout, type PanelId } from '../../web/editor/dock/layoutModel';
 
 const leaf = (id: string, views: string[]) => ({ type: 'leaf', data: { id, views, activeView: views[0] }, size: 100 });
 const panels = (ids: string[]) => Object.fromEntries(ids.map((id) => [id, { id, contentComponent: id, title: id }]));
@@ -103,5 +103,83 @@ describe('saved layout: storage access never throws', () => {
     expect(() => forgetLayout(s)).not.toThrow();
     expect(loadSavedLayout(s)).toBeNull();
     expect(loadSavedLayout(null)).toBeNull();
+  });
+});
+
+describe('the AI panel: one panel for the AI director and the assistant', () => {
+  it('is titled 「AI」 and the left group no longer names the director', () => {
+    expect(PANEL_TITLE.agent).toBe('AI');
+    expect(PANEL_TITLE.sidebar).not.toContain('AI');
+  });
+  it('every preset has the AI panel, so the director is never out of reach (the default one is a background tab next to the inspector)', () => {
+    for (const p of PRESETS) expect(p.placements.some((x) => x.id === 'agent'), p.id).toBe(true);
+    const dflt = PRESETS.find((x) => x.id === 'default')!;
+    expect(dflt.placements.find((x) => x.id === 'agent')).toMatchObject({ ref: 'inspector', dir: 'within', inactive: true });
+    const work = PRESETS.find((x) => x.id === 'ai-work')!;
+    expect(work.placements.find((x) => x.id === 'agent')).toMatchObject({ ref: 'stage', dir: 'right' });
+    expect(work.placements.find((x) => x.id === 'agent')!.inactive).toBeUndefined(); // the AI-work preset shows it
+  });
+});
+
+describe('saved layout: migration from the layout of the two separate AI panels (version 1)', () => {
+  const v1 = (layout: unknown) => JSON.stringify({ v: 1, layout });
+  const base = ['sidebar', 'stage', 'inspector', 'timeline'];
+
+  it('a version-1 layout without the assistant loads, and asks for the AI panel (the left 「AI 导演」 tab is gone)', () => {
+    const r = migrateLayout(v1(layoutOf(base)));
+    expect(r).not.toBeNull();
+    expect(r!.needsAiPanel).toBe(true);
+    expect(parseSavedLayout(v1(layoutOf(base)))).not.toBeNull();
+  });
+  it('a version-1 layout that already has the assistant panel keeps it where it was; nothing to add', () => {
+    const r = migrateLayout(v1(layoutOf([...base, 'agent'])));
+    expect(r!.needsAiPanel).toBe(false);
+    expect(Object.keys((r!.layout.panels as Record<string, unknown>)).sort()).toEqual([...base, 'agent'].sort());
+  });
+  it('a current layout without the AI panel is the person closing it: it is not added back', () => {
+    const r = migrateLayout(raw(layoutOf(base)));
+    expect(r!.needsAiPanel).toBe(false);
+  });
+  it('legacy panel ids are renamed to the AI panel instead of rejecting the layout (records, leaf views, active view, no duplicates)', () => {
+    expect(LEGACY_PANEL_ALIASES.ai).toBe('agent');
+    for (const legacy of Object.keys(LEGACY_PANEL_ALIASES)) {
+      const root = { type: 'branch', data: [leaf('g0', ['sidebar']), leaf('g1', ['stage']), { type: 'leaf', data: { id: 'g2', views: ['inspector', legacy], activeView: legacy }, size: 100 }, leaf('g3', ['timeline'])] };
+      const r = migrateLayout(v1(layoutOf([...base, legacy], root)));
+      expect(r, legacy).not.toBeNull();
+      const layout = r!.layout as { panels: Record<string, { id: string; title: string }>; grid: { root: { data: Array<{ data: { views: string[]; activeView?: string } }> } } };
+      expect(Object.keys(layout.panels).sort()).toEqual([...base, 'agent'].sort());
+      expect(layout.panels.agent!.id).toBe('agent');
+      expect(layout.panels.agent!.title).toBe(PANEL_TITLE.agent);
+      expect(layout.grid.root.data[2]!.data).toMatchObject({ views: ['inspector', 'agent'], activeView: 'agent' });
+      expect(r!.needsAiPanel, legacy).toBe(false);
+    }
+  });
+  it('a legacy id next to the real one leaves one panel, not two', () => {
+    const root = { type: 'branch', data: [leaf('g0', ['sidebar']), leaf('g1', ['stage']), leaf('g2', ['inspector', 'agent', 'ai']), leaf('g3', ['timeline'])] };
+    const r = migrateLayout(raw(layoutOf([...base, 'agent', 'ai'], root)));
+    expect(r).not.toBeNull();
+    expect(Object.keys((r!.layout.panels as Record<string, unknown>)).sort()).toEqual([...base, 'agent'].sort());
+  });
+  it('a panel that never existed still rejects the layout (the default layout is used)', () => {
+    expect(migrateLayout(v1(layoutOf([...base, 'removedPanel'])))).toBeNull();
+    expect(migrateLayout(JSON.stringify({ v: 3, layout: layoutOf(base) }))).toBeNull();
+    expect(migrateLayout(JSON.stringify({ v: 0, layout: layoutOf(base) }))).toBeNull();
+  });
+  it('is read from storage the same way, and written back as the current version', () => {
+    const s = memory();
+    s.setItem(LAYOUT_KEY, v1(layoutOf(base)));
+    expect(loadMigratedLayout(s)!.needsAiPanel).toBe(true);
+    expect(loadSavedLayout(s)).not.toBeNull();
+    saveLayout(loadSavedLayout(s), s);
+    expect(JSON.parse(s.m.get(LAYOUT_KEY)!).v).toBe(LAYOUT_VERSION);
+    expect(loadMigratedLayout(s)!.needsAiPanel).toBe(false);
+  });
+  it('where the AI panel is added: a background tab next to the inspector, else a column right of the stage', () => {
+    const set = (...ids: PanelId[]) => new Set<PanelId>(ids);
+    expect(aiRestorePlacement(set('stage', 'inspector', 'timeline'))).toMatchObject({ id: 'agent', ref: 'inspector', dir: 'within', inactive: true });
+    expect(aiRestorePlacement(set('stage', 'timeline'))).toMatchObject({ id: 'agent', ref: 'stage', dir: 'right', inactive: true });
+    // both resolve against the layout that exists
+    expect(resolvePlacement(aiRestorePlacement(set('stage', 'inspector')), set('stage', 'inspector'))).toEqual({ kind: 'panel', ref: 'inspector', dir: 'within' });
+    expect(resolvePlacement(aiRestorePlacement(set('stage')), set('stage'))).toEqual({ kind: 'panel', ref: 'stage', dir: 'right' });
   });
 });

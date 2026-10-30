@@ -17,6 +17,7 @@ import { hasFrameGrabber } from '../agentFrames';
 import { useProject } from './projectStore';
 import { notify, useUi } from './uiStore';
 import { useMemories } from '../memoryApi';
+import { appendNote, interleave, noteAsPastRun, type DirectorNote } from './agentNotes';
 
 export interface CardItem {
   id: number;
@@ -66,6 +67,10 @@ const add = (a: Usage, b: Usage): Usage => ({ inputTokens: a.inputTokens + b.inp
 interface AgentState {
   projectId: string | null;
   runs: RunItem[];
+  /** What the AI director did since (accepted results, a one-click generation): sent with the conversation history, shown in the chat. */
+  notes: DirectorNote[];
+  /** The text being typed (kept here so that switching to another tab of the dock and back does not lose it). */
+  draft: string;
   running: boolean;
   live: boolean;
   /** Tokens spent in this session (this project, since the panel was opened). */
@@ -75,6 +80,11 @@ interface AgentState {
   /** Bumped by Ctrl+K: the input focuses itself. */
   focusTick: number;
   bindProject(id: string | null): void;
+  setDraft(text: string): void;
+  /** The AI director's result was accepted (or a whole project was generated): the assistant remembers it. */
+  noteDirector(text: string): void;
+  /** Same for a project that is not open yet (the home dialog's one-click generation); it is delivered when that project is bound. */
+  queueDirectorNote(projectId: string, text: string): void;
   setLive(on: boolean): void;
   send(instruction: string, attachments?: AgentAttachment[]): Promise<void>;
   cancel(): void;
@@ -90,7 +100,10 @@ interface AgentState {
 }
 
 let seq = 0;
+let noteSeq = 0;
 let ctl: AbortController | null = null;
+/** Notes for projects that are not open yet, by project id. */
+const queued = new Map<string, string[]>();
 const LIVE_KEY = (id: string) => `openotes.agent.live.${id}`;
 const readLive = (id: string | null): boolean => {
   if (!id) return false;
@@ -142,6 +155,8 @@ export const useAgent = create<AgentState>((set, get) => {
   return {
     projectId: null,
     runs: [],
+    notes: [],
+    draft: '',
     running: false,
     live: false,
     session: zero(),
@@ -151,7 +166,26 @@ export const useAgent = create<AgentState>((set, get) => {
     bindProject(id) {
       if (get().projectId === id) return;
       ctl?.abort();
-      set({ projectId: id, runs: [], running: false, session: zero(), snapshot: null, live: readLive(id) });
+      const waiting = id ? queued.get(id) ?? [] : [];
+      if (id) queued.delete(id);
+      const notes = waiting.reduce<DirectorNote[]>((n, text) => appendNote(n, text, seq, ++noteSeq, Date.now()), []);
+      set({ projectId: id, runs: [], notes, draft: '', running: false, session: zero(), snapshot: null, live: readLive(id) });
+    },
+
+    setDraft(text) {
+      set({ draft: text });
+    },
+
+    noteDirector(text) {
+      const t = text.trim();
+      if (!t || !get().projectId) return;
+      set((s) => ({ notes: appendNote(s.notes, t, seq, ++noteSeq, Date.now()) }));
+    },
+
+    queueDirectorNote(projectId, text) {
+      if (!projectId || !text.trim()) return;
+      if (get().projectId === projectId) return get().noteDirector(text);
+      queued.set(projectId, [...(queued.get(projectId) ?? []), text.trim()].slice(-6));
     },
 
     setLive(on) {
@@ -174,10 +208,11 @@ export const useAgent = create<AgentState>((set, get) => {
       const sel = agentSelection(project, useProject.getState().selection, useUi.getState().cards);
       const id = ++seq;
       // what the assistant remembers: instruction + selection then, its answer, what that turn changed, whether it was applied, how to undo it
-      const history = agentHistory(get().runs.filter((r) => r.status === 'done' && r.proposal).map((r) => ({
-        instruction: r.instruction, selection: r.selectionText, summary: r.proposal!.summary, question: r.proposal!.question,
-        applied: r.proposal!.applied, pending: r.proposal!.pending, appliedIds: r.items.filter((i) => i.state === 'applied').map((i) => i.id), revert: r.revert,
-      })));
+      // (the director's notes are turns of their own, placed right after the run they followed)
+      const history = agentHistory(interleave(get().runs.filter((r) => r.status === 'done' && r.proposal), get().notes).map((row) => row.note ? noteAsPastRun(row.note) : {
+        instruction: row.run!.instruction, selection: row.run!.selectionText, summary: row.run!.proposal!.summary, question: row.run!.proposal!.question,
+        applied: row.run!.proposal!.applied, pending: row.run!.proposal!.pending, appliedIds: row.run!.items.filter((i) => i.state === 'applied').map((i) => i.id), revert: row.run!.revert,
+      }));
       // the pre-run snapshot: in memory (once per session) and in the server's history (every run, bounded there)
       if (!get().snapshot) set({ snapshot: { project: clone(project), at: Date.now() } });
       if (useProject.getState().etag) void postSnapshot(project);

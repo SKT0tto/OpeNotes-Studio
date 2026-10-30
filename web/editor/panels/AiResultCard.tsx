@@ -20,11 +20,13 @@ export const providerLabel = (provider: string, model: string) =>
 
 const ORDER: DiffScope[] = ['structure', 'camera', 'performance', 'costume', 'staging', 'fx'];
 
-export function AiResultCard({ card, onToggle, onAccept, onReject }: {
+export function AiResultCard({ card, onToggle, onAccept, onReject, onRefine }: {
   card: Card;
   onToggle: (scope: DiffScope) => void;
   onAccept: (all: boolean) => void;
   onReject: () => void;
+  /** 「让助手微调这一场」: opens the assistant on this scene (selects it, focuses the input; nothing is sent). */
+  onRefine?: () => void;
 }) {
   const { result: r, diff } = card;
   const run = r.runs[0];
@@ -43,8 +45,9 @@ export function AiResultCard({ card, onToggle, onAccept, onReject }: {
         <span className={card.state === 'accepted' ? 'ok' : card.state === 'rejected' ? 'hint' : r.applied ? 'warn' : 'bad'} data-testid="ai-state">
           {card.state === 'accepted' ? '已接受' : card.state === 'rejected' ? '已拒绝' : r.applied ? '待确认' : '未应用（锁定冲突）'}
         </span>
-        {r.cached && <span className="badge" data-testid="ai-cached">缓存</span>}
+        {r.cached && <span className="badge" data-testid="ai-cached" title="输入没有变化，直接用了上次的结果；想要不同的结果请点「换一版」">缓存</span>}
         <span className="hint">{run ? providerLabel(run.provider, run.model) : ''} · {r.runs.length} 次调用 · {ms} ms{tokens > 0 ? ` · ${tokens} tokens` : ''}{r.runs.some((x) => x.repaired) ? ' · 含一次修复调用' : ''}</span>
+        {onRefine && <button className="btn-s" onClick={onRefine} data-testid="ai-refine-assistant" title="选中这一场并把光标放进 AI 助手的输入框；不会自动发送">让助手微调这一场</button>}
       </div>
       {isRule && <p className="hint" data-testid="ai-rule-note">规则生成（非 AI）：对白按引号识别，说话人按名字匹配，镜头按固定节奏。可手改，也可配置 AI 后重新生成。</p>}
       {r.conflicts.length > 0 && <ul className="bad" data-testid="ai-conflicts">{r.conflicts.map((c, i) => <li key={i}>{c.label}</li>)}</ul>}

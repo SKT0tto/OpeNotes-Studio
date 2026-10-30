@@ -8,11 +8,15 @@ export type PanelId = (typeof PANEL_IDS)[number];
 
 export const isPanelId = (v: unknown): v is PanelId => typeof v === 'string' && (PANEL_IDS as readonly string[]).includes(v);
 
+/**
+ * The `agent` panel is the one AI panel: the 「生成」 section (the AI director: scenes, scopes, diff preview, accept / reject) above the
+ * assistant chat. Its id stays `agent` (saved layouts, the "open" flag and the test ids all know it); only the title changed.
+ */
 export const PANEL_TITLE: Record<PanelId, string> = {
-  sidebar: '剧本 · 素材 · AI 导演',
+  sidebar: '剧本 · 素材',
   stage: '预览',
   storyboard: '分镜',
-  agent: 'AI 助手',
+  agent: 'AI',
   inspector: '检查器',
   timeline: '时间线',
 };
@@ -25,7 +29,7 @@ export const PANEL_MIN: Record<PanelId, { w: number; h: number }> = {
   sidebar: { w: 180, h: 120 },
   stage: { w: 400, h: 200 },
   storyboard: { w: 300, h: 160 },
-  agent: { w: 220, h: 160 },
+  agent: { w: 260, h: 220 },
   inspector: { w: 200, h: 120 },
   timeline: { w: 300, h: 100 },
 };
@@ -55,19 +59,20 @@ export const PRESETS: Preset[] = [
   {
     id: 'default',
     label: '默认布局',
-    hint: '剧本在左，预览居中（与分镜同一组标签），检查器在右，时间线在底部',
+    hint: '剧本在左，预览居中（与分镜同一组标签），检查器在右（与 AI 面板同一组标签），时间线在底部',
     placements: [
       { id: 'stage' },
       { id: 'storyboard', ref: 'stage', dir: 'within', inactive: true },
       { id: 'sidebar', ref: 'stage', dir: 'left', w: 320 },
       { id: 'inspector', ref: 'stage', dir: 'right', w: 340 },
+      { id: 'agent', ref: 'inspector', dir: 'within', inactive: true },
       { id: 'timeline', dir: 'below', h: 290 },
     ],
   },
   {
     id: 'ai-work',
     label: 'AI 工作',
-    hint: '剧本、预览、AI 助手并排；检查器与助手同组；时间线收窄',
+    hint: '剧本、预览、AI 面板并排；检查器与 AI 面板同组；时间线收窄',
     placements: [
       { id: 'stage' },
       { id: 'storyboard', ref: 'stage', dir: 'within', inactive: true },
@@ -86,6 +91,7 @@ export const PRESETS: Preset[] = [
       { id: 'sidebar', ref: 'storyboard', dir: 'left', w: 300 },
       { id: 'stage', ref: 'storyboard', dir: 'right', w: 520 },
       { id: 'inspector', ref: 'stage', dir: 'below', h: 300 },
+      { id: 'agent', ref: 'inspector', dir: 'within', inactive: true },
       { id: 'timeline', dir: 'below', h: 200 },
     ],
   },
@@ -132,7 +138,15 @@ export function presetProblems(p: Preset): string[] {
 // ---------------------------------------------------------------------------------------------------------------- persistence
 
 export const LAYOUT_KEY = 'studio.dock.layout';
-export const LAYOUT_VERSION = 1;
+/**
+ * 2 = the AI director and the assistant are one panel (`agent`, titled 「AI」). A version-1 layout still loads: it is migrated (see
+ * `migrateLayout`): legacy panel ids are renamed and the AI panel, which the left 「AI 导演」 tab used to provide, is added back.
+ */
+export const LAYOUT_VERSION = 2;
+const MIGRATABLE_VERSIONS: readonly number[] = [1, LAYOUT_VERSION];
+
+/** Panel ids an older layout may name for what is now the one AI panel (`agent`). Never an error; they are renamed on load. */
+export const LEGACY_PANEL_ALIASES: Readonly<Record<string, PanelId>> = { ai: 'agent', director: 'agent', 'ai-director': 'agent' };
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -156,12 +170,43 @@ function leafViews(node: unknown, out: string[], depth = 0): boolean {
   return false;
 }
 
+/** Renames legacy panel ids (`LEGACY_PANEL_ALIASES`) in a parsed layout, in place: the panel records, the leaf views and the active view. A target that is already there wins. */
+function renameLegacyPanels(layout: Record<string, unknown>): void {
+  const panels = layout.panels;
+  if (!isObj(panels)) return;
+  const grid = layout.grid;
+  const rename = (id: string): string => LEGACY_PANEL_ALIASES[id] ?? id;
+  for (const old of Object.keys(panels)) {
+    const to = LEGACY_PANEL_ALIASES[old];
+    if (!to) continue;
+    const rec = panels[old];
+    delete panels[old];
+    if (!(to in panels) && isObj(rec)) panels[to] = { ...rec, id: to, contentComponent: to, title: PANEL_TITLE[to] };
+  }
+  const visit = (node: unknown): void => {
+    if (!isObj(node)) return;
+    if (node.type === 'leaf' && isObj(node.data) && Array.isArray(node.data.views)) {
+      const views = (node.data.views as unknown[]).map((v) => (typeof v === 'string' ? rename(v) : v));
+      node.data.views = views.filter((v, i) => views.indexOf(v) === i);
+      if (typeof node.data.activeView === 'string') node.data.activeView = rename(node.data.activeView);
+    } else if (node.type === 'branch' && Array.isArray(node.data)) node.data.forEach(visit);
+  };
+  if (isObj(grid)) visit(grid.root);
+}
+
+export interface ParsedLayout {
+  layout: Record<string, unknown>;
+  /** The saved layout predates the merged AI panel (version 1) and does not have it: the dock must add it (`aiRestorePlacement`). */
+  needsAiPanel: boolean;
+}
+
 /**
- * Parses a persisted layout. Returns the layout object to hand to `fromJSON`, or null when it is unusable: not JSON, another
- * version, a panel that no longer exists, a required panel missing, a panel in two places or in none, or a broken grid.
+ * Parses a persisted layout. Returns the layout object to hand to `fromJSON` (and whether the AI panel has to be added), or null
+ * when it is unusable: not JSON, an unknown version, a panel that no longer exists, a required panel missing, a panel in two
+ * places or in none, or a broken grid. Version 1 (before the merge of the AI director into the assistant panel) is migrated.
  * (Whether dockview itself accepts it is checked by trying; the caller falls back to the default preset on a throw.)
  */
-export function parseSavedLayout(raw: string | null | undefined): Record<string, unknown> | null {
+export function migrateLayout(raw: string | null | undefined): ParsedLayout | null {
   if (!raw) return null;
   let parsed: unknown;
   try {
@@ -169,8 +214,9 @@ export function parseSavedLayout(raw: string | null | undefined): Record<string,
   } catch {
     return null;
   }
-  if (!isObj(parsed) || parsed.v !== LAYOUT_VERSION || !isObj(parsed.layout)) return null;
+  if (!isObj(parsed) || typeof parsed.v !== 'number' || !MIGRATABLE_VERSIONS.includes(parsed.v) || !isObj(parsed.layout)) return null;
   const layout = parsed.layout;
+  renameLegacyPanels(layout);
   const grid = layout.grid;
   const panels = layout.panels;
   if (!isObj(grid) || !isObj(panels)) return null;
@@ -187,7 +233,17 @@ export function parseSavedLayout(raw: string | null | undefined): Record<string,
   if (!leafViews(grid.root, views)) return null;
   if (new Set(views).size !== views.length) return null;
   if (views.length !== ids.length || !views.every((v) => ids.includes(v))) return null;
-  return layout;
+  return { layout, needsAiPanel: parsed.v < LAYOUT_VERSION && !ids.includes('agent') };
+}
+
+/** Same as `migrateLayout`, for callers that only want the layout. */
+export function parseSavedLayout(raw: string | null | undefined): Record<string, unknown> | null {
+  return migrateLayout(raw)?.layout ?? null;
+}
+
+/** Where the AI panel goes when a migrated layout lacks it: a background tab next to the inspector, else a column right of the stage. */
+export function aiRestorePlacement(present: ReadonlySet<PanelId>): Placement {
+  return present.has('inspector') ? { id: 'agent', ref: 'inspector', dir: 'within', inactive: true } : { id: 'agent', ref: 'stage', dir: 'right', w: 340, inactive: true };
 }
 
 export function serializeLayout(layout: unknown): string {
@@ -205,8 +261,11 @@ const defaultStore = (): Store | null => {
 
 /** localStorage may be missing or throw (private window, blocked site data): every access is guarded. */
 export function loadSavedLayout(s: Store | null = defaultStore()): Record<string, unknown> | null {
+  return loadMigratedLayout(s)?.layout ?? null;
+}
+export function loadMigratedLayout(s: Store | null = defaultStore()): ParsedLayout | null {
   try {
-    return parseSavedLayout(s?.getItem(LAYOUT_KEY));
+    return migrateLayout(s?.getItem(LAYOUT_KEY));
   } catch {
     return null;
   }

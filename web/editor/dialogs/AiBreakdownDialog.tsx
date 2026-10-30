@@ -13,10 +13,12 @@ import { DirectorMemoryLine } from '../panels/MemoryPanel';
 import { fetchLlmSettings } from '../../llmApi';
 import type { Project } from '@shared/schema/project';
 import { createProject, loadProject, saveProject } from '../../projectsApi';
+import { oneClickText } from '../../store/agentNotes';
+import { useAgent } from '../../store/agentStore';
 import { useProject } from '../../store/projectStore';
 import { readTextFile, normalizeNovel } from '../../textImport';
 import { Modal } from '../ui';
-import { continuityOf } from '../panels/AiPanel';
+import { continuityOf } from '../panels/directorRun';
 import { SettingsDialog } from './SettingsDialog';
 
 type Engine = 'ai' | 'rule';
@@ -198,6 +200,10 @@ export function AiBreakdownDialog({ catalog, onClose, onCreated }: { catalog: Co
   const openEditor = async (id: string) => {
     try {
       const r = await loadProject(id);
+      // the assistant is told what 「一键生成」 made (it is delivered when the editor opens this project), so that 「第二场节奏慢一点」 can refer to it
+      const done = Object.values(progress).filter((p) => p.state === 'done').length;
+      const failedCount = Object.values(progress).filter((p) => p.state === 'error').length;
+      if (done > 0) useAgent.getState().queueDirectorNote(id, oneClickText({ who: useRule ? '规则' : settings?.status.provider === 'fixture' ? '回放' : 'AI', done, total: sceneTotal || r.project.scenes.length, failed: failedCount, warnings: continuityOf(r.project, catalog).length }));
       useProject.getState().open(r.project, r.etag);
       onCreated(id);
     } catch (e) {

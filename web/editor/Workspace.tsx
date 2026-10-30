@@ -1,4 +1,4 @@
-/** The editing workspace: top bar, left panel (script / assets), live preview or storyboard, inspector, timeline, status bar. */
+/** The editing workspace: top bar, left panel (script / assets), live preview or storyboard, inspector, the AI panel (generation + assistant), timeline, status bar. */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { newProjectId } from '@shared/project/blank';
@@ -12,8 +12,8 @@ import { CameraSystemSwitch } from './CameraSystemSwitch';
 import { downloadProject } from './io';
 import { AssetBrowser } from './panels/AssetBrowser';
 import { SettingsDialog } from './dialogs/SettingsDialog';
-import { AgentPanel } from './panels/AgentPanel';
-import { AiPanel, type CameraGenerationRequest } from './panels/AiPanel';
+import { AiPanel } from './panels/AiPanel';
+import { useDirectorRun, type CameraGenerationRequest } from './panels/directorRun';
 import { useAgent } from '../store/agentStore';
 import { Inspector } from './panels/Inspector';
 import { Outline } from './panels/Outline';
@@ -63,11 +63,22 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   const { state } = useRenderState(host.playerRef, host.ready);
   const [dock, setDock] = useState<DockController | null>(null);
   const [present, setPresent] = useState<ReadonlySet<PanelId>>(() => new Set());
+  // Which panels are on screen (the front tab of their group), as opposed to present: the AI panel can sit behind the inspector's tab.
+  const [shown, setShown] = useState<ReadonlySet<PanelId>>(() => new Set());
+  const onVisible = useCallback((id: PanelId, visible: boolean) => {
+    setShown((cur) => {
+      if (cur.has(id) === visible) return cur;
+      const next = new Set(cur);
+      if (visible) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
   const [wantAgent] = useState(readAgentOpen);
-  const agentOpen = present.has('agent');
+  const agentOpen = shown.has('agent');
   const leftOpen = present.has('sidebar');
   const setAgentOpen = (on: boolean) => {
-    if (on) dock?.show('agent');
+    if (on) dock?.show('agent'); // brings the tab to the front, or adds the panel when it was closed
     else dock?.hide('agent');
   };
   // The stage's DOM host belongs to the workspace, not to a dock panel: the Pixi application is built once and survives every layout change.
@@ -94,14 +105,16 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   useEffect(() => {
     if (dock && centerView === 'storyboard' && !present.has('storyboard')) useUi.getState().set({ centerView: 'preview' });
   }, [dock, present, centerView]);
-  const [tab, setTab] = useState<'script' | 'assets' | 'ai'>('script');
+  const [tab, setTab] = useState<'script' | 'assets'>('script');
   const [notice, setNotice] = useState<string | null>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraGenerationRequest | null>(null);
-  const [aiBusy, setAiBusy] = useState(false);
-  const selectTab = (next: typeof tab) => {
-    cameraRequest?.consume();
-    setTab(next);
-  };
+  const aiBusy = useDirectorRun((s) => s.busy);
+  // The director's run state and the assistant's conversation belong to the open project; leaving it (or the editor) ends a running generation.
+  useEffect(() => {
+    useDirectorRun.getState().bindProject(project.id);
+    useAgent.getState().bindProject(project.id);
+    return () => useDirectorRun.getState().unbind();
+  }, [project.id]);
   const regenerateCamera = (sceneIds: string[]) => {
     if (aiBusy || cameraRequest) return;
     const snapshot = useProject.getState().project;
@@ -117,8 +130,9 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
       },
     };
     setCameraRequest(request);
-    dock?.show('sidebar');
-    setTab('ai');
+    // the AI panel (its 「生成」 section expanded) runs the request once the AI settings are known
+    useDirectorRun.getState().setGenerateOpen(true);
+    dock?.show('agent');
   };
   // The travel notice belongs to one explicit switch; never carry it across mounts or projects.
   useEffect(() => {
@@ -215,11 +229,10 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         return (
           <div className="ws-left" data-testid="left-panel">
             <nav className="tabs">
-              <button className={tab === 'script' ? 'active' : ''} onClick={() => selectTab('script')} data-testid="tab-script">剧本</button>
-              <button className={tab === 'assets' ? 'active' : ''} onClick={() => selectTab('assets')} data-testid="tab-assets">素材</button>
-              <button className={tab === 'ai' ? 'active' : ''} onClick={() => selectTab('ai')} data-testid="tab-ai">AI 导演</button>
+              <button className={tab === 'script' ? 'active' : ''} onClick={() => setTab('script')} data-testid="tab-script">剧本</button>
+              <button className={tab === 'assets' ? 'active' : ''} onClick={() => setTab('assets')} data-testid="tab-assets">素材</button>
             </nav>
-            <div className="panel-scroll">{tab === 'script' ? <Outline seek={host.seek} playerRef={host.playerRef} compiled={host.compiled} catalog={catalog} /> : tab === 'ai' ? <AiPanel cameraRequest={cameraRequest} onBusyChange={setAiBusy} /> : <AssetBrowser />}</div>
+            <div className="panel-scroll">{tab === 'script' ? <Outline seek={host.seek} playerRef={host.playerRef} compiled={host.compiled} catalog={catalog} /> : <AssetBrowser />}</div>
           </div>
         );
       case 'storyboard':
@@ -227,7 +240,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
       case 'agent':
         return (
           <div className="ws-agent" data-testid="agent-dock">
-            <div className="panel-scroll"><AgentPanel onFocusBeat={focusBeat} /></div>
+            <div className="panel-scroll"><AiPanel visible={visible} onFocusBeat={focusBeat} cameraRequest={cameraRequest} /></div>
           </div>
         );
       case 'inspector':
@@ -272,14 +285,14 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         {notice && <span className="notice" data-testid="notice">{notice}</span>}
         <button className="btn" onClick={() => setSettingsOpen(true)} data-testid="btn-settings">AI 设置</button>
         <button className="btn" onClick={() => set({ helpOpen: true })} data-testid="btn-help" title="快捷键（?）">？ 快捷键</button>
-        <button className={`btn toggle${agentOpen ? ' on' : ''}`} onClick={() => { setAgentOpen(!agentOpen); if (!agentOpen) useAgent.getState().focusInput(); }} aria-pressed={agentOpen} data-testid="btn-agent" title="AI 助手（Ctrl+K）">AI 助手</button>
-        <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => { if (leftOpen) cameraRequest?.consume(); dock?.toggle('sidebar'); }} aria-pressed={leftOpen} title="左栏">▌◧</button>
+        <button className={`btn toggle${agentOpen ? ' on' : ''}`} onClick={() => { setAgentOpen(!agentOpen); if (!agentOpen) useAgent.getState().focusInput(); }} aria-pressed={agentOpen} data-testid="btn-agent" title="AI 面板：生成 + 助手（Ctrl+K）">AI</button>
+        <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => dock?.toggle('sidebar')} aria-pressed={leftOpen} title="左栏">▌◧</button>
         <button className={`btn toggle${present.has('inspector') ? ' on' : ''}`} onClick={() => dock?.toggle('inspector')} aria-pressed={present.has('inspector')} title="检查器">◨▐</button>
         <LayoutMenu dock={dock} present={present} />
       </header>
 
       <div className="ws-mid">
-        <Dock render={renderPanel} stageHost={stageHost} agentWanted={wantAgent} onController={setDock} onPresent={setPresent} onCenter={onCenter} />
+        <Dock render={renderPanel} stageHost={stageHost} agentWanted={wantAgent} onController={setDock} onPresent={setPresent} onVisible={onVisible} onCenter={onCenter} />
       </div>
       {createPortal(<Preview host={host} project={project} catalog={catalog} />, stageHost)}
       <footer className="ws-status">

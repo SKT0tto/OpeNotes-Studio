@@ -5,6 +5,7 @@
  */
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { openDemoEditor } from './helpers/editor';
+import { aiColumn } from './helpers/ui';
 
 test.describe.configure({ mode: 'serial' });
 test.setTimeout(240_000);
@@ -21,6 +22,7 @@ test.beforeAll(async ({ browser }) => {
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Control+k'); // the assistant shows the selection
   await expect(page.getByTestId('agent-dock')).toBeVisible();
+  await aiColumn(page); // in its own column, so that the inspector (which shows the multi-selection too) stays on screen
   await page.locator('body').click({ position: { x: 5, y: 5 } });
 });
 test.afterAll(async ({ request }: { request: APIRequestContext }) => {

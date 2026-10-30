@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { playing, seekTo, settled } from './helpers/editor';
-import { tab } from './helpers/ui';
+import { openAi, tab } from './helpers/ui';
 
 test.use({ baseURL: 'http://127.0.0.1:5373' });
 test.describe.configure({ mode: 'serial' });
@@ -99,7 +99,7 @@ test('P12: breakdown of the story: scenes, locations with reasons, outfits with 
 });
 
 test('P13: generate the performance of all scenes from the recorded output; it plays; units are not labelled AI', async () => {
-  await page.getByTestId('tab-ai').click();
+  await openAi(page);
   await page.getByTestId('ai-preview').uncheck(); // these tests apply directly; the diff / accept flow has its own test below
   await expect(page.getByTestId('ai-status')).toContainText('非真实 AI');
   const before = await project();
@@ -168,7 +168,7 @@ test('P13: locks and edits survive "regenerate scene"; a camera-only rerun leave
   expect(bs.wardrobe[castId]!.meta.locked).toBe(true);
 
   // regenerate the whole scene
-  await page.getByTestId('tab-ai').click();
+  await openAi(page);
   await page.getByTestId('ai-preview').uncheck(); // these tests apply directly; the diff / accept flow has its own test below
   await page.getByTestId('ai-scope').selectOption('scene');
   await page.getByTestId('ai-regen-scene').click();
@@ -219,7 +219,7 @@ test('P13: a field lock keeps one field (the text) while "overwrite my edits" re
   await expect(page.getByTestId('insp-beat-text')).toHaveValue('只锁文字的台词。');
   await page.getByTestId('insp-beat-emotion').selectOption('angry'); // another field of the same line is free
   await settled(page);
-  await page.getByTestId('tab-ai').click();
+  await openAi(page);
   await page.getByTestId('ai-preview').uncheck(); // these tests apply directly; the diff / accept flow has its own test below
   await page.getByTestId('ai-scope').selectOption('scene');
   await page.getByTestId('ai-overwrite').check();
@@ -246,8 +246,8 @@ test('P14: a proposal is a diff first: nothing changes until accepted; reject ke
   await page.getByTestId('insp-shot-type').selectOption('ecu');
   await settled(page);
   const edited = JSON.stringify((await project()).scenes[i]);
-  await page.getByTestId('tab-ai').click();
-  await expect(page.getByTestId('ai-preview')).toBeChecked();
+  await openAi(page);
+  await page.getByTestId('ai-preview').check(); // the options are kept while the panel is hidden: the earlier tests switched the preview off
   await page.getByTestId('ai-scope').selectOption('camera');
   await page.getByTestId('ai-overwrite').check();
   await page.getByTestId('ai-regen-scene').click();
@@ -302,7 +302,7 @@ test('M1: a result whose lines differ from the scene can still be accepted for c
   const cut = (await project()).scenes[i]!;
   expect(cut.beats[2]!.shot.type).toBe('ecu');
   expect(cut.beats.length).toBe(before.beats.length - 1);
-  await page.getByTestId('tab-ai').click();
+  await openAi(page);
   await page.getByTestId('ai-scope').selectOption('scene');
   await page.getByTestId('ai-overwrite').check();
   await page.getByTestId('ai-regen-scene').click();
