@@ -281,6 +281,19 @@ describe('LineSplit with a fake model', () => {
     expect(r.splits!.map((s) => s.by)).toEqual(['ai', 'ai']);
   });
 
+  it('a budget already at the cap is not asked again with an identical request: the line falls back', async () => {
+    const f = fake((input) => {
+      const ids = (input.lines as Array<{ id: string }>).map((l) => l.id);
+      if (ids.length === 2 || ids[0] === 'L1') return new LlmError('truncated', '截断');
+      return { lines: [{ id: 'L2', pieces: [piece(L2A), piece(L2B)] }] };
+    });
+    // a provider capped below the thinking allowance: every budget is the cap
+    const r = await run({ ...f.provider, maxOutputTokens: 1000 }, project());
+    expect(r.splits!.map((s) => s.by)).toEqual(['rule', 'ai']);
+    expect(f.splitCalls().filter((c) => (c.input.lines as Array<{ id: string }>)[0]!.id === 'L1')).toHaveLength(2);
+    expect(r.warnings.some((w) => w.includes('预算已达上限'))).toBe(true);
+  });
+
   it('a line that stays cut off falls back alone: the other line keeps its AI answer', async () => {
     const f = fake((input) => {
       const ids = (input.lines as Array<{ id: string }>).map((l) => l.id);

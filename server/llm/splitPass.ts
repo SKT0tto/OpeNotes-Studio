@@ -244,8 +244,10 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
     } catch (e) {
       if (!(e instanceof LlmError && e.kind === 'truncated')) throw e;
       if (ids.length === 1) {
-        if (scale < 2) return call(ids, mk, 2);
-        lose(ids, '模型输出被截断（加倍预算重试后仍然截断），已按标点拆分');
+        const budget = Math.min(cap, splitOutputBudget(ids.map((id) => [...(text.get(id) ?? '')].length), cap));
+        // a budget already at the cap cannot be doubled: the retry would be the identical request
+        if (scale < 2 && Math.min(cap, budget * 2) > budget) return call(ids, mk, 2);
+        lose(ids, scale < 2 ? '模型输出被截断（预算已达上限，无法加倍），已按标点拆分' : '模型输出被截断（加倍预算重试后仍然截断），已按标点拆分');
         return [];
       }
       const mid = Math.ceil(ids.length / 2);
@@ -318,10 +320,9 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
 
   // ---- the one retry: only the failing lines, with the problem list ----------------------------------------------------
   let retried = false;
-  const retryIds0 = () => [...failing.keys()].filter((id) => !lost.has(id));
-  if (retryIds0().length > 0) {
+  const retryIds = [...failing.keys()].filter((id) => !lost.has(id));
+  if (retryIds.length > 0) {
     retried = true;
-    const retryIds = [...failing.keys()].filter((id) => !lost.has(id));
     const allProblems = [...failing.values()].flat();
     const prevOfFailing = previous.map((p) => ({ lines: p.lines.filter((l) => failing.has(l.id)) }));
     try {
