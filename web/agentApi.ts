@@ -3,7 +3,7 @@ import type { OpRecord, ToolStats } from '@shared/agent/tools';
 import type { HistoryTurn } from '@shared/agent/history';
 import type { CaptureRequest } from '@shared/agent/frames';
 import type { Project } from '@shared/schema/project';
-import type { Verification } from '@shared/agent/verify';
+import type { LongLine, Verification } from '@shared/agent/verify';
 import type { MemoryEvent } from '@shared/agent/memory';
 import { answerCapture } from './agentFrames';
 
@@ -31,6 +31,8 @@ export interface AgentProposal {
   mode: 'tools' | 'json';
   stats: ToolStats;
   verification?: Verification;
+  /** Lines this turn made longer than the dialogue area (absent when none). */
+  longLines?: LongLine[];
   /** Long-term memory saved / updated / forgotten / proposed in this turn. */
   memory?: MemoryEvent[];
   stopped: string;
