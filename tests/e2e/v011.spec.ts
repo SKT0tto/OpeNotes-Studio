@@ -287,6 +287,7 @@ test.describe('AI settings and generation failures', () => {
     provider: 'anthropic', available: ['anthropic', 'openai'],
     anthropic: { hasKey: false, mask: null, source: null, model: 'claude-sonnet-5-5', baseUrl: '' },
     openai: { hasKey: false, mask: null, source: null, model: '', baseUrl: '' },
+    vision: { hasKey: false, mask: null, source: null, mode: 'auto', model: '', baseUrl: '' },
     status: { configured: false, provider: 'anthropic', model: null, verified: 'none', message: '未配置 AI：Anthropic 缺少 API key（请在设置中填写，或设置环境变量 ANTHROPIC_API_KEY）' },
     ...over,
   });
@@ -372,7 +373,7 @@ test.describe('AI settings and generation failures', () => {
     await expect(page.getByTestId('full-failed-scene').first()).toContainText('API key 无效或无权限');
     await expect(page.getByTestId('full-stage')).toContainText('0 个场景成功');
     await expect(page.getByTestId('full-fix')).toContainText('打开 AI 设置');
-    await expect(page.getByTestId('full-resume')).toContainText('重试失败场景');
+    await expect(page.getByTestId('full-resume')).toContainText('重试失败的');
     await expect(page.getByTestId('full-done')).toHaveCount(0);
     await page.screenshot({ path: '.verify/v011-gen-all-failed.png' });
     await page.unroute('**/api/director/scenes');
@@ -405,7 +406,7 @@ test.describe('AI settings and generation failures', () => {
     await expect(page.getByTestId('full-succeeded')).toContainText('已成功');
     await expect(page.getByTestId('full-stage')).toContainText(/\d+ 个场景成功，2 个失败/);
     await expect(page.getByTestId('full-done')).toHaveCount(0);
-    await expect(page.getByTestId('full-resume')).toContainText('重试失败场景（2）');
+    await expect(page.getByTestId('full-resume')).toContainText('重试失败的 2 场');
     await page.screenshot({ path: '.verify/v011-gen-partial.png' });
     // retry: only the two failed scenes are sent, and now everything is reported as done
     await page.unroute('**/api/director/scenes');

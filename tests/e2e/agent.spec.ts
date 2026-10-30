@@ -102,7 +102,7 @@ test('an instruction produces a card; applying part of it is one undo step', asy
   await expect.poll(() => shotTypes(['s1b1', 's1b2', 's1b5']), { timeout: 20_000 }).toEqual(['cu', 'cu', before[2]]);
   const p = await playing(page);
   expect(p.scenes[0]!.beats[0]!.shot.meta).toMatchObject({ source: 'ai', genId: 'agent_e2e' });
-  expect(await undoTitle()).toContain('AI 助手：这一段镜头都推近一点');
+  expect(await undoTitle()).toContain('AI：这一段镜头都推近一点');
   // ONE Ctrl+Z undoes both
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Control+z');

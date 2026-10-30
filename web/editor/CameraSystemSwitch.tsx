@@ -49,7 +49,7 @@ export function CameraSystemSwitch({ project, onRegenerate, regenerationBusy }: 
           {project.source.text ? (
             <p>可重新生成本场景或全部尚未设计运镜的场景的镜头，也可在右侧「镜头」面板手动设置「叙事意图」。生成后先预览差异，接受后才应用；未配置 AI 时使用规则导演（非 AI）。</p>
           ) : (
-            <p>这个项目没有原文，不能直接使用 AI 导演。可在右侧「镜头」面板手动设置「叙事意图」。</p>
+            <p>这个项目没有原文，不能直接用 AI 生成。可在右侧「镜头」面板手动设置「叙事意图」。</p>
           )}
           {project.scenes.some((s) => s.cameraSystem && s.cameraSystem !== 'inherit') && (
             <p className="hint">单独设置了镜头系统的场景仍遵循场景设置。</p>

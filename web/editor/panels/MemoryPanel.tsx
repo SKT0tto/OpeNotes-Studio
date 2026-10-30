@@ -15,7 +15,7 @@ const scopeLabel = (m: Pick<Memory, 'scope' | 'castName' | 'castId'>) => (m.scop
 
 function KindSelect({ value, onChange, testId }: { value: MemoryKind; onChange: (k: MemoryKind) => void; testId?: string }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value as MemoryKind)} data-testid={testId} title="镜头 / 特效 / 站位表演 / 节奏 会给 AI 导演参考；其他 只给助手">
+    <select value={value} onChange={(e) => onChange(e.target.value as MemoryKind)} data-testid={testId} title="镜头 / 特效 / 站位表演 / 节奏 生成整场时也会给 AI 参考；其他 只在对话里用">
       {MEMORY_KINDS.map((k) => <option key={k} value={k}>{MEMORY_KIND_LABEL[k]}</option>)}
     </select>
   );
@@ -77,14 +77,14 @@ export function MemoryManager({ projectId }: { projectId: string }) {
         <strong>长期记忆</strong>
         <ExperimentalBadge />
         <span className="grow" />
-        <label className="chk" title={`${EXPERIMENTAL_TIP}。关闭后助手不再读取、保存记忆，AI 导演也不参考（已存的记忆保留）。`}>
+        <label className="chk" title={`${EXPERIMENTAL_TIP}。关闭后 AI 不再读取、保存记忆，生成时也不参考（已存的记忆保留）。`}>
           <input type="checkbox" checked={enabled} data-testid="memory-enabled" onChange={(e) => void st.setEnabled(e.target.checked)} /> 启用记忆
         </label>
       </div>
-      {!enabled ? <p className="hint">记忆已关闭：助手不会读取或保存偏好，AI 导演也不参考。</p> : (
+      {!enabled ? <p className="hint">记忆已关闭：AI 不会读取或保存偏好，生成时也不参考。</p> : (
         <>
-          <p className="hint">助手会记住你说「记住 / 以后 / 一律…」的演出偏好，跨对话生效；当前指令优先于记忆，本项目的优先于全局的。镜头、特效、站位表演、节奏类的偏好也会给 AI 导演生成整场时参考。</p>
-          {loaded && memories.length === 0 && <p className="hint" data-testid="memory-empty">还没有记忆。可以对助手说「记住：回忆一律用雾边」，或在下面手动添加。</p>}
+          <p className="hint">AI 会记住你说「记住 / 以后 / 一律…」的演出偏好，跨对话生效；当前指令优先于记忆，本项目的优先于全局的。镜头、特效、站位表演、节奏类的偏好也会在 AI 生成整场时参考。</p>
+          {loaded && memories.length === 0 && <p className="hint" data-testid="memory-empty">还没有记忆。可以对 AI 说「记住：回忆一律用雾边」，或在下面手动添加。</p>}
           {proj.length > 0 && <div className="memory-section"><div className="hint">本项目</div>{proj.map((m) => <MemoryRow key={`${m.id}:${m.updatedAt}`} m={m} projectId={projectId} />)}</div>}
           {glob.length > 0 && <div className="memory-section"><div className="hint">全局（所有项目）</div>{glob.map((m) => <MemoryRow key={`${m.id}:${m.updatedAt}`} m={m} projectId={projectId} />)}</div>}
           <div className="memory-add">

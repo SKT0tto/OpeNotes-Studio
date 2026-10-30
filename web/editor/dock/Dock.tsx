@@ -5,7 +5,7 @@
  * (`render`) so they keep reading the same state. The stage is special: its DOM host is owned by the Workspace and only
  * attached here, so the Pixi application survives every layout operation (preset, reset, closing and re-adding a group).
  */
-import { useContext, useEffect, useLayoutEffect, useRef, useSyncExternalStore, createContext, type ReactNode } from 'react';
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore, createContext, type ReactNode } from 'react';
 import {
   DockviewReact,
   themeDark,
@@ -24,9 +24,10 @@ import {
   PANEL_TITLE,
   REQUIRED,
   SHOW_PLACEMENT,
+  aiRestorePlacement,
   forgetLayout,
   isPanelId,
-  loadSavedLayout,
+  loadMigratedLayout,
   presetById,
   resolvePlacement,
   saveLayout,
@@ -41,6 +42,8 @@ export interface DockController {
   hide: (id: PanelId) => void;
   toggle: (id: PanelId) => void;
   activate: (id: PanelId) => void;
+  /** Bring the previously front tab of this panel's group to the front, without closing the panel or changing the layout. False when the panel is alone in its group. */
+  back: (id: PanelId) => boolean;
   applyPreset: (id: string) => void;
   /** Back to the default preset and forget the saved layout. */
   reset: () => void;
@@ -49,6 +52,8 @@ export interface DockController {
 interface DockCtxValue {
   render: (id: PanelId, visible: boolean) => ReactNode;
   stageHost: HTMLElement;
+  /** A panel became the visible tab of its group (true) or stopped being rendered / visible (false). */
+  onVisible: (id: PanelId, visible: boolean) => void;
 }
 const DockCtx = createContext<DockCtxValue | null>(null);
 
@@ -67,6 +72,12 @@ function DockPanel({ api }: IDockviewPanelProps) {
   const id = api.id as PanelId;
   const visible = usePanelVisible(api);
   const holder = useRef<HTMLDivElement>(null);
+  // the workspace needs to know whether a panel is on screen (not just present): the 「AI」 button activates a panel hidden behind another tab
+  const { onVisible } = ctx;
+  useEffect(() => {
+    onVisible(id, visible);
+    return () => onVisible(id, false);
+  }, [onVisible, id, visible]);
   useLayoutEffect(() => {
     if (id !== 'stage') return;
     const el = holder.current!;
@@ -165,7 +176,7 @@ function addPlacement(api: DockviewApi, p: Placement, present: ReadonlySet<Panel
   else api.addPanel({ ...base, position: { referencePanel: target.ref, direction: target.dir } } as Parameters<DockviewApi['addPanel']>[0]);
 }
 
-function buildPreset(api: DockviewApi, presetId: string, extra: PanelId[] = []): void {
+function buildPreset(api: DockviewApi, presetId: string, extra: PanelId[] = [], showAgent = false): void {
   api.clear();
   const present = new Set<PanelId>();
   const preset = presetById(presetId);
@@ -180,15 +191,18 @@ function buildPreset(api: DockviewApi, presetId: string, extra: PanelId[] = []):
   }
   // the stage is the tab shown in its group, unless the preset made the storyboard the main view
   api.getPanel(presetId === 'storyboard' ? 'storyboard' : 'stage')?.api.setActive();
+  // the AI panel was open before (the remembered flag): bring its tab to the front of its group
+  if (showAgent) api.getPanel('agent')?.api.setActive();
 }
 
-export function Dock({ render, stageHost, agentWanted, onController, onPresent, onCenter }: {
+export function Dock({ render, stageHost, agentWanted, onController, onPresent, onVisible, onCenter }: {
   render: DockCtxValue['render'];
   stageHost: HTMLElement;
-  /** Open the assistant in a layout that is built from scratch (the remembered "assistant open" flag). */
+  /** Show the AI panel in a layout that is built from scratch (the remembered "AI panel open" flag). */
   agentWanted: boolean;
   onController: (c: DockController) => void;
   onPresent: (present: ReadonlySet<PanelId>) => void;
+  onVisible: DockCtxValue['onVisible'];
   /** The stage / storyboard tab that is now the visible one. */
   onCenter: (id: 'stage' | 'storyboard') => void;
 }) {
@@ -196,19 +210,23 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
   useEffect(() => {
     live.current = { onController, onPresent, onCenter, agentWanted };
   });
+  const ctxValue = useMemo<DockCtxValue>(() => ({ render, stageHost, onVisible }), [render, stageHost, onVisible]);
   const onReady = ({ api }: DockviewReadyEvent) => {
     let restoring = true;
-    const saved = loadSavedLayout();
+    const saved = loadMigratedLayout();
     let ok = false;
     if (saved) {
       try {
-        api.fromJSON(saved as unknown as Parameters<DockviewApi['fromJSON']>[0]);
+        api.fromJSON(saved.layout as unknown as Parameters<DockviewApi['fromJSON']>[0]);
         ok = true;
+        // a layout saved before the AI director became part of the AI panel: the panel is added back (a background tab), and the titles are refreshed
+        if (saved.needsAiPanel && !api.getPanel('agent')) addPlacement(api, aiRestorePlacement(presentOf(api)), presentOf(api), false);
+        for (const p of api.panels) if (isPanelId(p.id) && p.title !== PANEL_TITLE[p.id]) p.api.setTitle(PANEL_TITLE[p.id]);
       } catch {
         ok = false; // dockview rejected it: start from the default
       }
     }
-    if (!ok) buildPreset(api, 'default', live.current.agentWanted ? ['agent'] : []);
+    if (!ok) buildPreset(api, 'default', [], live.current.agentWanted);
     restoring = false;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -223,6 +241,8 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
         }
       }, 250);
     };
+    // the tabs that were in front before, newest first (for `back`: the 「AI」 button returns to the previous tab of the group)
+    let recent: string[] = [];
     // the add / remove events fire before dockview updates its own list, so the set is kept from the events themselves
     let cur = presentOf(api);
     const emitPresent = () => live.current.onPresent(new Set(cur));
@@ -246,6 +266,7 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
       api.onDidLayoutFromJSON(recompute),
       api.onDidActivePanelChange((e) => {
         const id = e.panel?.id;
+        if (id) recent = [id, ...recent.filter((x) => x !== id)].slice(0, 12);
         if (id === 'stage' || id === 'storyboard') live.current.onCenter(id);
       }),
     ];
@@ -267,12 +288,18 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
       },
       toggle: (id) => (has(id) ? controller.hide(id) : controller.show(id)),
       activate: (id) => api.getPanel(id)?.api.setActive(),
+      back: (id) => {
+        const panel = api.getPanel(id);
+        const mates = panel?.group.panels.filter((p) => p.id !== id) ?? [];
+        const target = recent.map((x) => mates.find((p) => p.id === x)).find(Boolean) ?? mates[0];
+        if (!target) return false;
+        target.api.setActive();
+        return true;
+      },
       applyPreset: (id) => {
-        const hadAgent = has('agent');
         restoring = true;
         try {
-          // an assistant that is open stays open, wherever the preset puts the other panels
-          buildPreset(api, id, hadAgent && !presetById(id).placements.some((p) => p.id === 'agent') ? ['agent'] : []);
+          buildPreset(api, id); // every preset has the AI panel (the 「AI 工作」 one in front, the others behind the inspector's tab)
         } finally {
           restoring = false;
         }
@@ -290,7 +317,7 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
   };
 
   return (
-    <DockCtx.Provider value={{ render, stageHost }}>
+    <DockCtx.Provider value={ctxValue}>
       <div className="dock-root" data-testid="dock-root" data-layout-key={LAYOUT_KEY}>
         <DockviewReact
           components={COMPONENTS}

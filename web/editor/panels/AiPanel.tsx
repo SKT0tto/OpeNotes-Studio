@@ -1,361 +1,206 @@
 /**
- * AI director panel: generate / regenerate scenes, whole scenes or one scope; every proposal is shown as a diff against the
- * current scene and accepted or rejected per scope (one undo step each); progress, cancel, the run log and the continuity
- * check of the whole project.
+ * 「AI」: the one AI panel, chat first. A header row, ONE scrolling stream (your messages, the AI's generation cards and change cards, in the order
+ * they happened) and a composer at the bottom that never scrolls away (context, suggestion chips, the input, 「生成 ▾」, 发送). Generating is an
+ * action next to the input: the popover sets what and how, and the result arrives in the stream as a card with the same verbs as every other
+ * card (应用全部 / 应用所选 / 拒绝 / 撤销这次 / 换一版 / 微调). The engines are unchanged: generation is `directorRun.ts`, the assistant is
+ * `agentStore.ts`; they share the selection, the AI settings, the memory switch and this stream.
  */
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
-import { costumeLabelZh } from '@shared/catalog/labels';
-import { catalogLookups, checkContinuity } from '@shared/director/continuity';
-import { alignToOld, diffScene, type DiffScope } from '@shared/director/diff';
-import { mergeLocks } from '@shared/director/mergeLocks';
-import { SCOPE_LABEL, SCOPE_NAMES, type ScopeName } from '@shared/director/scope';
-import type { CompactCatalog } from '@shared/schema/assets';
-import type { Project } from '@shared/schema/project';
-import type { PublicLlmSettings } from '@shared/schema/settings';
-import { DirectorApiError, postScene, postScenes, type BatchProgress, type SceneResponse } from '../../directorApi';
-import { DirectorMemoryLine } from './MemoryPanel';
-import { fetchLlmSettings } from '../../llmApi';
+import { useMemories } from '../../memoryApi';
+import { useAgent } from '../../store/agentStore';
+import { useAiFlow } from '../../store/aiFlow';
 import { useProject } from '../../store/projectStore';
-import { notify } from '../../store/uiStore';
+import { useUi } from '../../store/uiStore';
 import { SettingsDialog } from '../dialogs/SettingsDialog';
 import { useCatalog } from '../useCatalog';
-import { AiResultCard, type Card } from './AiResultCard';
+import { ChatTurn } from './AgentPanel';
+import { AiComposer } from './ai/AiComposer';
+import { noAi, useAiSettings } from './ai/aiSettings';
+import { GenerateTurn } from './ai/GenerateCard';
+import { OnboardTurn } from './ai/OnboardCard';
+import type { GenTurn } from './ai/genTurn';
+import { continuityOf, useDirectorRun, type CameraGenerationRequest, type DirectorEnv, type Engine } from './directorRun';
+import { EXPERIMENTAL_TIP, MemoryManager } from './MemoryPanel';
 
-interface LogLine { at: number; kind: 'info' | 'error'; text: string }
-type Engine = 'ai' | 'rule';
+interface Item { order: number; key: string; node: 'chat' | 'generate' | 'onboard'; id: number }
 
-export function continuityOf(project: Project, catalog: CompactCatalog | null) {
-  return checkContinuity(project, catalogLookups(catalog));
+export function AiPanel({ visible = true, onFocusBeat, cameraRequest = null }: { visible?: boolean; onFocusBeat: (sceneId: string, beatId: string | undefined) => void; cameraRequest?: CameraGenerationRequest | null }) {
+  // dockview keeps a panel's React tree alive while its tab is behind another one: nothing is rendered (or recomputed on every edit, like the
+  // continuity check) until the tab is in front. Everything that matters survives in the stores: the run, the options, the draft, the pictures.
+  if (!visible) return null;
+  return <AiPanelBody onFocusBeat={onFocusBeat} cameraRequest={cameraRequest} />;
 }
 
-/** A user-created request; consuming also invalidates it when leaving the panel. */
-export interface CameraGenerationRequest {
-  projectId: string;
-  /** One scene (current-scene regenerate) or several, processed one request at a time. */
-  sceneIds: string[];
-  consume: () => boolean;
-}
-
-interface RunOptions {
-  sceneId?: string;
-  /** Several scenes, one sequential request each (camera regenerate for all). */
-  sceneIds?: string[];
-  scope?: ScopeName;
-  preview?: boolean;
-  overwriteUser?: boolean;
-  onlyBeat?: boolean;
-  engine?: Engine;
-}
-
-export function AiPanel({ cameraRequest = null, onBusyChange }: { cameraRequest?: CameraGenerationRequest | null; onBusyChange?: (busy: boolean) => void }) {
+function AiPanelBody({ onFocusBeat, cameraRequest }: { onFocusBeat: (sceneId: string, beatId: string | undefined) => void; cameraRequest: CameraGenerationRequest | null }) {
   const project = useProject((s) => s.project)!;
-  const selection = useProject((s) => s.selection);
   const catalog = useCatalog();
-  const [settings, setSettings] = useState<PublicLlmSettings | null>(null);
-  const [settingsLoading, setSettingsLoading] = useState(true);
-  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const hoverBeat = useUi((s) => s.hoverBeat);
+  const runs = useAgent((s) => s.runs);
+  const memoryView = useAgent((s) => s.memoryView);
+  const snapshot = useAgent((s) => s.snapshot);
+  const turns = useDirectorRun((s) => s.turns);
+  const entries = useAiFlow((s) => s.entries);
+  const popoverOpen = useAiFlow((s) => s.popoverOpen);
+  const continuityOpen = useAiFlow((s) => s.continuityOpen);
+  const aiState = useAiSettings();
+  const { settings, loading, error } = aiState;
+  const mem = useMemories();
   const [showSettings, setShowSettings] = useState(false);
-  const [engine, setEngine] = useState<Engine>('ai');
-  const [preview, setPreview] = useState(true);
-  const [scope, setScope] = useState<ScopeName>('scene');
-  const [onlyBeat, setOnlyBeat] = useState(false);
-  const [overwriteUser, setOverwriteUser] = useState(false);
-  const [useMem, setUseMem] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState<Record<string, BatchProgress>>({});
-  const [total, setTotal] = useState(0);
-  const [cards, setCards] = useState<Record<string, Card>>({});
-  const [log, setLog] = useState<LogLine[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const ctl = useRef<AbortController | null>(null);
-  const mounted = useRef(false);
-  const meta = useRef<{ scopes: ScopeName[]; beatIds?: string[]; overwrite: boolean; label: string }>({ scopes: ['scene'], overwrite: false, label: '' });
+  const [menu, setMenu] = useState(false);
+  const end = useRef<HTMLDivElement>(null);
+  const a = useAgent.getState();
 
-  const loadSettings = useCallback(() => {
-    return fetchLlmSettings().then(setSettings, (e: Error) => {
-      setSettings(null);
-      setSettingsError(e.message);
-    }).finally(() => setSettingsLoading(false));
-  }, []);
-  useEffect(() => { void loadSettings(); }, [loadSettings]);
-  const reload = () => {
-    setSettingsLoading(true);
-    setSettingsError(null);
-    void loadSettings();
-  };
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-      ctl.current?.abort();
-      onBusyChange?.(false);
-    };
-  }, [onBusyChange]);
-
-  const scene = project.scenes.find((s) => s.id === selection.sceneId) ?? project.scenes[0];
+  useEffect(() => { void useAiSettings.getState().load(); }, []);
+  useEffect(() => { void useMemories.getState().load(project.id); }, [project.id]);
   const configured = settings?.status.configured === true;
-  const useRule = engine === 'rule' || !configured;
-  const canGenerate = !busy && !settingsLoading && !settingsError && !!project.source.text && project.scenes.length > 0;
-  const who = useRule ? '规则' : settings?.status.provider === 'fixture' ? '回放' : 'AI';
-  const castName = useCallback((id: string) => project.cast.find((c) => c.id === id)?.displayName ?? id, [project.cast]);
-  const titleOf = (id: string) => project.scenes.find((s) => s.id === id)?.title ?? id;
-  const say = (kind: LogLine['kind'], text: string) => setLog((l) => [...l.slice(-60), { at: Date.now(), kind, text }]);
+  const provider = settings?.status.provider;
+  const env: DirectorEnv = useMemo(() => ({ configured, provider, catalog }), [configured, provider, catalog]);
+  const setPopoverOpen = useCallback((open: boolean) => useAiFlow.getState().setPopoverOpen(open), []);
 
-  /** Applies proposals to the CURRENT scenes through the lock-enforcing merge; one undo step. */
-  const applyCards = (list: Array<{ card: Card; scopes: ScopeName[] }>, label: string, partial = false) => {
-    const conflicts: string[] = [];
-    const done: string[] = [];
-    useProject.getState().applyEdit((d) => {
-      for (const { card, scopes } of list) {
-        const k = d.scenes.findIndex((s) => s.id === card.sceneId);
-        if (k < 0) continue;
-        const cur = JSON.parse(JSON.stringify(d.scenes[k])) as Project['scenes'][number];
-        const merged = mergeLocks(cur, partial ? alignToOld(cur, card.result.scene) : card.result.scene, {
-          scopes, ...(meta.current.beatIds ? { beatIds: meta.current.beatIds } : {}), overwriteUser: meta.current.overwrite,
-        });
-        if (merged.applied) {
-          d.scenes[k] = merged.scene as never;
-          done.push(card.sceneId);
-        } else conflicts.push(...merged.conflicts.map((c) => c.label));
-      }
-    }, label);
-    setCards((c) => {
-      const next = { ...c };
-      for (const { card } of list) if (next[card.sceneId] && done.includes(card.sceneId)) next[card.sceneId] = { ...next[card.sceneId]!, state: 'accepted' };
-      return next;
-    });
-    if (conflicts.length > 0) setError(`锁定冲突，没有应用：\n${conflicts.join('\n')}`);
-    else notify(`${label}（Ctrl+Z 可撤销）`, 'info');
-  };
-
-  const accept = (card: Card, all: boolean) => {
-    const scopes: ScopeName[] = all ? meta.current.scopes : (card.checked.filter((s) => s !== 'structure') as ScopeName[]);
-    applyCards([{ card, scopes }], `${who}：接受「${card.title}」${all ? '' : '（部分范围）'}`, !all);
-  };
-  const acceptAll = () => {
-    const pend = Object.values(cards).filter((c) => c.state === 'pending' && c.result.applied);
-    if (pend.length > 0) applyCards(pend.map((card) => ({ card, scopes: meta.current.scopes })), `${who}：接受 ${pend.length} 个场景的演出`);
-  };
-  const reject = (id: string) => setCards((c) => ({ ...c, [id]: { ...c[id]!, state: 'rejected' } }));
-  const rejectAll = () => setCards((c) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.state === 'pending' ? { ...v, state: 'rejected' as const } : v])));
-  const toggle = (id: string, s: DiffScope) => setCards((c) => ({ ...c, [id]: { ...c[id]!, checked: c[id]!.checked.includes(s) ? c[id]!.checked.filter((x) => x !== s) : [...c[id]!.checked, s] } }));
-
-  const intake = (snapshotScenes: Project['scenes'], results: SceneResponse[], runPreview: boolean, runWho: string) => {
-    const fresh: Record<string, Card> = {};
-    for (const r of results) {
-      const old = snapshotScenes.find((s) => s.id === r.sceneId);
-      if (!old) continue;
-      const diff = diffScene(old, alignToOld(old, r.scene), {
-        cast: castName,
-        model: (id) => {
-          const m = catalog?.models.find((x) => x.id === id);
-          return m ? costumeLabelZh(m.costumeInfo, m.costume) : id;
-        },
-      });
-      fresh[r.sceneId] = { sceneId: r.sceneId, title: old.title, result: r, diff, scopes: meta.current.scopes, state: 'pending', checked: Object.keys(diff.counts) as DiffScope[] };
-      say('info', `${old.title}：${r.runs.length} 次调用，${r.runs.reduce((n, x) => n + x.ms, 0)} ms，${diff.items.length} 项变化${r.warnings.length ? `，${r.warnings.length} 条修复/警告` : ''}${r.runs.some((x) => x.repaired) ? '，含修复调用' : ''}`);
-    }
-    setCards((c) => ({ ...c, ...fresh }));
-    if (!runPreview) applyCards(Object.values(fresh).filter((c) => c.result.applied).map((card) => ({ card, scopes: meta.current.scopes })), `${runWho} 生成：${meta.current.label}`);
-    else if (Object.values(fresh).some((c) => !c.result.applied)) setError('有场景因锁定冲突没有应用，详见结果。');
-  };
-
-  const run = async (all: boolean, options: RunOptions = {}) => {
-    if (ctl.current) return;
-    const snapshot = useProject.getState().project;
-    const runScene = snapshot?.scenes.find((s) => s.id === (options.sceneId ?? scene?.id));
-    const multi = options.sceneIds;
-    if (!snapshot?.source.text || (!all && !multi && !runScene)) return;
-    const runScope = options.scope ?? scope;
-    const runPreview = options.preview ?? preview;
-    const runOverwrite = options.overwriteUser ?? overwriteUser;
-    const runOnlyBeat = options.onlyBeat ?? onlyBeat;
-    const runUseRule = options.engine ? options.engine === 'rule' : useRule;
-    const runWho = runUseRule ? '规则' : settings?.status.provider === 'fixture' ? '回放' : 'AI';
-    setBusy(true);
-    onBusyChange?.(true);
-    setError(null);
-    setProgress({});
-    setCards({});
-    ctl.current = new AbortController();
-    const scopes: ScopeName[] = all ? ['scene'] : [runScope];
-    const beatIds = !all && runOnlyBeat && selection.beatId ? [selection.beatId] : undefined;
-    meta.current = { scopes, ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, label: all ? '全部场景' : multi ? `${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}` : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}` };
-    const eng = runUseRule ? ({ engine: 'rule' } as const) : useMem ? {} : { useMemories: false };
-    const got: SceneResponse[] = [];
-    try {
-      if (all) {
-        setTotal(snapshot.scenes.length);
-        say('info', `开始生成全部场景（${runWho}，并发 3）`);
-        try {
-          await postScenes(snapshot, { scopes, overwriteUser: runOverwrite, ...eng }, (p) => {
-            setProgress((x) => ({ ...x, [p.sceneId]: p }));
-            if (p.state === 'done' && p.result) got.push(p.result);
-            if (p.state === 'error') say('error', `${titleOf(p.sceneId)}：${p.message ?? ''}`);
-          }, ctl.current.signal);
-        } catch (e) {
-          if ((e as Error).name !== 'AbortError') throw e;
-          say('info', `已取消：保留已完成的 ${got.length} 个场景，可再次点击继续（已完成的有缓存，不会重复调用）`);
-        }
-      } else if (multi) {
-        setTotal(multi.length);
-        say('info', `开始：${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}（${runWho}，逐场景依次请求）`);
-        for (const id of multi) {
-          const title = titleOf(id);
-          if (ctl.current.signal.aborted) break;
-          setProgress((x) => ({ ...x, [id]: { sceneId: id, title, state: 'start' } }));
-          try {
-            const result = await postScene(snapshot, id, { scopes, overwriteUser: runOverwrite, ...eng }, ctl.current.signal);
-            got.push(result);
-            setProgress((x) => ({ ...x, [id]: { sceneId: id, title, state: 'done', result } }));
-          } catch (e) {
-            if ((e as Error).name === 'AbortError') {
-              say('info', `已取消：保留已完成的 ${got.length} 个场景`);
-              break;
-            }
-            const msg = e instanceof DirectorApiError ? e.message : (e as Error).message;
-            setProgress((x) => ({ ...x, [id]: { sceneId: id, title, state: 'error', message: msg } }));
-            say('error', `${title}：${msg}`);
-            setError(`${title}：${msg}
-已停止，保留已完成的 ${got.length} 个场景。`);
-            break;
-          }
-        }
-      } else if (runScene) {
-        setTotal(1);
-        say('info', '开始：' + runScene.title + ' · ' + SCOPE_LABEL[runScope] + '（' + runWho + '）');
-        got.push(await postScene(snapshot, runScene.id, { scopes, ...(beatIds ? { beatIds } : {}), overwriteUser: runOverwrite, ...eng }, ctl.current.signal));
-      }
-      if (mounted.current) intake(snapshot.scenes, got, runPreview, runWho);
-    } catch (e) {
-      if (!mounted.current) return;
-      if ((e as Error).name !== 'AbortError') {
-        const msg = e instanceof DirectorApiError ? `${e.message}${e.problems.length ? `\n${e.problems.join('\n')}` : ''}` : (e as Error).message;
-        setError(msg);
-        say('error', msg.split('\n')[0]!);
-      } else say('info', '已取消');
-    } finally {
-      if (mounted.current) {
-        setBusy(false);
-        onBusyChange?.(false);
-      }
-      ctl.current = null;
-    }
-  };
-
+  // A camera regeneration request (the travel notice, 重导镜头): runs once, with the controls it needs, when the settings are known.
   const receiveCameraRequest = useEffectEvent((request: CameraGenerationRequest) => {
     if (!request.consume()) return;
-    setScope('camera');
-    setPreview(true);
-    setOverwriteUser(false);
-    setOnlyBeat(false);
-    if (settingsError || !settings) return;
-    const snapshot = useProject.getState().project;
-    if (snapshot?.id !== request.projectId || !request.sceneIds.every((id) => snapshot.scenes.some((s) => s.id === id))) return;
-    const runEngine = settings.status.configured ? 'ai' : 'rule';
-    setEngine(runEngine);
+    const store = useDirectorRun.getState();
+    store.setControls({ target: 'scene', scope: 'camera', preview: true, overwriteUser: false, onlyBeat: false });
+    if (error || !settings) return;
+    const current = useProject.getState().project;
+    if (current?.id !== request.projectId || !request.sceneIds.every((id) => current.scenes.some((s) => s.id === id))) return;
+    const runEngine: Engine = settings.status.configured ? 'ai' : 'rule';
+    store.setControls({ engine: runEngine });
     const [only] = request.sceneIds;
-    void run(false, { ...(request.sceneIds.length === 1 && only ? { sceneId: only } : { sceneIds: request.sceneIds }), scope: 'camera', preview: true, overwriteUser: false, onlyBeat: false, engine: runEngine });
+    void store.run(false, { ...(request.sceneIds.length === 1 && only ? { sceneId: only } : { sceneIds: request.sceneIds }), scope: 'camera', preview: true, overwriteUser: false, onlyBeat: false, engine: runEngine }, env);
   });
   useEffect(() => {
-    if (!cameraRequest || settingsLoading) return;
+    if (!cameraRequest || loading) return;
     // Dispatch the user command after the panel/settings commit; navigation cancels it.
     const timer = window.setTimeout(() => receiveCameraRequest(cameraRequest), 0);
     return () => window.clearTimeout(timer);
-  }, [cameraRequest, settingsLoading]);
+  }, [cameraRequest, loading]);
+  // Leaving the panel (closed, or another tab in front) cancels a request that has not run yet, so that coming back never replays it. The
+  // cancel is deferred one tick and undone by a re-mount: React's strict mode mounts, unmounts and re-mounts every component once.
+  const latestRequest = useRef(cameraRequest);
+  useEffect(() => { latestRequest.current = cameraRequest; });
+  const cancelTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (cancelTimer.current !== null) {
+      window.clearTimeout(cancelTimer.current);
+      cancelTimer.current = null;
+    }
+    return () => {
+      cancelTimer.current = window.setTimeout(() => void latestRequest.current?.consume(), 0);
+    };
+  }, []);
 
-  const pending = Object.values(cards).filter((c) => c.state === 'pending' && c.result.applied);
-  const warnings = useMemo(() => continuityOf(project, catalog), [project, catalog]);
-  const finished = Object.values(progress).filter((p) => p.state !== 'start').length;
+  // the stream: assistant turns, generation turns and the first-run dialog's cards, in the order they happened
+  const items = useMemo<Item[]>(() => [
+    ...runs.map((r) => ({ order: r.order, key: `c${r.id}`, node: 'chat' as const, id: r.id })),
+    ...turns.map((t) => ({ order: t.order, key: `g${t.id}`, node: 'generate' as const, id: t.id })),
+    ...entries.map((e) => ({ order: e.order, key: `o${e.id}`, node: 'onboard' as const, id: e.id })),
+  ].sort((x, y) => x.order - y.order), [runs, turns, entries]);
+  const last = runs.at(-1);
+  const lastTurn = turns.at(-1);
+  const tailKey = `${items.length}:${last?.progress.length ?? 0}:${last?.status ?? ''}:${lastTurn?.status ?? ''}:${Object.keys(lastTurn?.progress ?? {}).length}:${Object.keys(lastTurn?.cards ?? {}).length}`;
+  // follow the stream: a generation card is shown from its top (its head and its buttons matter, not its last diff line), anything else from its end
+  const flow = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const turnEls = flow.current?.querySelectorAll<HTMLElement>('[data-testid="ai-turn"]');
+    const lastEl = turnEls?.[turnEls.length - 1];
+    if (lastEl?.dataset.kind === 'generate' && lastTurn?.status !== 'running') lastEl.scrollIntoView?.({ block: 'start' });
+    else end.current?.scrollIntoView?.({ block: 'end' });
+  }, [tailKey, memoryView, lastTurn?.status]);
+
+  // 「微调」: select that scene, put 「第N场：」 in the input and focus it; nothing is sent
+  const refine = (sceneId: string) => {
+    onFocusBeat(sceneId, undefined);
+    const no = project.scenes.findIndex((s) => s.id === sceneId) + 1;
+    useAgent.getState().setDraft(`第${no}场：`);
+    useAgent.getState().focusInput();
+  };
+  // a typed command that was routed to generation by mistake: drop that turn and send the words to the assistant
+  const routeUndo = (turn: GenTurn) => {
+    const text = turn.routed ?? turn.userText;
+    useDirectorRun.getState().discard(turn.id);
+    void useAgent.getState().send(text);
+  };
+  const clearAll = () => {
+    useAgent.getState().cancel();
+    useDirectorRun.getState().reset();
+    useAgent.setState({ runs: [], snapshot: null, running: false });
+    useAiFlow.setState({ entries: [] });
+  };
+
+  const warnings = useMemo(() => (continuityOpen ? continuityOf(project, catalog) : []), [continuityOpen, project, catalog]);
+  const memCount = mem.enabled ? mem.memories.filter((m) => m.enabled).length : 0;
+  const without = noAi(aiState);
+  const hasText = !!project.source.text;
 
   return (
-    <div className="ai-panel" data-testid="ai-panel">
-      {settingsLoading && <p className="hint" data-testid="ai-settings-loading">正在读取 AI 设置…</p>}
-      {settingsError && (
-        <div className="bad" data-testid="ai-settings-error">
-          <p>读取 AI 设置失败，尚未开始生成。{settingsError}</p>
-          <button className="btn" onClick={reload} data-testid="ai-settings-retry">重试读取设置</button>
+    <div className="ai-merged" data-testid="ai-merged-panel">
+      <div className="agent-panel ai-panel-root" data-testid="agent-panel" data-hover-beat={hoverBeat ?? undefined}>
+        <div className="ai-head">
+          <strong className="ai-head-title">AI</strong>
+          <span className="grow" />
+          <button className={`btn-s${memoryView ? ' on' : ''}`} data-testid="agent-memory" title={mem.enabled ? `长期记忆（${EXPERIMENTAL_TIP}）` : '长期记忆已关闭'} onClick={() => a.setMemoryView(!memoryView)}>{memoryView ? '返回对话' : '记忆'}{!memoryView && memCount > 0 ? ` ${memCount}` : ''}</button>
+          <button className="btn-s" data-testid="ai-gear" title="AI 设置" aria-label="AI 设置" onClick={() => setShowSettings(true)}>⚙</button>
+          <span className="ai-menu-wrap">
+            <button className="btn-s" data-testid="ai-menu" aria-label="更多" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>⋯</button>
+            {menu && (
+              <div className="ai-menu" role="menu" onMouseLeave={() => setMenu(false)}>
+                <button role="menuitem" className="btn-s" data-testid="ai-continuity-toggle" onClick={() => { useAiFlow.getState().setContinuityOpen(!continuityOpen); setMenu(false); }}>{continuityOpen ? '收起连续性检查' : '检查连续性'}</button>
+                <button role="menuitem" className="btn-s" data-testid="agent-restore" disabled={!snapshot} onClick={() => { a.restoreSnapshot(); setMenu(false); }}>恢复到 AI 开始前</button>
+                <button role="menuitem" className="btn-s" data-testid="ai-clear" onClick={() => { clearAll(); setMenu(false); }}>清空对话</button>
+              </div>
+            )}
+          </span>
         </div>
-      )}
-      {settings && (
-        <p className={settings?.status.verified === 'ok' ? 'ok' : configured && settings?.status.verified !== 'failed' ? 'hint' : 'warn'} data-testid="ai-status">
-          {settings.status.message}
-          {' '}<button className="btn-s" onClick={() => setShowSettings(true)} data-testid="ai-open-settings">AI 设置</button>
-        </p>
-      )}
-      {!project.source.text && <p className="hint" data-testid="ai-no-source">这个项目没有原文（不是由 AI 拆解创建的），不能用 AI 导演。请在项目列表里用「AI 拆解」创建项目。</p>}
-      <div className="ai-controls">
-        <label className="srow"><span>引擎</span>
-          <select value={useRule ? 'rule' : 'ai'} onChange={(e) => setEngine(e.target.value as Engine)} data-testid="ai-engine">
-            <option value="ai" disabled={!configured}>AI 模型{configured ? '' : '（未配置）'}</option>
-            <option value="rule">规则导演（非 AI，无需 key）</option>
-          </select>
-        </label>
-        <label className="srow"><span>范围</span>
-          <select value={scope} onChange={(e) => setScope(e.target.value as ScopeName)} data-testid="ai-scope">
-            {SCOPE_NAMES.map((n) => <option key={n} value={n}>{SCOPE_LABEL[n]}</option>)}
-          </select>
-        </label>
-        <label className="chk"><input type="checkbox" checked={onlyBeat} disabled={!selection.beatId} onChange={(e) => setOnlyBeat(e.target.checked)} data-testid="ai-only-beat" /> 只重做选中的台词</label>
-        <label className="chk"><input type="checkbox" checked={overwriteUser} onChange={(e) => setOverwriteUser(e.target.checked)} data-testid="ai-overwrite" /> 也覆盖我手改过的内容（锁定的永不覆盖）</label>
-        <label className="chk"><input type="checkbox" checked={preview} onChange={(e) => setPreview(e.target.checked)} data-testid="ai-preview" /> 先预览差异，再逐项接受 / 拒绝</label>
-        {!useRule && <DirectorMemoryLine projectId={project.id} on={useMem} setOn={setUseMem} disabled={busy} />}
-        <div className="ai-buttons">
-          <button className="btn primary" disabled={!canGenerate || !scene} onClick={() => void run(false)} data-testid="ai-regen-scene">
-            {scene && scene.beats.some((b) => b.meta.source !== 'rule') ? '重新生成' : '生成演出'}：{scene?.title ?? '—'}
-          </button>
-          <button className="btn" disabled={!canGenerate} onClick={() => void run(true)} data-testid="ai-gen-all">生成全部场景演出</button>
-          {busy && <button className="btn danger" onClick={() => ctl.current?.abort()} data-testid="ai-cancel">取消</button>}
+        {loading && <p className="hint ai-banner" data-testid="ai-settings-loading">正在读取 AI 设置…</p>}
+        {error && (
+          <div className="bad ai-banner" data-testid="ai-settings-error">
+            读取 AI 设置失败，尚未开始生成。{error}{' '}
+            <button className="btn-s" onClick={() => void useAiSettings.getState().load()} data-testid="ai-settings-retry">重试读取设置</button>
+          </div>
+        )}
+        {without && (
+          <p className="warn ai-banner" data-testid="ai-noai-banner">
+            未配置 AI：可以用「生成 ▾ → 规则生成（非 AI）」；用一句话修改需要 AI 模型{' '}
+            <button className="btn-s" onClick={() => setShowSettings(true)} data-testid="ai-banner-settings">设置</button>
+          </p>
+        )}
+        {memoryView && <div className="ai-stream"><MemoryManager projectId={project.id} /></div>}
+        <div ref={flow} className="agent-flow ai-stream" data-testid="agent-flow" hidden={memoryView}>
+          {continuityOpen && project.scenes.length > 0 && (
+            <details open data-testid="ai-continuity" className="ai-continuity-block">
+              <summary>{warnings.length === 0 ? '连续性检查：未发现问题' : `连续性检查：${warnings.length} 条提示（点击定位）`}</summary>
+              <ul className="ai-warn ai-continuity">
+                {warnings.map((w, i) => (
+                  <li key={i} onClick={() => useProject.getState().select({ sceneId: w.sceneId, ...(w.beatId ? { beatId: w.beatId } : {}) })} data-testid="ai-cont-item">{w.message}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+          {items.length === 0 && (
+            <p className="hint ai-empty" data-testid="ai-empty">
+              {hasText ? '用一句话指挥 AI：“第二场多用双人，少点特写”“这一句加回忆效果”“让爱音在这里进场”。点输入框旁的「生成 ▾」，让 AI（或规则生成）重新生成场景的演出。每次修改先给你看变更，可勾选应用，Ctrl+Z 一步撤销。'
+                : '用一句话指挥 AI：“第二场多用双人，少点特写”“这一句加回忆效果”。这个项目没有原文（不是由小说创建的），所以不能整场生成，但仍可以用一句话修改。每次修改先给你看变更，Ctrl+Z 一步撤销。'}
+            </p>
+          )}
+          {items.map((it) => {
+            if (it.node === 'chat') {
+              const r = runs.find((x) => x.id === it.id);
+              return r ? <ChatTurn key={it.key} run={r} project={project} onFocus={onFocusBeat} /> : null;
+            }
+            if (it.node === 'generate') {
+              const t = turns.find((x) => x.id === it.id);
+              return t ? <GenerateTurn key={it.key} turn={t} env={env} onRefine={refine} onRouteUndo={routeUndo} onOpenSettings={() => setShowSettings(true)} /> : null;
+            }
+            const e = entries.find((x) => x.id === it.id);
+            return e ? <OnboardTurn key={it.key} entry={e} env={env} /> : null;
+          })}
+          <div ref={end} />
         </div>
-        {useRule && <p className="hint" data-testid="ai-rule-hint">规则导演：对白按引号识别、说话人按名字匹配、镜头按固定节奏，产物标注为「规则」，不是 AI。</p>}
+        <AiComposer env={env} popoverOpen={popoverOpen} setPopoverOpen={setPopoverOpen} onOpenSettings={() => setShowSettings(true)} />
       </div>
-      {busy && total > 0 && (
-        <div data-testid="ai-meter">
-          <div className="ai-meter"><i style={{ width: `${Math.round((finished / total) * 100)}%` }} /></div>
-          <span className="hint">{finished} / {total} 个场景</span>
-        </div>
-      )}
-      {Object.keys(progress).length > 0 && (
-        <ul className="ai-progress" data-testid="ai-progress">
-          {Object.values(progress).map((p) => (
-            <li key={p.sceneId} className={p.state === 'error' ? 'bad' : p.state === 'done' ? 'ok' : ''} data-state={p.state}>
-              {p.state === 'start' ? '生成中…' : p.state === 'done' ? `完成${p.cached ? '（缓存）' : ''}` : `失败：${p.message}`} · {p.title}
-            </li>
-          ))}
-        </ul>
-      )}
-      {busy && Object.keys(progress).length === 0 && <p className="hint">请求中…（每个场景只调用一次模型）</p>}
-      {error && <pre className="bad ai-error" data-testid="ai-error">{error}</pre>}
-      {pending.length > 1 && (
-        <div className="ai-batchbar" data-testid="ai-batchbar">
-          <button className="btn primary" onClick={acceptAll} data-testid="ai-accept-batch">接受全部 {pending.length} 个场景</button>
-          <button className="btn" onClick={rejectAll}>全部拒绝</button>
-        </div>
-      )}
-      <ul className="ai-results">
-        {Object.values(cards).map((c) => (
-          <AiResultCard key={c.sceneId} card={c} onToggle={(s) => toggle(c.sceneId, s)} onAccept={(all) => accept(c, all)} onReject={() => reject(c.sceneId)} />
-        ))}
-      </ul>
-      {project.scenes.length > 0 && (
-        <details open={warnings.length > 0} data-testid="ai-continuity">
-          <summary>{warnings.length === 0 ? '连续性检查：未发现问题' : `连续性检查：${warnings.length} 条提示（点击定位）`}</summary>
-          <ul className="ai-warn ai-continuity">
-            {warnings.map((w, i) => (
-              <li key={i} onClick={() => useProject.getState().select({ sceneId: w.sceneId, ...(w.beatId ? { beatId: w.beatId } : {}) })} data-testid="ai-cont-item">{w.message}</li>
-            ))}
-          </ul>
-        </details>
-      )}
-      {log.length > 0 && (
-        <details>
-          <summary>运行记录（{log.length}）</summary>
-          <ul className="ai-log" data-testid="ai-log">
-            {log.map((l, i) => <li key={i} className={l.kind === 'error' ? 'bad' : ''}>{new Date(l.at).toLocaleTimeString()} {l.text}</li>)}
-          </ul>
-        </details>
-      )}
-      {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} onChanged={setSettings} />}
+      {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} onChanged={(s) => useAiSettings.getState().set(s)} />}
     </div>
   );
 }

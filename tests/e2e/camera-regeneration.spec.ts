@@ -1,9 +1,10 @@
-/** The travel notice delegates one camera-only preview to the existing director panel. No real LLM or settings are used. */
+/** The travel notice delegates one camera-only preview to the AI panel's generation (an ordinary generation turn in its stream). No real LLM or settings are used. */
 import fs from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Project } from '../../shared/schema/project';
 import type { SceneOptions } from '../../web/directorApi';
 import { beatStart, playing, seekTo, settled } from './helpers/editor';
+import { aiPop, openAi, showInspector } from './helpers/ui';
 
 const demo = JSON.parse(fs.readFileSync('tests/fixtures/demo-project.json', 'utf8')) as Project;
 const story = fs.readFileSync('tests/fixtures/story-short.txt', 'utf8');
@@ -99,7 +100,7 @@ test.afterEach(async ({ page, request }) => {
   projectId = '';
 });
 
-test('waits for configured AI, expands the left panel, and previews exactly one current-scene camera request', async ({ page }) => {
+test('waits for configured AI, opens the AI panel, and previews exactly one current-scene camera request', async ({ page }) => {
   const target = demo.scenes[1]!;
   await seekTo(page, await beatStart(page, target.beats[0]!.id) + 0.05);
   const before = (await playing(page)).scenes;
@@ -110,8 +111,8 @@ test('waits for configured AI, expands the left panel, and previews exactly one 
   await expect(page.getByTestId('camera-travel-notice')).toContainText(`本场景：${target.title}`);
   await page.getByTestId('camera-travel-regenerate').click();
   await expect(page.getByTestId('camera-travel-notice')).toHaveCount(0);
-  await expect(page.getByTestId('left-panel')).toBeVisible();
-  await expect(page.getByTestId('tab-ai')).toHaveClass('active');
+  await expect(page.getByTestId('ai-merged-panel')).toBeVisible(); // the AI panel does not need the left panel
+  await expect(page.getByTestId('left-panel')).toHaveCount(0);
   await expect(page.getByTestId('ai-settings-loading')).toBeVisible();
   expect(requests).toEqual([]);
   settingsGate.resolve();
@@ -127,19 +128,22 @@ test('waits for configured AI, expands the left panel, and previews exactly one 
   expect(sent.body.overwriteUser).toBe(false);
   expect(sent.body.project.scenes).toEqual(before);
   await expect(page.getByTestId('ai-diff-camera')).toBeVisible();
+  await aiPop(page);
   await expect(page.getByTestId('ai-preview')).toBeChecked();
+  await page.keyboard.press('Escape'); // closes the popover
   await settled(page);
   expect((await playing(page)).scenes).toEqual(before);
   await page.getByTestId('ai-reject').click();
-  await page.getByTestId('tab-script').click();
-  await page.getByTestId('tab-ai').click();
+  // another tab in front of the AI panel and back: the one-shot request is not replayed (and the panel's state is kept)
+  await showInspector(page);
+  await openAi(page);
   await expect(page.getByTestId('ai-settings-loading')).toHaveCount(0);
   await settled(page);
   expect(requests).toHaveLength(1);
 });
 
 test('overrides stale panel controls and cannot start a second generation while busy', async ({ page }) => {
-  await page.getByTestId('tab-ai').click();
+  await openAi(page);
   await expect(page.getByTestId('ai-status')).toContainText('configured');
   await page.getByTestId('ai-preview').uncheck();
   await page.getByTestId('ai-overwrite').check();
@@ -150,11 +154,13 @@ test('overrides stale panel controls and cannot start a second generation while 
   await page.getByTestId('cam-system-travel').click();
   await page.getByTestId('camera-travel-regenerate').click();
   await expect.poll(() => requests.length).toBe(1);
+  await aiPop(page);
   await expect(page.getByTestId('ai-scope')).toHaveValue('camera');
   await expect(page.getByTestId('ai-engine')).toHaveValue('ai');
   await expect(page.getByTestId('ai-preview')).toBeChecked();
   await expect(page.getByTestId('ai-overwrite')).not.toBeChecked();
   await expect(page.getByTestId('ai-only-beat')).not.toBeChecked();
+  await page.keyboard.press('Escape');
   expect(requests[0]!.body.scopes).toEqual(['camera']);
   expect(requests[0]!.body.beatIds).toBeUndefined();
   expect(requests[0]!.body.overwriteUser).toBe(false);
@@ -180,8 +186,10 @@ test('unconfigured AI explicitly falls back to the rule director', async ({ page
   expect(requests).toHaveLength(1);
   expect(requests[0]!.body.engine).toBe('rule');
   expect(requests[0]!.body.scopes).toEqual(['camera']);
-  await expect(page.getByTestId('ai-rule-hint')).toBeVisible();
   await expect(page.getByTestId('ai-origin')).toHaveText('规则');
+  await expect(page.getByTestId('ai-noai-banner')).toBeVisible(); // no AI: one line at the top of the panel
+  await aiPop(page);
+  await expect(page.getByTestId('ai-rule-hint')).toBeVisible();
 });
 
 test('settings failure ends the queued request and permits retry without silently generating', async ({ page }) => {
@@ -189,10 +197,13 @@ test('settings failure ends the queued request and permits retry without silentl
   await page.getByTestId('cam-system-travel').click();
   await page.getByTestId('camera-travel-regenerate').click();
   await expect(page.getByTestId('ai-settings-error')).toContainText('读取 AI 设置失败');
+  await aiPop(page);
   await expect(page.getByTestId('ai-regen-scene')).toBeDisabled();
+  await page.keyboard.press('Escape');
   expect(requests).toEqual([]);
   settingsFailure = false;
   await page.getByTestId('ai-settings-retry').click();
+  await aiPop(page);
   await expect(page.getByTestId('ai-status')).toContainText('configured');
   await expect(page.getByTestId('ai-regen-scene')).toBeEnabled();
   await settled(page);
@@ -203,14 +214,14 @@ test('settings failure ends the queued request and permits retry without silentl
   expect(requests[0]!.body.scopes).toEqual(['camera']);
 });
 
-test('leaving the panel cancels an unconsumed request and returning does not replay it', async ({ page }) => {
+test('leaving the panel (another tab in front of it) cancels an unconsumed request and returning does not replay it', async ({ page }) => {
   settingsGate = deferred();
   await page.getByTestId('cam-system-travel').click();
   await page.getByTestId('camera-travel-regenerate').click();
   await expect(page.getByTestId('ai-settings-loading')).toBeVisible();
-  await page.getByTestId('tab-script').click();
+  await showInspector(page); // the AI panel goes behind the inspector's tab: leaving it cancels the request that has not run yet
   settingsGate.resolve();
-  await page.getByTestId('tab-ai').click();
+  await openAi(page);
   await expect(page.getByTestId('ai-status')).toContainText('configured');
   await settled(page);
   expect(requests).toEqual([]);
@@ -239,12 +250,15 @@ test('the notice does not open on load or reload; all-scenes regenerate sends on
     expect(r.body.project.settings.cameraSystem).toBe('travel');
   }
   await expect(page.getByTestId('ai-diff-camera').first()).toBeVisible();
+  await aiPop(page);
   await expect(page.getByTestId('ai-preview')).toBeChecked();
+  await page.keyboard.press('Escape');
   await settled(page);
   expect((await playing(page)).scenes).toEqual(before); // nothing applied before accepting
-  // leaving and returning to the panel must not replay the one-shot request
-  await page.getByTestId('tab-script').click();
-  await page.getByTestId('tab-ai').click();
+  // leaving and returning to the panel must not replay the one-shot request; the results are still there
+  await showInspector(page);
+  await openAi(page);
+  await expect(page.getByTestId('ai-result')).toHaveCount(demo.scenes.length);
   await settled(page);
   expect(requests).toHaveLength(demo.scenes.length);
 });

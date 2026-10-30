@@ -59,13 +59,16 @@ async function drag(from: { x: number; y: number }, to: { x: number; y: number }
   await page.mouse.up();
 }
 
-test('the default layout: script left, stage centre, inspector right, timeline below; the layout is saved', async () => {
+test('the default layout: script left, stage centre, inspector right (with the AI panel as a tab behind it), timeline below; the layout is saved', async () => {
   const [left, stage, right, bottom] = [await box('left-panel'), await box('preview'), await box('right-panel'), await box('bottom-panel')];
   expect(left.x + left.width).toBeLessThanOrEqual(stage.x + 1);
   expect(stage.x + stage.width).toBeLessThanOrEqual(right.x + 1);
   expect(bottom.y).toBeGreaterThanOrEqual(stage.y + stage.height - 1);
   await expect(page.getByTestId('dock-tab-storyboard')).toBeVisible(); // the storyboard is a tab next to the preview
-  await expect(page.getByTestId('agent-dock')).toHaveCount(0);
+  await expect(page.getByTestId('dock-tab-agent').locator('.dock-tab-title')).toHaveText('AI'); // the one AI panel (generation + assistant) is in the layout ...
+  await expect(page.getByTestId('agent-dock')).toHaveCount(0); // ... behind the inspector's tab
+  await expect(page.getByTestId('dock-tab-inspector')).toBeVisible();
+  await expect(page.getByTestId('tab-ai')).toHaveCount(0); // the left group no longer has an AI 导演 tab
   await stageFits();
   await expect.poll(stored).not.toBeNull();
 });
@@ -108,12 +111,13 @@ test('resizing a divider resizes the stage (the canvas keeps its shape)', async 
   expect((await box('stage-frame')).height).toBeLessThan(frameAfter.height);
 });
 
-test('dock the assistant to another side by dragging its tab; it survives a reload', async () => {
+test('dock the AI panel to another side by dragging its tab; it survives a reload', async () => {
   await page.locator('body').click({ position: { x: 5, y: 5 } });
   await page.keyboard.press('Control+k');
   await expect(page.getByTestId('agent-dock')).toBeVisible();
   const stage0 = await box('preview');
-  expect((await box('agent-dock')).x).toBeGreaterThan(stage0.x); // opens to the right of the stage
+  expect((await box('agent-dock')).x).toBeGreaterThan(stage0.x); // comes to the front of the right group (the inspector's tab goes behind it)
+  await expect(page.getByTestId('right-panel')).toHaveCount(0);
   // drag the assistant's tab onto the left edge of the script panel
   const tab = (await page.getByTestId('dock-tab-agent').boundingBox())!;
   const left = await box('left-panel');
@@ -164,7 +168,7 @@ test('the storyboard tab and the 预览 / 分镜 buttons stay in step', async ()
   await stageFits();
 });
 
-test('presets: 「AI 工作」 puts the script, the stage and the assistant side by side; 「重置布局」 restores the default', async () => {
+test('presets: 「AI 工作」 puts the script, the stage and the AI panel side by side; 「重置布局」 restores the default (the AI panel behind the inspector tab)', async () => {
   await menu('layout-preset-ai-work');
   await expect(page.getByTestId('agent-dock')).toBeVisible();
   const [left, stage, agent] = [await box('left-panel'), await box('preview'), await box('agent-dock')];
@@ -175,15 +179,45 @@ test('presets: 「AI 工作」 puts the script, the stage and the assistant side
   await page.screenshot({ path: '.verify/dock-ai-work.png' });
   await menu('layout-reset');
   await expect(page.getByTestId('right-panel')).toBeVisible();
-  const [l2, s2, r2, b2, a2] = [await box('left-panel'), await box('preview'), await box('right-panel'), await box('bottom-panel'), await box('agent-dock')];
+  await expect(page.getByTestId('agent-dock')).toHaveCount(0);
+  const [l2, s2, r2, b2] = [await box('left-panel'), await box('preview'), await box('right-panel'), await box('bottom-panel')];
   expect(l2.x + l2.width).toBeLessThanOrEqual(s2.x + 1);
-  expect(s2.x + s2.width).toBeLessThanOrEqual(a2.x + 1); // an open assistant stays open, between the stage and the inspector
-  expect(a2.x + a2.width).toBeLessThanOrEqual(r2.x + 1);
+  expect(s2.x + s2.width).toBeLessThanOrEqual(r2.x + 1);
   expect(b2.y).toBeGreaterThanOrEqual(s2.y + s2.height - 1);
+  await expect(page.getByTestId('dock-tab-agent')).toBeVisible(); // still in the layout: one click on its tab brings it to the front
   await stageFits();
   await page.waitForTimeout(500);
   await reload();
   expect((await box('left-panel')).x).toBeLessThan((await box('preview')).x);
+});
+
+test('a layout saved before the AI panel was one panel (version 1, no AI panel) still loads; the AI panel is added back behind the inspector', async () => {
+  await page.evaluate((k) => {
+    type Node = { type: string; data: { views: string[]; activeView?: string } | Node[] };
+    const saved = JSON.parse(localStorage.getItem(k)!) as { v: number; layout: { panels: Record<string, unknown>; grid: { root: Node } } };
+    saved.v = 1;
+    delete saved.layout.panels.agent;
+    const visit = (n: Node): void => {
+      if (n.type === 'leaf') {
+        const d = n.data as { views: string[]; activeView?: string };
+        d.views = d.views.filter((v) => v !== 'agent');
+        if (d.activeView === 'agent') d.activeView = d.views[0]!;
+      } else (n.data as Node[]).forEach(visit);
+    };
+    visit(saved.layout.grid.root);
+    localStorage.setItem(k, JSON.stringify(saved));
+  }, KEY);
+  await reload();
+  await expect(page.getByTestId('left-panel')).toBeVisible();
+  await expect(page.getByTestId('dock-tab-agent').locator('.dock-tab-title')).toHaveText('AI');
+  await expect(page.getByTestId('right-panel')).toBeVisible();
+  await stageFits();
+  // written back as the current version (and the AI panel opens from its tab)
+  await expect.poll(async () => (JSON.parse((await stored()) ?? '{}') as { v?: number }).v).toBe(2);
+  await page.getByTestId('dock-tab-agent').locator('.dock-tab-title').click(); // the title, not the tab's ✕
+  await expect(page.getByTestId('agent-dock')).toBeVisible();
+  await page.getByTestId('dock-tab-inspector').locator('.dock-tab-title').click();
+  await expect(page.getByTestId('right-panel')).toBeVisible();
 });
 
 test('a broken or outdated saved layout falls back to the default; blocked storage does not break the editor', async () => {

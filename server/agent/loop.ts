@@ -335,7 +335,7 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
     const sceneId = p.sceneId ?? env.selection.sceneId ?? '';
     if (!env.sandbox.scenes.some((s) => s.id === sceneId)) return JSON.stringify({ 错误: [`场景 ${sceneId} 不存在`] });
     regenUsed = true;
-    emit({ type: 'status', text: '正在让导演按你的倾向重新设计镜头…' });
+    emit({ type: 'status', text: '正在让 AI 按你的倾向重新设计镜头…' });
     let result;
     try {
       result = await runScene({ ...deps.director, signal: deps.signal }, { project: clone(env.sandbox), sceneId, scopes: ['camera'], ...(p.beatIds?.length ? { beatIds: p.beatIds } : {}), guidance: p.guidance }, `${genId}_cam`);

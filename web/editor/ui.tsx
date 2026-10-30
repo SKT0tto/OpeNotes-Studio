@@ -172,7 +172,7 @@ export function SliderField(p: NumFieldProps & { min: number; max: number }) {
   );
 }
 
-export function Modal({ title, onClose, children, testid, wide }: { title: string; onClose: () => void; children: ReactNode; testid?: string; wide?: boolean }) {
+export function Modal({ title, onClose, children, testid, wide, xl }: { title: string; onClose: () => void; children: ReactNode; testid?: string; wide?: boolean; xl?: boolean }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
@@ -186,7 +186,7 @@ export function Modal({ title, onClose, children, testid, wide }: { title: strin
   }, [onClose]);
   return (
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`modal${wide ? ' wide' : ''}`} role="dialog" aria-label={title} data-testid={testid}>
+      <div className={`modal${wide ? ' wide' : ''}${xl ? ' xl' : ''}`} role="dialog" aria-label={title} data-testid={testid}>
         <header>
           <h2>{title}</h2>
           <button className="ghost" onClick={onClose} aria-label="关闭">✕</button>
