@@ -15,6 +15,7 @@ import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
 import { restorePunctuationDialogue } from './punctuationLines';
 import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
+import { splitMergedDialogue, stripQuotes } from './mergedDialogue';
 
 export interface Validated<T> {
   value: T;
@@ -290,11 +291,46 @@ export function repairExpression(m: ModelEntry, wanted: string, emotion: string)
 
 const LEGACY_SHOT: Record<string, DirectedBeat['shot']['type']> = { closeup: 'cu', bust: 'mcu', medium: 'mcu', wide: 'group', establishing: 'group' };
 
+/**
+ * A dialogue beat that holds 「台词＋叙述＋台词」 (a closing quote, narration, an opening quote again) is cut back into a dialogue /
+ * narration / dialogue run, so the narration is shown as narration and nothing the model packed in is lost. The first piece keeps the
+ * beat's shot, cut, background and acting; the others cut in without effects or actor changes. Costume changes behind it move along.
+ */
+function unmergeDialogue(d: SceneDirection, warnings: string[]): void {
+  if (!d.beats.some((b) => b.kind === 'dialogue' && b.keepId === null && splitMergedDialogue(stripQuotes(b.text)) !== null)) return;
+  const beats: DirectedBeat[] = [];
+  const newIndex: number[] = [];
+  d.beats.forEach((b, i) => {
+    newIndex.push(beats.length);
+    const parts = b.kind === 'dialogue' && b.keepId === null ? splitMergedDialogue(stripQuotes(b.text)) : null;
+    if (!parts) {
+      beats.push(b);
+      return;
+    }
+    warnings.push(`第 ${i + 1} 句对白里夹着叙述（「${stripQuotes(b.text).slice(0, 14)}…」收引号后又开引号），已拆成 ${parts.length} 拍：对白、旁白、对白交替`);
+    parts.forEach((p, k) => {
+      if (k === 0) {
+        beats.push({ ...b, text: p.text });
+        return;
+      }
+      const narr = p.kind === 'narration';
+      beats.push({
+        ...b, keepId: null, kind: narr ? 'narration' : 'dialogue', speaker: narr ? null : b.speaker, text: p.text, cutIn: 'cut', fx: 'none',
+        memoryTone: null, fxStrength: null, actors: [], shot: { ...b.shot, move: 'static' }, reason: narr ? '原文叙述' : b.reason,
+      });
+      delete beats[beats.length - 1]!.bg;
+    });
+  });
+  d.beats = beats;
+  for (const c of d.costumeChanges) c.beatIndex = newIndex[Math.min(Math.max(0, c.beatIndex), newIndex.length - 1)] ?? c.beatIndex;
+}
+
 export function validateDirection(input: SceneDirection, ctx: DirectionContext): Validated<SceneDirection> {
   const L: Lookup = lookup(ctx.catalog);
   const warnings: string[] = [];
   const errors: string[] = [];
   const d: SceneDirection = JSON.parse(JSON.stringify(input)) as SceneDirection;
+  unmergeDialogue(d, warnings);
   const castIds = new Set(ctx.cast.map((c) => c.castId));
   const keyOf = new Map(ctx.cast.map((c) => [c.castId, c.characterKey]));
   const present = (id: string | null | undefined): id is string => !!id && castIds.has(id);
