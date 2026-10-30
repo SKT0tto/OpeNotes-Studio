@@ -11,7 +11,8 @@
  *   anywhere else (width break)                        10, with a warning
  * and a piece that opens with a turn word (不过 / 可是 / 啊 ...) or `……` gets a bonus of -0.5. Only break points outside of brackets are
  * used, unless nothing else works. The objective, in order: fewest pieces, then the fewest lines in the longest piece, then the lowest
- * break cost, then the most even pieces; a piece shorter than 4 characters is heavily penalised (no lonely 「好吗？」).
+ * break cost, then the most even pieces; a piece shorter than 4 characters is heavily penalised (no lonely 「好吗？」), one of 4-5 is penalised
+ * less (5 / 2.5, so a better pause elsewhere wins over a thin tail like 「告诉我吧。」, but a width break (10) does not).
  * Text is never changed: pieces concatenate back to the original (only whitespace at the cuts is dropped).
  */
 import { dialogWidthEm, fitsDialog, type DialogMetrics, type DialogVariant } from '../style/dialogLayout';
@@ -31,6 +32,9 @@ const TURN = /^(不过|但是|可是|然而|只是|所以|总之|其实|难道|�
 const isWs = (c: string) => c === ' ' || c === '\u3000' || c === '\n' || c === '\t' || c === '\r';
 const trim = (s: string) => s.replace(/^[\s\u3000]+|[\s\u3000]+$/gu, '');
 const meaningful = (s: string) => [...s].filter((c) => !isWs(c) && !NO_START.has(c) && !NO_END.has(c) && !CLOSERS.has(c)).length;
+
+/** A piece of fewer than 4 meaningful characters is nearly never wanted; 4-5 is thin, so only a mild push. */
+const shortPenalty = (m: number): number => (m < 4 ? 50 : m < 6 ? (6 - m) * 2.5 : 0);
 
 export interface Wrapper {
   open: string;
@@ -94,7 +98,7 @@ function seg(p: Prep, i: number, j: number): SegInfo {
   if (!info) {
     const text = segText(p, i, j);
     const lines = fitsDialog(withWrap(p, text), p.style, p.variant).lines;
-    info = { text, lines, len: [...text].length, short: meaningful(text) < 4 && !isPunctuationOnly(text) ? 50 : 0 };
+    info = { text, lines, len: [...text].length, short: isPunctuationOnly(text) ? 0 : shortPenalty(meaningful(text)) };
     p.cache.set(key, info);
   }
   return info;

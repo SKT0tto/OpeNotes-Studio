@@ -13,6 +13,7 @@ import { FixtureProvider } from '../../server/llm/fixtureProvider';
 import { RuleProvider } from '../../server/llm/ruleProvider';
 import { runScene, runScenes, type BatchProgress } from '../../server/llm/sceneRunner';
 import { SPLIT_SYSTEM } from '../../server/llm/prompts/lineSplit';
+import { splitOutputBudget } from '../../server/llm/splitPass';
 import { diffScene } from '../../shared/director/diff';
 import { matchBeats } from '../../shared/director/expand';
 import { splitParagraphs } from '../../shared/director/paragraphs';
@@ -326,6 +327,18 @@ describe('soft repair of what the model decided', () => {
     const a = repairPieces([{ ...raw('closer', '哽咽着说出真话'), actor: { motion: 'nod01', expression: null, attention: null } }, raw('closer', '哽咽着说出真话')], ['a', 'b'], { ...ctx, speaker: null });
     expect(a.pieces.map((x) => x.camera)).toEqual(['hold', 'hold']);
     expect(a.pieces[0]!.actor).toBeNull();
+  });
+});
+
+describe('output budget of a LineSplit call (F5)', () => {
+  it('leaves about 40% headroom over what a real 13-line scene needed (5308 tokens), and more than a single line needed (1030)', () => {
+    expect(splitOutputBudget(Array.from({ length: 13 }, () => 70), 16000)).toBeGreaterThanOrEqual(Math.round(5308 * 1.35));
+    expect(splitOutputBudget([70], 16000)).toBeGreaterThanOrEqual(Math.round(1030 * 1.1));
+  });
+  it('grows with the lines and their length, and never exceeds the provider cap', () => {
+    expect(splitOutputBudget([70, 70], 16000)).toBeGreaterThan(splitOutputBudget([70], 16000));
+    expect(splitOutputBudget([200], 16000)).toBeGreaterThan(splitOutputBudget([70], 16000));
+    expect(splitOutputBudget(Array.from({ length: 20 }, () => 300), 4096)).toBe(4096);
   });
 });
 

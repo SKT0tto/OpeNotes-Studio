@@ -51,6 +51,22 @@ describe('splitForDialog', () => {
     expect(run(LINES.confess!).r.pieces[0]!.endsWith('很久以前的事。')).toBe(true);
   });
 
+  it('a thin tail (4-5 characters) is avoided when a pause elsewhere exists: 「告诉我吧。」 stays with the question before it', () => {
+    const t = '你刚才说「没关系」的时候，眼睛一直在看别的地方。我认识你多少年了，这种程度的谎话我怎么可能看不出来。所以，到底发生了什么？告诉我吧。';
+    const { r, c } = run(t);
+    expect(c.ok).toBe(true);
+    expect(r.pieces).toHaveLength(2);
+    expect(r.pieces[0]!.endsWith('看不出来。')).toBe(true);
+    expect(r.pieces[1]).toBe('所以，到底发生了什么？告诉我吧。');
+    // no sample is cut into a piece of fewer than 6 characters
+    for (const [name, x] of Object.entries(LINES)) for (const p of run(x).r.pieces) expect([...p].filter((ch) => !/[，。、！？…—（）「」]/.test(ch)).length, name).toBeGreaterThanOrEqual(6);
+  });
+
+  it('a thin tail is still taken when every other cut is worse (a width break costs more)', () => {
+    const t = `${han(60)}好不好呀，${han(2)}`;
+    expect(run(t).c.ok).toBe(true);
+  });
+
   it('a list without a turn is cut at a comma into two even-ish halves', () => {
     const { r } = run(LINES.list!);
     expect(r.pieces).toHaveLength(2);
