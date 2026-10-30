@@ -21,7 +21,17 @@ import { AgentOpSchema, type AgentOp } from './ops';
 export type CheckStatus = 'ok' | 'needs_unlock' | 'needs_confirm' | 'invalid';
 export interface CheckCtx {
   catalog?: DirectorCatalog | undefined;
+  /**
+   * The user's own words ask for a line to be shown in full beyond the dialogue area's maxLines (computed on the server from the instruction
+   * by the agent loop; S6 adds `asksForDialogExpand`). Without it no op may leave a beat with `overflow: 'expand'` that was not expanded before.
+   */
+  allowDialogExpand?: boolean | undefined;
 }
+
+export const DIALOG_EXPAND_NOT_ASKED = '只有用户明确要求时才能让对话框超过两行；请改用拆分，或在回复里告诉用户这句放不下并询问';
+
+/** Beats that are expanded (`overflow: 'expand'`) in `project`, by id. */
+const expandedBeatIds = (project: Project): Set<string> => new Set(project.scenes.flatMap((s) => s.beats.filter((b) => b.overflow === 'expand').map((b) => b.id)));
 export interface CheckResult {
   status: CheckStatus;
   /** Repairs that were made, or rules that were bent: live mode does not auto-apply an op that has any. */
@@ -382,6 +392,12 @@ export function checkOp(project: Project, raw: unknown, ctx: CheckCtx = {}): Che
   const before = stageIssues(project, project.scenes.find((x) => x.id === op.sceneId)!);
   const applied = applyOp(sim, op, { genId: 'check', now: 0 });
   if (!applied.ok) return base({ status: 'invalid', problems: [applied.error ?? '无法应用'], op, warnings: sem.warnings, notes: sem.notes });
+  // `overflow: 'expand'` is a person's decision: whatever the op, it may only appear when the user asked for it
+  if (!ctx.allowDialogExpand) {
+    const was = expandedBeatIds(project);
+    const fresh = [...expandedBeatIds(sim)].filter((id) => !was.has(id));
+    if (fresh.length > 0) return base({ status: 'invalid', problems: [`${DIALOG_EXPAND_NOT_ASKED}（${fresh.slice(0, 3).join('、')}）`], op, warnings: sem.warnings, notes: sem.notes });
+  }
   const after = stageIssues(sim, sim.scenes.find((x) => x.id === op.sceneId)!);
   const fresh = after.filter((x) => !before.includes(x));
   const warnings = [...sem.warnings, ...fresh.map((x) => `${x}（可以把进场提前到他第一次出现的那一句）`)];

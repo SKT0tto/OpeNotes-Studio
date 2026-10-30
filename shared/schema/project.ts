@@ -75,6 +75,18 @@ export const BeatSchema = z.object({
   sourceOffset: z.number().optional(),
   duration: z.object({ mode: z.enum(['auto', 'fixed']), seconds: z.number().min(0) }).default({ mode: 'auto', seconds: 0 }),
   emotion: z.string().optional(),
+  /**
+   * Set on the later pieces of a long line that was split (by the director, the editor or the assistant): the id of the FIRST piece.
+   * Such a continuation keeps the camera exactly as its head left it (see compile `holdsShot`). Optional and never defaulted: a project
+   * that never split a line has no such key.
+   */
+  splitFrom: Id.optional(),
+  /**
+   * 'expand' = show the whole text even when it is longer than the dialogue area's `maxLines` (grows down, then up, then scrolls with the
+   * typewriter). Absent = clipped to `maxLines` as before. Only a person (or an assistant turn the person asked for it) sets it; the
+   * director and the splitter never write it (`check.ts` enforces it for assistant ops).
+   */
+  overflow: z.enum(['expand']).optional(),
   shot: ShotSchema,
   style: StyleSchema,
   meta: MetaSchema,

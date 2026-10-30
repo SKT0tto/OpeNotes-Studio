@@ -726,7 +726,14 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
     // the same framing again (e.g. the partner answers in the same two-shot) is no new shot: no cut, no new camera key
     const same = i > 0 && !entering && !userShot && prevShot !== null && prevShot.type === type && prevShot.type !== 'establishing' && beat.cutIn === 'cut' && prevMove === 'static' && beat.shot.move === 'static' &&
       prevShot.ids.length === ids.length && prevShot.ids.every((x) => ids.includes(x)) && beat.kind !== 'establishing' && !held;
-    return held || same;
+    // a continuation of a split line keeps the camera exactly as its head left it, also after the head's push / pull (which `same` would
+    // call a new shot); a hand-set shot, a closer size, another focus, a move or a dip all still count as the author's choice
+    const head = i > 0 ? list[i - 1] : undefined;
+    const continues =
+      beat.splitFrom !== undefined && head !== undefined && (head.id === beat.splitFrom || head.splitFrom === beat.splitFrom) &&
+      !entering && !userShot && TEXT_KINDS.includes(beat.kind) && beat.cutIn === 'cut' && beat.shot.move === 'static' && sameFocus &&
+      prevShot !== null && prevShot.type === type && prevShot.type !== 'establishing';
+    return held || same || continues;
   };
   /** Travel, medium shots: speakers of beat i and of the following beats that keep its shot (who is in the conversation of this shot). */
   const heldSpeakers = (i: number, type: ShotType, ids: string[]): string[] => {
@@ -787,6 +794,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
       id: beat.id, kind: beat.kind, variant: beat.variant, coSpeakers: beat.coSpeakers, shotHeld: held, ui: uiOf(v),
       speakerId: beat.speakerId ?? null, text: beat.text, start: bt.start, end: bt.end, textEnd: bt.textEnd, cps: v.rhythm.textSpeedCps, focus: shotIds,
       shotType: type, dof: dofLevel,
+      ...(beat.overflow === 'expand' ? { expand: true as const } : {}),
     };
     beats.push(cb);
     let travelBeat: CompiledBeat['camTravel'] | undefined;
