@@ -85,6 +85,10 @@ describe('asksForLineSplit / asksForDialogExpand', () => {
     '别拆开', '不要拆', '这句话不用拆', '先不要分句', '不要把这句断开', '别切', '镜头切一下', '把镜头切成两段', '把第三场分成两段', '把背景拆开', '人物分开站',
     '把这两个人分成两组', '对话之间停顿久一点', '这句停顿太长，处理一下', '节奏太长了，整理一下', '场景切换太长了修一下',
   ])('not a split request: %s', (t) => expect(asksForLineSplit(t)).toBe(false));
+  it.each([
+    '不要把第三句台词拆开', '别把立希那句切开', '请不要把素世的独白断开', '别把立希那句切开，完整显示吧', '不要把立希那句台词拆开，给它换个近景就行',
+  ])('a longer object between the negation and the verb is still a refusal: %s', (t) => expect(asksForLineSplit(t)).toBe(false));
+  it.each(['长的那几句台词，麻烦分开来说', '这句话分开来说'])('分开来说 is a split request: %s', (t) => expect(asksForLineSplit(t)).toBe(true));
   it.each(['让情绪慢慢展开', '让所有人完整显示在镜头里', '全员完整显示在画面里', '表情展开一点'])('not an expand request: %s', (t) => expect(asksForDialogExpand(t)).toBe(false));
   it.each(['让这个人的台词完整显示', '把角色的字幕全部显示'])('still an expand request: %s', (t) => expect(asksForDialogExpand(t)).toBe(true));
   it('a short 好 after the assistant asked 要不要拆 / 展开 counts; without that question it does not', () => {

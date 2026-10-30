@@ -19,12 +19,12 @@ const SPLIT_INTO_LINES = /(拆|分|切|断)(成|为|开成)?(两|二|三|四|五
 /** The same with 段 / 行: needs a line object or 它 / 这 / 那 nearby, and must not be about scenes or chapters. */
 const SPLIT_INTO_PARTS = /(拆|分|切|断)(成|为|开成)?(两|二|三|四|五|几|多|\d)(段|行)/;
 /** Cutting verbs that need a line object in the message (the object may sit in another clause: 「这句太长了，切一下」). */
-const SPLIT_VERB = /拆(开|分|成|一下|下|句|掉|短)|拆$|断开|断成|断一下|断下|断句|分句|切开|切一下|切下|分开(说|讲|读|念)|分段|分一下段/;
+const SPLIT_VERB = /拆(开|分|成|一下|下|句|掉|短)|拆$|断开|断成|断一下|断下|断句|分句|切开|切一下|切下|分开(来)?(说|讲|读|念)|分段|分一下段/;
 /** Things that are not text: 「镜头切一下」「把场景拆开」「第二章分成两段」. */
 const NOT_TEXT_BEFORE_VERB = /(场景|章节?|[场幕节]|镜头|背景|画面|站位|角色|人物|分组|停顿|动作|转场|音乐)[^，。,.;；！!？?]{0,4}(拆|断|分|切)/;
 const SCENEY = /场景|章|[场幕节]|镜头|背景|画面|站位|角色|人物|分组/;
 /** 别拆开 / 不要拆 / 不用断 / 先不分: a clause with a negated cut asks for the opposite. */
-const NEGATED_CUT = /(别|不要|不用|不必|无需|勿|不想|不许|不让|先不|不需要|不能|不可以|不)(再|要)?[^，。,.;；！!？?]{0,3}(拆|断|分|切)|不拆|不断|不切/;
+const NEGATED_CUT = /(别|不要|不用|不必|无需|勿|不想|不许|不让|先不|不需要|不能|不可以|不)(再|要)?[^，。,.;；！!？?]{0,3}(拆|断|分|切)|不拆|不断|不切|(别|不要|不用|不必|无需|勿|不想|不许|不让|不需要)(再)?(要)?[把将][^，。,.;；！!？?]{0,10}(拆|断|分|切)/;
 /** The overflow complaint: the text does not fit the dialogue box. */
 const OVERFLOW = /(放不下|装不下|显示不全|显示不完|看不全|看不完|被截(断|掉|了)?|超出(了)?(对话框|对话区|屏幕|画面|两行|范围|框)|超过(了)?(两|二|2)行|溢出|(过|太|超)长)/;
 /** 「停顿太长」「镜头太长」 is about time, not about the text. */
