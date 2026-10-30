@@ -4,7 +4,7 @@
  * (`source: user`) units were overwritten. It does NOT enforce locks: `checkOp` simulates the op and asks `findLockViolations`, and the
  * editor's `applyEdit` gate is the final barrier.
  */
-import { absTime, anchorAt, clone, ensureTrack, findTrack, locateKey, newBeat, newKeyId, nextId, removeBeat, removeKey, setActorInScene, storedBeatTimes, type AnyKey } from '../project/mutate';
+import { absTime, anchorAt, clone, ensureTrack, findTrack, locateKey, newBeat, newKeyId, nextId, removeBeat, removeKey, repairSplitGroups, setActorInScene, storedBeatTimes, type AnyKey } from '../project/mutate';
 import { bgSwitchValue } from '../director/bgKeys';
 import { memoryThroughWhite } from '../director/expand';
 import { EMOTION_LABEL, SHOT_LABEL, MOVE_LABEL, TRANSITION_LABEL, expressionLabel, motionLabel } from '../catalog/labels';
@@ -101,6 +101,13 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
     if (before !== after) res.changes.push({ scope, where: beatId ? where(beatId) : '场景', field, before, after, ...(beatId ? { beatId } : {}) });
   };
   const beatLabel = (b: Beat) => `台词「${clip(b.text, 8)}」`;
+  /** The continuations whose first piece changed because of a delete / move / merge, on the change card. */
+  const noteGroups = (before: ReadonlyMap<string, string | undefined>) => {
+    for (const b of scene.beats) {
+      const was = before.get(b.id);
+      if (before.has(b.id) && was !== b.splitFrom) push('续句关系', was ?? '无', b.splitFrom ?? '无（成为独立的一句）', b.id);
+    }
+  };
 
   switch (op.op) {
     case 'beat_set': {
@@ -113,6 +120,7 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       if (s.variant !== undefined) { push('台词形式', b.variant, s.variant, b.id); b.variant = s.variant; }
       if (s.emotion !== undefined) { push('情绪', b.emotion ? (EMOTION_LABEL[b.emotion] ?? b.emotion) : '无', s.emotion ? (EMOTION_LABEL[s.emotion] ?? s.emotion) : '无', b.id); if (s.emotion) b.emotion = s.emotion; else delete b.emotion; }
       if (s.cutIn !== undefined) { push('切入', TRANSITION_LABEL[b.cutIn] ?? b.cutIn, TRANSITION_LABEL[s.cutIn] ?? s.cutIn, b.id, 'camera'); b.cutIn = s.cutIn; }
+      if (s.splitFrom !== undefined) { push('续句关系', b.splitFrom ?? '无', s.splitFrom ?? '无', b.id); if (s.splitFrom) b.splitFrom = s.splitFrom; else delete b.splitFrom; }
       if (s.cutInKeepDialog !== undefined) { push('切入时保留对白', jsonShort(b.cutInKeepDialog), jsonShort(s.cutInKeepDialog), b.id, 'camera'); b.cutInKeepDialog = s.cutInKeepDialog; }
       if (s.coSpeakers !== undefined) { push('同时说话', b.coSpeakers.map(castName).join('、') || '无', s.coSpeakers.map(castName).join('、') || '无', b.id); b.coSpeakers = s.coSpeakers; }
       if (s.duration !== undefined) {
@@ -145,7 +153,9 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       if (scene.beats.length <= 1) return fail('场景至少要保留一句台词');
       push('删除台词', `${b.speakerId ? `${castName(b.speakerId)}：` : ''}${clip(b.text, 24)}`, '—', b.id);
       if (b.meta.source === 'user') res.overwrote.push(beatLabel(b));
+      const before = new Map(scene.beats.map((x) => [x.id, x.splitFrom]));
       removeBeat(scene, b.id);
+      noteGroups(before);
       return res;
     }
     case 'beat_move': {
@@ -153,9 +163,12 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       if (!b) return fail(`台词 ${op.beatId} 不存在`);
       if (op.afterBeatId !== null && (!beatOf(op.afterBeatId) || op.afterBeatId === op.beatId)) return fail(`目标位置 ${op.afterBeatId} 无效`);
       const from = scene.beats.indexOf(b);
+      const before = new Map(scene.beats.map((x) => [x.id, x.splitFrom]));
       scene.beats.splice(from, 1);
       const to = op.afterBeatId === null ? 0 : scene.beats.findIndex((x) => x.id === op.afterBeatId) + 1;
       scene.beats.splice(to, 0, b);
+      repairSplitGroups(scene);
+      noteGroups(before);
       push('顺序', `第${from + 1}句`, `第${to + 1}句`, b.id);
       stamp(b.meta, op, ctx, res, beatLabel(b));
       return res;
@@ -288,11 +301,15 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       push('合并台词', `${clip(b.text, 10)} ｜ ${clip(next.text, 10)}`, clip(b.text + next.text, 24), b.id);
       if (next.meta.source === 'user') res.overwrote.push(beatLabel(next));
       b.text += next.text;
+      // the pieces of the line that is merged in (it was a first piece) now belong to this one
+      const before = new Map(scene.beats.map((x) => [x.id, x.splitFrom]));
+      for (const x of scene.beats) if (x.splitFrom === next.id) x.splitFrom = b.splitFrom ?? b.id;
       for (const bl of Object.values(scene.blocking)) {
         if (bl.enter?.beatId === next.id) bl.enter.beatId = b.id;
         if (bl.exit?.beatId === next.id) bl.exit.beatId = b.id;
       }
       removeBeat(scene, next.id);
+      noteGroups(before);
       stamp(b.meta, op, ctx, res, beatLabel(b));
       return res;
     }

@@ -2,7 +2,8 @@
  * 「改回去」: the ops that take a project back from `after` to `before`, for the units an earlier assistant turn changed.
  * Computed by diffing the two projects (not by inverting each op), so it works for every op kind and is exact for the fields the
  * agent edits: beat fields, shot, per-person offsets, rhythm overrides, timeline keys (by key id), entrances / exits / start positions,
- * presence, outfits, scene settings, the opening background and inserted / deleted lines (so also the pieces a split added), and `overflow` through `dialog_expand`.
+ * presence, outfits, scene settings, the opening background and inserted / deleted lines (so also the pieces a split added), `overflow` through `dialog_expand`,
+ * and which line a continuation belongs to (`splitFrom`; a delete, move or merge re-points continuations).
  * Provenance (`meta.source`) is not restored.
  */
 import type { Beat, Project, Scene } from '../schema/project';
@@ -91,7 +92,16 @@ function sceneRevert(sb: Scene, sa: Scene): AgentOp[] {
   if (!same(sb.location, sa.location) && sb.location) set.location = { text: sb.location.text, show: sb.location.show };
   if (Object.keys(set).length) ops.push({ op: 'scene_set', sceneId, set, reason } as AgentOp);
   if (sb.background.assetId !== sa.background.assetId) ops.push({ op: 'bg_set', sceneId, at: 'start', assetId: sb.background.assetId, ...(sb.location ? { location: sb.location.text } : {}), reason });
-  return [...ops, ...deletes];
+  // which line a continuation belongs to goes last: deleting / moving / merging lines re-points continuations by itself, so after the
+  // structural ops of this revert it is written again, for every continuation (a no-op where it already matches)
+  const structural = !same(common, nowOrder) || deletes.length > 0 || sb.beats.some((b) => !afterIds.has(b.id));
+  const groups: AgentOp[] = [];
+  for (const bb of sb.beats) {
+    const ba = sa.beats.find((b) => b.id === bb.id);
+    if (!ba) continue;
+    if (bb.splitFrom !== ba.splitFrom || (bb.splitFrom !== undefined && structural)) groups.push({ op: 'beat_set', sceneId, beatId: bb.id, set: { splitFrom: bb.splitFrom ?? null }, reason } as AgentOp);
+  }
+  return [...ops, ...deletes, ...groups];
 }
 
 function beatRevert(sceneId: string, bb: Beat, ba: Beat, reason: string): AgentOp[] {

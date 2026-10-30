@@ -175,6 +175,36 @@ export function duplicateBeat(scene: Scene, beatId: string): Beat | null {
   return copy;
 }
 
+/**
+ * Keep the split groups honest after a delete / move / merge: a continuation (`splitFrom`) must follow its first piece or another
+ * continuation of the same group right away. A continuation that no longer does (its first piece was deleted or moved off, or something
+ * was put in between) starts a plain line again (`splitFrom` cleared), and the continuations that follow it join it, so no 「↳ 续句」 is
+ * left without its line. Lines without `splitFrom` are never touched. Returns what changed.
+ */
+export function repairSplitGroups(scene: Scene): Array<{ beatId: string; from: string; to: string | null }> {
+  const changed: Array<{ beatId: string; from: string; to: string | null }> = [];
+  if (!scene.beats.some((b) => b.splitFrom !== undefined)) return changed;
+  const ids = new Set(scene.beats.map((b) => b.id));
+  const remap = new Map<string, string>();
+  scene.beats.forEach((b, i) => {
+    if (b.splitFrom === undefined) return;
+    const was = b.splitFrom;
+    const target = remap.get(was) ?? was;
+    const prev = scene.beats[i - 1];
+    if (ids.has(target) && prev && (prev.id === target || prev.splitFrom === target)) {
+      if (target !== was) {
+        b.splitFrom = target;
+        changed.push({ beatId: b.id, from: was, to: target });
+      }
+      return;
+    }
+    remap.set(was, b.id);
+    delete b.splitFrom;
+    changed.push({ beatId: b.id, from: was, to: null });
+  });
+  return changed;
+}
+
 /** Delete a beat: its keys go with it, and enter / exit markers that pointed at it move to the next beat (or vanish). */
 export function removeBeat(scene: Scene, beatId: string): boolean {
   const i = scene.beats.findIndex((b) => b.id === beatId);
@@ -192,6 +222,7 @@ export function removeBeat(scene: Scene, beatId: string): boolean {
       else delete bl.exit;
     }
   }
+  repairSplitGroups(scene);
   return true;
 }
 
@@ -202,6 +233,7 @@ export function moveBeat(scene: Scene, beatId: string, toIndex: number): boolean
   if (i === j) return false;
   const [b] = scene.beats.splice(i, 1);
   scene.beats.splice(j, 0, b!);
+  repairSplitGroups(scene);
   return true;
 }
 

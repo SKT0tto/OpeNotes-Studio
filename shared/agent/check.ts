@@ -140,6 +140,7 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
       if (Object.keys(set).length === 0) s.problems.push('set 是空的');
       if (set.emotion && !(EMOTIONS as readonly string[]).includes(set.emotion)) s.problems.push(`情绪只能取：${EMOTIONS.join(' / ')}`);
       if (set.speakerId) castOk(set.speakerId, false);
+      if (set.splitFrom && (set.splitFrom === input.beatId || !scene.beats.some((x) => x.id === set.splitFrom))) s.problems.push(`续句的首句 ${set.splitFrom} 不在这个场景里`);
       if (set.speakerId && !scene.wardrobe[set.speakerId]) s.notes.push(`${castMember(project, set.speakerId)?.displayName ?? set.speakerId} 不在这个场景里，这句会没有人物画面`);
       for (const c of set.coSpeakers ?? []) castOk(c, false);
       if (set.text !== undefined && set.text.trim() === '' && (set.kind ?? b?.kind) !== 'silent' && (set.kind ?? b?.kind) !== 'empty' && (set.kind ?? b?.kind) !== 'pause') s.problems.push('台词文字不能为空（要清空请把类型改成 silent）');

@@ -24,7 +24,7 @@ import { liveForbidden } from '../../shared/agent/ops';
 import { planReplay, replayInto } from '../../shared/agent/replay';
 import { revertOps } from '../../shared/agent/revert';
 import { newLongLines } from '../../shared/agent/verify';
-import { clone } from '../../shared/project/mutate';
+import { clone, moveBeat, removeBeat } from '../../shared/project/mutate';
 import { call, makeEnv, sceneOf } from './helpers/agentEnv';
 import { cat, directedProject } from './helpers/directorFlow';
 import { fitsDialog } from '../../shared/style/dialogLayout';
@@ -280,6 +280,113 @@ describe('split_line', () => {
     const moved = (s.tracks as unknown as Array<{ keys: Array<{ id: string; at: { beatId: string; offset: number } }> }>).flatMap((t) => t.keys).find((k) => k.id === 'k_late')!;
     expect(moved.at.beatId).toBe(b.id);
     expect(moved.at.offset).toBeLessThan(5);
+  });
+});
+
+describe('split groups survive delete / move / merge (F4)', () => {
+  const P1 = '……不过，钱的事';
+  const P2 = '我还没跟大家商量。';
+  /** The long line cut into three: [..., H, x_b1, x_b2, ...] in scene 3, with the beats around it. */
+  function grouped() {
+    const { p, id } = withLong();
+    const r = checkOp(p, { op: 'beat_split_pieces', sceneId: p.scenes[2]!.id, beatId: id, newIds: ['x_b1', 'x_b2'], pieces: [{ text: PA }, { text: P1 }, { text: P2 }] } as never, { allowLineSplit: true });
+    expect(r.status, JSON.stringify(r.problems)).not.toBe('invalid');
+    applyOp(p, r.op, { genId: 'g', now: 1 });
+    const s = p.scenes[2]!;
+    const i = s.beats.findIndex((b) => b.id === id);
+    return { p, sid: s.id, H: id, before: s.beats[i - 1]!.id, after: s.beats[i + 3]!.id };
+  }
+  const run = (p: ReturnType<typeof grouped>['p'], op: Record<string, unknown>) => {
+    const w = clone(p);
+    const r = checkOp(w, { sceneId: p.scenes[2]!.id, ...op } as never, { allowLineSplit: true });
+    expect(r.status, JSON.stringify(r.problems)).not.toBe('invalid');
+    applyOp(w, r.op, { genId: 'g2', now: 2 });
+    return w;
+  };
+  const shape = (p: ReturnType<typeof grouped>['p']) => p.scenes[2]!.beats.map((b) => `${b.id}${b.splitFrom ? '<' + b.splitFrom : ''}`);
+  /** revertOps takes the project back to the order and the groups it had. */
+  const reverts = (before: ReturnType<typeof grouped>['p'], after: ReturnType<typeof grouped>['p']) => {
+    const back = clone(after);
+    for (const op of revertOps(before, after)) {
+      const r = checkOp(back, op, { allowLineSplit: true, allowDialogExpand: true });
+      expect(r.status, JSON.stringify(r.problems)).not.toBe('invalid');
+      applyOp(back, r.op, { genId: 'r', now: 9 });
+    }
+    expect(shape(back)).toEqual(shape(before));
+    expect(back.scenes[2]!.beats.map((b) => b.text)).toEqual(before.scenes[2]!.beats.map((b) => b.text));
+  };
+
+  it('the grouped fixture is H, x_b1, x_b2 with the pieces pointing at H', () => {
+    const g = grouped();
+    const s = shape(g.p);
+    const i = s.indexOf(g.H);
+    expect(s.slice(i, i + 3)).toEqual([g.H, `x_b1<${g.H}`, `x_b2<${g.H}`]);
+  });
+  it('deleting the first piece makes the next piece the line and the one after it follows; revert restores the group', () => {
+    const g = grouped();
+    const w = run(g.p, { op: 'beat_delete', beatId: g.H });
+    const s = shape(w);
+    expect(s).toContain('x_b1');
+    expect(s).toContain('x_b2<x_b1');
+    expect(s.some((x) => x.includes('<' + g.H))).toBe(false);
+    reverts(g.p, w);
+  });
+  it('deleting a middle piece keeps the rest of the group; deleting the last one too', () => {
+    const g = grouped();
+    const w = run(g.p, { op: 'beat_delete', beatId: 'x_b1' });
+    expect(shape(w)).toContain(`x_b2<${g.H}`);
+    reverts(g.p, w);
+    expect(shape(run(g.p, { op: 'beat_delete', beatId: 'x_b2' }))).toContain(`x_b1<${g.H}`);
+  });
+  it('merging the first piece with its next piece keeps the group; merging the previous line into the first piece takes the pieces along', () => {
+    const g = grouped();
+    const w = run(g.p, { op: 'beat_merge', beatId: g.H });
+    expect(shape(w)).toContain(`x_b2<${g.H}`);
+    expect(w.scenes[2]!.beats.find((b) => b.id === g.H)!.text).toBe(PA + P1);
+    reverts(g.p, w);
+    const m = run(g.p, { op: 'beat_merge', beatId: g.before });
+    const s = shape(m);
+    expect(s.includes(`x_b1<${g.before}`) && s.includes(`x_b2<${g.before}`)).toBe(true);
+    expect(s.some((x) => x.includes('<' + g.H))).toBe(false);
+    reverts(g.p, m);
+  });
+  it('moving a piece away from its group makes it a plain line; moving the first piece away makes the next one the line; moving a line between the pieces cuts the group', () => {
+    const g = grouped();
+    const away = run(g.p, { op: 'beat_move', beatId: 'x_b1', afterBeatId: g.after });
+    const s = shape(away);
+    expect(s).toContain('x_b1');
+    expect(s).toContain(`x_b2<${g.H}`);
+    reverts(g.p, away);
+    const head = run(g.p, { op: 'beat_move', beatId: g.H, afterBeatId: g.after });
+    expect(shape(head)).toContain('x_b1');
+    expect(shape(head)).toContain('x_b2<x_b1');
+    reverts(g.p, head);
+    const between = run(g.p, { op: 'beat_move', beatId: g.before, afterBeatId: g.H });
+    const b = shape(between);
+    expect(b).toContain('x_b1');
+    expect(b).toContain('x_b2<x_b1');
+    reverts(g.p, between);
+  });
+  it('moving the first piece to where it already is, or a plain line elsewhere, changes nothing in the groups', () => {
+    const g = grouped();
+    const w = run(g.p, { op: 'beat_move', beatId: g.after, afterBeatId: null });
+    const s = shape(w);
+    const i = s.findIndex((x) => x === g.H);
+    expect(s.slice(i, i + 3)).toEqual([g.H, `x_b1<${g.H}`, `x_b2<${g.H}`]);
+    reverts(g.p, w);
+  });
+  it('the editor delete / move (mutate) clean up the same way, and projects without continuations are untouched', () => {
+    const g = grouped();
+    const w = clone(g.p);
+    removeBeat(w.scenes[2]!, g.H);
+    expect(shape(w)).toContain('x_b2<x_b1');
+    const v = clone(g.p);
+    moveBeat(v.scenes[2]!, 'x_b2', 0);
+    expect(shape(v)[0]).toBe('x_b2');
+    const plain = withLong();
+    removeBeat(plain.p.scenes[2]!, plain.p.scenes[2]!.beats[0]!.id);
+    moveBeat(plain.p.scenes[2]!, plain.p.scenes[2]!.beats[3]!.id, 0);
+    expect(plain.p.scenes[2]!.beats.every((b) => b.splitFrom === undefined)).toBe(true);
   });
 });
 
