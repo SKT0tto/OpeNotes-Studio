@@ -34,6 +34,17 @@ function beat(o: BeatSpec = {}): SceneDirection['beats'][number] {
 const direction = (...beats: SceneDirection['beats']): SceneDirection => SceneDirectionTravelSchema.parse({ reason: 'r', blocking: [], transitionIn: 'cut', bgm: null, costumeChanges: [], beats });
 const run = (d: SceneDirection, over: Partial<Parameters<typeof validateDirection>[1]> = {}) => validateDirection(d, { ...base, ...over });
 
+describe('a speech-tag paragraph stages correctly in travel', () => {
+  it('a beat that packs 「“A，”X说，“B。”」 becomes two dialogue beats of the speaker, with no narration beat', () => {
+    const tagged = '“你们太慢了。”立希说，“新歌的副歌还一点头绪都没有，今天一定要定下来。”';
+    const v = run(direction(beat({ speaker: A, focus: [A], text: tagged }), beat({ speaker: B, focus: [B], para: P0 + 1 })), { paragraphs: base.paragraphs.map((p) => (p.index === P0 ? { ...p, text: tagged } : p)) });
+    expect(v.errors).toEqual([]);
+    expect(v.value.beats.map((b) => b.kind)).toEqual(['dialogue', 'dialogue', 'dialogue']);
+    expect(v.value.beats.slice(0, 2).map((b) => b.text)).toEqual(['你们太慢了。', '新歌的副歌还一点头绪都没有，今天一定要定下来。']);
+    expect(v.value.beats.slice(0, 2).map((b) => b.shot.focus)).toEqual([[A], [A]]);
+  });
+});
+
 describe('travel two-shot pairs keep their meaning (change 2)', () => {
   it('keeps the model\'s pair when the partner is on stage, even when somebody stands between them', () => {
     // the seating order is A B C D; the pair A + C is not adjacent but both talk to each other

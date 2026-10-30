@@ -15,7 +15,7 @@ import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
 import { restorePunctuationDialogue } from './punctuationLines';
 import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
-import { splitMergedDialogue, stripQuotes } from './mergedDialogue';
+import { splitMerged, stripQuotes } from './mergedDialogue';
 
 export interface Validated<T> {
   value: T;
@@ -296,18 +296,20 @@ const LEGACY_SHOT: Record<string, DirectedBeat['shot']['type']> = { closeup: 'cu
  * narration / dialogue run, so the narration is shown as narration and nothing the model packed in is lost. The first piece keeps the
  * beat's shot, cut, background and acting; the others cut in without effects or actor changes. Costume changes behind it move along.
  */
-function unmergeDialogue(d: SceneDirection, warnings: string[]): void {
-  if (!d.beats.some((b) => b.kind === 'dialogue' && b.keepId === null && splitMergedDialogue(stripQuotes(b.text)) !== null)) return;
+function unmergeDialogue(d: SceneDirection, warnings: string[], paragraphs: Paragraph[]): void {
+  const splitOf = (b: DirectedBeat) => (b.kind === 'dialogue' && b.keepId === null ? splitMerged(b.text, paragraphs[b.paragraph]?.text) : null);
+  if (!d.beats.some((b) => splitOf(b) !== null)) return;
   const beats: DirectedBeat[] = [];
   const newIndex: number[] = [];
   d.beats.forEach((b, i) => {
     newIndex.push(beats.length);
-    const parts = b.kind === 'dialogue' && b.keepId === null ? splitMergedDialogue(stripQuotes(b.text)) : null;
-    if (!parts) {
+    const split = splitOf(b);
+    const parts = split?.pieces;
+    if (!split || !parts) {
       beats.push(b);
       return;
     }
-    warnings.push(`第 ${i + 1} 句对白里夹着叙述（「${stripQuotes(b.text).slice(0, 14)}…」收引号后又开引号），已拆成 ${parts.length} 拍：对白、旁白、对白交替`);
+    warnings.push(`第 ${i + 1} 句对白里夹着叙述（「${stripQuotes(b.text).slice(0, 14)}…」收引号后又开引号），已拆成 ${parts.length} 拍：对白、旁白、对白交替${split.droppedTags.length > 0 ? `（已去掉说话标签「${split.droppedTags.join('」「')}」）` : ''}`);
     parts.forEach((p, k) => {
       if (k === 0) {
         beats.push({ ...b, text: p.text });
@@ -330,7 +332,7 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
   const warnings: string[] = [];
   const errors: string[] = [];
   const d: SceneDirection = JSON.parse(JSON.stringify(input)) as SceneDirection;
-  unmergeDialogue(d, warnings);
+  unmergeDialogue(d, warnings, ctx.paragraphs);
   const castIds = new Set(ctx.cast.map((c) => c.castId));
   const keyOf = new Map(ctx.cast.map((c) => [c.castId, c.characterKey]));
   const present = (id: string | null | undefined): id is string => !!id && castIds.has(id);
@@ -434,7 +436,7 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     } else if (b.speaker !== null) b.speaker = null;
     if (b.kind === 'dialogue' && b.keepId === null) {
       // spoken lines are shown without their quotation marks (the name plate already says who speaks)
-      const t = b.text.trim().replace(/^[“"「『]+/, '').replace(/[”"」』]+$/, '');
+      const t = stripQuotes(b.text);
       if (t !== b.text && t.length > 0) b.text = t;
     }
     if (b.kind === 'silent') b.text = '';
