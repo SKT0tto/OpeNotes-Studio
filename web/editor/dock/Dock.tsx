@@ -42,6 +42,8 @@ export interface DockController {
   hide: (id: PanelId) => void;
   toggle: (id: PanelId) => void;
   activate: (id: PanelId) => void;
+  /** Bring the previously front tab of this panel's group to the front, without closing the panel or changing the layout. False when the panel is alone in its group. */
+  back: (id: PanelId) => boolean;
   applyPreset: (id: string) => void;
   /** Back to the default preset and forget the saved layout. */
   reset: () => void;
@@ -239,6 +241,8 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
         }
       }, 250);
     };
+    // the tabs that were in front before, newest first (for `back`: the 「AI」 button returns to the previous tab of the group)
+    let recent: string[] = [];
     // the add / remove events fire before dockview updates its own list, so the set is kept from the events themselves
     let cur = presentOf(api);
     const emitPresent = () => live.current.onPresent(new Set(cur));
@@ -262,6 +266,7 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
       api.onDidLayoutFromJSON(recompute),
       api.onDidActivePanelChange((e) => {
         const id = e.panel?.id;
+        if (id) recent = [id, ...recent.filter((x) => x !== id)].slice(0, 12);
         if (id === 'stage' || id === 'storyboard') live.current.onCenter(id);
       }),
     ];
@@ -283,6 +288,14 @@ export function Dock({ render, stageHost, agentWanted, onController, onPresent, 
       },
       toggle: (id) => (has(id) ? controller.hide(id) : controller.show(id)),
       activate: (id) => api.getPanel(id)?.api.setActive(),
+      back: (id) => {
+        const panel = api.getPanel(id);
+        const mates = panel?.group.panels.filter((p) => p.id !== id) ?? [];
+        const target = recent.map((x) => mates.find((p) => p.id === x)).find(Boolean) ?? mates[0];
+        if (!target) return false;
+        target.api.setActive();
+        return true;
+      },
       applyPreset: (id) => {
         restoring = true;
         try {

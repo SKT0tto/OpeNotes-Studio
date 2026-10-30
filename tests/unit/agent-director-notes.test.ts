@@ -3,10 +3,14 @@ import { agentHistory } from '../../shared/agent/history';
 import { clone } from '../../shared/project/mutate';
 import type { Project } from '../../shared/schema/project';
 import type { AgentProposal, TurnBody } from '../../web/agentApi';
-import { appendNote, directorAcceptText, interleave, MAX_NOTES, noteAsPastRun, oneClickText, type DirectorNote } from '../../web/store/agentNotes';
+import { DEFAULT_CONTROLS, useDirectorRun } from '../../web/editor/panels/directorRun';
+import { generateEntry, skeletonEntry, breakdownEntry } from '../../web/editor/dialogs/oneClickRun';
+import { noteAsPastRun, oneClickText } from '../../web/store/agentNotes';
 import { useAgent } from '../../web/store/agentStore';
+import { nextOrder, useAiFlow } from '../../web/store/aiFlow';
 import { useProject } from '../../web/store/projectStore';
 import { directedProject } from './helpers/directorFlow';
+import { env, fakeApi } from './helpers/fakeDirector';
 
 vi.mock('../../web/agentFrames', () => ({ hasFrameGrabber: () => false }));
 const turns: TurnBody[] = [];
@@ -23,113 +27,138 @@ vi.mock('../../web/agentApi', async (orig) => {
   };
 });
 
-describe('director notes: pure helpers', () => {
-  it('an accepted result reads as one short line: scene, scope, who, how to undo', () => {
-    const t = directorAcceptText({ who: 'AI', scenes: [{ no: 2, title: '放学后' }], scopes: ['镜头'] });
-    expect(t).toBe('接受了 第2场「放学后」 · 镜头（AI生成，已应用到项目，Ctrl+Z 可撤销）');
-    expect(directorAcceptText({ who: '规则', scenes: [{ no: 1, title: 'a' }], scopes: ['整个场景'], partial: true })).toContain('只接受了部分范围');
-    expect(directorAcceptText({ who: 'AI', scenes: [{ no: 1, title: 'a' }], scopes: ['镜头'], onlyBeats: 1 })).toContain('只有选中的 1 句');
-    const many = directorAcceptText({ who: 'AI', scenes: Array.from({ length: 9 }, (_, i) => ({ no: i + 1, title: `s${i + 1}` })), scopes: ['整个场景'] });
-    expect(many).toContain('等 9 场');
-    expect(many).not.toContain('第9场');
-  });
+describe('what the AI did outside the assistant is told as plain history', () => {
   it('the one-click generation says how many scenes there are, how many were made and what is left', () => {
     expect(oneClickText({ who: 'AI', done: 4, total: 4, failed: 0, warnings: 2 })).toBe('一键生成（AI）：整部演出共 4 场，已生成 4 场；连续性提示 2 条');
     expect(oneClickText({ who: 'AI', done: 3, total: 4, failed: 1, warnings: 0 })).toContain('失败 1 场');
     expect(oneClickText({ who: '规则', done: 3, total: 4, failed: 0, warnings: 0 })).toContain('还有 1 场没生成');
   });
   it('a note is an ordinary user / assistant pair of the history format, with no changes and nothing to undo', () => {
-    const h = agentHistory([noteAsPastRun({ text: '接受了 第2场「x」 · 镜头（AI生成，已应用到项目，Ctrl+Z 可撤销）' })]);
+    const h = agentHistory([noteAsPastRun({ text: 'AI生成了 第2场「x」 · 镜头（已应用到项目，Ctrl+Z 可撤销）' })]);
     expect(h).toHaveLength(2);
     expect(h[0]).toMatchObject({ role: 'user' });
     expect(h[0]!.content).toContain('第2场');
-    expect(h[0]!.content.startsWith('【AI 导演】接受了')).toBe(true);
+    expect(h[0]!.content.startsWith('【AI 生成】')).toBe(true);
+    expect(h[0]!.content).not.toMatch(/导演|助手/);
     expect(h[1]).toMatchObject({ role: 'assistant' });
     expect(h[1]!.revert).toBeUndefined();
     expect(h[1]!.content).not.toContain('这一轮的改动');
   });
-  it('notes made without an assistant run in between are one entry; a run in between starts a new one; old ones fall away', () => {
-    let n: DirectorNote[] = [];
-    n = appendNote(n, 'a', 0, 1, 10);
-    n = appendNote(n, 'b', 0, 2, 11);
-    expect(n).toHaveLength(1);
-    expect(n[0]!.text).toBe('a\nb');
-    n = appendNote(n, 'c', 1, 3, 12);
-    expect(n.map((x) => x.text)).toEqual(['a\nb', 'c']);
-    for (let i = 0; i < 20; i++) n = appendNote(n, `x${i}`, 5 + i, 10 + i, 20 + i);
-    expect(n.length).toBeLessThanOrEqual(MAX_NOTES);
-    const crowded = Array.from({ length: 20 }, (_, i) => `l${i}`).reduce((acc, t) => appendNote(acc, t, 99, 1, 1), [] as DirectorNote[]);
-    expect(crowded[0]!.text.split('\n').length).toBeLessThanOrEqual(MAX_NOTES);
-  });
-  it('a note sits right after the run it followed', () => {
-    const rows = interleave([{ id: 1 }, { id: 2 }, { id: 3 }], [{ id: 1, after: 2, text: 'n', at: 0 }, { id: 2, after: 0, text: 'first', at: 0 }]);
-    expect(rows.map((r) => (r.note ? `note:${r.note.text}` : `run:${r.run!.id}`))).toEqual(['note:first', 'run:1', 'run:2', 'note:n', 'run:3']);
-  });
 });
 
-describe('the assistant is told what the director did', () => {
+describe('the assistant is told what generation did, as it is now', () => {
   let project: Project;
+  const history = (n: number) => turns[n]!.history;
   beforeEach(() => {
     turns.length = 0;
     project = directedProject();
     useProject.getState().open(clone(project), null);
     useProject.getState().select({ sceneId: project.scenes[1]!.id, beatId: null });
+    useDirectorRun.getState().unbind();
+    useDirectorRun.setState({ controls: { ...DEFAULT_CONTROLS } });
     useAgent.getState().bindProject(null);
     useAgent.getState().bindProject(project.id);
+    useAiFlow.getState().unbind();
+    useAiFlow.getState().bind(project.id);
   });
 
-  it('the next instruction carries the note in its history, before the turns that came after it', async () => {
-    useAgent.getState().noteDirector('接受了 第2场「放学后」 · 整个场景（AI生成，已应用到项目，Ctrl+Z 可撤销）');
+  it('an applied generation turn is in the next instruction\'s history, before the turns that came after it', async () => {
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(false, {}, env, api);
+    useDirectorRun.getState().accept(useDirectorRun.getState().turns[0]!.id, project.scenes[1]!.id, true);
     await useAgent.getState().send('刚生成的第二场节奏慢一点');
-    expect(turns).toHaveLength(1);
-    const h1 = turns[0]!.history;
+    const h1 = history(0);
     expect(h1).toHaveLength(2);
-    expect(h1[0]!.role).toBe('user');
-    expect(h1[0]!.content).toContain('第2场「放学后」');
-    expect(h1[1]!.role).toBe('assistant');
-    // the second instruction: the note, then the first instruction and its answer
+    expect(h1[0]!.content).toContain(`第2场「${project.scenes[1]!.title}」`);
+    expect(h1[0]!.content).toContain('已应用到项目');
     await useAgent.getState().send('再慢一点');
-    const h2 = turns[1]!.history;
+    const h2 = history(1);
     expect(h2.map((x) => x.role)).toEqual(['user', 'assistant', 'user', 'assistant']);
-    expect(h2[0]!.content).toContain('第2场「放学后」');
     expect(h2[2]!.content.startsWith('刚生成的第二场节奏慢一点')).toBe(true);
   });
-  it('a note made after a run follows that run in the history', async () => {
-    await useAgent.getState().send('这句推近');
-    useAgent.getState().noteDirector('接受了 第1场「a」 · 镜头（AI生成，已应用到项目，Ctrl+Z 可撤销）');
+  it('a pending result is told as not applied yet; after Ctrl+Z an applied one is told as undone', async () => {
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(false, {}, env, api);
+    await useAgent.getState().send('这一场怎么样');
+    expect(history(0)[0]!.content).toContain('尚未应用');
+    const t = useDirectorRun.getState().turns[0]!;
+    useDirectorRun.getState().accept(t.id, project.scenes[1]!.id, true);
     await useAgent.getState().send('好');
-    const h = turns[1]!.history;
-    expect(h[0]!.content.startsWith('这句推近')).toBe(true);
-    expect(h[2]!.content).toContain('第1场「a」');
+    expect(history(1)[0]!.content).toContain('已应用到项目');
+    useProject.getState().undo(); // Ctrl+Z
+    await useAgent.getState().send('嗯');
+    const h = history(2);
+    expect(h[0]!.content).toContain('已撤销');
+    expect(h[0]!.content).not.toContain('已应用到项目');
   });
-  it('with no notes the history is exactly the old one (no extra turns)', async () => {
+  it('a generation made after an assistant turn follows it, by order', async () => {
     await useAgent.getState().send('这句推近');
-    expect(turns[0]!.history).toEqual([]);
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(false, {}, env, api);
+    await useAgent.getState().send('好');
+    const h = history(1);
+    expect(h[0]!.content.startsWith('这句推近')).toBe(true);
+    expect(h[2]!.content).toContain('尚未应用');
+  });
+  it('with nothing generated the history is exactly the old one (no extra turns)', async () => {
+    await useAgent.getState().send('这句推近');
+    expect(history(0)).toEqual([]);
     await useAgent.getState().send('再近');
-    expect(turns[1]!.history.map((x) => x.role)).toEqual(['user', 'assistant']);
-    expect(turns[1]!.history[0]!.content.startsWith('这句推近')).toBe(true);
+    expect(history(1).map((x) => x.role)).toEqual(['user', 'assistant']);
+    expect(history(1)[0]!.content.startsWith('这句推近')).toBe(true);
   });
-  it('a note for a project that is not open yet (the home dialog) arrives when that project opens, and not before', () => {
-    useAgent.getState().queueDirectorNote('p_new', '一键生成（AI）：整部演出共 4 场，已生成 4 场；连续性提示 0 条');
-    expect(useAgent.getState().notes).toEqual([]);
-    useAgent.getState().bindProject('p_new');
-    expect(useAgent.getState().notes).toHaveLength(1);
-    expect(useAgent.getState().notes[0]!.text).toContain('一键生成');
-    // delivered once
-    useAgent.getState().bindProject(project.id);
-    useAgent.getState().bindProject('p_new');
-    expect(useAgent.getState().notes).toEqual([]);
+  it('the first-run dialog\'s cards are handed over by project id: nothing before the project opens, delivered once, in order, and the panel is asked to come forward', async () => {
+    const a = breakdownEntry({ who: '规则', userText: '分场并生成整部演出', scenes: ['a', 'b'], cast: 3, warnings: 0 });
+    const b = generateEntry({ who: '规则', done: 2, total: 2, failed: 0, warnings: 1, notes: ['连续性：x'] });
+    useAiFlow.getState().queue('p_new', [a, b]);
+    expect(useAiFlow.getState().entries).toEqual([]);
+    useAiFlow.getState().bind('p_new');
+    expect(useAiFlow.getState().entries.map((e) => e.kind)).toEqual(['breakdown', 'generate']);
+    expect(useAiFlow.getState().reveal).toBe(true);
+    expect(a.order).toBeLessThan(b.order);
+    // strict mode: unbound and bound again in the same tick, the cards are still there
+    useAiFlow.getState().unbind();
+    useAiFlow.getState().bind('p_new');
+    expect(useAiFlow.getState().entries).toHaveLength(2);
+    await new Promise((r) => setTimeout(r, 5));
+    useAiFlow.getState().bind(project.id);
+    useAiFlow.getState().bind('p_new');
+    expect(useAiFlow.getState().entries).toEqual([]); // delivered once
+    expect(useAiFlow.getState().reveal).toBe(false);
   });
-  it('notes belong to their project: another project starts without them', () => {
-    useAgent.getState().noteDirector('x');
-    expect(useAgent.getState().notes).toHaveLength(1);
-    useAgent.getState().bindProject('p_other');
-    expect(useAgent.getState().notes).toEqual([]);
+  it('the handed-over cards are in the assistant\'s history (what the dialog did), then later turns', async () => {
+    useAiFlow.getState().queue('p_h', [breakdownEntry({ who: 'AI', userText: '先分场看看', scenes: ['a', 'b', 'c'], cast: 2, warnings: 0 }), skeletonEntry({ who: 'AI', scenes: 3 })]);
+    useProject.getState().open(clone({ ...project, id: 'p_h' }), null);
+    useAgent.getState().bindProject('p_h');
+    useAiFlow.getState().bind('p_h');
+    await useAgent.getState().send('把第一场改一下');
+    const h = history(0);
+    expect(h).toHaveLength(4);
+    expect(h[0]!.content).toContain('分场');
+    expect(h[2]!.content).toContain('已建 3 场骨架');
+    expect(h.map((x) => x.content).join('\n')).not.toMatch(/导演|助手/);
   });
-  it('the draft survives (it lives in the store); another project starts empty', () => {
+  it('the review path leaves a skeleton card with the 「生成全部场景」 action', () => {
+    const e = skeletonEntry({ who: '规则', scenes: 5 });
+    expect(e.canGenerateAll).toBe(true);
+    expect(e.title).toContain('5 场骨架');
+    expect(e.summary).toContain('还没生成演出');
+  });
+  it('the stream order is one counter: runs, turns and entries never share a position', () => {
+    const a = nextOrder();
+    const b = nextOrder();
+    expect(b).toBeGreaterThan(a);
+  });
+  it('the draft, the pictures and the memory view live in the store (a hidden panel keeps them); another project starts empty', () => {
     useAgent.getState().setDraft('第二场再');
+    useAgent.getState().setAttachments([{ dataUrl: 'data:image/png;base64,AA', label: 'a' }]);
+    useAgent.getState().setMemoryView(true);
     expect(useAgent.getState().draft).toBe('第二场再');
+    expect(useAgent.getState().attachments).toHaveLength(1);
+    expect(useAgent.getState().memoryView).toBe(true);
     useAgent.getState().bindProject('p_other');
     expect(useAgent.getState().draft).toBe('');
+    expect(useAgent.getState().attachments).toEqual([]);
+    expect(useAgent.getState().memoryView).toBe(false);
   });
 });

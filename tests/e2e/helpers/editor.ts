@@ -1,9 +1,11 @@
 import { expect, type Page } from '@playwright/test';
 import type { Project } from '../../../shared/schema/project';
+import { mockAiConfigured } from './ui';
 import './studio';
 
 /** Opens the editor on a fresh copy of the demo project; returns its id. */
 export async function openDemoEditor(page: Page, title: string): Promise<string> {
+  await mockAiConfigured(page); // the assistant's input needs an AI model; tests that talk to it answer /api/agent/turn themselves
   await page.goto('/');
   await page.getByTestId('new-title').fill(title);
   await page.getByTestId('btn-from-demo').click();

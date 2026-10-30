@@ -173,10 +173,10 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
         ? { key: 'core', ok: true, label: 'Cubism Core', detail: `${coreLocal ? '使用本地副本（vendor/）' : '使用 Live2D 官方地址（需联网）'} · moc3 v${coreProbe.mocVersion}`, action: { text: '管理 Core', run: () => setWizard(0) } }
         : { key: 'core', ok: false, label: 'Cubism Core', detail: coreProbe.message, action: { text: '获取 Core', run: () => setWizard(0) } },
     llm === undefined
-      ? { key: 'ai', ok: null, label: 'AI 导演', detail: '检查中…' }
+      ? { key: 'ai', ok: null, label: 'AI', detail: '检查中…' }
       : llm?.status.configured
-        ? { key: 'ai', ok: true, label: 'AI 导演', detail: `${llm.status.provider === 'anthropic' ? 'Claude' : 'OpenAI 兼容'} · ${llm.status.model ?? ''}` }
-        : { key: 'ai', ok: false, label: 'AI 导演', detail: 'AI 未配置：填入你自己的 API key 或本地 LM Studio 地址即可启用；未配置时仍可使用“规则生成（非 AI）”。', action: { text: '打开 AI 设置', run: () => setSettingsOpen(true) } },
+        ? { key: 'ai', ok: true, label: 'AI', detail: `${llm.status.provider === 'anthropic' ? 'Claude' : 'OpenAI 兼容'} · ${llm.status.model ?? ''}` }
+        : { key: 'ai', ok: false, label: 'AI', detail: 'AI 未配置：填入你自己的 API key 或本地 LM Studio 地址即可启用；未配置时仍可使用“规则生成（非 AI）”。', action: { text: '打开 AI 设置', run: () => setSettingsOpen(true) } },
   ];
 
   const ready = checks.filter((c) => c.ok === true).length;
@@ -234,9 +234,9 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
           <p className="lede">把小说变成《BanG Dream! Our Notes》风格的演出：AI 分场、选背景与服装、写镜头与表演，再在编辑器里逐句打磨。</p>
 
           <nav className="menu" aria-label="主菜单" onKeyDown={menuKeys}>
-            <button className="menu-item primary" onClick={() => setAiOpen(true)} data-testid="btn-ai-breakdown" title="粘贴或打开 .txt / .md 小说，自动分场并导演整部作品。支持 UTF-8 / GBK 编码，可随时取消与续跑。">
+            <button className="menu-item primary" onClick={() => setAiOpen(true)} data-testid="btn-ai-breakdown" title="粘贴或打开 .txt / .md 小说，自动分场并生成整部演出。没配置 AI 也可以用规则生成。支持 UTF-8 / GBK 编码，可随时取消与续跑。">
               <Icon d="M12 3l1.8 4.9L19 9.7l-5.2 1.8L12 16.4l-1.8-4.9L5 9.7l5.2-1.8L12 3Zm6.5 10 .9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4Z" fill />
-              <span className="mi-text"><strong>导入小说开始</strong><small>粘贴或打开小说，AI 一键分场、导演整部作品</small></span>
+              <span className="mi-text"><strong>导入小说开始</strong><small>粘贴或打开小说，AI 分场并生成整部演出（未配置 AI 也能用规则生成）</small></span>
             </button>
             {last && (
               <button className="menu-item" onClick={() => void openById(last.id)} data-testid="hub-continue" title={`${last.title} · ${when(last.updatedAt)}`}>

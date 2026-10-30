@@ -1,39 +1,23 @@
 /**
- * 「AI 助手」: talk to the project. One instruction = one change card ("AI 说" next to "实际改动", before -> after with the reason, apply all / some /
- * reject, a 「需要你确认」 group for locked or hand-made content). Applying is one undo step. The 「实时」 switch applies small safe change sets by itself.
+ * The assistant's part of the AI panel: its change card (one instruction = one card, "AI 说" next to "实际改动", before -> after with the reason,
+ * apply all / some / reject, a 「需要你确认」 group for locked or hand-made content) and one conversation turn. Applying is one undo step.
+ * The panel itself (header, stream, composer) is `AiPanel.tsx`; the card shell is shared with the generation card (`ai/AiCard.tsx`).
  */
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import type { Change } from '@shared/agent/apply';
 import { AGENT_SCOPE_LABEL, scopeOf, type AgentScope } from '@shared/agent/ops';
-import { LIVE_MAX_OPS } from '@shared/agent/live';
-import { multiContext } from '@shared/agent/selection';
 import { planReplay } from '@shared/agent/replay';
 import type { Project } from '@shared/schema/project';
-import { MAX_FRAMES } from '@shared/agent/frames';
 import { VERIFICATION_LINE } from '@shared/agent/verify';
-import { filesToAttachments } from '../../agentMedia';
-import { interleave } from '../../store/agentNotes';
-import { useAgent, type AgentAttachment, type CardItem, type RunItem } from '../../store/agentStore';
-import { notify } from '../../store/uiStore';
-import { useProject } from '../../store/projectStore';
+import { useAgent, type CardItem, type RunItem } from '../../store/agentStore';
+import { stepIsLive, useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
-import { directorMemories, memoryReviewInstruction } from '@shared/agent/memory';
-import { useMemories } from '../../memoryApi';
-import { EXPERIMENTAL_TIP, ExperimentalBadge, MemoryCards, MemoryManager } from './MemoryPanel';
+import { AiCard } from './ai/AiCard';
+import { MemoryCards } from './MemoryPanel';
 
 
 
 const SCOPE_ORDER: AgentScope[] = ['camera', 'performance', 'costume', 'staging', 'fx', 'background', 'structure', 'rhythm', 'lock'];
-const fmt = (n: number) => (n >= 10_000 ? `${(n / 1000).toFixed(1)}k` : String(n));
-
-function suggestions(project: Project, sel: { sceneId: string | null; beatId: string | null }, multi = false): string[] {
-  if (multi) return ['这几句镜头推近一点', '这几句加回忆效果', '这几句节奏放慢一点'];
-  const scene = project.scenes.find((s) => s.id === sel.sceneId);
-  const beat = scene?.beats.find((b) => b.id === sel.beatId);
-  if (beat) return ['镜头推近一点', '这一句加回忆效果', '这句节奏放慢一点'];
-  if (scene) return ['这一场多用双人镜头，少点特写', '这一场节奏放慢一点', '这一场去掉所有特效'];
-  return ['选中一句话后，可以说“这里镜头推近一点”'];
-}
 
 const sceneNo = (project: Project, id: string) => project.scenes.findIndex((s) => s.id === id) + 1;
 
@@ -168,7 +152,7 @@ function PendingBatch({ run, batch, renderPending }: { run: RunItem; batch: Pend
   );
 }
 
-function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFocus: (sceneId: string, beatId: string | undefined) => void }) {
+export function AgentCard({ run, project, onFocus }: { run: RunItem; project: Project; onFocus: (sceneId: string, beatId: string | undefined) => void }) {
   const a = useAgent.getState();
   const hover = (beatId: string | undefined) => useUi.getState().set({ hoverBeat: beatId ?? null });
   useEffect(() => () => useUi.getState().set({ hoverBeat: null }), []);
@@ -225,14 +209,36 @@ function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFoc
   };
   const aiSaid = p.summary || (p.question ? p.question.question : '');
   const actual = run.items.filter((i) => i.origin === 'applied').flatMap((i) => i.record.changes).length;
+  const undone = applied.length > 0 && !!run.steps?.length && !run.steps.some(stepIsLive);
+  const stateKey = run.rejected ? 'rejected' : undone || (run.wasUndone && applied.length === 0) ? 'undone' : applied.length > 0 ? (open.length > 0 ? 'partial' : 'applied') : open.length > 0 || pending.length > 0 ? 'pending' : 'done';
+  const stateText = { rejected: '已拒绝', undone: '已撤销', partial: '部分应用', applied: '已应用', pending: '待确认', done: '' }[stateKey];
+  const tone = stateKey === 'applied' ? 'ok' : stateKey === 'pending' || stateKey === 'partial' ? 'warn' : 'hint';
+  useProject((s) => s.histRev); // 已应用 reads 已撤销 after Ctrl+Z
+  const actions = (
+    <>
+      {open.length > 0 && !run.rejected && (
+        <>
+          <button className="btn primary" data-testid="agent-apply-all" onClick={() => a.applyItems(run.id, open.map((i) => i.id))}>应用全部</button>
+          <button className="btn" data-testid="agent-apply-sel" disabled={checked.length === 0} onClick={() => a.applyItems(run.id, checked.map((i) => i.id))}>应用所选 ({checked.length})</button>
+          <button className="btn" data-testid="agent-reject" onClick={() => a.reject(run.id)}>拒绝</button>
+        </>
+      )}
+      {applied.length > 0 && (
+        <span className="ai-applied" data-testid="agent-applied">
+          {undone ? `已撤销 ${applied.length} 项` : `已应用 ${applied.length} 项 · Ctrl+Z 撤销`}
+          <button className="btn" data-testid="agent-undo-card" disabled={undoLabel !== run.appliedLabel} onClick={() => a.undoRun(run.id)}>撤销这次</button>
+        </span>
+      )}
+    </>
+  );
+  const hasActions = (open.length > 0 && !run.rejected) || applied.length > 0;
   return (
-    <div className="agent-card" data-testid="agent-card" data-run={run.id}>
-      <div className="agent-card-head">
-        <strong data-testid="agent-card-title">{run.items.length === 0 && p.memory?.length ? '长期记忆' : titleOf(project, run.items)}</strong>
-        <span className="hint">{p.stopped === 'steps' ? '（达到步数上限）' : ''}</span>
-      </div>
+    <AiCard
+      state={stateKey} title={run.items.length === 0 && p.memory?.length ? '长期记忆' : titleOf(project, run.items)} titleTestId="agent-card-title" who="AI"
+      stateLabel={stateText || undefined} tone={tone} said={aiSaid || '（没有文字说明）'} saidTestId="agent-said" meta={p.stopped === 'steps' ? '（达到步数上限）' : undefined}
+      bodyTestId="agent-card" bodyAttrs={{ 'data-run': String(run.id) }} actions={hasActions ? actions : undefined}
+    >
       {run.liveNote && <p className="hint warn" data-testid="agent-live-note">{run.liveNote}</p>}
-      <div className="agent-said" data-testid="agent-said"><span className="agent-tag">AI 说</span>{aiSaid || '（没有文字说明）'}</div>
       {p.claimedWithoutOps && <p className="hint warn" data-testid="agent-claimed">AI 提到但没有执行：{p.claimedWithoutOps}</p>}
       {p.question && (
         <div className="agent-question" data-testid="agent-question">
@@ -258,128 +264,25 @@ function Card({ run, project, onFocus }: { run: RunItem; project: Project; onFoc
         </div>
       )}
       {p.pending.length > 0 && pending.length === 0 && <p className="hint">需要确认的项目已处理。</p>}
-      {open.length > 0 && !run.rejected && (
-        <div className="agent-buttons">
-          <button className="btn primary" data-testid="agent-apply-all" onClick={() => a.applyItems(run.id, open.map((i) => i.id))}>全部应用</button>
-          <button className="btn" data-testid="agent-apply-sel" disabled={checked.length === 0} onClick={() => a.applyItems(run.id, checked.map((i) => i.id))}>应用所选 ({checked.length})</button>
-          <button className="btn" data-testid="agent-reject" onClick={() => a.reject(run.id)}>拒绝</button>
-        </div>
-      )}
-      {applied.length > 0 && (
-        <div className="agent-applied" data-testid="agent-applied">
-          已应用 {applied.length} 项 · Ctrl+Z 撤销
-          <button className="btn-s" data-testid="agent-undo-card" disabled={undoLabel !== run.appliedLabel} onClick={() => a.undoRun(run.id)}>撤销这次</button>
-        </div>
-      )}
       {run.rejected && <p className="hint" data-testid="agent-rejected">已拒绝</p>}
+    </AiCard>
+  );
+}
+
+/** One assistant turn of the stream: the 「你」 bubble (with its pictures), progress while it runs, then the change card. */
+export function ChatTurn({ run, project, onFocus }: { run: RunItem; project: Project; onFocus: (sceneId: string, beatId: string | undefined) => void }) {
+  return (
+    <div className="ai-turn" data-testid="ai-turn" data-kind="chat">
+      <div className="agent-turn" data-testid="agent-turn">
+      <div className="ai-user-wrap">
+        <div className="agent-user ai-user-bubble" data-testid="agent-user">{run.instruction}{run.attachments?.length ? <div data-testid="agent-user-attachments">{run.attachments.map((x, i) => <img key={i} src={x.dataUrl} alt={x.label} title={x.label} style={{ height: 40, marginRight: 4, borderRadius: 3 }} />)}</div> : null}</div>
+      </div>
+      {run.status === 'running' && <div className="agent-progress" data-testid="agent-progress">{run.progress.slice(-4).map((p, i) => <div key={i} className="hint">{p}</div>)}</div>}
+      {run.status === 'failed' && <p className="bad" data-testid="agent-error">{run.error}</p>}
+      {run.status === 'cancelled' && <p className="hint">已取消</p>}
+      {run.status === 'done' && run.proposal && <AgentCard run={run} project={project} onFocus={onFocus} />}
+      </div>
     </div>
   );
 }
 
-export function AgentPanel({ onFocusBeat }: { onFocusBeat: (sceneId: string, beatId: string | undefined) => void }) {
-  const project = useProject((s) => s.project)!;
-  const selection = useProject((s) => s.selection);
-  const hoverBeat = useUi((st) => st.hoverBeat);
-  const cards = useUi((st) => st.cards);
-  const { runs, notes, draft: text, running, live, session, snapshot, focusTick } = useAgent();
-  const a = useAgent.getState();
-  const setText = a.setDraft; // the draft lives in the store: another dock tab in front unmounts this panel, and what was typed must stay
-  // pictures / video frames for the next instruction (attach button, drop on the input, paste)
-  const [attach, setAttach] = useState<AgentAttachment[]>([]);
-  const [dragging, setDragging] = useState(false);
-  const [showMemory, setShowMemory] = useState(false);
-  const mem = useMemories();
-  useEffect(() => { void useMemories.getState().load(project.id); }, [project.id]);
-  const styleMemories = mem.enabled ? directorMemories(mem.memories, project.id).length : 0;
-  const fileInput = useRef<HTMLInputElement>(null);
-  const addFiles = async (files: File[]) => {
-    if (files.length === 0) return;
-    const { items, problems } = await filesToAttachments(files, MAX_FRAMES - attach.length);
-    if (items.length) setAttach((cur) => [...cur, ...items].slice(0, MAX_FRAMES));
-    if (problems.length) notify(problems.join('；'), 'warn');
-  };
-  const input = useRef<HTMLTextAreaElement>(null);
-  const end = useRef<HTMLDivElement>(null);
-  useEffect(() => { useAgent.getState().bindProject(project.id); }, [project.id]);
-  useEffect(() => { input.current?.focus(); }, [focusTick]);
-  const tailKey = `${runs.length}:${notes.length}:${runs.at(-1)?.progress.length ?? 0}:${runs.at(-1)?.status ?? ''}`;
-  useEffect(() => { end.current?.scrollIntoView?.({ block: 'end' }); }, [tailKey]);
-  const scene = project.scenes.find((s) => s.id === selection.sceneId);
-  const beatIdx = scene?.beats.findIndex((b) => b.id === selection.beatId) ?? -1;
-  const multi = multiContext(project, cards);
-  const ctxText = multi ?? (scene ? `第${sceneNo(project, scene.id)}场${beatIdx >= 0 ? ` · 第${beatIdx + 1}句` : ''}${selection.castId ? ` · ${project.cast.find((c) => c.id === selection.castId)?.displayName ?? ''}` : ''}` : '整个项目');
-  const send = (t: string) => {
-    const v = t.trim();
-    if (!v || running) return;
-    setText('');
-    const pics = attach;
-    setAttach([]);
-    void useAgent.getState().send(v, pics);
-  };
-  const last = runs.at(-1);
-  return (
-    <div className="agent-panel" data-testid="agent-panel" data-hover-beat={hoverBeat ?? undefined}>
-      <div className="agent-top">
-        <label className="chk" title={`打开后，只改当前场景、不超过 ${LIVE_MAX_OPS} 项、不含进出场 / 背景 / 锁的小改动会自动应用（可撤销）`}>
-          <input type="checkbox" checked={live} onChange={(e) => a.setLive(e.target.checked)} data-testid="agent-live" /> 实时
-        </label>
-        <span className="hint" data-testid="agent-context" title="指令里的“这里 / 这一句”指这个选区；多选时“这几句 / 这段 / 选中的”指选中的句子">选区：{ctxText}</span>
-        <span className="grow" />
-        <button className={`btn-s${showMemory ? ' on' : ''}`} data-testid="agent-memory" title={mem.enabled ? `长期记忆（${EXPERIMENTAL_TIP}）` : '长期记忆已关闭'} onClick={() => setShowMemory((v) => !v)}>{showMemory ? '返回对话' : '记忆'}{!showMemory && mem.enabled && mem.memories.some((m) => m.enabled) ? ` ${mem.memories.filter((m) => m.enabled).length}` : ''}</button>
-        <span className="hint" data-testid="agent-cost" title="本条指令的 token 用量 / 本次会话累计（含缓存命中）">
-          本条 {fmt((last?.usage.inputTokens ?? 0) + (last?.usage.outputTokens ?? 0))} · 本次共 {fmt(session.inputTokens + session.outputTokens)} tokens
-        </span>
-      </div>
-      {showMemory && <MemoryManager projectId={project.id} />}
-      <div className="agent-flow" data-testid="agent-flow" hidden={showMemory}>
-        {runs.length === 0 && <p className="hint">用一句话指挥 AI 修改当前项目，例如“第二场多用双人，少点特写”“这一句加回忆效果”“让爱音在这里进场”“这句停顿长一点”。每次修改先给你看变更，可勾选应用，Ctrl+Z 一步撤销。整场重新生成请用上面的「生成」。</p>}
-        {interleave(runs, notes).map((row) => {
-          // what the AI director did (an accepted result, a one-click generation): the assistant knows it, so 「刚生成的第二场…」 works
-          if (row.note) return <div key={`note${row.note.id}`} className="agent-note" data-testid="agent-director-note"><span className="agent-tag">AI 导演</span>{row.note.text}</div>;
-          const r = row.run!;
-          return (
-            <div key={r.id} className="agent-turn" data-testid="agent-turn">
-              <div className="agent-user" data-testid="agent-user">{r.instruction}{r.attachments?.length ? <div data-testid="agent-user-attachments">{r.attachments.map((x, i) => <img key={i} src={x.dataUrl} alt={x.label} title={x.label} style={{ height: 40, marginRight: 4, borderRadius: 3 }} />)}</div> : null}</div>
-              {r.status === 'running' && <div className="agent-progress" data-testid="agent-progress">{r.progress.slice(-4).map((p, i) => <div key={i} className="hint">{p}</div>)}</div>}
-              {r.status === 'failed' && <p className="bad" data-testid="agent-error">{r.error}</p>}
-              {r.status === 'cancelled' && <p className="hint">已取消</p>}
-              {r.status === 'done' && r.proposal && <Card run={r} project={project} onFocus={onFocusBeat} />}
-            </div>
-          );
-        })}
-        <div ref={end} />
-      </div>
-      {snapshot && <div className="agent-snap hint"><button className="btn-s" data-testid="agent-restore" onClick={() => a.restoreSnapshot()}>恢复到 AI 助手开始前</button></div>}
-      <div className="agent-suggest">
-        {suggestions(project, selection, !!multi).map((s) => <button key={s} className="btn-s" disabled={running || !scene} onClick={() => send(s)}>{s}</button>)}
-        {scene && styleMemories > 0 && (
-          <button className="btn-s" data-testid="agent-review-memory" disabled={running} title={`让助手按你保存的 ${styleMemories} 条风格偏好检查这一场，只改明显违反的地方（每处都是普通的变更卡片，可勾选、可撤销）。${EXPERIMENTAL_TIP}`} onClick={() => send(memoryReviewInstruction(sceneNo(project, scene.id)))}>
-            按偏好检查本场 <ExperimentalBadge />
-          </button>
-        )}
-      </div>
-      {attach.length > 0 && (
-        <div className="agent-attachments" data-testid="agent-attachments" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', padding: '2px 0' }}>
-          {attach.map((x, i) => (
-            <span key={i} style={{ position: 'relative' }} title={x.label}>
-              <img src={x.dataUrl} alt={x.label} style={{ height: 44, borderRadius: 3, display: 'block' }} />
-              <button className="btn-s" data-testid="agent-attachment-remove" aria-label={`移除${x.label}`} style={{ position: 'absolute', top: 0, right: 0, padding: '0 4px' }} onClick={() => setAttach((cur) => cur.filter((_, j) => j !== i))}>×</button>
-            </span>
-          ))}
-        </div>
-      )}
-      <div className={`agent-input${dragging ? ' drop' : ''}`} data-testid="agent-dropzone" style={dragging ? { outline: '2px dashed var(--accent, #6aa0ff)' } : undefined}
-        onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragging(true); } }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => { if (e.dataTransfer.files.length) { e.preventDefault(); setDragging(false); void addFiles([...e.dataTransfer.files]); } }}>
-        <input ref={fileInput} type="file" accept="image/*,video/*" multiple hidden data-testid="agent-attach-input" onChange={(e) => { void addFiles([...(e.target.files ?? [])]); e.target.value = ''; }} />
-        <button className="btn-s" data-testid="agent-attach" title={`附上截图或短视频（拖进来、粘贴也可以；最多 ${MAX_FRAMES} 张，视频取几帧）`} disabled={running || attach.length >= MAX_FRAMES} onClick={() => fileInput.current?.click()}>附图</button>
-        <textarea ref={input} value={text} rows={2} placeholder="对 AI 说点什么…（Enter 发送，Shift+Enter 换行，Ctrl+K 聚焦；可以拖入或粘贴截图）" data-testid="agent-input"
-          onPaste={(e) => { const files = [...e.clipboardData.files].filter((f) => f.type.startsWith('image/')); if (files.length) { e.preventDefault(); void addFiles(files); } }}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(text); } }} />
-        {running ? <button className="btn" data-testid="agent-stop" onClick={() => a.cancel()}>停止</button> : <button className="btn primary" data-testid="agent-send" disabled={!text.trim()} onClick={() => send(text)}>发送</button>}
-      </div>
-    </div>
-  );
-}

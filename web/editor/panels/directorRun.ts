@@ -1,29 +1,27 @@
 /**
- * The AI director's run state and logic, out of the panel: options, progress, the proposals (cards), the run log, accept / reject, and the
- * request itself. It used to live in the component that was mounted only while its tab was in front, so switching tabs aborted a run and
- * dropped a result nobody had accepted yet. In a store it survives the panel being hidden, collapsed or re-mounted; leaving the project
- * (or the editor) ends it (`reset`).
+ * The generation logic of the AI panel, out of the components: the options (`controls`), the requests, and the generation turns that go into
+ * the panel's one stream (`ai/genTurn.ts`): progress, the proposals as cards, applying / rejecting. It used to live in a component that was
+ * mounted only while its tab was in front, so switching tabs aborted a run and dropped a result nobody had accepted yet. In a store it survives
+ * the panel being hidden, collapsed or re-mounted; leaving the project (or the editor) ends it (`reset`).
  *
  * Nothing about the requests changed: the same `postScene` / `postScenes` calls with the same options, in the same key order (`refresh` is
- * only present for 「换一版」). Accepting still runs through the lock-enforcing `mergeLocks` inside one `applyEdit` = one undo step.
+ * only present for 「换一版」). Applying still runs through the lock-enforcing `mergeLocks` inside one `applyEdit` = one undo step.
  */
 import { create } from 'zustand';
 import { costumeLabelZh } from '@shared/catalog/labels';
 import { catalogLookups, checkContinuity } from '@shared/director/continuity';
-import { alignToOld, diffScene, DIFF_LABEL, type DiffScope } from '@shared/director/diff';
+import { alignToOld, diffScene, type DiffScope } from '@shared/director/diff';
 import { mergeLocks } from '@shared/director/mergeLocks';
 import { SCOPE_LABEL, type ScopeName } from '@shared/director/scope';
 import type { CompactCatalog } from '@shared/schema/assets';
 import type { Project } from '@shared/schema/project';
-import { DirectorApiError, postScene, postScenes, type BatchProgress, type SceneResponse } from '../../directorApi';
-import { directorAcceptText } from '../../store/agentNotes';
-import { useAgent } from '../../store/agentStore';
+import { DirectorApiError, postScene, postScenes, type SceneResponse } from '../../directorApi';
+import { nextOrder } from '../../store/aiFlow';
 import { useProject } from '../../store/projectStore';
 import { notify } from '../../store/uiStore';
-import type { Card } from './AiResultCard';
+import type { Card, Engine, GenTurn, LogLine, RunOptions } from './ai/genTurn';
 
-export interface LogLine { at: number; kind: 'info' | 'error'; text: string }
-export type Engine = 'ai' | 'rule';
+export type { Card, CardState, Engine, GenTurn, LogLine, RunOptions } from './ai/genTurn';
 
 export function continuityOf(project: Project, catalog: CompactCatalog | null) {
   return checkContinuity(project, catalogLookups(catalog));
@@ -35,19 +33,6 @@ export interface CameraGenerationRequest {
   /** One scene (current-scene regenerate) or several, processed one request at a time. */
   sceneIds: string[];
   consume: () => boolean;
-}
-
-export interface RunOptions {
-  sceneId?: string;
-  /** Several scenes, one sequential request each (camera regenerate for all). */
-  sceneIds?: string[];
-  scope?: ScopeName;
-  preview?: boolean;
-  overwriteUser?: boolean;
-  onlyBeat?: boolean;
-  engine?: Engine;
-  /** 「换一版」: ask for a new answer instead of the cached one for the same input (the request's `refresh` flag). */
-  refresh?: boolean;
 }
 
 /** What the panel knows that the store does not: the AI settings and the catalog (for model labels in the diff). */
@@ -66,6 +51,8 @@ export interface DirectorApi {
 const realApi: DirectorApi = { postScene, postScenes };
 
 export interface DirectorControls {
+  /** What 「生成」 acts on: the selected scene (or, with `onlyBeat`, the selected lines), every scene, or only those not generated yet. */
+  target: 'scene' | 'all' | 'missing';
   engine: Engine;
   scope: ScopeName;
   onlyBeat: boolean;
@@ -73,80 +60,68 @@ export interface DirectorControls {
   preview: boolean;
   useMem: boolean;
 }
-export const DEFAULT_CONTROLS: DirectorControls = { engine: 'ai', scope: 'scene', onlyBeat: false, overwriteUser: false, preview: true, useMem: true };
-
-interface RunMeta { scopes: ScopeName[]; beatIds?: string[]; overwrite: boolean; label: string; who: string }
+export const DEFAULT_CONTROLS: DirectorControls = { target: 'scene', engine: 'ai', scope: 'scene', onlyBeat: false, overwriteUser: false, preview: true, useMem: true };
 
 /** 「规则 / 回放 / AI」: who made the proposal. */
 export const whoLabel = (useRule: boolean, provider: string | null | undefined): string => (useRule ? '规则' : provider === 'fixture' ? '回放' : 'AI');
-/** The rule director is used when it was picked or when no AI is configured. */
+/** The rule generator is used when it was picked or when no AI is configured. */
 export const usesRule = (engine: Engine, configured: boolean): boolean => engine === 'rule' || !configured;
+
+/** A line the generator wrote itself (the rule generator's skeleton lines quote the source paragraph); anything else counts as generated. */
+export const isDirectedBeat = (b: { meta: { source: string; reason?: string | undefined } }): boolean => !(b.meta.source === 'rule' && b.meta.reason?.startsWith('原文段落'));
+/** Has this scene been generated (by the AI, the rule generator or by hand) rather than only broken down? */
+export const isDirectedScene = (s: { beats: Array<{ meta: { source: string; reason?: string | undefined } }> }): boolean => s.beats.length > 0 && s.beats.some(isDirectedBeat);
 
 interface DirectorState {
   projectId: string | null;
   controls: DirectorControls;
-  /** Is the 「生成」 section of the AI panel expanded? null = not chosen yet (open when the project has source text). */
-  generateOpen: boolean | null;
   busy: boolean;
-  progress: Record<string, BatchProgress>;
-  total: number;
-  cards: Record<string, Card>;
-  log: LogLine[];
-  error: string | null;
-  meta: RunMeta;
+  /** The generation turns of this project, oldest first (the stream interleaves them with the assistant's turns by `order`). */
+  turns: GenTurn[];
   setControls(patch: Partial<DirectorControls>): void;
-  setGenerateOpen(open: boolean): void;
-  setError(error: string | null): void;
-  /** Called with the open project's id: another project ends the run and clears the results. */
+  /** Called with the open project's id: another project ends the run and clears the turns. */
   bindProject(id: string | null): void;
-  /** Abort a running request and clear the results; the options stay (they are the person's settings, not results). */
+  /** Abort a running request and clear the turns; the options stay (they are the person's settings, not results). */
   reset(): void;
   /** The project was left (the editor closed or another project opened): `reset`, the options back to their defaults, and forget which project it was. */
   unbind(): void;
   run(all: boolean, options: RunOptions | undefined, env: DirectorEnv, api?: DirectorApi): Promise<void>;
   cancel(): void;
-  accept(sceneId: string, all: boolean): void;
-  acceptAll(): void;
-  reject(sceneId: string): void;
-  rejectAll(): void;
-  toggleScope(sceneId: string, scope: DiffScope): void;
+  accept(turnId: number, sceneId: string, all: boolean): void;
+  acceptAll(turnId: number): void;
+  reject(turnId: number, sceneId: string): void;
+  rejectAll(turnId: number): void;
+  toggleScope(turnId: number, sceneId: string, scope: DiffScope): void;
+  /** 「撤销这次」: undo the newest application of the turn, when it is still the top of the undo stack. */
+  undo(turnId: number): void;
+  /** Drop a turn (a command that was routed here by mistake); cancels it when it is running. */
+  discard(turnId: number): void;
 }
-
-const OPEN_KEY = 'studio.ai.generate.open';
-const readOpen = (): boolean | null => {
-  try {
-    const v = localStorage.getItem(OPEN_KEY);
-    return v === '1' ? true : v === '0' ? false : null;
-  } catch {
-    return null;
-  }
-};
-const writeOpen = (on: boolean): void => {
-  try {
-    localStorage.setItem(OPEN_KEY, on ? '1' : '0');
-  } catch { /* storage may be blocked; the state just is not remembered */ }
-};
 
 let ctl: AbortController | null = null;
 /** Bumped by `reset`: a request that was started before it must not write into the store any more. */
 let generation = 0;
-const NO_META: RunMeta = { scopes: ['scene'], overwrite: false, label: '', who: 'AI' };
+let turnSeq = 0;
 
 export const useDirectorRun = create<DirectorState>((set, get) => {
-  const say = (kind: LogLine['kind'], text: string) => set((s) => ({ log: [...s.log.slice(-60), { at: Date.now(), kind, text }] }));
+  const patchTurn = (id: number, f: (t: GenTurn) => GenTurn) => set((s) => ({ turns: s.turns.map((t) => (t.id === id ? f(t) : t)) }));
+  const turnOf = (id: number) => get().turns.find((t) => t.id === id);
+  const say = (id: number, kind: LogLine['kind'], text: string) => patchTurn(id, (t) => ({ ...t, log: [...t.log.slice(-60), { at: Date.now(), kind, text }] }));
 
   /** Applies proposals to the CURRENT scenes through the lock-enforcing merge; one undo step. */
-  const applyCards = (list: Array<{ card: Card; scopes: ScopeName[] }>, label: string, partial = false, scopeLabels?: string[]) => {
-    const meta = get().meta;
+  const applyCards = (turnId: number, list: Array<{ card: Card; scopes: ScopeName[] }>, label: string, partial = false) => {
+    const turn = turnOf(turnId);
+    if (!turn) return;
     const conflicts: string[] = [];
     const done: string[] = [];
-    useProject.getState().applyEdit((d) => {
+    const before = useProject.getState().undoId;
+    const ok = useProject.getState().applyEdit((d) => {
       for (const { card, scopes } of list) {
         const k = d.scenes.findIndex((s) => s.id === card.sceneId);
         if (k < 0) continue;
         const cur = JSON.parse(JSON.stringify(d.scenes[k])) as Project['scenes'][number];
         const merged = mergeLocks(cur, partial ? alignToOld(cur, card.result.scene) : card.result.scene, {
-          scopes, ...(meta.beatIds ? { beatIds: meta.beatIds } : {}), overwriteUser: meta.overwrite,
+          scopes, ...(turn.beatIds ? { beatIds: turn.beatIds } : {}), overwriteUser: turn.overwrite,
         });
         if (merged.applied) {
           d.scenes[k] = merged.scene as never;
@@ -154,28 +129,22 @@ export const useDirectorRun = create<DirectorState>((set, get) => {
         } else conflicts.push(...merged.conflicts.map((c) => c.label));
       }
     }, label);
-    set((s) => {
-      const next = { ...s.cards };
-      for (const { card } of list) if (next[card.sceneId] && done.includes(card.sceneId)) next[card.sceneId] = { ...next[card.sceneId]!, state: 'accepted' };
-      return { cards: next };
-    });
-    if (conflicts.length > 0) set({ error: `锁定冲突，没有应用：\n${conflicts.join('\n')}` });
-    else notify(`${label}（Ctrl+Z 可撤销）`, 'info');
-    // the assistant remembers what was just generated and applied, so that 「刚生成的第二场节奏慢一点」 resolves
-    if (done.length > 0) {
-      const project = useProject.getState().project;
-      useAgent.getState().noteDirector(directorAcceptText({
-        who: meta.who,
-        scenes: done.map((id) => ({ no: (project?.scenes.findIndex((s) => s.id === id) ?? -1) + 1, title: project?.scenes.find((s) => s.id === id)?.title ?? id })).filter((s) => s.no > 0),
-        scopes: scopeLabels ?? [...new Set(list.flatMap((x) => x.scopes))].map((s) => SCOPE_LABEL[s]),
-        partial,
-        ...(meta.beatIds ? { onlyBeats: meta.beatIds.length } : {}),
-      }));
+    const after = useProject.getState().undoId;
+    const stepId = ok && after !== null && after !== before ? after : undefined;
+    if (ok) {
+      patchTurn(turnId, (t) => {
+        const cards = { ...t.cards };
+        for (const { card } of list) if (cards[card.sceneId] && done.includes(card.sceneId)) cards[card.sceneId] = { ...cards[card.sceneId]!, state: 'accepted', ...(stepId !== undefined ? { stepId } : {}) };
+        return { ...t, cards, steps: stepId !== undefined ? [...t.steps, { stepId, sceneIds: done }] : t.steps };
+      });
     }
+    if (conflicts.length > 0) patchTurn(turnId, (t) => ({ ...t, error: `锁定冲突，没有应用：\n${conflicts.join('\n')}` }));
+    else if (ok) notify(`${label}（Ctrl+Z 可撤销）`, 'info');
   };
 
-  const intake = (snapshot: Project, results: SceneResponse[], runPreview: boolean, runWho: string, catalog: CompactCatalog | null) => {
-    const meta = get().meta;
+  const intake = (turnId: number, snapshot: Project, results: SceneResponse[], runPreview: boolean, catalog: CompactCatalog | null) => {
+    const turn = turnOf(turnId);
+    if (!turn) return;
     const castName = (id: string) => snapshot.cast.find((c) => c.id === id)?.displayName ?? id;
     const fresh: Record<string, Card> = {};
     for (const r of results) {
@@ -188,35 +157,25 @@ export const useDirectorRun = create<DirectorState>((set, get) => {
           return m ? costumeLabelZh(m.costumeInfo, m.costume) : id;
         },
       });
-      fresh[r.sceneId] = { sceneId: r.sceneId, title: old.title, result: r, diff, scopes: meta.scopes, state: 'pending', checked: Object.keys(diff.counts) as DiffScope[] };
-      say('info', `${old.title}：${r.runs.length} 次调用，${r.runs.reduce((n, x) => n + x.ms, 0)} ms，${diff.items.length} 项变化${r.warnings.length ? `，${r.warnings.length} 条修复/警告` : ''}${r.runs.some((x) => x.repaired) ? '，含修复调用' : ''}`);
+      fresh[r.sceneId] = { sceneId: r.sceneId, title: old.title, result: r, diff, scopes: turn.scopes, state: 'pending', checked: Object.keys(diff.counts) as DiffScope[] };
+      say(turnId, 'info', `${old.title}：${r.runs.length} 次调用，${r.runs.reduce((n, x) => n + x.ms, 0)} ms，${diff.items.length} 项变化${r.warnings.length ? `，${r.warnings.length} 条修复/警告` : ''}${r.runs.some((x) => x.repaired) ? '，含修复调用' : ''}`);
     }
-    set((s) => ({ cards: { ...s.cards, ...fresh } }));
-    if (!runPreview) applyCards(Object.values(fresh).filter((c) => c.result.applied).map((card) => ({ card, scopes: meta.scopes })), `${runWho} 生成：${meta.label}`);
-    else if (Object.values(fresh).some((c) => !c.result.applied)) set({ error: '有场景因锁定冲突没有应用，详见结果。' });
+    // the cards in scene order, whatever order the answers came in
+    const order = new Map(snapshot.scenes.map((s, i) => [s.id, i]));
+    const sorted = Object.fromEntries(Object.entries(fresh).sort(([a], [b]) => (order.get(a) ?? 0) - (order.get(b) ?? 0)));
+    patchTurn(turnId, (t) => ({ ...t, cards: sorted }));
+    if (!runPreview) applyCards(turnId, Object.values(sorted).filter((c) => c.result.applied).map((card) => ({ card, scopes: turn.scopes })), `${turn.who} 生成：${turn.label}`);
+    else if (Object.values(sorted).some((c) => !c.result.applied)) patchTurn(turnId, (t) => ({ ...t, error: '有场景因锁定冲突没有应用，详见结果。' }));
   };
 
   return {
     projectId: null,
     controls: { ...DEFAULT_CONTROLS },
-    generateOpen: readOpen(),
     busy: false,
-    progress: {},
-    total: 0,
-    cards: {},
-    log: [],
-    error: null,
-    meta: NO_META,
+    turns: [],
 
     setControls(patch) {
       set((s) => ({ controls: { ...s.controls, ...patch } }));
-    },
-    setGenerateOpen(open) {
-      writeOpen(open);
-      set({ generateOpen: open });
-    },
-    setError(error) {
-      set({ error });
     },
 
     bindProject(id) {
@@ -230,7 +189,7 @@ export const useDirectorRun = create<DirectorState>((set, get) => {
       generation++;
       ctl?.abort();
       ctl = null;
-      set({ busy: false, progress: {}, total: 0, cards: {}, log: [], error: null, meta: NO_META });
+      set({ busy: false, turns: [] });
     },
 
     unbind() {
@@ -250,7 +209,10 @@ export const useDirectorRun = create<DirectorState>((set, get) => {
       const current = snapshot?.scenes.find((s) => s.id === selection.sceneId) ?? snapshot?.scenes[0];
       const runScene = snapshot?.scenes.find((s) => s.id === (options.sceneId ?? current?.id));
       const multi = options.sceneIds;
-      if (!snapshot?.source.text || (!all && !multi && !runScene)) return;
+      // 「还没生成的场景」: the scenes that are only broken down, in one batch request (the one-click generation's request)
+      const batchIds = options.batchIds;
+      if (!snapshot?.source.text || (!all && !multi && !batchIds && !runScene)) return;
+      const wide = all || !!batchIds;
       const c = get().controls;
       const runScope = options.scope ?? c.scope;
       const runPreview = options.preview ?? c.preview;
@@ -263,102 +225,142 @@ export const useDirectorRun = create<DirectorState>((set, get) => {
       const mineCtl = new AbortController();
       ctl = mineCtl;
       const signal = mineCtl.signal;
-      set({ busy: true, error: null, progress: {}, cards: {} });
-      const scopes: ScopeName[] = all ? ['scene'] : [runScope];
-      const beatIds = !all && runOnlyBeat && selection.beatId ? [selection.beatId] : undefined;
-      set({ meta: { scopes, ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, who: runWho, label: all ? '全部场景' : multi ? `${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}` : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}` } });
+      const scopes: ScopeName[] = wide ? ['scene'] : [runScope];
+      const beatIds = !wide ? options.beatIds ?? (runOnlyBeat && selection.beatId ? [selection.beatId] : undefined) : undefined;
+      const label = all ? '全部场景' : batchIds ? `${batchIds.length} 个还没生成的场景` : multi ? `${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}` : `${runScene?.title ?? ''} · ${SCOPE_LABEL[runScope]}${beatIds ? '（所选台词）' : ''}`;
+      const no = (id: string) => (snapshot.scenes.findIndex((s) => s.id === id) + 1) || 0;
+      const verb = options.refresh ? '换一版：' : '';
+      const redo = all ? snapshot.scenes.some(isDirectedScene) : batchIds ? false : multi ? multi.some((id) => { const s = snapshot.scenes.find((x) => x.id === id); return !!s && isDirectedScene(s); }) : !!runScene && isDirectedScene(runScene);
+      const userText = options.userText
+        ?? (all ? `${verb}${redo ? '重新生成' : '生成'}全部场景`
+          : batchIds ? `${verb}生成还没生成的 ${batchIds.length} 个场景`
+          : multi ? `${verb}重新生成 ${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}`
+            : `${verb}${redo ? '重新生成' : '生成'} 第${no(runScene!.id)}场「${runScene!.title}」· ${SCOPE_LABEL[runScope]}${beatIds ? `（选中的 ${beatIds.length} 句）` : ''}`);
+      const turnId = ++turnSeq;
+      const turn: GenTurn = {
+        id: turnId, order: nextOrder(), userText, ...(options.userText ? { routed: options.userText } : {}), who: runWho, label, scopes,
+        ...(beatIds ? { beatIds } : {}), overwrite: runOverwrite, all,
+        request: {
+          ...(all ? {} : batchIds ? { batchIds } : multi ? { sceneIds: multi } : { sceneId: runScene!.id }), scope: runScope, preview: runPreview, overwriteUser: runOverwrite, onlyBeat: runOnlyBeat,
+          ...(beatIds ? { beatIds } : {}), engine: runUseRule ? 'rule' : 'ai',
+        },
+        sceneIds: all ? snapshot.scenes.map((s) => s.id) : batchIds ?? multi ?? [runScene!.id],
+        status: 'running', preview: runPreview, progress: {}, total: 0, cards: {}, log: [], error: null, steps: [],
+      };
+      set((s) => ({ busy: true, turns: [...s.turns, turn] }));
       const eng = runUseRule ? ({ engine: 'rule' } as const) : c.useMem ? {} : { useMemories: false };
       // only 「换一版」 sends `refresh`; every other request is byte-identical to what it always was
       const fresh = options.refresh === true ? ({ refresh: true } as const) : {};
       const titleOf = (id: string) => snapshot.scenes.find((s) => s.id === id)?.title ?? id;
       const got: SceneResponse[] = [];
+      let failed: string | null = null;
       try {
-        if (all) {
-          set({ total: snapshot.scenes.length });
-          say('info', `开始生成全部场景（${runWho}，并发 3）`);
+        if (wide) {
+          patchTurn(turnId, (t) => ({ ...t, total: batchIds ? batchIds.length : snapshot.scenes.length }));
+          say(turnId, 'info', `开始生成${batchIds ? `${batchIds.length} 个还没生成的场景` : '全部场景'}（${runWho}，并发 3）`);
           try {
-            await api.postScenes(snapshot, { scopes, overwriteUser: runOverwrite, ...eng, ...fresh }, (p) => {
+            await api.postScenes(snapshot, { scopes, ...(batchIds ? { sceneIds: batchIds } : {}), overwriteUser: runOverwrite, ...eng, ...fresh }, (p) => {
               if (!alive()) return;
-              set((s) => ({ progress: { ...s.progress, [p.sceneId]: p } }));
+              patchTurn(turnId, (t) => ({ ...t, progress: { ...t.progress, [p.sceneId]: p } }));
               if (p.state === 'done' && p.result) got.push(p.result);
-              if (p.state === 'error') say('error', `${titleOf(p.sceneId)}：${p.message ?? ''}`);
+              if (p.state === 'error') say(turnId, 'error', `${titleOf(p.sceneId)}：${p.message ?? ''}`);
             }, signal);
           } catch (e) {
             if ((e as Error).name !== 'AbortError') throw e;
-            if (alive()) say('info', `已取消：保留已完成的 ${got.length} 个场景，可再次点击继续（已完成的有缓存，不会重复调用）`);
+            if (alive()) say(turnId, 'info', `已取消：保留已完成的 ${got.length} 个场景，可再次点击继续（已完成的有缓存，不会重复调用）`);
           }
         } else if (multi) {
-          set({ total: multi.length });
-          say('info', `开始：${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}（${runWho}，逐场景依次请求）`);
+          patchTurn(turnId, (t) => ({ ...t, total: multi.length }));
+          say(turnId, 'info', `开始：${multi.length} 个场景 · ${SCOPE_LABEL[runScope]}（${runWho}，逐场景依次请求）`);
           for (const id of multi) {
             const title = titleOf(id);
             if (signal.aborted) break;
-            set((s) => ({ progress: { ...s.progress, [id]: { sceneId: id, title, state: 'start' } } }));
+            patchTurn(turnId, (t) => ({ ...t, progress: { ...t.progress, [id]: { sceneId: id, title, state: 'start' } } }));
             try {
               const result = await api.postScene(snapshot, id, { scopes, overwriteUser: runOverwrite, ...eng, ...fresh }, signal);
               got.push(result);
-              if (alive()) set((s) => ({ progress: { ...s.progress, [id]: { sceneId: id, title, state: 'done', result } } }));
+              if (alive()) patchTurn(turnId, (t) => ({ ...t, progress: { ...t.progress, [id]: { sceneId: id, title, state: 'done', result } } }));
             } catch (e) {
               if ((e as Error).name === 'AbortError') {
-                if (alive()) say('info', `已取消：保留已完成的 ${got.length} 个场景`);
+                if (alive()) say(turnId, 'info', `已取消：保留已完成的 ${got.length} 个场景`);
                 break;
               }
               const msg = e instanceof DirectorApiError ? e.message : (e as Error).message;
               if (alive()) {
-                set((s) => ({ progress: { ...s.progress, [id]: { sceneId: id, title, state: 'error', message: msg } } }));
-                say('error', `${title}：${msg}`);
-                set({ error: `${title}：${msg}\n已停止，保留已完成的 ${got.length} 个场景。` });
+                patchTurn(turnId, (t) => ({ ...t, progress: { ...t.progress, [id]: { sceneId: id, title, state: 'error', message: msg } }, error: `${title}：${msg}\n已停止，保留已完成的 ${got.length} 个场景。` }));
+                say(turnId, 'error', `${title}：${msg}`);
               }
               break;
             }
           }
         } else if (runScene) {
-          set({ total: 1 });
-          say('info', '开始：' + runScene.title + ' · ' + SCOPE_LABEL[runScope] + '（' + runWho + '）');
+          patchTurn(turnId, (t) => ({ ...t, total: 1 }));
+          say(turnId, 'info', '开始：' + runScene.title + ' · ' + SCOPE_LABEL[runScope] + '（' + runWho + '）');
           got.push(await api.postScene(snapshot, runScene.id, { scopes, ...(beatIds ? { beatIds } : {}), overwriteUser: runOverwrite, ...eng, ...fresh }, signal));
         }
-        if (alive()) intake(snapshot, got, runPreview, runWho, env.catalog);
+        if (alive()) intake(turnId, snapshot, got, runPreview, env.catalog);
       } catch (e) {
         if (!alive()) return;
         if ((e as Error).name !== 'AbortError') {
           const msg = e instanceof DirectorApiError ? `${e.message}${e.problems.length ? `\n${e.problems.join('\n')}` : ''}` : (e as Error).message;
-          set({ error: msg });
-          say('error', msg.split('\n')[0]!);
-        } else say('info', '已取消');
+          failed = msg;
+          patchTurn(turnId, (t) => ({ ...t, error: msg }));
+          say(turnId, 'error', msg.split('\n')[0]!);
+        } else say(turnId, 'info', '已取消');
       } finally {
-        if (alive()) set({ busy: false });
+        if (alive()) {
+          const aborted = signal.aborted;
+          patchTurn(turnId, (t) => ({ ...t, status: failed !== null && Object.keys(t.cards).length === 0 ? 'failed' : aborted ? 'cancelled' : 'done' }));
+          set({ busy: false });
+        }
         if (ctl === mineCtl) ctl = null;
       }
     },
 
-    accept(sceneId, all) {
-      const card = get().cards[sceneId];
-      if (!card) return;
-      const { meta } = get();
-      const scopes: ScopeName[] = all ? meta.scopes : (card.checked.filter((s) => s !== 'structure') as ScopeName[]);
-      applyCards([{ card, scopes }], `${meta.who}：接受「${card.title}」${all ? '' : '（部分范围）'}`, !all, all ? undefined : card.checked.filter((s) => s !== 'structure').map((s) => DIFF_LABEL[s]));
+    accept(turnId, sceneId, all) {
+      const turn = turnOf(turnId);
+      const card = turn?.cards[sceneId];
+      if (!turn || !card) return;
+      const scopes: ScopeName[] = all ? turn.scopes : (card.checked.filter((s) => s !== 'structure') as ScopeName[]);
+      applyCards(turnId, [{ card, scopes }], `${turn.who}：应用「${card.title}」${all ? '' : '（部分范围）'}`, !all);
     },
 
-    acceptAll() {
-      const { cards, meta } = get();
-      const pend = Object.values(cards).filter((c) => c.state === 'pending' && c.result.applied);
-      if (pend.length > 0) applyCards(pend.map((card) => ({ card, scopes: meta.scopes })), `${meta.who}：接受 ${pend.length} 个场景的演出`);
+    acceptAll(turnId) {
+      const turn = turnOf(turnId);
+      if (!turn) return;
+      const pend = Object.values(turn.cards).filter((c) => c.state === 'pending' && c.result.applied);
+      if (pend.length > 0) applyCards(turnId, pend.map((card) => ({ card, scopes: turn.scopes })), `${turn.who}：应用 ${pend.length} 个场景的演出`);
     },
 
-    reject(sceneId) {
-      set((s) => (s.cards[sceneId] ? { cards: { ...s.cards, [sceneId]: { ...s.cards[sceneId]!, state: 'rejected' } } } : s));
+    reject(turnId, sceneId) {
+      patchTurn(turnId, (t) => (t.cards[sceneId] ? { ...t, cards: { ...t.cards, [sceneId]: { ...t.cards[sceneId]!, state: 'rejected' } } } : t));
     },
 
-    rejectAll() {
-      set((s) => ({ cards: Object.fromEntries(Object.entries(s.cards).map(([k, v]) => [k, v.state === 'pending' ? { ...v, state: 'rejected' as const } : v])) }));
+    rejectAll(turnId) {
+      patchTurn(turnId, (t) => ({ ...t, cards: Object.fromEntries(Object.entries(t.cards).map(([k, v]) => [k, v.state === 'pending' ? { ...v, state: 'rejected' as const } : v])) }));
     },
 
-    toggleScope(sceneId, scope) {
-      set((s) => {
-        const c = s.cards[sceneId];
-        if (!c) return s;
-        return { cards: { ...s.cards, [sceneId]: { ...c, checked: c.checked.includes(scope) ? c.checked.filter((x) => x !== scope) : [...c.checked, scope] } } };
+    toggleScope(turnId, sceneId, scope) {
+      patchTurn(turnId, (t) => {
+        const c = t.cards[sceneId];
+        if (!c) return t;
+        return { ...t, cards: { ...t.cards, [sceneId]: { ...c, checked: c.checked.includes(scope) ? c.checked.filter((x) => x !== scope) : [...c.checked, scope] } } };
       });
+    },
+
+    undo(turnId) {
+      const turn = turnOf(turnId);
+      const st = useProject.getState();
+      const last = turn?.steps.at(-1);
+      if (!last || st.undoId !== last.stepId) return;
+      st.undo();
+    },
+
+    discard(turnId) {
+      const turn = turnOf(turnId);
+      if (!turn) return;
+      if (turn.status === 'running') ctl?.abort();
+      set((s) => ({ turns: s.turns.filter((t) => t.id !== turnId) }));
     },
   };
 });

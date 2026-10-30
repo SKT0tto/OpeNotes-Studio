@@ -1,54 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clone } from '../../shared/project/mutate';
 import type { Project } from '../../shared/schema/project';
-import { postScene, type SceneResponse } from '../../web/directorApi';
-import { DEFAULT_CONTROLS, useDirectorRun, usesRule, whoLabel, type DirectorApi, type DirectorEnv } from '../../web/editor/panels/directorRun';
+import { postScene } from '../../web/directorApi';
+import { DEFAULT_CONTROLS, isDirectedScene, useDirectorRun, usesRule, whoLabel, type RunOptions } from '../../web/editor/panels/directorRun';
+import { shownState, turnHistoryText, turnState, undoableStep } from '../../web/editor/panels/ai/genTurn';
+import { beatTarget, missingScenes } from '../../web/editor/panels/ai/generateActions';
 import { useAgent } from '../../web/store/agentStore';
-import { useProject } from '../../web/store/projectStore';
+import { stepIsLive, useProject } from '../../web/store/projectStore';
 import { directedProject } from './helpers/directorFlow';
+import { answer, env, fakeApi } from './helpers/fakeDirector';
 
 // the assistant store reaches the editor stage's frame grabber, which registers itself on `window`: not needed here
 vi.mock('../../web/agentFrames', () => ({ hasFrameGrabber: () => false }));
 
-const env: DirectorEnv = { configured: true, provider: 'openai', catalog: null };
-const zeroUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
-
-/** The server's answer for one scene: the scene with its first line's shot changed, as a recorded response. */
-function answer(project: Project, sceneId: string, cached = false): SceneResponse {
-  const scene = clone(project.scenes.find((s) => s.id === sceneId)!);
-  const beat = scene.beats[0]!;
-  beat.shot.type = beat.shot.type === 'cu' ? 'ms' : 'cu';
-  return {
-    sceneId, scene, applied: true, conflicts: [],
-    report: { replacedBeats: [], keptBeats: [], replacedTracks: [], keptTracks: [], protectedKept: [] },
-    direction: { reason: 'test', beats: [], costumeChanges: [] } as unknown as SceneResponse['direction'],
-    warnings: [], cached,
-    runs: [{ pass: 'scene', label: 't', provider: 'openai', model: 'm', cached, ms: 5, usage: zeroUsage, repaired: false, warnings: [] }],
-  };
-}
-
-interface Call { sceneId: string; options: unknown }
-/** A fake director: records the options of every request; `gate` holds the answers back until it is opened. */
-function fakeApi(gate?: Promise<void>) {
-  const calls: Call[] = [];
-  const batches: unknown[] = [];
-  const api: DirectorApi = {
-    postScene: async (project, sceneId, options, signal) => {
-      calls.push({ sceneId, options });
-      if (gate) await Promise.race([gate, new Promise((_, rej) => signal?.addEventListener('abort', () => rej(Object.assign(new Error('aborted'), { name: 'AbortError' }))))]);
-      if (signal?.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' });
-      return answer(project, sceneId);
-    },
-    postScenes: async (project, options, onProgress) => {
-      batches.push(options);
-      for (const s of project.scenes) onProgress({ sceneId: s.id, title: s.title, state: 'done', result: answer(project, s.id) });
-      return [];
-    },
-  };
-  return { api, calls, batches };
-}
-
 const json = (v: unknown) => JSON.stringify(v);
+const last = () => useDirectorRun.getState().turns.at(-1)!;
 let project: Project;
 beforeEach(() => {
   project = directedProject();
@@ -87,7 +53,7 @@ describe('requests are byte-identical to what the AI director panel always sent'
     useDirectorRun.getState().setControls({ engine: 'rule' });
     await useDirectorRun.getState().run(false, {}, env, b.api);
     expect(json(b.calls[0]!.options)).toBe('{"scopes":["scene"],"overwriteUser":false,"engine":"rule"}');
-    // no AI configured: the rule director, whatever the select says
+    // no AI configured: the rule generator, whatever the select says
     useDirectorRun.getState().unbind();
     const c = fakeApi();
     useDirectorRun.getState().setControls({ engine: 'ai' });
@@ -121,8 +87,41 @@ describe('requests are byte-identical to what the AI director panel always sent'
   });
 });
 
-describe('「换一版」', () => {
-  it('is the only request that carries refresh:true (last key); the plain re-run stays cache-friendly', async () => {
+/** The request main's AiPanel built (web/editor/panels/AiPanel.tsx on main, lines 184-227), written out independently of the store. */
+function mainRequest(p: { all: boolean; scope: string; beatIds?: string[]; overwrite: boolean; useRule: boolean; useMem: boolean }): unknown {
+  const eng = p.useRule ? { engine: 'rule' } : p.useMem ? {} : { useMemories: false };
+  if (p.all) return { scopes: ['scene'], overwriteUser: p.overwrite, ...eng };
+  return { scopes: [p.scope], ...(p.beatIds ? { beatIds: p.beatIds } : {}), overwriteUser: p.overwrite, ...eng };
+}
+
+describe('every option combination sends exactly what main sent', () => {
+  const bools = [false, true];
+  it('postScene / postScenes parameters (JSON) for target x scope x only-line x overwrite x engine x configured x memory x preview', async () => {
+    const beatId = project.scenes[1]!.beats[2]!.id;
+    let n = 0;
+    for (const all of bools) for (const scope of ['scene', 'camera', 'fx'] as const) for (const onlyBeat of bools) for (const overwrite of bools)
+      for (const engine of ['ai', 'rule'] as const) for (const configured of bools) for (const useMem of bools) for (const preview of bools) {
+        const f = fakeApi();
+        useDirectorRun.getState().unbind();
+        useDirectorRun.getState().setControls({ scope, onlyBeat, overwriteUser: overwrite, engine, useMem, preview });
+        await useDirectorRun.getState().run(all, {}, { ...env, configured }, f.api);
+        const want = mainRequest({ all, scope, ...(onlyBeat && !all ? { beatIds: [beatId] } : {}), overwrite, useRule: engine === 'rule' || !configured, useMem });
+        const got = all ? f.batches[0] : f.calls[0]!.options;
+        expect(json(got)).toBe(json(want));
+        n++;
+      }
+    expect(n).toBe(2 * 3 * 2 * 2 * 2 * 2 * 2 * 2);
+  });
+  it('「换一版」 is the same request plus refresh:true as its last key, for one scene, all scenes, several scenes', async () => {
+    const f = fakeApi();
+    await useDirectorRun.getState().run(false, { refresh: true }, env, f.api);
+    expect(json(f.calls[0]!.options)).toBe('{"scopes":["scene"],"overwriteUser":false,"refresh":true}');
+    await useDirectorRun.getState().run(true, { refresh: true }, env, f.api);
+    expect(json(f.batches[0])).toBe('{"scopes":["scene"],"overwriteUser":false,"refresh":true}');
+    await useDirectorRun.getState().run(false, { sceneIds: [project.scenes[0]!.id], refresh: true }, env, f.api);
+    expect(json(f.calls[1]!.options)).toBe('{"scopes":["scene"],"overwriteUser":false,"refresh":true}');
+  });
+  it('the plain re-run stays cache-friendly (no refresh key)', async () => {
     const { api, calls } = fakeApi();
     await useDirectorRun.getState().run(false, {}, env, api);
     await useDirectorRun.getState().run(false, { refresh: true }, env, api);
@@ -133,12 +132,38 @@ describe('「换一版」', () => {
       '{"scopes":["scene"],"overwriteUser":false}',
     ]);
   });
-  it('also reaches the all-scenes and several-scenes requests', async () => {
-    const { api, calls, batches } = fakeApi();
-    await useDirectorRun.getState().run(true, { refresh: true }, env, api);
-    expect(json(batches[0])).toBe('{"scopes":["scene"],"overwriteUser":false,"refresh":true}');
-    await useDirectorRun.getState().run(false, { sceneIds: [project.scenes[0]!.id], refresh: true }, env, api);
-    expect(json(calls[0]!.options)).toBe('{"scopes":["scene"],"overwriteUser":false,"refresh":true}');
+  it("a card's 换一版 repeats its own request (same target, scope, engine) with refresh", async () => {
+    const f = fakeApi();
+    useDirectorRun.getState().setControls({ scope: 'camera' });
+    await useDirectorRun.getState().run(false, {}, env, f.api);
+    const turn = last();
+    await useDirectorRun.getState().run(turn.all, { ...turn.request, refresh: true }, env, f.api);
+    expect(f.calls.map((c) => json(c.options))).toEqual(['{"scopes":["camera"],"overwriteUser":false}', '{"scopes":["camera"],"overwriteUser":false,"refresh":true}']);
+    expect(f.calls[1]!.sceneId).toBe(project.scenes[1]!.id);
+  });
+});
+
+describe('「还没生成的场景」 and 「选中的句子」 (several lines)', () => {
+  it('missing scenes: only the scenes that are not directed, in one batch request with sceneIds', async () => {
+    const p = clone(project);
+    // scene 0 and 2 are only broken down (rule skeleton lines quoting the source paragraph)
+    for (const i of [0, 2]) for (const b of p.scenes[i]!.beats) { b.meta.source = 'rule'; b.meta.reason = '原文段落 1'; }
+    useProject.getState().open(p, null);
+    const want = [p.scenes[0]!.id, p.scenes[2]!.id];
+    expect(missingScenes(p)).toEqual(want);
+    expect(isDirectedScene(p.scenes[1]!)).toBe(true);
+    const f = fakeApi();
+    await useDirectorRun.getState().run(false, { batchIds: want }, env, f.api);
+    expect(json(f.batches[0])).toBe(`{"scopes":["scene"],"sceneIds":${json(want)},"overwriteUser":false}`);
+    expect(last().sceneIds).toEqual(want);
+    expect(Object.keys(last().cards)).toEqual(want);
+  });
+  it('several lines of one scene go as beatIds of that scene; lines of two scenes fall back to the one selected line', () => {
+    const s = project.scenes[1]!;
+    const ids = [s.beats[0]!.id, s.beats[1]!.id, s.beats[3]!.id];
+    expect(beatTarget(project, useProject.getState().selection, ids)).toEqual({ sceneId: s.id, beatIds: ids });
+    const mixed = [s.beats[0]!.id, project.scenes[2]!.beats[0]!.id];
+    expect(beatTarget(project, useProject.getState().selection, mixed)).toEqual({ sceneId: s.id, beatIds: [s.beats[2]!.id] });
   });
 });
 
@@ -149,12 +174,16 @@ describe('the run state is in the store: it survives the panel going away', () =
     const { api } = fakeApi(gate);
     const running = useDirectorRun.getState().run(false, {}, env, api);
     expect(useDirectorRun.getState().busy).toBe(true);
+    expect(last().status).toBe('running'); // the turn (the 「你」 bubble and the card) exists from the first moment
+    expect(last().userText).toContain('第2场');
     // (the panel unmounts here: nothing of the run lives in it)
     open();
     await running;
     const s = useDirectorRun.getState();
     expect(s.busy).toBe(false);
-    const card = s.cards[project.scenes[1]!.id]!;
+    const turn = last();
+    expect(turn.status).toBe('done');
+    const card = turn.cards[project.scenes[1]!.id]!;
     expect(card.state).toBe('pending');
     expect(card.diff.items.length).toBeGreaterThan(0);
     expect(useProject.getState().project).toEqual(project); // nothing applied before the person accepts
@@ -177,8 +206,9 @@ describe('the run state is in the store: it survives the panel going away', () =
     await running;
     const s = useDirectorRun.getState();
     expect(s.busy).toBe(false);
-    expect(Object.keys(s.cards)).toEqual([]);
-    expect(s.log.at(-1)!.text).toBe('已取消');
+    expect(Object.keys(last().cards)).toEqual([]);
+    expect(last().status).toBe('cancelled');
+    expect(last().log.at(-1)!.text).toBe('已取消');
   });
   it('leaving the project aborts a running request, and its late answer never reaches the next project', async () => {
     let open!: () => void;
@@ -192,8 +222,7 @@ describe('the run state is in the store: it survives the panel going away', () =
     open();
     await running;
     const s = useDirectorRun.getState();
-    expect(s.cards).toEqual({});
-    expect(s.log).toEqual([]);
+    expect(s.turns).toEqual([]);
     expect(s.projectId).toBe('p_other');
   });
   it('the options survive a reset and a hidden panel, but not another project (「覆盖我手改过的内容」 must not carry over)', () => {
@@ -207,6 +236,17 @@ describe('the run state is in the store: it survives the panel going away', () =
     useDirectorRun.getState().unbind();
     expect(useDirectorRun.getState().controls).toEqual(DEFAULT_CONTROLS);
   });
+  it('turns accumulate in the order they happened (one stream), each with its own cards', async () => {
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(false, {}, env, api);
+    await useDirectorRun.getState().run(true, {}, env, api);
+    const t = useDirectorRun.getState().turns;
+    expect(t).toHaveLength(2);
+    expect(t[0]!.order).toBeLessThan(t[1]!.order);
+    expect(Object.keys(t[0]!.cards)).toHaveLength(1);
+    // the cards of an all-scenes turn are in scene order whatever order the answers came in
+    expect(Object.keys(t[1]!.cards)).toEqual(project.scenes.map((s) => s.id));
+  });
 });
 
 describe('accepting', () => {
@@ -214,15 +254,15 @@ describe('accepting', () => {
     const { api } = fakeApi();
     const id = project.scenes[1]!.id;
     await useDirectorRun.getState().run(false, {}, env, api);
-    useDirectorRun.getState().reject(id);
-    expect(useDirectorRun.getState().cards[id]!.state).toBe('rejected');
+    useDirectorRun.getState().reject(last().id, id);
+    expect(last().cards[id]!.state).toBe('rejected');
     expect(useProject.getState().project).toEqual(project);
     await useDirectorRun.getState().run(false, {}, env, api);
-    useDirectorRun.getState().accept(id, true);
-    expect(useDirectorRun.getState().cards[id]!.state).toBe('accepted');
+    useDirectorRun.getState().accept(last().id, id, true);
+    expect(last().cards[id]!.state).toBe('accepted');
     const after = useProject.getState().project!;
     expect(after.scenes[1]!.beats[0]!.shot.type).not.toBe(project.scenes[1]!.beats[0]!.shot.type);
-    expect(useProject.getState().undoLabel).toContain('接受');
+    expect(useProject.getState().undoLabel).toContain('应用');
     useProject.getState().undo();
     expect(useProject.getState().project!.scenes[1]!.beats[0]!.shot.type).toBe(project.scenes[1]!.beats[0]!.shot.type);
     expect(useProject.getState().canUndo).toBe(false); // exactly one step
@@ -231,37 +271,93 @@ describe('accepting', () => {
     const { api } = fakeApi();
     useDirectorRun.getState().setControls({ preview: false });
     await useDirectorRun.getState().run(false, {}, env, api);
-    expect(useDirectorRun.getState().cards[project.scenes[1]!.id]!.state).toBe('accepted');
+    expect(last().cards[project.scenes[1]!.id]!.state).toBe('accepted');
     useProject.getState().undo();
     expect(useProject.getState().canUndo).toBe(false);
   });
-  it('accepting tells the assistant: a short note with the scene, the scope and who made it', async () => {
-    const { api } = fakeApi();
-    await useDirectorRun.getState().run(false, { scope: 'camera' }, env, api);
-    expect(useAgent.getState().notes).toEqual([]); // a proposal that is only previewed is not news yet
-    useDirectorRun.getState().accept(project.scenes[1]!.id, true);
-    const notes = useAgent.getState().notes;
-    expect(notes).toHaveLength(1);
-    expect(notes[0]!.text).toContain(`第2场「${project.scenes[1]!.title}」`);
-    expect(notes[0]!.text).toContain('镜头');
-    expect(notes[0]!.text).toContain('AI生成');
-    expect(notes[0]!.text).toContain('Ctrl+Z');
-  });
-  it('rejecting adds no note', async () => {
-    const { api } = fakeApi();
-    await useDirectorRun.getState().run(false, {}, env, api);
-    useDirectorRun.getState().reject(project.scenes[1]!.id);
-    expect(useAgent.getState().notes).toEqual([]);
-  });
-  it('accepting several scenes at once is one note naming all of them', async () => {
+  it('accepting several scenes at once is one undo step', async () => {
     const { api } = fakeApi();
     await useDirectorRun.getState().run(true, {}, env, api);
-    useDirectorRun.getState().acceptAll();
-    const notes = useAgent.getState().notes;
-    expect(notes).toHaveLength(1);
-    for (let i = 0; i < project.scenes.length; i++) expect(notes[0]!.text).toContain(`第${i + 1}场`);
+    useDirectorRun.getState().acceptAll(last().id);
+    expect(last().steps).toHaveLength(1);
+    expect(last().steps[0]!.sceneIds).toHaveLength(project.scenes.length);
     useProject.getState().undo();
     expect(useProject.getState().canUndo).toBe(false);
+  });
+  it('a partial accept (only the ticked scopes) goes through the same lock merge, as one step', async () => {
+    const { api } = fakeApi();
+    const id = project.scenes[1]!.id;
+    await useDirectorRun.getState().run(false, {}, env, api);
+    const card = last().cards[id]!;
+    expect(card.checked).toContain('camera');
+    useDirectorRun.getState().accept(last().id, id, false);
+    expect(last().cards[id]!.state).toBe('accepted');
+    expect(last().steps).toHaveLength(1);
+  });
+});
+
+describe('「已撤销」: the card state and what the assistant is told follow the undo stack', () => {
+  const ref = (sid: string) => { const i = project.scenes.findIndex((s) => s.id === sid); return i < 0 ? null : { no: i + 1, title: project.scenes[i]!.title }; };
+  it('Ctrl+Z after applying: the card reads 已撤销, the step is gone, the history line says so', async () => {
+    const { api } = fakeApi();
+    const id = project.scenes[1]!.id;
+    await useDirectorRun.getState().run(false, {}, env, api);
+    useDirectorRun.getState().accept(last().id, id, true);
+    expect(turnState(last(), stepIsLive)).toBe('applied');
+    expect(shownState(last().cards[id]!, stepIsLive)).toBe('accepted');
+    expect(turnHistoryText(last(), ref, stepIsLive)).toContain('已应用到项目');
+    expect(undoableStep(last(), useProject.getState().undoId)).not.toBeNull();
+    useProject.getState().undo(); // Ctrl+Z
+    expect(turnState(last(), stepIsLive)).toBe('undone');
+    expect(shownState(last().cards[id]!, stepIsLive)).toBe('undone');
+    expect(turnHistoryText(last(), ref, stepIsLive)).toContain('已撤销');
+    expect(turnHistoryText(last(), ref, stepIsLive)).not.toContain('已应用到项目');
+    expect(undoableStep(last(), useProject.getState().undoId)).toBeNull();
+    useProject.getState().redo(); // and back
+    expect(turnState(last(), stepIsLive)).toBe('applied');
+  });
+  it('the 「撤销这次」 button undoes the newest application only while it is the top of the undo stack', async () => {
+    const { api } = fakeApi();
+    const id = project.scenes[1]!.id;
+    await useDirectorRun.getState().run(false, {}, env, api);
+    const turnId = last().id;
+    useDirectorRun.getState().accept(turnId, id, true);
+    // another edit on top: the card cannot undo it blindly
+    useProject.getState().applyEdit((d) => { d.title = 'x'; }, '改标题');
+    useDirectorRun.getState().undo(turnId);
+    expect(turnState(last(), stepIsLive)).toBe('applied');
+    useProject.getState().undo();
+    useDirectorRun.getState().undo(turnId);
+    expect(turnState(last(), stepIsLive)).toBe('undone');
+    expect(useProject.getState().canUndo).toBe(false);
+  });
+  it('history lines: pending, partly applied, then undone', async () => {
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(true, {}, env, api);
+    const turn = last();
+    expect(turnHistoryText(turn, ref, stepIsLive)).toContain('尚未应用');
+    useDirectorRun.getState().accept(turn.id, project.scenes[0]!.id, true);
+    expect(turnHistoryText(last(), ref, stepIsLive)).toContain('部分应用');
+    useProject.getState().undo();
+    expect(turnHistoryText(last(), ref, stepIsLive)).toContain('部分应用');
+    useDirectorRun.getState().rejectAll(turn.id);
+    useDirectorRun.getState().acceptAll(turn.id);
+    expect(turnState(last(), stepIsLive)).toBe('partial');
+  });
+  it('a rejected turn reads 已拒绝 in the history', async () => {
+    const { api } = fakeApi();
+    await useDirectorRun.getState().run(false, {}, env, api);
+    useDirectorRun.getState().reject(last().id, project.scenes[1]!.id);
+    expect(turnHistoryText(last(), ref, stepIsLive)).toContain('用户拒绝了');
+  });
+  it('a running or cancelled turn is not in the history', async () => {
+    const gate = new Promise<void>(() => {});
+    const { api } = fakeApi(gate);
+    const running = useDirectorRun.getState().run(false, {}, env, api);
+    expect(turnHistoryText(last(), () => null, stepIsLive)).toBeNull();
+    useDirectorRun.getState().cancel();
+    await running;
+    expect(turnHistoryText(last(), () => null, stepIsLive)).toBeNull();
   });
 });
 
@@ -273,5 +369,20 @@ describe('who made it', () => {
     expect(usesRule('rule', true)).toBe(true);
     expect(usesRule('ai', false)).toBe(true);
     expect(usesRule('ai', true)).toBe(false);
+  });
+});
+
+describe('a typed command routed to generation', () => {
+  it('keeps the typed words as the bubble, and discarding the turn removes it (and stops it when it is running)', async () => {
+    const gate = new Promise<void>(() => {});
+    const { api } = fakeApi(gate);
+    const opts: RunOptions = { userText: '重新生成这一场' };
+    const running = useDirectorRun.getState().run(false, opts, env, api);
+    expect(last().routed).toBe('重新生成这一场');
+    expect(last().userText).toBe('重新生成这一场');
+    useDirectorRun.getState().discard(last().id);
+    await running;
+    expect(useDirectorRun.getState().turns).toEqual([]);
+    expect(useDirectorRun.getState().busy).toBe(false);
   });
 });

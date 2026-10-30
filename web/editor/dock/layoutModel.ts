@@ -9,8 +9,8 @@ export type PanelId = (typeof PANEL_IDS)[number];
 export const isPanelId = (v: unknown): v is PanelId => typeof v === 'string' && (PANEL_IDS as readonly string[]).includes(v);
 
 /**
- * The `agent` panel is the one AI panel: the 「生成」 section (the AI director: scenes, scopes, diff preview, accept / reject) above the
- * assistant chat. Its id stays `agent` (saved layouts, the "open" flag and the test ids all know it); only the title changed.
+ * The `agent` panel is the one AI panel (chat first: one stream, a composer with the 「生成 ▾」 popover). Its id stays `agent` (saved layouts,
+ * the "open" flag and the test ids all know it); only the title changed.
  */
 export const PANEL_TITLE: Record<PanelId, string> = {
   sidebar: '剧本 · 素材',
@@ -29,7 +29,7 @@ export const PANEL_MIN: Record<PanelId, { w: number; h: number }> = {
   sidebar: { w: 180, h: 120 },
   stage: { w: 400, h: 200 },
   storyboard: { w: 300, h: 160 },
-  agent: { w: 260, h: 220 },
+  agent: { w: 260, h: 240 },
   inspector: { w: 200, h: 120 },
   timeline: { w: 300, h: 100 },
 };

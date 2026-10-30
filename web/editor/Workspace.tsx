@@ -1,4 +1,4 @@
-/** The editing workspace: top bar, left panel (script / assets), live preview or storyboard, inspector, the AI panel (generation + assistant), timeline, status bar. */
+/** The editing workspace: top bar, left panel (script / assets), live preview or storyboard, inspector, the AI panel (one conversation: generation + changes), timeline, status bar. */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { newProjectId } from '@shared/project/blank';
@@ -15,6 +15,7 @@ import { SettingsDialog } from './dialogs/SettingsDialog';
 import { AiPanel } from './panels/AiPanel';
 import { useDirectorRun, type CameraGenerationRequest } from './panels/directorRun';
 import { useAgent } from '../store/agentStore';
+import { useAiFlow } from '../store/aiFlow';
 import { Inspector } from './panels/Inspector';
 import { Outline } from './panels/Outline';
 import { Preview } from './panels/Preview';
@@ -81,6 +82,14 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
     if (on) dock?.show('agent'); // brings the tab to the front, or adds the panel when it was closed
     else dock?.hide('agent');
   };
+  // The 「AI」 button: not in front -> bring it to the front (adding it when it was closed); in front -> back to the tab that was in front of
+  // it in its group. It never closes the panel and never changes the layout.
+  const toggleAgent = () => {
+    if (!agentOpen) {
+      setAgentOpen(true);
+      useAgent.getState().focusInput();
+    } else if (!dock?.back('agent')) useAgent.getState().focusInput();
+  };
   // The stage's DOM host belongs to the workspace, not to a dock panel: the Pixi application is built once and survives every layout change.
   const [stageHost] = useState(() => {
     const d = document.createElement('div');
@@ -105,6 +114,14 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   useEffect(() => {
     if (dock && centerView === 'storyboard' && !present.has('storyboard')) useUi.getState().set({ centerView: 'preview' });
   }, [dock, present, centerView]);
+  // The first-run dialog handed its cards over: the AI panel comes to the front so that they are the first thing in the editor.
+  const reveal = useAiFlow((s) => s.reveal);
+  useEffect(() => {
+    if (!dock || !reveal) return;
+    dock.show('agent');
+    dock.activate('agent');
+    useAiFlow.getState().clearReveal();
+  }, [dock, reveal]);
   const [tab, setTab] = useState<'script' | 'assets'>('script');
   const [notice, setNotice] = useState<string | null>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraGenerationRequest | null>(null);
@@ -113,7 +130,11 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   useEffect(() => {
     useDirectorRun.getState().bindProject(project.id);
     useAgent.getState().bindProject(project.id);
-    return () => useDirectorRun.getState().unbind();
+    useAiFlow.getState().bind(project.id);
+    return () => {
+      useDirectorRun.getState().unbind();
+      useAiFlow.getState().unbind();
+    };
   }, [project.id]);
   const regenerateCamera = (sceneIds: string[]) => {
     if (aiBusy || cameraRequest) return;
@@ -130,8 +151,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
       },
     };
     setCameraRequest(request);
-    // the AI panel (its 「生成」 section expanded) runs the request once the AI settings are known
-    useDirectorRun.getState().setGenerateOpen(true);
+    // the AI panel runs the request once the AI settings are known
     dock?.show('agent');
   };
   // The travel notice belongs to one explicit switch; never carry it across mounts or projects.
@@ -285,7 +305,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         {notice && <span className="notice" data-testid="notice">{notice}</span>}
         <button className="btn" onClick={() => setSettingsOpen(true)} data-testid="btn-settings">AI 设置</button>
         <button className="btn" onClick={() => set({ helpOpen: true })} data-testid="btn-help" title="快捷键（?）">？ 快捷键</button>
-        <button className={`btn toggle${agentOpen ? ' on' : ''}`} onClick={() => { setAgentOpen(!agentOpen); if (!agentOpen) useAgent.getState().focusInput(); }} aria-pressed={agentOpen} data-testid="btn-agent" title="AI 面板：生成 + 助手（Ctrl+K）">AI</button>
+        <button className={`btn toggle${agentOpen ? ' on' : ''}`} onClick={toggleAgent} aria-pressed={agentOpen} data-testid="btn-agent" title="AI 面板（Ctrl+K）：对话、生成、修改">AI</button>
         <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => dock?.toggle('sidebar')} aria-pressed={leftOpen} title="左栏">▌◧</button>
         <button className={`btn toggle${present.has('inspector') ? ' on' : ''}`} onClick={() => dock?.toggle('inspector')} aria-pressed={present.has('inspector')} title="检查器">◨▐</button>
         <LayoutMenu dock={dock} present={present} />

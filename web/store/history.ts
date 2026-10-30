@@ -8,6 +8,8 @@ import { applyPatches, enablePatches, produceWithPatches, type Draft, type Patch
 enablePatches();
 
 export interface Step {
+  /** Unique for the lifetime of the page: lets a card ask whether the step it made is still in the undo stack. */
+  id: number;
   label: string;
   patches: Patch[];
   inverse: Patch[];
@@ -19,6 +21,8 @@ export interface EditOptions {
   /** Skip the lock gate: only for an edit that opens the locks it touches in the same step (the user confirmed it in the AI assistant card). */
   bypassLocks?: boolean;
 }
+
+let stepSeq = 0;
 
 export class History<S extends Record<string, unknown>> {
   private undoStack: Step[] = [];
@@ -32,6 +36,17 @@ export class History<S extends Record<string, unknown>> {
   }
   get canRedo(): boolean {
     return this.redoStack.length > 0;
+  }
+  /** Id of the step undo would revert / redo would re-apply (null = none). */
+  get undoId(): number | null {
+    return this.undoStack.at(-1)?.id ?? null;
+  }
+  get redoId(): number | null {
+    return this.redoStack.at(-1)?.id ?? null;
+  }
+  /** Is this step in the undo stack (applied and not undone)? */
+  hasUndoStep(id: number): boolean {
+    return this.undoStack.some((s) => s.id === id);
   }
   get undoLabel(): string | null {
     return this.undoStack.at(-1)?.label ?? null;
@@ -50,7 +65,7 @@ export class History<S extends Record<string, unknown>> {
       top.patches.push(...patches);
       top.inverse.unshift(...inverse);
     } else {
-      this.undoStack.push({ label, patches, inverse, ...(opts.coalesce ? { coalesce: opts.coalesce } : {}) });
+      this.undoStack.push({ id: ++stepSeq, label, patches, inverse, ...(opts.coalesce ? { coalesce: opts.coalesce } : {}) });
       if (this.undoStack.length > this.limit) this.undoStack.shift();
     }
     this.open = !!opts.coalesce;

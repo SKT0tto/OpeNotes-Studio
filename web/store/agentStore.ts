@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand';
 import type { OpRecord } from '@shared/agent/tools';
-import { agentHistory, selectionText } from '@shared/agent/history';
+import { agentHistory, selectionText, type PastRun } from '@shared/agent/history';
 import { liveDecision } from '@shared/agent/live';
 import type { AgentOp } from '@shared/agent/ops';
 import { revertOps } from '@shared/agent/revert';
@@ -14,10 +14,13 @@ import { clone } from '@shared/project/mutate';
 import type { Project } from '@shared/schema/project';
 import { AgentApiError, postAgentTurn, postSnapshot, type AgentProposal, type AgentStreamEvent, type Usage } from '../agentApi';
 import { hasFrameGrabber } from '../agentFrames';
-import { useProject } from './projectStore';
+import { useProject, stepIsLive } from './projectStore';
 import { notify, useUi } from './uiStore';
 import { useMemories } from '../memoryApi';
-import { appendNote, interleave, noteAsPastRun, type DirectorNote } from './agentNotes';
+import { useDirectorRun } from '../editor/panels/directorRun';
+import { turnHistoryText } from '../editor/panels/ai/genTurn';
+import { noteAsPastRun } from './agentNotes';
+import { nextOrder, useAiFlow } from './aiFlow';
 
 export interface CardItem {
   id: number;
@@ -31,6 +34,8 @@ export interface CardItem {
 }
 export interface RunItem {
   id: number;
+  /** Position in the AI panel's one stream (`store/aiFlow.ts`). */
+  order: number;
   instruction: string;
   sceneId: string | null;
   status: 'running' | 'done' | 'failed' | 'cancelled';
@@ -42,6 +47,10 @@ export interface RunItem {
   liveNote?: string;
   /** undo label of the last application of this card (to enable 「撤销这次」 only while it is still the top of the undo stack). */
   appliedLabel?: string;
+  /** The undo steps that applied (parts of) this card: when none is in the undo stack any more the card reads 已撤销 and the assistant is told so. */
+  steps?: number[];
+  /** 「撤销这次」 was used: the card reads 已撤销 until its items are applied again. */
+  wasUndone?: boolean;
   rejected?: boolean;
   /** Tokens of this instruction (running while it streams). */
   usage: Usage;
@@ -67,10 +76,12 @@ const add = (a: Usage, b: Usage): Usage => ({ inputTokens: a.inputTokens + b.inp
 interface AgentState {
   projectId: string | null;
   runs: RunItem[];
-  /** What the AI director did since (accepted results, a one-click generation): sent with the conversation history, shown in the chat. */
-  notes: DirectorNote[];
   /** The text being typed (kept here so that switching to another tab of the dock and back does not lose it). */
   draft: string;
+  /** Pictures / video frames for the next instruction (kept here for the same reason). */
+  attachments: AgentAttachment[];
+  /** The memory manager is shown instead of the stream. */
+  memoryView: boolean;
   running: boolean;
   live: boolean;
   /** Tokens spent in this session (this project, since the panel was opened). */
@@ -81,10 +92,8 @@ interface AgentState {
   focusTick: number;
   bindProject(id: string | null): void;
   setDraft(text: string): void;
-  /** The AI director's result was accepted (or a whole project was generated): the assistant remembers it. */
-  noteDirector(text: string): void;
-  /** Same for a project that is not open yet (the home dialog's one-click generation); it is delivered when that project is bound. */
-  queueDirectorNote(projectId: string, text: string): void;
+  setAttachments(update: AgentAttachment[] | ((cur: AgentAttachment[]) => AgentAttachment[])): void;
+  setMemoryView(on: boolean): void;
   setLive(on: boolean): void;
   send(instruction: string, attachments?: AgentAttachment[]): Promise<void>;
   cancel(): void;
@@ -100,10 +109,7 @@ interface AgentState {
 }
 
 let seq = 0;
-let noteSeq = 0;
 let ctl: AbortController | null = null;
-/** Notes for projects that are not open yet, by project id. */
-const queued = new Map<string, string[]>();
 const LIVE_KEY = (id: string) => `openotes.agent.live.${id}`;
 const readLive = (id: string | null): boolean => {
   if (!id) return false;
@@ -117,6 +123,35 @@ const writeLive = (id: string | null, on: boolean): void => {
 const SCOPE_NAME: Record<string, string> = { camera: '镜头', performance: '表演', costume: '服装', staging: '站位', fx: '特效', background: '背景', structure: '台词/场景', rhythm: '节奏', lock: '锁定' };
 export const scopeName = (s: string): string => SCOPE_NAME[s] ?? s;
 
+/** The past runs for the assistant's history: its own finished turns, the generation turns and the first-run dialog's cards, in stream order. */
+export function flowHistory(runs: RunItem[], project: Project): PastRun[] {
+  const live = stepIsLive;
+  const rows: Array<{ order: number; past: PastRun }> = [];
+  for (const r of runs) {
+    if (r.status !== 'done' || !r.proposal) continue;
+    // applied, then taken back with Ctrl+Z: the assistant must not believe the changes are still in the project
+    const undone = (r.steps?.length ?? 0) > 0 && !r.steps!.some(live);
+    rows.push({
+      order: r.order,
+      past: {
+        instruction: r.instruction, selection: r.selectionText, question: r.proposal.question, applied: r.proposal.applied, pending: r.proposal.pending,
+        summary: undone ? `${r.proposal.summary}（用户已撤销这一轮的应用，项目里没有这些改动）` : r.proposal.summary,
+        appliedIds: undone ? [] : r.items.filter((i) => i.state === 'applied').map((i) => i.id), revert: undone ? undefined : r.revert,
+      },
+    });
+  }
+  const ref = (id: string) => {
+    const i = project.scenes.findIndex((s) => s.id === id);
+    return i < 0 ? null : { no: i + 1, title: project.scenes[i]!.title };
+  };
+  for (const t of useDirectorRun.getState().turns) {
+    const text = turnHistoryText(t, ref, live);
+    if (text) rows.push({ order: t.order, past: noteAsPastRun({ text }) });
+  }
+  for (const e of useAiFlow.getState().entries) rows.push({ order: e.order, past: noteAsPastRun({ text: e.historyText }) });
+  return rows.sort((a, b) => a.order - b.order).map((x) => x.past);
+}
+
 export const useAgent = create<AgentState>((set, get) => {
   const patchRun = (id: number, f: (r: RunItem) => RunItem) => set((s) => ({ runs: s.runs.map((r) => (r.id === id ? f(r) : r)) }));
 
@@ -126,10 +161,13 @@ export const useAgent = create<AgentState>((set, get) => {
     const chosen = run.items.filter((i) => ids.includes(i.id) && (i.state === 'open' || i.state === 'stale'));
     if (chosen.length === 0) return;
     const items: ReplayItem[] = chosen.map((i) => ({ id: i.id, op: i.record.op, unlock: opts.unlock === true, confirm: opts.confirm === true }));
-    const label = `AI 助手：${[...run.instruction].slice(0, 16).join('')}`;
+    const label = `AI：${[...run.instruction].slice(0, 16).join('')}`;
+    const topBefore = useProject.getState().undoId;
     const before = useProject.getState().project;
     const { plan, applied } = useProject.getState().applyAgentOps(items, label, run.proposal?.genId ?? `agent_${runId}`);
     const after = useProject.getState().project;
+    const topAfter = useProject.getState().undoId;
+    const stepId = applied > 0 && topAfter !== null && topAfter !== topBefore ? topAfter : undefined;
     // what undoes this card so far: from the project before its first application to now, in the scenes it touches
     const preApply = run.preApply ?? (applied > 0 && before ? clone(before) : undefined);
     const scenes = [...new Set(run.items.map((i) => i.record.op.sceneId))];
@@ -137,7 +175,7 @@ export const useAgent = create<AgentState>((set, get) => {
     const byId = new Map<number, PlannedItem>(plan.items.map((p) => [p.id, p]));
     patchRun(runId, (r) => ({
       ...r,
-      ...(applied > 0 ? { appliedLabel: label, ...(preApply ? { preApply } : {}), ...(revert ? { revert } : {}) } : {}),
+      ...(applied > 0 ? { wasUndone: false, appliedLabel: label, ...(stepId !== undefined ? { steps: [...(r.steps ?? []), stepId] } : {}), ...(preApply ? { preApply } : {}), ...(revert ? { revert } : {}) } : {}),
       items: r.items.map((i) => {
         const p = byId.get(i.id);
         if (!p) return i;
@@ -155,8 +193,9 @@ export const useAgent = create<AgentState>((set, get) => {
   return {
     projectId: null,
     runs: [],
-    notes: [],
     draft: '',
+    attachments: [],
+    memoryView: false,
     running: false,
     live: false,
     session: zero(),
@@ -166,26 +205,19 @@ export const useAgent = create<AgentState>((set, get) => {
     bindProject(id) {
       if (get().projectId === id) return;
       ctl?.abort();
-      const waiting = id ? queued.get(id) ?? [] : [];
-      if (id) queued.delete(id);
-      const notes = waiting.reduce<DirectorNote[]>((n, text) => appendNote(n, text, seq, ++noteSeq, Date.now()), []);
-      set({ projectId: id, runs: [], notes, draft: '', running: false, session: zero(), snapshot: null, live: readLive(id) });
+      set({ projectId: id, runs: [], draft: '', attachments: [], memoryView: false, running: false, session: zero(), snapshot: null, live: readLive(id) });
     },
 
     setDraft(text) {
       set({ draft: text });
     },
 
-    noteDirector(text) {
-      const t = text.trim();
-      if (!t || !get().projectId) return;
-      set((s) => ({ notes: appendNote(s.notes, t, seq, ++noteSeq, Date.now()) }));
+    setAttachments(update) {
+      set((s) => ({ attachments: typeof update === 'function' ? update(s.attachments) : update }));
     },
 
-    queueDirectorNote(projectId, text) {
-      if (!projectId || !text.trim()) return;
-      if (get().projectId === projectId) return get().noteDirector(text);
-      queued.set(projectId, [...(queued.get(projectId) ?? []), text.trim()].slice(-6));
+    setMemoryView(on) {
+      set({ memoryView: on });
     },
 
     setLive(on) {
@@ -208,15 +240,12 @@ export const useAgent = create<AgentState>((set, get) => {
       const sel = agentSelection(project, useProject.getState().selection, useUi.getState().cards);
       const id = ++seq;
       // what the assistant remembers: instruction + selection then, its answer, what that turn changed, whether it was applied, how to undo it
-      // (the director's notes are turns of their own, placed right after the run they followed)
-      const history = agentHistory(interleave(get().runs.filter((r) => r.status === 'done' && r.proposal), get().notes).map((row) => row.note ? noteAsPastRun(row.note) : {
-        instruction: row.run!.instruction, selection: row.run!.selectionText, summary: row.run!.proposal!.summary, question: row.run!.proposal!.question,
-        applied: row.run!.proposal!.applied, pending: row.run!.proposal!.pending, appliedIds: row.run!.items.filter((i) => i.state === 'applied').map((i) => i.id), revert: row.run!.revert,
-      }));
+      // (generation turns and the first-run dialog's cards are turns of their own, in the order they happened; each says what became of it NOW)
+      const history = agentHistory(flowHistory(get().runs, project));
       // the pre-run snapshot: in memory (once per session) and in the server's history (every run, bounded there)
       if (!get().snapshot) set({ snapshot: { project: clone(project), at: Date.now() } });
       if (useProject.getState().etag) void postSnapshot(project);
-      const run: RunItem = { id, instruction: text, sceneId: sel.sceneId, status: 'running', progress: ['正在连接…'], items: [], usage: zero(), selectionText: selectionText(project, sel), ...(attachments.length ? { attachments } : {}) };
+      const run: RunItem = { id, order: nextOrder(), instruction: text, sceneId: sel.sceneId, status: 'running', progress: ['正在连接…'], items: [], usage: zero(), selectionText: selectionText(project, sel), ...(attachments.length ? { attachments } : {}) };
       set((s) => ({ runs: [...s.runs, run], running: true }));
       ctl = new AbortController();
       const onEvent = (e: AgentStreamEvent) => {
@@ -287,11 +316,12 @@ export const useAgent = create<AgentState>((set, get) => {
       if (!run?.appliedLabel || st.undoLabel !== run.appliedLabel) return;
       st.undo();
       patchRun(runId, (r) => {
-        const { appliedLabel: _drop, preApply: _p, revert: _r, ...rest } = r;
+        const { appliedLabel: _drop, preApply: _p, revert: _r, steps: _s, ...rest } = r;
         void _drop;
         void _p;
         void _r;
-        return { ...rest, items: r.items.map((i) => (i.state === 'applied' ? { ...i, state: 'open', checked: true } : i)) };
+        void _s;
+        return { ...rest, wasUndone: true, items: r.items.map((i) => (i.state === 'applied' ? { ...i, state: 'open', checked: true } : i)) };
       });
     },
 
@@ -307,9 +337,9 @@ export const useAgent = create<AgentState>((set, get) => {
         d.style = restore.style as typeof d.style;
         d.settings = restore.settings as typeof d.settings;
         d.idSeq = restore.idSeq as typeof d.idSeq;
-      }, '恢复到 AI 助手开始前', { bypassLocks: true });
+      }, '恢复到 AI 开始前', { bypassLocks: true });
       st.seal();
-      notify('已恢复到 AI 助手开始前（可撤销）', 'info');
+      notify('已恢复到 AI 开始前（可撤销）', 'info');
     },
   };
 });

@@ -31,6 +31,9 @@ interface ProjectState {
   canRedo: boolean;
   undoLabel: string | null;
   redoLabel: string | null;
+  /** Id of the top undo step and a counter bumped on every history change: cards use them to tell whether what they applied is still applied. */
+  undoId: number | null;
+  histRev: number;
 
   open(project: Project, etag: string | null): void;
   close(): void;
@@ -66,7 +69,11 @@ function unlockPaths(paths: Seg[][]): void {
   }, '解锁');
 }
 
-const flags = () => ({ canUndo: history.canUndo, canRedo: history.canRedo, undoLabel: history.undoLabel, redoLabel: history.redoLabel });
+let histRev = 0;
+const flags = () => ({ canUndo: history.canUndo, canRedo: history.canRedo, undoLabel: history.undoLabel, redoLabel: history.redoLabel, undoId: history.undoId, histRev: ++histRev });
+
+/** Is the undo step with this id still applied (in the undo stack)? false after Ctrl+Z, after it was dropped, and after the project was closed. */
+export const stepIsLive = (id: number): boolean => history.hasUndoStep(id);
 
 export const useProject = create<ProjectState>((set, get) => ({
   project: null,

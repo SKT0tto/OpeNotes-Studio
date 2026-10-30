@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { playing, seekTo, settled } from './helpers/editor';
-import { openAi, tab } from './helpers/ui';
+import { aiPop, openAi, tab } from './helpers/ui';
 
 test.use({ baseURL: 'http://127.0.0.1:5373' });
 test.describe.configure({ mode: 'serial' });
@@ -82,9 +82,10 @@ test('P12: breakdown of the story: scenes, locations with reasons, outfits with 
   await expect(page.getByTestId('bd-scene').nth(3)).toContainText('夜间');
   await page.screenshot({ path: '.verify/p12-breakdown.png' });
   // re-run: served from the cache (marked, and fast)
-  await page.getByRole('button', { name: '重新拆解（忽略缓存）' }).click();
+  await page.getByTestId('ai-rebreak').click();
   await expect(page.getByTestId('breakdown-view')).toBeVisible();
-  await page.getByRole('button', { name: '返回修改文本' }).click();
+  await page.getByTestId('ai-edit-source').click(); // back to the text (it is on the left, still editable)
+  await expect(page.getByTestId('ai-source')).toBeFocused();
   const t0 = Date.now();
   await page.getByTestId('ai-breakdown').click();
   await expect(page.getByTestId('ai-cached')).toBeVisible();
@@ -99,7 +100,7 @@ test('P12: breakdown of the story: scenes, locations with reasons, outfits with 
 });
 
 test('P13: generate the performance of all scenes from the recorded output; it plays; units are not labelled AI', async () => {
-  await openAi(page);
+  await openAi(page, { target: 'all' });
   await page.getByTestId('ai-preview').uncheck(); // these tests apply directly; the diff / accept flow has its own test below
   await expect(page.getByTestId('ai-status')).toContainText('非真实 AI');
   const before = await project();
@@ -172,17 +173,18 @@ test('P13: locks and edits survive "regenerate scene"; a camera-only rerun leave
   await page.getByTestId('ai-preview').uncheck(); // these tests apply directly; the diff / accept flow has its own test below
   await page.getByTestId('ai-scope').selectOption('scene');
   await page.getByTestId('ai-regen-scene').click();
-  await expect(page.getByTestId('ai-result').first()).toBeVisible();
+  await expect(page.getByTestId('ai-result').last()).toBeVisible();
   await settled(page);
   const after = (await project()).scenes[i]!;
   expect(after.beats.find((b) => b.id === locked.id)).toEqual(bs.beats.find((b) => b.id === locked.id));
   expect(after.wardrobe[castId]).toEqual(bs.wardrobe[castId]);
   expect(after.beats.find((b) => b.id === edited.id)!.text).toBe('我自己改的台词。');
-  await expect(page.getByTestId('ai-kept').first()).toBeVisible();
+  await expect(page.getByTestId('ai-kept').last()).toBeVisible();
   await page.screenshot({ path: '.verify/p13-regen-locks.png' });
 
   // camera only: nothing but shots change
   const mid = (await project()).scenes[i]!;
+  await aiPop(page);
   await page.getByTestId('ai-scope').selectOption('camera');
   await page.getByTestId('ai-regen-scene').click();
   await expect(page.getByTestId('toast')).toContainText('镜头');
@@ -232,6 +234,7 @@ test('P13: a field lock keeps one field (the text) while "overwrite my edits" re
   expect(k.meta.lockedFields).toEqual(['text']);
   expect(k.emotion).not.toBe('angry'); // not locked: regenerated
   expect(after.beats.find((b) => b.id === redo.id)!.text).not.toBe('我自己改的台词。'); // overwriteUser replaced it
+  await aiPop(page);
   await page.getByTestId('ai-overwrite').uncheck();
   await page.screenshot({ path: '.verify/p13-field-lock.png' });
 });
@@ -251,7 +254,7 @@ test('P14: a proposal is a diff first: nothing changes until accepted; reject ke
   await page.getByTestId('ai-scope').selectOption('camera');
   await page.getByTestId('ai-overwrite').check();
   await page.getByTestId('ai-regen-scene').click();
-  await expect(page.getByTestId('ai-result').first()).toHaveAttribute('data-state', 'pending');
+  await expect(page.getByTestId('ai-result').last()).toHaveAttribute('data-state', 'pending');
   await expect(page.getByTestId('ai-diff-camera')).toBeVisible();
   await page.getByTestId('ai-diff-camera').locator('summary').click();
   await expect(page.getByTestId('ai-diff-camera')).toContainText('大特写');
@@ -259,19 +262,21 @@ test('P14: a proposal is a diff first: nothing changes until accepted; reject ke
   expect(JSON.stringify((await project()).scenes[i])).toBe(edited);
   await expect(page.getByTestId('ai-diff-performance')).toHaveCount(0);
   await page.getByTestId('ai-reject').click();
-  await expect(page.getByTestId('ai-result').first()).toHaveAttribute('data-state', 'rejected');
+  await expect(page.getByTestId('ai-result').last()).toHaveAttribute('data-state', 'rejected');
   expect(JSON.stringify((await project()).scenes[i])).toBe(edited);
   // again, accept: applied through the lock-enforcing merge, as ONE undo step
+  await aiPop(page);
   await page.getByTestId('ai-regen-scene').click();
   await expect(page.getByTestId('ai-accept-all')).toBeVisible();
   await page.getByTestId('ai-accept-all').click();
-  await expect(page.getByTestId('ai-result').first()).toHaveAttribute('data-state', 'accepted');
+  await expect(page.getByTestId('ai-result').last()).toHaveAttribute('data-state', 'accepted');
   await settled(page);
   const after = (await project()).scenes[i]!;
   expect(after.beats.find((b) => b.id === b0.id)!.shot.type).not.toBe('ecu');
   await page.getByTestId('btn-undo').click();
   await settled(page);
   expect(JSON.stringify((await project()).scenes[i])).toBe(edited);
+  await aiPop(page);
   await page.getByTestId('ai-overwrite').uncheck();
 
   // the rule director: explicit, labelled "规则（非 AI）", works without any model
@@ -279,11 +284,14 @@ test('P14: a proposal is a diff first: nothing changes until accepted; reject ke
   await expect(page.getByTestId('ai-rule-hint')).toContainText('不是 AI');
   await page.getByTestId('ai-scope').selectOption('camera');
   await page.getByTestId('ai-regen-scene').click();
-  await expect(page.getByTestId('ai-origin').first()).toHaveText('规则');
+  await expect(page.getByTestId('ai-origin').last()).toHaveText('规则');
   await expect(page.getByTestId('ai-rule-note')).toContainText('规则生成（非 AI）');
   await page.screenshot({ path: '.verify/p14-diff-rule.png' });
   await page.getByTestId('ai-reject').click();
+  await aiPop(page);
   await page.getByTestId('ai-engine').selectOption('ai');
+  await page.getByTestId('ai-menu').click(); // ⋯ → the continuity check of the whole project
+  await page.getByTestId('ai-continuity-toggle').click();
   await expect(page.getByTestId('ai-continuity')).toBeVisible();
 });
 
@@ -306,7 +314,7 @@ test('M1: a result whose lines differ from the scene can still be accepted for c
   await page.getByTestId('ai-scope').selectOption('scene');
   await page.getByTestId('ai-overwrite').check();
   await page.getByTestId('ai-regen-scene').click();
-  await expect(page.getByTestId('ai-result').first()).toHaveAttribute('data-state', 'pending');
+  await expect(page.getByTestId('ai-result').last()).toHaveAttribute('data-state', 'pending');
   await expect(page.getByTestId('ai-diff-structure')).toBeVisible();
   await expect(page.getByTestId('ai-check-structure')).toBeDisabled();
   await expect(page.getByTestId('ai-check-camera')).toBeEnabled();
@@ -316,7 +324,7 @@ test('M1: a result whose lines differ from the scene can still be accepted for c
   }
   await expect(page.getByTestId('ai-check-camera')).toBeChecked();
   await page.getByTestId('ai-accept-sel').click();
-  await expect(page.getByTestId('ai-result').first()).toHaveAttribute('data-state', 'accepted');
+  await expect(page.getByTestId('ai-result').last()).toHaveAttribute('data-state', 'accepted');
   await settled(page);
   const after = (await project()).scenes[i]!;
   expect(after.beats.map((b) => b.text)).toEqual(cut.beats.map((b) => b.text)); // the line list is untouched
@@ -324,6 +332,7 @@ test('M1: a result whose lines differ from the scene can still be accepted for c
   await page.getByTestId('btn-undo').click();
   await settled(page);
   expect(JSON.stringify((await project()).scenes[i])).toBe(JSON.stringify(cut));
+  await aiPop(page);
   await page.getByTestId('ai-overwrite').uncheck();
 });
 
