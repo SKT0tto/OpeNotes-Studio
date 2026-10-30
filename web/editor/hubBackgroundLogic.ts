@@ -40,7 +40,8 @@ export function serializeBackgroundPrefs(p: HubBackgroundPrefs): string {
   return JSON.stringify({ mode: p.mode, ...(p.mode === 'asset' && p.asset ? { asset: p.asset } : {}), dim: clampDim(p.dim) });
 }
 
-export interface HubImageInfo { exists: boolean; version?: string }
+/** `unreachable`: the server could not be asked (network error / non-404 failure) - `exists: false` is then only a guess for this session. */
+export interface HubImageInfo { exists: boolean; version?: string; unreachable?: boolean }
 
 export type HubBackgroundChoice =
   | { kind: 'auto' }
@@ -83,4 +84,10 @@ export function effectiveBackgroundPrefs(
 ): HubBackgroundPrefs {
   if (prefs.mode !== 'asset' && prefs.mode !== 'image') return prefs;
   return resolveHubBackground(prefs, backgrounds, image).kind === 'auto' ? { mode: 'auto', dim: prefs.dim } : prefs;
+}
+
+/** Whether the 自动 fallback may be written back to storage: not when it only comes from a failed (unreachable) image lookup. */
+export function shouldPersistBackgroundFallback(stored: HubBackgroundPrefs, backgroundCount: number, image: HubImageInfo | null): boolean {
+  if (stored.mode === 'image') return image?.unreachable !== true;
+  return backgroundCount > 0;
 }

@@ -47,7 +47,7 @@ export function useHubCustomImage(): { info: HubImageInfo | null; upload: (f: Fi
   useEffect(() => {
     let live = true;
     fetch('/api/hub/background')
-      .then((r) => (r.ok ? (r.json() as Promise<HubImageInfo>) : { exists: false }), () => ({ exists: false }))
+      .then((r) => (r.ok ? (r.json() as Promise<HubImageInfo>) : { exists: false, ...(r.status === 404 ? {} : { unreachable: true }) }), () => ({ exists: false, unreachable: true }))
       .then((i) => live && setInfo(i));
     return () => {
       live = false;

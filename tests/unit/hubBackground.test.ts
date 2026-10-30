@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DEFAULT_BACKGROUND_PREFS, DIM_MAX, effectiveBackgroundPrefs, hubImageUrl, parseBackgroundPrefs, resolveHubBackground, serializeBackgroundPrefs,
+  DEFAULT_BACKGROUND_PREFS, DIM_MAX, effectiveBackgroundPrefs, hubImageUrl, parseBackgroundPrefs, resolveHubBackground, serializeBackgroundPrefs, shouldPersistBackgroundFallback,
 } from '../../web/editor/hubBackgroundLogic';
 
 const bgs = [{ id: 'bg_a', url: '/a.png' }, { id: 'bg_b', url: '/b.png' }];
@@ -63,5 +63,22 @@ describe('effectiveBackgroundPrefs: the menu check mark follows what is really s
     expect(effectiveBackgroundPrefs(asset, null, null)).toBe(asset);
     expect(effectiveBackgroundPrefs(prefs('gradient'), bgs, { exists: false })).toEqual(prefs('gradient'));
     expect(effectiveBackgroundPrefs(prefs('auto'), bgs, { exists: false })).toEqual(prefs('auto'));
+  });
+});
+
+describe('shouldPersistBackgroundFallback: an outage must not reset 我的图片', () => {
+  const img = { mode: 'image', dim: 0.2 } as const;
+  it('shows 自动 for this session but does not persist when the image lookup was unreachable', () => {
+    const unreachable = { exists: false, unreachable: true };
+    expect(effectiveBackgroundPrefs(img, bgs, unreachable)).toEqual({ mode: 'auto', dim: 0.2 });
+    expect(shouldPersistBackgroundFallback(img, bgs.length, unreachable)).toBe(false);
+  });
+  it('persists on a definite "no picture" answer', () => {
+    expect(shouldPersistBackgroundFallback(img, bgs.length, { exists: false })).toBe(true);
+  });
+  it('library backgrounds still need a non-empty library', () => {
+    const asset = { mode: 'asset', asset: 'bg_zzz', dim: 0 } as const;
+    expect(shouldPersistBackgroundFallback(asset, 0, null)).toBe(false);
+    expect(shouldPersistBackgroundFallback(asset, 2, null)).toBe(true);
   });
 });
