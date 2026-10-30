@@ -351,6 +351,26 @@ describe('camera of the continuations', () => {
     }
   });
 
+  it.each([false, true])('a hold piece after the closer keeps the closer framing, no push and return (travel=%s)', (travel) => {
+    const base = beat(1, 'dialogue', 'c_002', 'x') as unknown as DirectedBeat;
+    const d = { reason: '', blocking: [], transitionIn: 'cut', bgm: null, costumeChanges: [], beats: [{ ...base }] } as unknown as SceneDirection;
+    const mk = (camera: PieceDecision['camera'], k: number): PieceDecision => ({ text: `t${k}`, emotion: 'neutral', why: '停顿后说出真心话', camera, reactionOf: null, actor: null });
+    const out = applySplitPlans(d, [{ index: 0, pieces: [mk('hold', 0), mk('closer', 1), mk('hold', 2), mk('hold', 3)], by: 'ai' }], { travel });
+    expect(out.beats.map((b) => b.shot.type)).toEqual(['mcu', 'cu', 'cu', 'cu']);
+    expect(out.beats.map((b) => b.shot.focus)).toEqual([['c_002'], ['c_002'], ['c_002'], ['c_002']]);
+    // the holds stay static; in travel they are "continue / auto", only the closer is "emphasis"
+    expect(out.beats.every((b) => b.shot.move === 'static')).toBe(true);
+    if (travel) expect(out.beats.slice(1).map((b) => b.shot.intent)).toEqual(['emphasis', 'continue', 'continue']);
+    else expect(out.beats.every((b) => b.shot.intent === undefined && b.shot.flow === undefined)).toBe(true);
+    // a hold BEFORE the closer is still the head's framing, and a reaction ends the closer's framing for the holds after it
+    const r = applySplitPlans(d, [{ index: 0, pieces: [mk('hold', 0), mk('hold', 1), mk('closer', 2)], by: 'ai' }], { travel });
+    expect(r.beats.map((b) => b.shot.type)).toEqual(['mcu', 'mcu', 'cu']);
+    const two = { ...d, beats: [{ ...base, shot: { ...base.shot, type: 'two_shot', focus: ['c_002', 'c_001'] } }] } as unknown as SceneDirection;
+    const t = applySplitPlans(two, [{ index: 0, pieces: [mk('hold', 0), mk('closer', 1), mk('hold', 2)], by: 'ai' }], { travel });
+    expect(t.beats.map((b) => b.shot.type)).toEqual(['two_shot', 'mcu', 'mcu']);
+    expect(t.beats[2]!.shot.focus).toEqual(['c_002']);
+  });
+
   it('a cut-in dip and a one-shot fx stay on the first piece; a memory carries on', () => {
     const base = beat(1, 'dialogue', 'c_002', 'x') as unknown as DirectedBeat;
     const d = { reason: '', blocking: [], transitionIn: 'cut', bgm: null, costumeChanges: [{ beatIndex: 1, castId: 'c_002', modelId: 'm', reason: '' }], beats: [{ ...base, fx: 'flash', cutIn: 'dip_black' }, { ...base, fx: 'memory', cutIn: 'dip_white' }, { ...base }] } as unknown as SceneDirection;

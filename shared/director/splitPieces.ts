@@ -111,9 +111,13 @@ const TIGHTER: Partial<Record<DirectedBeat['shot']['type'], DirectedBeat['shot']
 
 const CONTINUOUS_FX_BLOCK = new Set<string>(ONE_SHOT_FX);
 
-function continuation(head: DirectedBeat, p: PieceDecision, travel: boolean, headIndex: number): DirectedBeat {
+/**
+ * `closer`: the closer continuation just before (null when there is none). A `hold` piece after it keeps that tighter framing: going
+ * back to the head's framing would be a push and a return with no reason in the story.
+ */
+function continuation(head: DirectedBeat, p: PieceDecision, travel: boolean, headIndex: number, closer: DirectedBeat | null = null): DirectedBeat {
   const dialogue = head.kind === 'dialogue' && !!head.speaker;
-  const hs = head.shot;
+  const hs = p.camera === 'hold' && closer ? closer.shot : head.shot;
   let shot: DirectedBeat['shot'] = { ...hs, focus: [...hs.focus], move: 'static', dof: hs.dof };
   let intent: NonNullable<DirectedBeat['shot']['intent']> = 'continue';
   let flow: NonNullable<DirectedBeat['shot']['flow']> = 'auto';
@@ -163,7 +167,13 @@ export function applySplitPlans(d: SceneDirection, plans: readonly SplitPlan[], 
     const first = plan.pieces[0]!;
     const head: DirectedBeat = { ...b, text: first.text, emotion: first.emotion as DirectedBeat['emotion'] };
     beats.push(head);
-    for (const p of plan.pieces.slice(1)) beats.push(continuation(head, p, opts.travel, newIndex[i]!));
+    let closer: DirectedBeat | null = null;
+    for (const p of plan.pieces.slice(1)) {
+      const c = continuation(head, p, opts.travel, newIndex[i]!, closer);
+      if (p.camera === 'closer' && c.shot.type !== head.shot.type) closer = c;
+      else if (p.camera === 'reaction') closer = null;
+      beats.push(c);
+    }
   });
   return { ...d, beats, costumeChanges: d.costumeChanges.map((c) => ({ ...c, beatIndex: newIndex[c.beatIndex] ?? c.beatIndex })) };
 }
