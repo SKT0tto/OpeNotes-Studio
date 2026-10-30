@@ -25,6 +25,8 @@ import { useSceneFit } from '../bg/bgFit';
 import { BgPicker } from '../bg/BgPicker';
 import { BgThumb } from '../bg/BgThumb';
 import { StyleSection } from './StyleFields';
+import { cachedLineInfo, expandHint, lineIndicator } from '../longLines';
+import { splitLongLines, useSplitRun } from '../longLinesRun';
 
 const TRANSITIONS: Array<[Scene['transitionIn']['kind'], string]> = [
   ['cut', '硬切'], ['dip_black', '黑场眨眼'], ['scene_black', '换场黑场'], ['fade_black', '黑场（旧）'], ['fade_white', '白场（旧）'], ['crossfade', '交叉溶解（旧）'], ['wipe', '擦除（旧）'],
@@ -351,6 +353,9 @@ function BeatFields({ project, scene, beat, compiled }: { project: Project; scen
   const cScene = compiled?.scenes.find((x) => x.id === scene.id);
   const cBeat = cScene?.beats.find((x) => x.id === beat.id);
   const speaker = cScene?.actors.find((a) => a.castId === beat.speakerId);
+  const lineInfo = cachedLineInfo(project, scene, beat);
+  const ind = lineIndicator(lineInfo);
+  const split = useSplitRun();
   const ruleExpr = cBeat && speaker?.expressions.find((e) => Math.abs(e.at - cBeat.start) < 1e-6)?.name;
   const ruleGesture = cBeat && speaker?.motions.find((m) => !m.loop && Math.abs(m.at - (cBeat.start + 0.15)) < 1e-6)?.name;
   return (
@@ -392,6 +397,29 @@ function BeatFields({ project, scene, beat, compiled }: { project: Project; scen
         </Row>
         <Row label="台词文本" extra={fl('text')}><span className="ro">锁字段后，重新生成时这句的文字不变</span></Row>
         <textarea className="area" rows={4} value={beat.text} data-testid="insp-beat-text" onChange={(e) => up('修改台词', (b) => { b.text = e.target.value; touch(b.meta); }, 'text')} onBlur={seal} />
+        {ind && lineInfo && (
+          <div className={`line-meter${ind.warn ? ' over' : ''}`} data-testid="insp-line-meter" data-over={ind.warn ? 'true' : 'false'} data-expanded={ind.expanded ? 'true' : 'false'}>
+            <div className="line-meter-row">
+              <span className={`line-count${ind.warn ? ' warn' : ''}`} data-testid="insp-line-count">{ind.text}</span>
+              {ind.warn && <span className="badge warn-badge" data-testid="insp-long-badge">超长</span>}
+              {ind.expanded && <span className="badge" data-testid="insp-expanded-badge">已展开</span>}
+              {ind.warn && (
+                <button className="btn-s accent" disabled={split.busy} onClick={() => void splitLongLines({ sceneIds: [scene.id], beatIds: [beat.id], target: beat.id })} data-testid="insp-auto-split" title="按语义拆成连续的几句，同一个镜头、同一个说话人；一步撤销">
+                  {split.busy && split.target === beat.id ? '拆分中…' : '自动拆分'}
+                </button>
+              )}
+            </div>
+            {ind.warn && <p className="hint warn" data-testid="insp-long-hint">超出对话框的 {lineInfo.lines - lineInfo.max} 行在画面上看不到。可以自动拆分，或打开下面的展开显示。</p>}
+            {(lineInfo.lines > lineInfo.max || ind.expanded) && (
+              <label className="line-expand" data-testid="insp-expand-row">
+                <input type="checkbox" checked={ind.expanded} data-testid="insp-expand" onChange={(e) => up('展开显示', (b) => { if (e.target.checked) b.overflow = 'expand'; else delete b.overflow; touch(b.meta); })} />
+                展开显示
+                <span className="hint" data-testid="insp-expand-hint">{expandHint(lineInfo.lines, lineInfo.max)}</span>
+              </label>
+            )}
+          </div>
+        )}
+        {beat.splitFrom !== undefined && <p className="hint" data-testid="insp-continuation">↳ 续句：拆自 {beat.splitFrom}，沿用同一个镜头</p>}
         <Row label="情绪" extra={fl('emotion')}>
           <select value={beat.emotion ?? ''} data-testid="insp-beat-emotion" onChange={(e) => up('修改情绪', (b) => { if (e.target.value) b.emotion = e.target.value; else delete b.emotion; touch(b.meta); })}>
             <option value="">（未设置）</option>

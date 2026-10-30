@@ -10,6 +10,8 @@ import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { defaultModelOf } from '../castModel';
 import { LockIcon } from '../ui';
+import { LongLinesDialog } from '../dialogs/LongLinesDialog';
+import { cachedLineInfo, overLongRows } from '../longLines';
 import { MarqueeBand, useMarquee } from '../useMarquee';
 
 const KIND_LABEL: Record<Beat['kind'], string> = { dialogue: '对白', narration: '旁白', action: '动作', pause: '停顿', establishing: '空镜', silent: '无声', empty: '空景' };
@@ -24,6 +26,7 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
   const [over, setOver] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const [longOpen, setLongOpen] = useState(false);
   // A press inside the open line editor must select text, not start dragging the line: the rows are not draggable while that press lasts.
   const [editPress, setEditPress] = useState(false);
   useEffect(() => {
@@ -34,6 +37,7 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
   }, [editPress]);
   const { band } = useMarquee(root, '[data-beat-id]', 'list');
   if (!project) return null;
+  const nLong = overLongRows(project).length;
   const go = (sceneId: string, beatId: string | null, e?: React.MouseEvent) => {
     // Ctrl/Cmd+click toggles a beat in the multi-selection, Shift+click selects a range; only a plain click moves the playhead.
     const plain = beatId && e ? pickBeat(sceneId, beatId, modsOf(e)) : true;
@@ -61,6 +65,12 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
   return (
     <div className="script" ref={root} data-testid="script-editor">
       <MarqueeBand band={band} />
+      {project.scenes.length > 0 && (
+        <div className="o-longbar" data-testid="outline-longbar">
+          <button className={`btn-s${nLong > 0 ? ' warn' : ''}`} onClick={() => setLongOpen(true)} data-testid="btn-check-long" title="列出放不进对话框的台词，可以一键拆开">检查过长台词{nLong > 0 ? ` · ${nLong}` : ''}</button>
+        </div>
+      )}
+      {longOpen && <LongLinesDialog onClose={() => setLongOpen(false)} />}
       {project.scenes.length === 0 ? (
         <div className="empty-state" data-testid="outline-empty">
           <p className="empty-title">这个项目还没有场景</p>
@@ -88,6 +98,7 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
                   const held = compiled?.scenes.find((x) => x.id === s.id)?.beats.find((x) => x.id === b.id)?.shotHeld;
                   const who = project.cast.find((c) => c.id === b.speakerId)?.displayName;
                   const sel = selection.beatId === b.id;
+                  const li = cachedLineInfo(project, s, b);
                   const msel = !!multi && multi.includes(b.id);
                   return (
                     <li
@@ -123,7 +134,10 @@ export function Outline({ seek, playerRef, compiled, catalog }: { seek: (t: numb
                       <button className={`o-beat${sel ? ' sel' : ''}${msel ? ' msel' : ''}${hoverBeat === b.id ? ' hl' : ''}`} ref={hoverBeat === b.id ? (el) => el?.scrollIntoView?.({ block: 'nearest' }) : undefined} onClick={(e) => go(s.id, b.id, e)} aria-pressed={msel || undefined} data-multi={msel ? 'true' : undefined} data-testid={`outline-beat-${b.id}`}>
                         <span className="o-grip" aria-hidden>⋮⋮</span>
                         <span className="o-who">{b.kind === 'pause' ? '停顿' : (who ?? (b.kind === 'dialogue' ? '—' : KIND_LABEL[b.kind]))}</span>
+                        {b.splitFrom !== undefined && <span className="o-cont" title="续句：拆自上一句，沿用同一个镜头" data-testid={`outline-cont-${b.id}`}>↳</span>}
                         <span className="o-text">{b.text || '—'}</span>
+                        {li?.over && <span className="o-badge long" title={`${li.lines} 行，对话框只有 ${li.max} 行`} data-testid={`outline-long-${b.id}`}>超长</span>}
+                        {li?.expanded && li.lines > li.max && <span className="o-badge" title="展开显示" data-testid={`outline-expanded-${b.id}`}>展开</span>}
                         {b.meta.locked && <span className="o-held" title="已锁定"><LockIcon locked /></span>}
                         {held && <span className="o-held" title="沿用上一机位（取景相同或最短镜头规则）" data-testid={`outline-held-${b.id}`}>⏸</span>}
                       </button>

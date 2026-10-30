@@ -97,3 +97,19 @@ export async function postScenes(project: Project, o: SceneOptions & { sceneIds?
   if (!items) throw new DirectorApiError('server', '连接中断，没有收到结果');
   return items;
 }
+
+export interface SplitLinesResponse {
+  sceneId: string;
+  engine: 'ai' | 'rule';
+  splits: Array<{ beatId: string; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; emotion: string; why: string }> }>;
+  skipped: Array<{ beatId: string; reason: string }>;
+  warnings: string[];
+  runs: RunInfo[];
+}
+
+/** The editor's 「自动拆分」: the pieces the server decided for these long lines (nothing is applied). */
+export async function postSplitLines(project: Project, sceneId: string, beatIds?: string[], o: { refresh?: boolean; engine?: 'rule' } = {}, signal?: AbortSignal): Promise<SplitLinesResponse> {
+  const res = await postJson('/api/director/split-lines', { project, sceneId, ...(beatIds ? { beatIds } : {}), ...o }, signal);
+  if (!res.ok) throw await failure(res);
+  return (await res.json()) as SplitLinesResponse;
+}
