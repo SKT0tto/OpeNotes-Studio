@@ -77,7 +77,7 @@ function sceneAnswer(input: { fixedBeats?: Array<{ keepId: string; paragraph: nu
 }
 
 type SplitHandler = (input: Record<string, unknown>, call: number) => unknown;
-interface Call { schemaName: string; input: Record<string, unknown>; system: string }
+interface Call { schemaName: string; input: Record<string, unknown>; system: string; maxTokens: number }
 
 function fake(split: SplitHandler | Error, opts: { id?: LlmProvider['id']; signal?: AbortSignal } = {}) {
   const calls: Call[] = [];
@@ -87,7 +87,7 @@ function fake(split: SplitHandler | Error, opts: { id?: LlmProvider['id']; signa
     test: async () => ({ model: 'mock', latencyMs: 1 }),
     generateStructured: async (req) => {
       const input = req.input as Record<string, unknown>;
-      calls.push({ schemaName: req.schemaName, input, system: req.system });
+      calls.push({ schemaName: req.schemaName, input, system: req.system, maxTokens: req.maxTokens });
       let out: unknown;
       if (req.schemaName === 'LineSplit') {
         splitCalls++;
@@ -266,6 +266,34 @@ describe('LineSplit with a fake model', () => {
     expect(r.splits!.map((s) => s.by)).toEqual(['ai', 'ai']);
   });
 
+  it('a single line that is cut off is asked again once with double the budget, then accepted', async () => {
+    const f = fake((input, n) => {
+      const ids = (input.lines as Array<{ id: string }>).map((l) => l.id);
+      if (ids.length === 2) return new LlmError('truncated', '截断');
+      if (ids[0] === 'L1' && n === 2) return new LlmError('truncated', '截断');
+      return { lines: ids.map((id) => (id === 'L1' ? { id, pieces: [piece(L1A), piece(L1B)] } : { id, pieces: [piece(L2A), piece(L2B)] })) };
+    });
+    const r = await run(f.provider, project());
+    const calls = f.splitCalls();
+    // [L1, L2] cut, L1 cut, L1 again (x2), L2
+    expect(calls.map((c) => (c.input.lines as unknown[]).length)).toEqual([2, 1, 1, 1]);
+    expect(calls[2]!.maxTokens).toBe(Math.min(16000, calls[1]!.maxTokens * 2));
+    expect(r.splits!.map((s) => s.by)).toEqual(['ai', 'ai']);
+  });
+
+  it('a line that stays cut off falls back alone: the other line keeps its AI answer', async () => {
+    const f = fake((input) => {
+      const ids = (input.lines as Array<{ id: string }>).map((l) => l.id);
+      if (ids.length === 2 || ids[0] === 'L1') return new LlmError('truncated', '截断');
+      return { lines: [{ id: 'L2', pieces: [piece(L2A), piece(L2B)] }] };
+    });
+    const r = await run(f.provider, project());
+    expect(r.splits!.map((s) => s.by)).toEqual(['rule', 'ai']);
+    expect(r.warnings.some((w) => w.includes('截断'))).toBe(true);
+    // L1: cut off twice (x1, x2); no repair call is made for it
+    expect(f.splitCalls().filter((c) => (c.input.lines as Array<{ id: string }>)[0]!.id === 'L1')).toHaveLength(3);
+  });
+
   it('the repaired answer also answers the original request: the second run asks nothing', async () => {
     const cache = new LlmCache(path.join(tmp, 'c1'));
     const f = fake((_i, n) => (n === 1
@@ -334,6 +362,10 @@ describe('output budget of a LineSplit call (F5)', () => {
   it('leaves about 40% headroom over what a real 13-line scene needed (5308 tokens), and more than a single line needed (1030)', () => {
     expect(splitOutputBudget(Array.from({ length: 13 }, () => 70), 16000)).toBeGreaterThanOrEqual(Math.round(5308 * 1.35));
     expect(splitOutputBudget([70], 16000)).toBeGreaterThanOrEqual(Math.round(1030 * 1.1));
+  });
+  it('has a thinking allowance of at least 4096 per call, still capped by the provider', () => {
+    expect(splitOutputBudget([10], 16000)).toBeGreaterThanOrEqual(4096 + 300);
+    expect(splitOutputBudget([70], 3000)).toBe(3000);
   });
   it('grows with the lines and their length, and never exceeds the provider cap', () => {
     expect(splitOutputBudget([70, 70], 16000)).toBeGreaterThan(splitOutputBudget([70], 16000));

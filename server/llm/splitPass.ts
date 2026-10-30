@@ -29,12 +29,15 @@ export const MAX_LINES_PER_CALL = 20;
 
 /**
  * The output budget of one call: every line is answered with its pieces repeated verbatim plus a reason / emotion / camera each, about
- * `300 + 1.3 x characters` tokens (a real 13-line scene came to ~410 per line), with 40% headroom and a base for the wrapper. A budget
- * that is too tight cuts the answer off and costs a second, halved call.
+ * `300 + 1.3 x characters` tokens (a real 13-line scene came to ~410 per line), with 40% headroom, plus a thinking allowance (a floor of
+ * 4096 per call, like the other director calls' 4000+ bases). A budget that is too tight cuts the answer off and costs a second call.
  */
+/** Reasoning tokens of a thinking model (deepseek-flash...) count against `max_tokens` too: every call gets at least this much on top of the visible JSON. */
+export const SPLIT_THINKING_ALLOWANCE = 4096;
+
 export function splitOutputBudget(textLengths: readonly number[], cap: number): number {
   const need = textLengths.reduce((s, n) => s + 300 + 1.3 * n, 0);
-  return Math.min(cap, Math.ceil(600 + 1.4 * need));
+  return Math.min(cap, Math.ceil(SPLIT_THINKING_ALLOWANCE + 1.4 * need));
 }
 
 export interface SplitPassArgs {
@@ -220,23 +223,42 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
   const fallback: ModelOutcome['fallback'] = new Map();
   const text = new Map(candidates.map((c) => [c.id, c.text]));
 
-  const request = (inp: Record<string, unknown>, ids: string[]): StructuredRequest<LineSplit> => ({
-    system: SPLIT_SYSTEM, input: inp, schema: LineSplitSchema, schemaName: SPLIT_SCHEMA_NAME, maxTokens: splitOutputBudget(ids.map((id) => [...(text.get(id) ?? '')].length), cap), signal: d.signal,
+  const request = (inp: Record<string, unknown>, ids: string[], scale = 1): StructuredRequest<LineSplit> => ({
+    system: SPLIT_SYSTEM, input: inp, schema: LineSplitSchema, schemaName: SPLIT_SCHEMA_NAME,
+    maxTokens: Math.min(cap, splitOutputBudget(ids.map((id) => [...(text.get(id) ?? '')].length), cap) * scale), signal: d.signal,
   });
-  /** One call; a cut-off answer is asked again for each half of the lines (a single line that is cut off throws). */
-  const call = async (ids: string[], mk: (ids: string[]) => Record<string, unknown>): Promise<LineSplit[]> => {
+  /** Lines whose call was cut off for good (or failed in a half): only these fall back; the rest of the batch keeps its answers. */
+  const lost = new Map<string, string>();
+  const lose = (ids: string[], why: string) => { for (const id of ids) if (!accepted.has(id)) lost.set(id, why); };
+  /**
+   * One call. A cut-off answer is asked again for each half of the lines; a single line that is cut off is asked once more with double the
+   * budget before it is given up (recorded in `lost`, not thrown). A failing half does not take the other half's answers with it.
+   */
+  const call = async (ids: string[], mk: (ids: string[]) => Record<string, unknown>, scale = 1): Promise<LineSplit[]> => {
     try {
-      const r = await generateCached(d.provider, d.cache, SPLIT_PROMPT_VERSION, request(mk(ids), ids), d.refresh ? { refresh: true } : {});
+      const r = await generateCached(d.provider, d.cache, SPLIT_PROMPT_VERSION, request(mk(ids), ids, scale), d.refresh ? { refresh: true } : {});
       usage = { inputTokens: usage.inputTokens + r.usage.inputTokens, outputTokens: usage.outputTokens + r.usage.outputTokens, cacheReadTokens: usage.cacheReadTokens + r.usage.cacheReadTokens, cacheCreationTokens: usage.cacheCreationTokens + r.usage.cacheCreationTokens };
       cachedAll &&= r.cached;
       callWarnings.push(...r.warnings);
       return [r.data];
     } catch (e) {
-      if (e instanceof LlmError && e.kind === 'truncated' && ids.length > 1) {
-        const mid = Math.ceil(ids.length / 2);
-        return [...(await call(ids.slice(0, mid), mk)), ...(await call(ids.slice(mid), mk))];
+      if (!(e instanceof LlmError && e.kind === 'truncated')) throw e;
+      if (ids.length === 1) {
+        if (scale < 2) return call(ids, mk, 2);
+        lose(ids, '模型输出被截断（加倍预算重试后仍然截断），已按标点拆分');
+        return [];
       }
-      throw e;
+      const mid = Math.ceil(ids.length / 2);
+      const out: LineSplit[] = [];
+      for (const half of [ids.slice(0, mid), ids.slice(mid)]) {
+        try {
+          out.push(...(await call(half, mk)));
+        } catch (err) {
+          if (isAbort(d, err)) throw err;
+          lose(half, `长句拆分调用失败（${(err as Error).message}），已按标点拆分`);
+        }
+      }
+      return out;
     }
   };
 
@@ -245,6 +267,7 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
     const problems = new Map<string, string[]>();
     const lines = answers.flatMap((x) => x.lines);
     for (const id of ids) {
+      if (lost.has(id)) continue;
       const hits = lines.filter((l) => l.id === id);
       if (hits.length === 0) {
         problems.set(id, [`${id}：没有给出这句的拆分`]);
@@ -295,9 +318,10 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
 
   // ---- the one retry: only the failing lines, with the problem list ----------------------------------------------------
   let retried = false;
-  if (failing.size > 0) {
+  const retryIds0 = () => [...failing.keys()].filter((id) => !lost.has(id));
+  if (retryIds0().length > 0) {
     retried = true;
-    const retryIds = [...failing.keys()];
+    const retryIds = [...failing.keys()].filter((id) => !lost.has(id));
     const allProblems = [...failing.values()].flat();
     const prevOfFailing = previous.map((p) => ({ lines: p.lines.filter((l) => failing.has(l.id)) }));
     try {
@@ -310,6 +334,8 @@ async function askModel(a: SplitPassArgs, input: SplitInput, candidates: Candida
       for (const id of retryIds) fallback.set(id, `AI 拆分重试失败（${(e as Error).message}），已按标点拆分`);
     }
   }
+
+  for (const [id, why] of lost) if (!accepted.has(id) && !fallback.has(id)) fallback.set(id, why);
 
   // the repaired answer also answers the ORIGINAL request next time (otherwise the failing first call would be repeated on every run)
   if (retried && d.cache && !d.refresh && firstReqInputs.length === 1 && batches.length === 1 && fallback.size === 0) {
