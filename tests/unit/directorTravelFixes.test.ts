@@ -17,13 +17,15 @@ type Shot = Partial<SceneDirection['beats'][number]['shot']>;
 interface BeatSpec { speaker?: string | null; text?: string; focus?: string[]; type?: string; intent?: string | null; flow?: string | null; reason?: string; para?: number; enter?: string[]; exit?: string[]; insertTarget?: string | null; kind?: 'dialogue' | 'narration' | 'silent'; shot?: Shot }
 
 const actor = (castId: string, o: { enter?: boolean; exit?: boolean } = {}) => ({ castId, motion: null, expression: null, attention: null, enter: !!o.enter, exit: !!o.exit, move: null });
-/** A dialogue beat by default; its text is the paragraph's own text, so it traces back to the source. */
+/** The first quoted speech of a paragraph (a paragraph with a speech tag in the middle is not one dialogue line), else the paragraph itself. */
+const lineOf = (para: string): string => /“([^”]*)”/.exec(para)?.[1] ?? para;
+/** A dialogue beat by default; its text is the paragraph's own (first) line, so it traces back to the source. */
 function beat(o: BeatSpec = {}): SceneDirection['beats'][number] {
   const para = o.para ?? P0;
   const kind = o.kind ?? (o.speaker === null ? 'silent' : 'dialogue');
   const speaker = kind === 'dialogue' ? (o.speaker ?? A) : null;
   return {
-    keepId: null, paragraph: para, kind, speaker, text: kind === 'silent' ? '' : o.text ?? paragraphs[para]!.text, emotion: EMOTIONS[0]!, reason: o.reason ?? 'r',
+    keepId: null, paragraph: para, kind, speaker, text: kind === 'silent' ? '' : o.text ?? (kind === 'dialogue' ? lineOf(paragraphs[para]!.text) : paragraphs[para]!.text), emotion: EMOTIONS[0]!, reason: o.reason ?? 'r',
     shot: { type: (o.type ?? 'mcu') as never, focus: o.focus ?? (speaker ? [speaker] : [A]), move: 'static', dof: null, ...(o.insertTarget !== undefined ? { insertTarget: o.insertTarget as never } : {}), ...(o.intent !== undefined ? { intent: o.intent as never } : {}), ...(o.flow !== undefined ? { flow: o.flow as never } : {}), ...o.shot },
     cutIn: 'cut', fx: 'none',
     actors: [...(o.enter ?? []).map((c) => actor(c, { enter: true })), ...(o.exit ?? []).map((c) => actor(c, { exit: true }))],
