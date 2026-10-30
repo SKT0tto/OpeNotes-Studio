@@ -9,6 +9,7 @@ import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { LlmCache } from '../../server/llm/cache';
 import { LlmError, zeroUsage, type LlmProvider } from '../../server/llm/provider';
+import { FixtureProvider } from '../../server/llm/fixtureProvider';
 import { RuleProvider } from '../../server/llm/ruleProvider';
 import { runScene, runScenes, type BatchProgress } from '../../server/llm/sceneRunner';
 import { SPLIT_SYSTEM } from '../../server/llm/prompts/lineSplit';
@@ -21,6 +22,7 @@ import type { DirectedBeat, SceneDirection } from '../../shared/schema/ai';
 import type { Beat, Project } from '../../shared/schema/project';
 import { resolveStyle } from '../../shared/style/ournotes';
 import { fitsDialog } from '../../shared/style/dialogLayout';
+import { FIXTURE_DIR } from './helpers/directorCatalog';
 import { cat, clone, skeleton } from './helpers/directorFlow';
 
 const LONG1 = '我跟你说，这次的合宿我已经全部安排好了！民宿、电车票、练习的时间表，连每天晚上吃什么都写好了！……不过，钱的事我还没跟大家商量。';
@@ -571,5 +573,18 @@ describe('progress stream', () => {
     const off: BatchProgress[] = [];
     await runScenes({ provider: fake(GOOD).provider, cache: null, catalog: cat, now: () => 5000 }, p, [p.scenes[0]!.id], ['scene'], 'g', 1, (x) => off.push(x));
     expect(off.map((x) => x.state)).toEqual(['start', 'done']);
+  });
+});
+
+describe('the recorded-response provider has no LineSplit recording', () => {
+  it('it refuses the call (bad_request), so a scene with a long line is cut by punctuation with a warning, never fails', async () => {
+    const fx = new FixtureProvider(FIXTURE_DIR);
+    await expect(fx.generateStructured({ system: '', input: { lines: [] }, schema: (await import('../../shared/schema/ai')).LineSplitSchema, schemaName: 'LineSplit', maxTokens: 100 })).rejects.toMatchObject({ kind: 'bad_request' });
+    // the same through the scene: a model whose LineSplit call is refused like the fixture's
+    const f = fake(new LlmError('bad_request', '没有可回放的录制响应：LineSplit'), { id: 'fixture' });
+    const r = await run(f.provider, project());
+    expect(r.splits!.map((s) => s.by)).toEqual(['rule', 'rule']);
+    expect(r.warnings.filter((w) => w.includes('长句拆分调用失败（没有可回放的录制响应：LineSplit），已按标点拆分'))).toHaveLength(2);
+    expect(r.applied).toBe(true);
   });
 });

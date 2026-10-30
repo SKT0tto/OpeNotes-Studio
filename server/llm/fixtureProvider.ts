@@ -12,6 +12,8 @@ interface IndexEntry {
 /**
  * TEST-ONLY provider: replays recorded model outputs from `tests/fixtures/llm/` (see index.json). It is registered
  * only when the server runs with NODE_ENV=test; the UI labels it as a replay, never as AI.
+ * There is no recording for the `LineSplit` call (the long-line split step): the call is refused with `bad_request`, and the scene falls back to the
+ * deterministic splitter with one warning per cut line. The recorded story has no line that is too long, so no e2e run hits it.
  */
 export class FixtureProvider implements LlmProvider {
   readonly id = 'fixture' as const;
