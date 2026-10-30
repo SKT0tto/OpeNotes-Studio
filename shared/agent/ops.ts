@@ -42,7 +42,7 @@ export const AgentOpSchema = z.discriminatedUnion('op', [
     emotion: z.string().nullable().optional(), cutIn: z.enum(['cut', 'dip_black', 'dip_white']).optional(), cutInKeepDialog: z.boolean().optional(),
     coSpeakers: z.array(Id).optional(), duration: z.object({ mode: z.enum(['auto', 'fixed']), seconds: z.number().min(0).max(120) }).optional(),
   }).strict() }),
-  z.object({ op: z.literal('beat_insert'), ...Ref, afterBeatId: Id.nullable(), newId: Id, ...common, beat: z.object({ kind: z.enum(BEAT_KINDS), text: z.string(), speakerId: Id.optional(), emotion: z.string().optional() }) }),
+  z.object({ op: z.literal('beat_insert'), ...Ref, afterBeatId: Id.nullable(), newId: Id, ...common, beat: z.object({ kind: z.enum(BEAT_KINDS), text: z.string(), speakerId: Id.optional(), emotion: z.string().optional(), splitFrom: Id.optional() }) }),
   z.object({ op: z.literal('beat_delete'), ...Ref, beatId: Id, ...common }),
   z.object({ op: z.literal('beat_move'), ...Ref, beatId: Id, afterBeatId: Id.nullable(), ...common }),
   z.object({ op: z.literal('beat_split'), ...Ref, beatId: Id, at: z.number().int().min(1), newId: Id, ...common }),

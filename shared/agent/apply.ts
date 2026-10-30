@@ -129,6 +129,7 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
       nb.id = op.newId;
       if (op.beat.kind !== 'dialogue' && !op.beat.speakerId) delete nb.speakerId;
       if (op.beat.emotion) nb.emotion = op.beat.emotion;
+      if (op.beat.splitFrom) nb.splitFrom = op.beat.splitFrom;
       nb.meta = freshMeta(op, ctx);
       nb.shot.meta = freshMeta(op, ctx);
       nb.style.meta = freshMeta(op, ctx);

@@ -42,7 +42,7 @@ function sceneRevert(sb: Scene, sa: Scene): AgentOp[] {
   sb.beats.forEach((b, i) => {
     if (afterIds.has(b.id)) return;
     const prev = sb.beats.slice(0, i).reverse().find((x) => afterIds.has(x.id) || ops.some((o) => o.op === 'beat_insert' && o.newId === x.id));
-    ops.push({ op: 'beat_insert', sceneId, afterBeatId: prev?.id ?? null, newId: b.id, beat: { kind: (b.kind === 'establishing' ? 'empty' : b.kind) as 'empty', text: b.text, ...(b.speakerId ? { speakerId: b.speakerId } : {}), ...(b.emotion ? { emotion: b.emotion } : {}) }, reason });
+    ops.push({ op: 'beat_insert', sceneId, afterBeatId: prev?.id ?? null, newId: b.id, beat: { kind: (b.kind === 'establishing' ? 'empty' : b.kind) as 'empty', text: b.text, ...(b.speakerId ? { speakerId: b.speakerId } : {}), ...(b.emotion ? { emotion: b.emotion } : {}), ...(b.splitFrom ? { splitFrom: b.splitFrom } : {}) }, reason });
   });
   // the order of the lines that are in both
   const common = sb.beats.filter((b) => afterIds.has(b.id)).map((b) => b.id);
