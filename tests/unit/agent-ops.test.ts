@@ -125,6 +125,7 @@ describe('applyOp: every op group, with before -> after', () => {
     expect(s.beats).toHaveLength(n + 1);
     const ins = s.beats[2]!;
     expect([ins.speakerId, ins.text, ins.kind]).toEqual(['c_001', '……嗯。', 'dialogue']);
+    env.asks = { lineSplit: true, dialogExpand: false }; // cutting a line is only done when the user asked
     call(env, 'edit_structure', { action: 'split', beatId: ins.id, at: 1, reason: 'r' });
     expect(s.beats.slice(2, 4).map((b) => b.text)).toEqual(['…', '…嗯。']);
     call(env, 'edit_structure', { action: 'merge', beatId: ins.id, reason: 'r' });

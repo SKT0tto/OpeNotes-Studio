@@ -12,6 +12,7 @@ import { scenePresence } from '../timeline/presence';
 import { sceneTimes } from '../timeline/time';
 import { fxValues, type FxValue } from './apply';
 import { PUNCT, clip, lcs, nameOf } from './compact';
+import { beatLineInfo } from './lines';
 
 const strs = z.union([z.string(), z.array(z.string()).max(40)]);
 const num = z.number();
@@ -30,6 +31,10 @@ const LeafShape = {
   textFuzzy: z.string().max(200).optional().describe('台词模糊匹配（引文记不准时用：包含其中 ≥70% 的字且顺序一致）'),
   charsMin: num.optional().describe('台词字数 ≥'),
   charsMax: num.optional().describe('台词字数 ≤'),
+  linesMin: num.optional().describe('台词在对话框里占的行数 ≥（按真实排版测量，不是字数）'),
+  linesMax: num.optional().describe('台词在对话框里占的行数 ≤'),
+  overflow: z.boolean().optional().describe('true = 超长：行数超过对话框的最大行数、又没有展开（观众会看不全）；false = 放得下或已展开'),
+  expanded: z.boolean().optional().describe('是否设置了「展开显示全部」'),
   emotion: strs.optional().describe('情绪词；"none" = 没有标情绪'),
   shotType: strs.optional().describe('景别：group|two_shot|ms|mcu|cu|ecu|insert|establishing'),
   intent: strs.optional().describe('运镜意图（travel）；"none" = 没有'),
@@ -92,6 +97,11 @@ export interface BeatRow extends BeatRef {
   coSpeakers: string[];
   text: string;
   chars: number;
+  /** Lines the text takes in the dialogue area (0 when the beat shows no text). */
+  lines: number;
+  /** Too long for the dialogue area and not expanded. */
+  overflow: boolean;
+  expanded: boolean;
   emotion: string | null;
   shotType: string;
   focus: string[];
@@ -140,10 +150,11 @@ export function buildIndex(project: Project): QueryIndex {
       const visible = pres[i]?.visible ?? [];
       const bg = [...bgKeys].reverse().find((k) => order.get(k.at.beatId)! <= i)?.value.assetId ?? scene.background.assetId;
       const f = fx[i] ?? null;
+      const li = beatLineInfo(project, scene, b);
       rows.push({
         sceneId: scene.id, sceneNo: si + 1, beatId: b.id, beatNo: i + 1,
         kind: b.kind, speakerId: b.speakerId ?? null, speaker: nameOf(project, b.speakerId), coSpeakers: b.coSpeakers,
-        text: b.text, chars: [...b.text].length, emotion: b.emotion ?? null,
+        text: b.text, chars: [...b.text].length, lines: li?.lines ?? 0, overflow: li?.over ?? false, expanded: li?.expanded ?? false, emotion: b.emotion ?? null,
         shotType: b.shot.type, focus: b.shot.focus, move: b.shot.move, intent: cam === 'travel' ? b.shot.intent ?? null : null,
         flow: b.shot.transition === 'cut' ? 'cut' : b.shot.transition === 'travel' ? 'move' : b.shot.transition === 'glide' ? 'glide' : 'auto',
         dof: b.shot.dof ?? null, fx: f ? f.fx : 'none', fxValue: f,
@@ -265,6 +276,10 @@ function leafMatch(c: Ctx, f: BeatFilter, r: BeatRow): boolean {
   }
   if (f.charsMin !== undefined && r.chars < f.charsMin) return false;
   if (f.charsMax !== undefined && r.chars > f.charsMax) return false;
+  if (f.linesMin !== undefined && r.lines < f.linesMin) return false;
+  if (f.linesMax !== undefined && r.lines > f.linesMax) return false;
+  if (f.overflow !== undefined && r.overflow !== f.overflow) return false;
+  if (f.expanded !== undefined && r.expanded !== f.expanded) return false;
   if (f.emotion !== undefined && !arr(f.emotion).some((e) => (e === 'none' ? r.emotion === null : r.emotion === e))) return false;
   if (f.shotType !== undefined && !arr(f.shotType).includes(r.shotType)) return false;
   if (f.intent !== undefined && !arr(f.intent).some((e) => (e === 'none' ? r.intent === null : r.intent === e))) return false;
@@ -323,7 +338,7 @@ const KIND_SHORT: Record<string, string> = { dialogue: '对', narration: '旁', 
 export function queryTable(project: Project, rows: BeatRow[], limit = 60): string {
   const shown = rows.slice(0, limit);
   const name = (id: string) => nameOf(project, id);
-  const lines = shown.map((r) => [`${r.sceneNo}-${r.beatNo}`, r.beatId, KIND_SHORT[r.kind] ?? r.kind, r.speaker, `「${clip(r.text, 14)}」`, r.shotType, r.emotion ?? '—', r.fx === 'none' ? '—' : r.fx, r.visible.map(name).join('+') || '无人', r.lineGap, r.locked ? '锁' : r.userEdited ? '手改' : '—'].join('|'));
+  const lines = shown.map((r) => [`${r.sceneNo}-${r.beatNo}`, r.beatId, KIND_SHORT[r.kind] ?? r.kind, r.speaker, `「${clip(r.text, 14)}」`, r.shotType, r.emotion ?? '—', r.fx === 'none' ? '—' : r.fx, r.visible.map(name).join('+') || '无人', r.lineGap, [r.locked ? '锁' : r.userEdited ? '手改' : '', r.overflow ? `超长:${r.lines}行` : r.expanded ? `展开:${r.lines}行` : ''].filter(Boolean).join(' ') || '—'].join('|'));
   return [`共 ${rows.length} 句${rows.length > shown.length ? `（只列前 ${shown.length} 句；完整结果在 queryId 里，batch_edit 会全部用上）` : ''}`, '场-句|id|类|说话人|台词|景别|情绪|特效|画面上的人|句后停顿|标记', ...lines].join('\n');
 }
 

@@ -21,7 +21,8 @@ import type { Project } from '../../shared/schema/project';
 import type { DirectorDeps } from '../llm/director';
 import { LlmError, modelJsonSchema, stableStringify, zeroUsage, type ChatImage, type ChatTurn, type LlmProvider, type LlmUsage, type ToolSpec } from '../llm/provider';
 import { runScene } from '../llm/sceneRunner';
-import { NO_VERIFICATION, changesPicture, involvesMove, opBeatIds, type Verification } from '../../shared/agent/verify';
+import { NO_VERIFICATION, changesPicture, involvesMove, newLongLines, opBeatIds, type LongLine, type Verification } from '../../shared/agent/verify';
+import { requestFlags } from '../../shared/agent/asks';
 import { AGENT_SYSTEM, FALLBACK_PROTOCOL, MEMORY_RULES, VISION_PROMPT, userMessage } from './prompt';
 import type { MemoryBackend } from './memoryStore';
 import { loadSandbox, runInSandbox } from './sandbox';
@@ -90,6 +91,8 @@ export interface AgentTurnResult {
   unverified: number[];
   /** The model described a change but made none (so the card can say so). */
   claimedWithoutOps: string | null;
+  /** Lines this turn left too long for the dialogue area (a hint for the card; the assistant never cuts them on its own). */
+  longLines: LongLine[];
   usage: LlmUsage;
   /** The part of `usage` spent in regenerate_scene_camera (a whole-scene direction call). */
   regenUsage: LlmUsage;
@@ -133,7 +136,7 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   const emit = deps.emit ?? (() => {});
   const env: ToolEnv = {
     sandbox: clone(req.project), catalog: deps.catalog, selection: req.selection, genId, now: () => now(),
-    applied: [], pending: [], stats: newStats(), seq: { n: 0 },
+    applied: [], pending: [], stats: newStats(), seq: { n: 0 }, asks: requestFlags(req.instruction, req.history ?? []),
   };
   // the script sandbox (WASM, loaded once per process); without it run_script is not offered
   if (await loadSandbox()) env.scriptRunner = runInSandbox;
@@ -472,13 +475,13 @@ export async function runAgentTurn(deps: AgentDeps, req: AgentTurnRequest): Prom
   const unverified: number[] = [];
   for (const r of applied) {
     const probe = applyOp(clone(env.sandbox), r.op, { genId, now: now() });
-    if (probe.ok && probe.changes.length > 0 && !(r.op.op === 'beat_insert' || r.op.op === 'beat_split' || r.op.op === 'beat_delete' || r.op.op === 'beat_merge' || r.op.op === 'beat_move' || r.op.op === 'key_set' || r.op.op === 'key_shift' || r.op.op === 'actor_presence')) unverified.push(r.id);
+    if (probe.ok && probe.changes.length > 0 && !(r.op.op === 'beat_insert' || r.op.op === 'beat_split' || r.op.op === 'beat_split_pieces' || r.op.op === 'beat_delete' || r.op.op === 'beat_merge' || r.op.op === 'beat_move' || r.op.op === 'key_set' || r.op.op === 'key_shift' || r.op.op === 'actor_presence')) unverified.push(r.id);
   }
   const verification: Verification = picOps === 0 ? NO_VERIFICATION
     : { status: !canLook ? 'unavailable' : picDirty() || verifyFrames.length === 0 ? 'unchecked' : sawProblemFixed ? 'fixed' : 'verified', frames: picDirty() ? [] : verifyFrames, forced };
   const claimed = env.applied.length + env.pending.length === 0 && !env.askedUser && memoryEvents.length === 0 && CHANGE_WORDS.test(summary) ? summary.slice(0, 160) : null;
   return {
-    genId, summary, applied, pending: env.pending, question: env.askedUser ?? null, unverified, claimedWithoutOps: claimed,
+    genId, summary, applied, pending: env.pending, question: env.askedUser ?? null, unverified, claimedWithoutOps: claimed, longLines: newLongLines(req.project, env.sandbox),
     usage, regenUsage, steps, mode, stats: env.stats, verification, stopped, elapsedMs: Date.now() - t0, memory: memoryEvents, trace,
   };
 }
