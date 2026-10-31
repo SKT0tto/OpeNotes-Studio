@@ -130,7 +130,10 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   });
 
   const cap = d.provider.maxOutputTokens ?? 16000;
-  const perCallAt = (perPara: number) => Math.max(4, Math.min(MAX_PARAS_PER_CALL, Math.floor((cap - 1500) / perPara)));
+  // spans are planned for at most 16000 output tokens even when the provider allows more: one call stays well inside the request
+  // timeout, and the rest of a high cap is head room for a span (or a single long paragraph) that needs more than estimated
+  const planCap = Math.min(cap, 16000);
+  const perCallAt = (perPara: number) => Math.max(4, Math.min(MAX_PARAS_PER_CALL, Math.floor((planCap - 1500) / perPara)));
   const runs: RunInfo[] = [];
   const chunkWarnings: string[] = [];
   /** Output tokens per paragraph: starts at the default, then follows the provider's own usage numbers. */

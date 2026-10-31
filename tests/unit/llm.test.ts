@@ -9,7 +9,7 @@ import { createApp } from '../../server/app';
 import { resolveConfig } from '../../server/config';
 import { AnthropicProvider } from '../../server/llm/anthropic';
 import { LlmCache, generateCached } from '../../server/llm/cache';
-import { MODE_MEMORY_MS, OpenAiCompatProvider, forgetStructuredModes, type RememberedMode } from '../../server/llm/openaiCompat';
+import { DEFAULT_MAX_TOKENS, MODE_MEMORY_MS, OpenAiCompatProvider, forgetStructuredModes, type RememberedMode } from '../../server/llm/openaiCompat';
 import { LlmError, TruncatedError, extractJson, modelJsonSchema, stableStringify, type LlmProvider } from '../../server/llm/provider';
 import { LlmSettings, loadDotEnv } from '../../server/settings/store';
 
@@ -338,6 +338,15 @@ describe('environment defaults', () => {
     expect(s.provider().provider?.model).toBe('claude-sonnet-5-5');
     const t = new LlmSettings({ file: path.join(dir, 't.json'), env: {}, fixtureProvider: () => ({ id: 'fixture', model: 'f' }) as LlmProvider });
     expect(t.view().available).toContain('fixture');
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it('every provider gets a 32768-token output cap', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'settings-cap-'));
+    const at = (baseUrl: string) => new LlmSettings({ file: path.join(dir, `${baseUrl.length}.json`), env: { LLM_PROVIDER: 'openai', OPENAI_BASE_URL: baseUrl, OPENAI_MODEL: 'm', OPENAI_API_KEY: 'sk-test-00000000' } }).provider().provider?.maxOutputTokens;
+    expect(at('https://api.deepseek.com')).toBe(DEFAULT_MAX_TOKENS);
+    expect(at('http://localhost:1234/v1')).toBe(DEFAULT_MAX_TOKENS);
+    expect(new AnthropicProvider({ apiKey: KEY }).maxOutputTokens).toBe(DEFAULT_MAX_TOKENS);
     await fs.rm(dir, { recursive: true, force: true });
   });
 });

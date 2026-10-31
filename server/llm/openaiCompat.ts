@@ -3,6 +3,9 @@ import {
   type ChatImage, type ChatToolsRequest, type ChatToolsResult, type DescribeImagesRequest, type LlmProvider, type LlmUsage, type StructuredRequest, type StructuredResult, type TestResult,
 } from './provider';
 
+/** Default output cap of one call (thinking tokens count against it too). */
+export const DEFAULT_MAX_TOKENS = 32768;
+
 export interface OpenAiCompatOptions {
   baseUrl: string;
   /** Optional: LM Studio and other local servers need none. */
@@ -11,7 +14,7 @@ export interface OpenAiCompatOptions {
   fetch?: typeof fetch;
   timeoutMs?: number;
   retries?: number;
-  /** Upper bound for `max_tokens` (many hosted models reject more, e.g. 8192). */
+  /** Upper bound for `max_tokens` (default 32768). */
   maxTokensCap?: number;
   /** Injected in tests so retries do not wait. */
   sleep?: (ms: number) => Promise<void>;
@@ -88,7 +91,7 @@ export class OpenAiCompatProvider implements LlmProvider {
 
   constructor(private readonly opts: OpenAiCompatOptions) {
     this.model = opts.model;
-    this.maxOutputTokens = opts.maxTokensCap ?? 8192;
+    this.maxOutputTokens = opts.maxTokensCap ?? DEFAULT_MAX_TOKENS;
     this.base = opts.baseUrl.trim().replace(/\/+$/, '');
     this.doFetch = opts.fetch ?? fetch;
     this.sleep = opts.sleep ?? defaultSleep;
@@ -124,7 +127,7 @@ export class OpenAiCompatProvider implements LlmProvider {
   async chatTools(req: ChatToolsRequest): Promise<ChatToolsResult> {
     const body = {
       model: this.model,
-      max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? 8192),
+      max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? DEFAULT_MAX_TOKENS),
       messages: req.messages.map((m) => {
         if (m.role === 'tool') return { role: 'tool', tool_call_id: m.toolCallId, content: m.content };
         if (m.role === 'assistant') {
@@ -178,7 +181,7 @@ export class OpenAiCompatProvider implements LlmProvider {
 
   /** A plain multimodal request (no tools): the separate vision model of the assistant. */
   async describeImages(req: DescribeImagesRequest): Promise<{ text: string; usage: LlmUsage }> {
-    const res = await this.post({ model: this.model, max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? 8192), messages: [{ role: 'user', content: imageContent(req.prompt, req.images) }] }, req.signal);
+    const res = await this.post({ model: this.model, max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? DEFAULT_MAX_TOKENS), messages: [{ role: 'user', content: imageContent(req.prompt, req.images) }] }, req.signal);
     const choice = res.choices?.[0];
     const u = res.usage ?? {};
     return { text: choice?.message?.content ?? '', usage: { ...zeroUsage(), inputTokens: u.prompt_tokens ?? 0, outputTokens: u.completion_tokens ?? 0, cacheReadTokens: u.prompt_cache_hit_tokens ?? u.prompt_tokens_details?.cached_tokens ?? 0 } };
@@ -268,7 +271,7 @@ export class OpenAiCompatProvider implements LlmProvider {
     if (mode !== 'json_schema') system += `\n\n只输出一个 JSON 对象，不要任何解释或 Markdown。它必须符合下面的 JSON Schema：\n${stableStringify(schema)}`;
     return {
       model: this.model,
-      max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? 8192),
+      max_tokens: Math.min(req.maxTokens, this.opts.maxTokensCap ?? DEFAULT_MAX_TOKENS),
       messages: [{ role: 'system', content: system }, { role: 'user', content: inputText(req.input) }],
       ...(mode === 'json_schema' ? { response_format: { type: 'json_schema', json_schema: { name: req.schemaName, strict: true, schema } } } : {}),
       ...(mode === 'json_object' ? { response_format: { type: 'json_object' } } : {}),

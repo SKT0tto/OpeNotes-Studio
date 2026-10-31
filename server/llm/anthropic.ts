@@ -22,6 +22,8 @@ const STREAM_ABOVE = 16000;
 export class AnthropicProvider implements LlmProvider {
   readonly id = 'anthropic' as const;
   readonly model: string;
+  /** Output cap of one call (above 16000 the call streams, see STREAM_ABOVE). */
+  readonly maxOutputTokens = 32768;
   private readonly client: Anthropic;
   private readonly effort: 'low' | 'medium' | 'high';
 
