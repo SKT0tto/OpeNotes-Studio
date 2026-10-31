@@ -63,8 +63,11 @@ const isThirdPartyTag = (t: string): boolean => isSpeechTag(t) && !/^[我你咱]
  * One speech plus one tag: 「“我们再来一遍。”立希说。」 (tag after), 「立希说：“我们再来一遍。”」 (tag before), also with the outer quotes off
  * (`我们再来一遍。”立希说。`) and with “” / "" / 「」 / 『』. Returns the bare speech and the tag, or null when the text is not clearly that shape.
  * Speeches with a tag between them are handled by splitMerged instead.
+ * Only when `source` (the story paragraph) shows the tag outside every quote: inside a quote it is a reported speech
+ * (她说：『明天见。』 said by someone else) and must stay. Without a source nothing is stripped.
  */
-export function stripSingleSpeechTag(raw: string): { text: string; tag: string } | null {
+export function stripSingleSpeechTag(raw: string, source?: string): { text: string; tag: string } | null {
+  if (source === undefined) return null;
   let t = raw.trim();
   const ascii = t.match(/"/g)?.length ?? 0;
   if (ascii === 2) {
@@ -99,6 +102,7 @@ export function stripSingleSpeechTag(raw: string): { text: string; tag: string }
   }
   const out = stripQuotes(speech);
   if (out.length === 0 || !isThirdPartyTag(tag)) return null;
+  if (!occursOutsideQuotes(source, tag.trim().replace(/[，。：:,]+$/, ''))) return null;
   return { text: out, tag: tag.trim() };
 }
 
@@ -107,8 +111,9 @@ function quotedMask(text: string): boolean[] {
   const mask: boolean[] = [];
   let depth = 0;
   for (const ch of text) {
-    if (OPENERS.has(ch)) depth++;
-    const inside = depth > 0;
+    if (ch === '"') depth = depth > 0 ? 0 : 1; // ASCII quotes pair up
+    else if (OPENERS.has(ch)) depth++;
+    const inside = depth > 0 || ch === '"';
     if (CLOSERS.has(ch) && depth > 0) depth--;
     for (let k = 0; k < ch.length; k++) mask.push(inside);
   }

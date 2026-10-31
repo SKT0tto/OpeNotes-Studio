@@ -109,14 +109,26 @@ describe('L3: one speech plus one tag', () => {
     ['“真的可以吗？”爱音问道。', '真的可以吗？', '爱音问道。'],
   ];
   it.each(cases)('%s', (raw, text, tag) => {
-    expect(stripSingleSpeechTag(raw)).toEqual({ text, tag });
+    expect(stripSingleSpeechTag(raw, raw.replace(/^「“(.*)”(.*)」$/, '“$1”$2'))).toEqual({ text, tag });
+    expect(stripSingleSpeechTag(raw)).toBeNull(); // no source: never strip
+  });
+  it('a reported speech inside the own quotes of the speaker keeps its lead-in', () => {
+    for (const [beat, para] of [
+      ['她说：『明天见。』', '“她说：『明天见。』”'], ['她说：「明天见。」', '“她说：「明天见。」”'], ['立希刚才问：『鼓棒呢？』', '“立希刚才问：『鼓棒呢？』”'],
+      ['她问：『你还会来吗？』', '“她问：『你还会来吗？』”'], ['他们说：『乐队解散了。』', '“他们说：『乐队解散了。』”'], ['妈妈说：『早点回家。』', '“妈妈说：『早点回家。』”'],
+      ['素世刚才发消息问：『鼓棒是不是落在你们那了？』', '“素世刚才发消息问：『鼓棒是不是落在你们那了？』”'],
+    ] as const) expect(stripSingleSpeechTag(beat, para), beat).toBeNull();
+  });
+  it('a real tag outside the quotes of the source is still stripped', () => {
+    expect(stripSingleSpeechTag('立希说：“我们再来一遍。”', '她抬头。立希说：“我们再来一遍。”')?.text).toBe('我们再来一遍。');
+    expect(stripSingleSpeechTag('我们再来一遍。”立希说。', '“我们再来一遍。”立希说。')?.tag).toBe('立希说。');
   });
   it('negatives are left alone', () => {
     for (const raw of [
       '“等等我。”爱音拐进小道。', '“原来是这样。”灯这才知道。', '“好。”爱音说着把吉他背带往肩上一甩。', '“好。”立希说，“开始吧。”', '我说：“再来一遍。”',
       '她说“明天见”，然后就走了。', '『春日影』是她写的。', '“《春日影》的谱子，你带来了吗？”', '明天就要演『碧天伴走』了，你紧张吗？', '你说的“没关系”到底是什么意思？', '我今天不太舒服。',
       '“好。”立希说着，抬手敲了敲鼓面。', '立希说，要不要再来一遍？', "\"Let's go again,\" Rikki said, \"from the chorus.\"",
-    ]) expect(stripSingleSpeechTag(raw), raw).toBeNull();
+    ]) expect(stripSingleSpeechTag(raw, raw), raw).toBeNull();
   });
 });
 

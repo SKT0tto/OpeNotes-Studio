@@ -436,7 +436,7 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     } else if (b.speaker !== null) b.speaker = null;
     if (b.kind === 'dialogue' && b.keepId === null) {
       // spoken lines are shown without their quotation marks (the name plate already says who speaks)
-      const tagged = stripSingleSpeechTag(b.text);
+      const tagged = stripSingleSpeechTag(b.text, paraOf(b.paragraph)?.text);
       if (tagged) {
         warnings.push(`${where}的对白带着说话标签「${tagged.tag}」，已去掉`);
         b.text = tagged.text;
