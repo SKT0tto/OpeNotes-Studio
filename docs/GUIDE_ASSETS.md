@@ -36,7 +36,7 @@
 5. 第一次运行会自动安装依赖（需要联网，几十秒）。随后会问：「需要 Live2D Cubism Core 才能显示 Live2D 模型……是否同意协议并从 Live2D 官方下载？[Y/n]」——同意《Live2D 专有软件许可协议》就输入 `Y` 回车，它只会从 Live2D 官方地址下载；输入 `N` 也可以，之后在网页的配置向导里还会再提示。
 6. 浏览器会自动打开 <http://127.0.0.1:5274>，按首页的**配置向导**导入素材（见第 2 章起）。使用期间请保持启动窗口开着，关闭它就会停止服务。
 
-升级：先关闭程序，双击 `Update-Windows.cmd`（macOS / Linux：`bash update.sh`）自动更新——它只替换有变化的文件，`data/`、`.env`、`studio.config.json`、`vendor/` 不会被改动，旧文件备份在 `update-backup/`，加 `--rollback` 可还原（更新脚本从 1.0.0 之后的版本开始内置，旧版需先手动下载一次）。也可以把新版本解压**覆盖**到旧目录，保留 `data/`（项目与设置）和 `studio.config.json`（素材库路径）。下载包不含任何游戏素材，也不含 Cubism Core。
+升级：先关闭程序，双击 `Update-Windows.cmd`（macOS / Linux：`bash update.sh`）自动更新——它只替换有变化的文件，`data/`、`.env`、`studio.config.json`、`vendor/` 不会被改动，旧文件备份在 `update-backup/`，加 `--rollback` 可还原（只保留最近 3 份备份；更新被中断时，下次运行会先自动还原；改过的背景标签会按条目合并保留；连不上 GitHub 就手动下载 zip，加 `--from-zip zip路径`，用代理时设置 `NODE_USE_ENV_PROXY=1` 和 `HTTPS_PROXY`。更新脚本从 1.0.0 之后的版本开始内置，旧版需先手动下载一次）。也可以把新版本解压**覆盖**到旧目录，保留 `data/`（项目与设置）和 `studio.config.json`（素材库路径）。下载包不含任何游戏素材，也不含 Cubism Core。
 
 > 方式一不需要看 1.2、1.3，直接跳到[第 2 章](#2-首页与配置向导)。
 

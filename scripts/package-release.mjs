@@ -2,6 +2,7 @@
 // Run `npm run build` first (the release workflow does). Usage: node scripts/package-release.mjs [--tag v0.1.3] [--out release]
 // The package holds the built app (dist/), the start scripts and the docs; never node_modules, tests, the website, assets,
 // the Cubism Core, .env or data/.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
@@ -66,16 +67,25 @@ const zipPath = path.join(outDir, `${name}.zip`);
 fs.rmSync(zipPath, { force: true });
 const zip = new yazl.ZipFile();
 const mtime = new Date();
+// release-files.json: path -> sha256 of every packaged file. scripts/update.mjs deletes only files the previous release listed here.
+const manifest = {};
+const sha = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 for (const [abs, dest] of files) {
   const entry = `${name}/${dest}`;
   if (dest.endsWith('.cmd')) {
-    zip.addBuffer(Buffer.from(fs.readFileSync(abs, 'utf8').replace(/\r?\n/g, '\r\n'), 'utf8'), entry, { mtime });
+    const buf = Buffer.from(fs.readFileSync(abs, 'utf8').replace(/\r?\n/g, '\r\n'), 'utf8');
+    manifest[dest] = sha(buf);
+    zip.addBuffer(buf, entry, { mtime });
   } else if (dest.endsWith('.sh')) {
-    zip.addBuffer(Buffer.from(fs.readFileSync(abs, 'utf8').replace(/\r\n/g, '\n'), 'utf8'), entry, { mtime, mode: 0o100755 });
+    const buf = Buffer.from(fs.readFileSync(abs, 'utf8').replace(/\r\n/g, '\n'), 'utf8');
+    manifest[dest] = sha(buf);
+    zip.addBuffer(buf, entry, { mtime, mode: 0o100755 });
   } else {
+    manifest[dest] = sha(fs.readFileSync(abs));
     zip.addFile(abs, entry, { mtime });
   }
 }
+zip.addBuffer(Buffer.from(`${JSON.stringify({ version, files: manifest }, null, 1)}\n`), `${name}/release-files.json`, { mtime });
 zip.end();
 await pipeline(zip.outputStream, fs.createWriteStream(zipPath));
 

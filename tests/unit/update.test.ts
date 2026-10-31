@@ -3,10 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import yazl from 'yazl';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import crypto from 'node:crypto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 type Files = Map<string, { read(): Buffer; mode: number }>;
-type Plan = { add: string[]; change: string[]; remove: string[]; same: number };
+type Plan = { add: string[]; change: string[]; remove: string[]; same: number; overrides: Record<string, Buffer>; labels: null | { kept: string[]; overridden: string[]; rulesKept: boolean } };
+type Backup = { dir: string; manifest: { createdAt: string; completed?: boolean; rolledBack?: boolean; from: string; to: string } };
 const u = (await import(pathToFileURL(path.resolve('scripts', 'update.mjs')).href)) as {
   compareVersions(a: string, b: string): number;
   parseVersion(v: string): unknown;
@@ -17,6 +19,12 @@ const u = (await import(pathToFileURL(path.resolve('scripts', 'update.mjs')).hre
   planUpdate(root: string, f: Files): Plan;
   applyPlan(root: string, f: Files, p: Plan, v: { fromVersion: string; toVersion: string }): string;
   rollbackLatest(root: string): { dir: string; manifest: { from: string } } | null;
+  recoverIncomplete(root: string): { action: string; failed: unknown[]; manifest: { from: string; to: string } }[];
+  restoreBackup(root: string, dir: string): { failed: { rel: string }[] };
+  listBackups(root: string): Backup[];
+  mergeLabels(l: Buffer, p: Buffer): { buf: Buffer; kept: string[]; overridden: string[]; rulesKept: boolean } | null;
+  readPrevManifest(root: string): Map<string, string> | null;
+  tuning: { retries: number };
   pickRelease(r: unknown): { version: string; asset?: { name: string }; notes: string };
   verifyDownload(b: Buffer, a: unknown): void;
   configuredPort(root: string, env: Record<string, string>): number;
@@ -82,7 +90,7 @@ describe('zip reader', () => {
     const zip = await makeZip({ 'a/x.txt': 'hello world hello world' }, { store: true });
     const bad = Buffer.from(zip);
     bad[bad.indexOf('hello')]! ^= 0xff; // flips a content byte: crc mismatch
-    expect(() => u.readZip(bad)[0]!.read()).toThrow(/校验/);
+    expect(() => u.readZip(bad)[0]!.read()).toThrow(/已损坏/);
     expect(() => u.readZip(Buffer.from('not a zip at all, definitely'))).toThrow();
     expect(() => u.readZip(zip.subarray(0, zip.length - 10))).toThrow();
     // unsupported method (bzip2 = 12) in the central directory
@@ -104,7 +112,7 @@ describe('zip reader', () => {
 
 describe('path safety', () => {
   it('rejects traversal, absolute and odd paths', () => {
-    for (const n of ['../x', 'a/../../x', '/etc/passwd', 'C:/x', 'c:\\x', 'a\\b', 'a//b', './a', 'a/./b', 'a\0b', '']) expect(() => u.sanitizeEntryPath(n)).toThrow();
+    for (const n of ['../x', 'a/../../x', '/etc/passwd', 'C:/x', 'c:\\x', 'a\\b', 'a//b', 'a/.env:evil', 'data./x', 'a/b ', 'a/b.', 'a/CON', 'a/nul.txt', 'x/COM1', 'x/lpt9.log', './a','a/./b', 'a\0b', '']) expect(() => u.sanitizeEntryPath(n)).toThrow();
     for (const n of ['a/b.txt', 'a/', 'top/dist/x.js', 'a/..foo/b']) expect(u.sanitizeEntryPath(n)).toBe(n);
   });
 
@@ -145,122 +153,309 @@ describe('release picking and download checks', () => {
       fs.writeFileSync(path.join(dir, 'studio.config.json'), '{"port":6001}');
       expect(u.configuredPort(dir, {})).toBe(6001);
       expect(u.configuredPort(dir, { API_PORT: '7000' })).toBe(7000);
+      fs.writeFileSync(path.join(dir, '.env'), 'OPENAI_KEY=secret\nAPI_PORT = "6500" # mine\n');
+      expect(u.configuredPort(dir, {})).toBe(6500); // .env beats studio.config.json, like the server
+      expect(u.configuredPort(dir, { API_PORT: '7000' })).toBe(7000); // the real environment beats .env
     } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   });
 });
 
-describe('plan, apply, backup and rollback', () => {
+const shaOf = (c: string) => crypto.createHash('sha256').update(c).digest('hex');
+const filesOf = (o: Record<string, string>): Files => new Map(Object.entries(o).map(([k, v]) => [k, { read: () => Buffer.from(v), mode: 0 }]));
+const manifestJson = (version: string, o: Record<string, string>) => JSON.stringify({ version, files: Object.fromEntries(Object.entries(o).map(([k, v]) => [k, shaOf(v)])) });
+const labelFile = (labels: Record<string, unknown>, rules: unknown = { unknownPolicy: 'avoid' }) => JSON.stringify({ version: 1, rules, labels }, null, 1) + '\n';
+
+describe('install fixtures', () => {
   let root: string;
-  const write = (rel: string, c: string) => { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), c); };
-  const read = (rel: string) => fs.readFileSync(path.join(root, rel), 'utf8');
-  const exists = (rel: string) => fs.existsSync(path.join(root, rel));
+  const abs = (rel: string) => path.join(root, rel);
+  const write = (rel: string, c: string) => { fs.mkdirSync(path.dirname(abs(rel)), { recursive: true }); fs.writeFileSync(abs(rel), c); };
+  const read = (rel: string) => fs.readFileSync(abs(rel), 'utf8');
+  const exists = (rel: string) => fs.existsSync(abs(rel));
   const protectedFiles = { 'data/projects/p1/project.json': 'MY STORY', '.env': 'SECRET=1', 'studio.config.json': '{"port":1}', 'node_modules/x/index.js': 'nm', 'vendor/live2dcubismcore.min.js': 'core', 'assets/m/a.moc3': 'asset' };
-
-  beforeEach(() => {
-    root = fs.mkdtempSync(path.join(os.tmpdir(), 'upd-install-'));
-    write('package.json', pkgJson('1.0.0'));
-    write('dist/server/index.mjs', 'old-server');
-    write('dist/web/same.js', 'same');
-    write('dist/web/old-chunk.js', 'gone');
-    write('scripts/launch.mjs', 'old-launch');
-    write('docs/OLD.md', 'old doc');
-    write('README.md', 'old readme');
-    write('notes-by-user.txt', 'not in package: untouched');
+  /** an install at `version` whose files are exactly `o` (+ a matching release-files.json when withManifest) */
+  const install = (version: string, o: Record<string, string>, withManifest = true) => {
+    const all = { 'package.json': pkgJson(version), 'dist/server/index.mjs': 'server', ...o };
+    for (const [k, v] of Object.entries(all)) write(k, v);
+    if (withManifest) write('release-files.json', manifestJson(version, all));
     for (const [k, v] of Object.entries(protectedFiles)) write(k, v);
-  });
-  afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+  };
+  const pkgFiles = (version: string, o: Record<string, string>): Files => {
+    const all = { 'package.json': pkgJson(version), 'dist/server/index.mjs': 'server', ...o };
+    return filesOf({ ...all, 'release-files.json': manifestJson(version, all) });
+  };
+  const apply = (from: string, to: string, files: Files) => u.applyPlan(root, files, u.planUpdate(root, files), { fromVersion: from, toVersion: to });
+  const tmpFiles = () => (fs.readdirSync(root, { recursive: true }) as string[]).filter((f) => f.endsWith('.update-tmp'));
+  const tree = () => Object.fromEntries((fs.readdirSync(root, { recursive: true }) as string[]).map((f) => f.replaceAll('\\', '/')).filter((f) => !f.startsWith('update-backup') && fs.statSync(abs(f)).isFile()).sort().map((f) => [f, read(f)]));
+  const markIncomplete = (backup: string) => {
+    const m = JSON.parse(fs.readFileSync(path.join(backup, 'manifest.json'), 'utf8'));
+    fs.writeFileSync(path.join(backup, 'manifest.json'), JSON.stringify({ ...m, completed: false }));
+  };
 
-  async function newFiles(): Promise<Files> {
-    const zip = await makeZip(top('1.1.0', {
-      'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'new-server', 'dist/web/same.js': 'same',
-      'dist/web/new-chunk.js': 'fresh', 'scripts/launch.mjs': 'old-launch', 'scripts/update.mjs': 'upd', 'README.md': 'new readme',
-    }));
-    return u.packageFiles(u.readZip(zip));
-  }
+  beforeEach(() => { root = fs.mkdtempSync(path.join(os.tmpdir(), 'upd-install-')); });
+  afterEach(() => { vi.restoreAllMocks(); u.tuning.retries = 40; fs.rmSync(root, { recursive: true, force: true }); });
 
   it('finds the install and refuses git checkouts and strangers', () => {
+    install('1.0.0', {});
     expect(u.findInstall(root).version).toBe('1.0.0');
-    fs.mkdirSync(path.join(root, '.git'));
+    fs.mkdirSync(abs('.git'));
     expect(() => u.findInstall(root)).toThrow(/git/);
-    fs.rmSync(path.join(root, '.git'), { recursive: true });
-    fs.rmSync(path.join(root, 'dist/server/index.mjs'));
-    expect(() => u.findInstall(root)).toThrow(/不是 OpeNotes/);
-    write('dist/server/index.mjs', 'x');
+    fs.rmSync(abs('.git'), { recursive: true });
     write('package.json', JSON.stringify({ name: 'other', version: '1.0.0' }));
     expect(() => u.findInstall(root)).toThrow(/不是 OpeNotes/);
   });
 
-  it('plans adds, changes and removals only inside managed paths', async () => {
-    const plan = u.planUpdate(root, await newFiles());
-    expect(plan.add.sort()).toEqual(['dist/web/new-chunk.js', 'scripts/update.mjs']);
-    expect(plan.change.sort()).toEqual(['README.md', 'dist/server/index.mjs', 'package.json']);
-    expect(plan.remove.sort()).toEqual(['dist/web/old-chunk.js', 'docs/OLD.md']);
-    expect(plan.same).toBe(2);
-    expect(plan.change.at(-1)).toBe('package.json'); // written last
+  describe('plan: manifest-based deletion', () => {
+    const oldFiles = { 'dist/web/same.js': 'same', 'dist/web/old-chunk.js': 'gone', 'docs/OLD.md': 'old doc', 'README.md': 'old readme' };
+    const newFiles = { 'dist/web/same.js': 'same', 'dist/web/new-chunk.js': 'fresh', 'README.md': 'new readme' };
+
+    it('deletes only what the previous release shipped; local extras in managed dirs stay', () => {
+      install('1.0.1', oldFiles);
+      write('examples/我的示例.json', 'mine');
+      write('dist/web/my-plugin.js', 'mine');
+      write('notes-by-user.txt', 'mine');
+      const plan = u.planUpdate(root, pkgFiles('1.1.0', newFiles));
+      expect(plan.remove).toEqual(['dist/web/old-chunk.js', 'docs/OLD.md']);
+      expect(plan.add).toContain('dist/web/new-chunk.js');
+      expect(plan.change.at(-1)).toBe('package.json'); // written last
+      apply('1.0.1', '1.1.0', pkgFiles('1.1.0', newFiles));
+      for (const f of ['examples/我的示例.json', 'dist/web/my-plugin.js', 'notes-by-user.txt']) expect(read(f)).toBe('mine');
+      expect(exists('docs/OLD.md')).toBe(false);
+      for (const [k, v] of Object.entries(protectedFiles)) expect(read(k)).toBe(v);
+    });
+
+    it('1.0.x path: no manifest means overwrite and add only, nothing is deleted', () => {
+      install('1.0.0', oldFiles, false);
+      expect(u.readPrevManifest(root)).toBeNull();
+      const files = pkgFiles('1.1.0', newFiles);
+      expect(u.planUpdate(root, files).remove).toEqual([]);
+      apply('1.0.0', '1.1.0', files);
+      expect(read('docs/OLD.md')).toBe('old doc');
+      expect(read('README.md')).toBe('new readme');
+      expect(read('dist/web/new-chunk.js')).toBe('fresh');
+      expect(exists('release-files.json')).toBe(true); // from now on updates have a baseline
+    });
+
+    it('ignores protected or unsafe paths listed in a tampered manifest', () => {
+      install('1.0.0', {});
+      write('release-files.json', JSON.stringify({ files: { '.env': 'x', 'data/projects/p1/project.json': 'x', '../evil': 'x' } }));
+      const plan = u.planUpdate(root, filesOf({ 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'server' }));
+      expect(plan.remove).toEqual([]);
+    });
   });
 
-  it('applies the update, leaves protected files alone, backs up and rolls back', async () => {
-    const files = await newFiles();
-    const plan = u.planUpdate(root, files);
-    const backup = u.applyPlan(root, files, plan, { fromVersion: '1.0.0', toVersion: '1.1.0' });
+  describe('backup, rollback and ordering', () => {
+    it('applies, backs up, leaves protected files alone and rolls back fully', () => {
+      install('1.0.0', { 'dist/web/old.js': 'old', 'README.md': 'old readme' });
+      const before = tree();
+      const files = pkgFiles('1.1.0', { 'dist/web/new.js': 'new', 'README.md': 'new readme', 'scripts/update.mjs': 'upd' });
+      const backup = apply('1.0.0', '1.1.0', files);
+      expect(read('README.md')).toBe('new readme');
+      expect(fs.readFileSync(path.join(backup, 'dist/web/old.js'), 'utf8')).toBe('old');
+      expect(path.basename(backup)).toMatch(/^1\.0\.0-\d{8}-\d{6}-[0-9a-f]{6}$/);
+      expect(tmpFiles()).toEqual([]);
+      expect(u.rollbackLatest(root)?.manifest.from).toBe('1.0.0');
+      expect(tree()).toEqual(before);
+      expect(u.rollbackLatest(root)).toBeNull(); // already rolled back
+    });
 
-    expect(read('package.json')).toContain('1.1.0');
-    expect(read('dist/server/index.mjs')).toBe('new-server');
-    expect(read('dist/web/new-chunk.js')).toBe('fresh');
-    expect(exists('dist/web/old-chunk.js')).toBe(false);
-    expect(exists('docs')).toBe(false); // emptied directory is pruned
-    expect(read('notes-by-user.txt')).toBe('not in package: untouched');
-    for (const [k, v] of Object.entries(protectedFiles)) expect(read(k)).toBe(v);
-    expect(fs.readdirSync(root, { recursive: true }).filter((f) => String(f).endsWith('.update-tmp'))).toEqual([]);
+    it('orders backups by their recorded time, not by name (1.0.9 -> 1.0.10 -> 1.0.11)', () => {
+      install('1.0.9', { 'dist/web/v9.js': '9' });
+      const s9 = tree();
+      apply('1.0.9', '1.0.10', pkgFiles('1.0.10', { 'dist/web/v10.js': '10' }));
+      const s10 = tree();
+      apply('1.0.10', '1.0.11', pkgFiles('1.0.11', { 'dist/web/v11.js': '11' }));
+      expect(u.rollbackLatest(root)?.manifest.from).toBe('1.0.10');
+      expect(tree()).toEqual(s10);
+      expect(u.rollbackLatest(root)?.manifest.from).toBe('1.0.9');
+      expect(tree()).toEqual(s9);
+    });
 
-    expect(path.basename(backup)).toMatch(/^1\.0\.0-\d{8}-\d{6}$/);
-    expect(fs.readFileSync(path.join(backup, 'dist/server/index.mjs'), 'utf8')).toBe('old-server');
-    expect(fs.readFileSync(path.join(backup, 'docs/OLD.md'), 'utf8')).toBe('old doc');
-    expect(fs.existsSync(path.join(backup, 'dist/web/new-chunk.js'))).toBe(false);
+    it('refuses to roll back when the installed version is not the one the backup updated to', () => {
+      install('1.0.0', {});
+      apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { 'dist/web/a.js': 'a' }));
+      write('package.json', pkgJson('1.5.0'));
+      expect(() => u.rollbackLatest(root)).toThrow(/1\.5\.0/);
+      expect(read('dist/web/a.js')).toBe('a');
+    });
 
-    const rb = u.rollbackLatest(root);
-    expect(rb?.manifest.from).toBe('1.0.0');
-    expect(read('package.json')).toContain('1.0.0');
-    expect(read('dist/server/index.mjs')).toBe('old-server');
-    expect(read('dist/web/old-chunk.js')).toBe('gone');
-    expect(read('docs/OLD.md')).toBe('old doc');
-    expect(read('README.md')).toBe('old readme');
-    expect(exists('dist/web/new-chunk.js')).toBe(false);
-    expect(exists('scripts/update.mjs')).toBe(false);
-    for (const [k, v] of Object.entries(protectedFiles)) expect(read(k)).toBe(v);
-    expect(u.rollbackLatest(root)).toBeNull(); // already rolled back
+    it('two runs in the same second get distinct backup dirs', () => {
+      install('1.0.0', {});
+      const a = apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { 'dist/web/a.js': 'a' }));
+      write('package.json', pkgJson('1.0.0'));
+      const b = apply('1.0.0', '1.2.0', pkgFiles('1.2.0', { 'dist/web/a.js': 'b' }));
+      expect(a).not.toBe(b);
+      expect(u.listBackups(root).length).toBe(2);
+    });
+
+    it('keeps only the last 3 backups', () => {
+      install('1.0.0', {});
+      for (let i = 1; i <= 5; i++) apply(`1.0.${i - 1}`, `1.0.${i}`, pkgFiles(`1.0.${i}`, { 'dist/web/a.js': String(i) }));
+      expect(u.listBackups(root).map((b) => b.manifest.to)).toEqual(['1.0.3', '1.0.4', '1.0.5']);
+    });
+
+    it('an interrupted run is restored first, so the original state comes back', () => {
+      install('1.0.0', { 'dist/web/old.js': 'old', 'README.md': 'old readme' });
+      const original = tree();
+      const backup = apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { 'dist/web/new.js': 'new', 'README.md': 'new readme' }));
+      markIncomplete(backup); // as if killed before the last step: package.json still old
+      write('package.json', pkgJson('1.0.0'));
+      expect(u.recoverIncomplete(root).map((r) => r.action)).toEqual(['restored']);
+      expect(tree()).toEqual(original);
+      expect(u.recoverIncomplete(root)).toEqual([]);
+    });
+
+    it('an interrupted run whose package.json was already written is marked finished, not undone', () => {
+      install('1.0.0', {});
+      markIncomplete(apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { 'dist/web/a.js': 'a' })));
+      expect(u.recoverIncomplete(root).map((r) => r.action)).toEqual(['finished']);
+      expect(read('dist/web/a.js')).toBe('a');
+      expect(u.rollbackLatest(root)?.manifest.from).toBe('1.0.0'); // now a normal rollback-able update
+    });
   });
 
-  it('restores automatically when a write fails midway', async () => {
-    const files = await newFiles();
-    const plan = u.planUpdate(root, files);
-    const bad: Files = new Map(files);
-    bad.set('scripts/update.mjs', { mode: 0, read: () => { throw new Error('boom'); } });
-    expect(() => u.applyPlan(root, bad, plan, { fromVersion: '1.0.0', toVersion: '1.1.0' })).toThrow(/已自动还原/);
-    expect(read('package.json')).toContain('1.0.0');
-    expect(read('dist/server/index.mjs')).toBe('old-server');
-    expect(exists('dist/web/new-chunk.js')).toBe(false);
-    expect(read('docs/OLD.md')).toBe('old doc');
-  });
+  describe('locked files (EPERM)', () => {
+    const failRename = (suffix: string, times: () => boolean, code: string) => {
+      const real = fs.renameSync.bind(fs);
+      return vi.spyOn(fs, 'renameSync').mockImplementation((a, b) => {
+        if (String(b).replaceAll('\\', '/').endsWith(suffix) && times()) throw Object.assign(new Error(`${code}: locked`), { code });
+        return real(a, b);
+      });
+    };
+    const next = () => filesOf({ 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'new-server', 'dist/web/new.js': 'new' });
 
-  it('main(--from-zip) updates, is idempotent, and --check changes nothing', async () => {
-    const zip = await makeZip(top('1.1.0', { 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'new-server', 'CHANGELOG.md': '# Changelog\n\n## 1.1.0\n\nnew stuff\n' }));
-    const zipPath = path.join(root, '..', `upd-${path.basename(root)}.zip`);
-    fs.writeFileSync(zipPath, zip);
-    const saved = process.env.API_PORT;
-    process.env.API_PORT = '59871'; // a port nothing listens on
-    try {
-      expect(await u.main([root, '--from-zip', zipPath, '--check'])).toBe(0);
-      expect(read('dist/server/index.mjs')).toBe('old-server');
-      expect(await u.main([root, '--from-zip', zipPath, '--yes'])).toBe(0);
+    it('retries a briefly locked file and succeeds', () => {
+      install('1.0.0', {});
+      let n = 0;
+      failRename('dist/server/index.mjs', () => n++ < 3, 'EBUSY');
+      apply('1.0.0', '1.1.0', next());
       expect(read('dist/server/index.mjs')).toBe('new-server');
-      expect(await u.main([root, '--from-zip', zipPath, '--yes'])).toBe(0); // up to date now
-      expect(fs.readdirSync(path.join(root, 'update-backup')).length).toBe(1);
-      expect(await u.main([root, '--rollback'])).toBe(0);
-      expect(read('dist/server/index.mjs')).toBe('old-server');
-    } finally {
-      if (saved === undefined) delete process.env.API_PORT; else process.env.API_PORT = saved;
-      fs.rmSync(zipPath, { force: true });
+      expect(n).toBe(4);
+    });
+
+    it('a file that stays locked: original error kept, failures listed, no .update-tmp left, recovery works after unlock', () => {
+      install('1.0.0', { 'dist/web/old.js': 'old' });
+      const original = tree();
+      u.tuning.retries = 1;
+      let locked = true;
+      failRename('dist/server/index.mjs', () => locked, 'EPERM');
+      let err: Error | undefined;
+      try { apply('1.0.0', '1.1.0', next()); } catch (e) { err = e as Error; }
+      expect(err?.message).toMatch(/EPERM/);
+      expect(err?.message).toMatch(/dist\/server\/index\.mjs/);
+      expect(err?.message).toMatch(/--rollback/);
+      expect(tmpFiles()).toEqual([]);
+      locked = false;
+      expect(u.recoverIncomplete(root).map((r) => r.action)).toEqual(['restored']);
+      expect(tree()).toEqual(original);
+    });
+
+    it('a successful auto-restore says so', () => {
+      install('1.0.0', {});
+      const files = next();
+      files.set('dist/web/new.js', { mode: 0, read: () => { throw new Error('boom'); } });
+      expect(() => apply('1.0.0', '1.1.0', files)).toThrow(/boom[\s\S]*已自动还原/);
+      expect(read('dist/server/index.mjs')).toBe('server');
+    });
+  });
+
+  describe('case-only rename', () => {
+    for (const withManifest of [true, false]) {
+      it(`keeps the file under its new name (${withManifest ? 'with' : 'without'} manifest)`, () => {
+        install('1.0.0', { 'docs/GUIDE.md': 'guide' }, withManifest);
+        apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { 'docs/guide.md': 'guide' }));
+        expect(fs.readdirSync(abs('docs'))).toEqual(['guide.md']);
+        expect(read('docs/guide.md')).toBe('guide');
+        u.rollbackLatest(root);
+        expect(fs.readdirSync(abs('docs'))).toEqual(['GUIDE.md']);
+      });
     }
+  });
+
+  describe('asset-labels merge', () => {
+    const L = 'asset-labels/backgrounds.json';
+    const entry = (title: string, source = 'draft', updatedAt?: string) => ({ title, source, ...(updatedAt ? { updatedAt } : {}) });
+    const shipped = labelFile({ 1: entry('a'), 2: entry('b'), 3: entry('c') });
+
+    it('mergeLabels: newer user edits stay, older ones are overridden and listed, drafts follow the package, differing rules stay', () => {
+      const local = labelFile({ 1: entry('mine1', 'user', '2026-10-02'), 2: entry('mine2', 'user', '2026-09-01'), 3: entry('draft-edit', 'draft'), 9: entry('only-mine', 'user', '2026-10-01') }, { unknownPolicy: 'allow' });
+      const pkg = labelFile({ 1: entry('a2', 'draft', '2026-10-01'), 2: entry('b2', 'draft', '2026-09-15'), 3: entry('c2'), 4: entry('new') });
+      const m = u.mergeLabels(Buffer.from(local), Buffer.from(pkg))!;
+      const out = JSON.parse(m.buf.toString());
+      expect(out.labels['1'].title).toBe('mine1');
+      expect(out.labels['2'].title).toBe('b2');
+      expect(out.labels['3'].title).toBe('c2');
+      expect(out.labels['4'].title).toBe('new');
+      expect(out.labels['9'].title).toBe('only-mine');
+      expect(out.rules.unknownPolicy).toBe('allow');
+      expect(m.kept.sort()).toEqual(['1', '9']);
+      expect(m.overridden).toEqual(['2']);
+      expect(m.rulesKept).toBe(true);
+      expect(u.mergeLabels(Buffer.from('not json'), Buffer.from(pkg))).toBeNull();
+    });
+
+    it('a local file that matches the previous release is simply overwritten', () => {
+      install('1.0.1', { [L]: shipped });
+      const next = labelFile({ 1: entry('a'), 2: entry('b2'), 3: entry('c') });
+      const files = pkgFiles('1.1.0', { [L]: next });
+      expect(u.planUpdate(root, files).labels).toBeNull();
+      apply('1.0.1', '1.1.0', files);
+      expect(read(L)).toBe(next);
+    });
+
+    it('an edited local file is merged, and the old file is backed up', () => {
+      install('1.0.1', { [L]: shipped });
+      const edited = labelFile({ 1: entry('a'), 2: entry('my-b', 'user', '2026-10-20'), 3: entry('c') });
+      write(L, edited);
+      const files = pkgFiles('1.1.0', { [L]: labelFile({ 1: entry('a'), 2: entry('b2'), 3: entry('c3'), 4: entry('d') }) });
+      expect(u.planUpdate(root, files).labels?.kept).toEqual(['2']);
+      const backup = apply('1.0.1', '1.1.0', files);
+      const out = JSON.parse(read(L));
+      expect(out.labels['2'].title).toBe('my-b');
+      expect(out.labels['3'].title).toBe('c3');
+      expect(out.labels['4'].title).toBe('d');
+      expect(fs.readFileSync(path.join(backup, L), 'utf8')).toBe(edited);
+    });
+
+    it('1.0.x (no manifest) always merges', () => {
+      install('1.0.0', { [L]: shipped }, false);
+      write(L, labelFile({ 1: entry('a'), 2: entry('my-b', 'user', '2026-10-20'), 3: entry('c') }));
+      apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { [L]: labelFile({ 1: entry('a'), 2: entry('b2'), 3: entry('c') }) }));
+      expect(JSON.parse(read(L)).labels['2'].title).toBe('my-b');
+    });
+  });
+
+  describe('main()', () => {
+    it('updates an install in a path with spaces and Chinese, rejects unknown arguments, recovers an interrupted run, rolls back', async () => {
+      const outer = root;
+      const dir = path.join(outer, '安装 目录 测试');
+      fs.mkdirSync(dir);
+      root = dir;
+      install('1.0.0', { 'dist/web/old.js': 'old' });
+      const original = tree();
+      const zipPath = path.join(outer, '发布包 1.1.0.zip');
+      fs.writeFileSync(zipPath, await makeZip(top('1.1.0', { 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'new-server', 'CHANGELOG.md': '# Changelog\n\n## 1.1.0\n\nnew stuff\n' })));
+      const savedPort = process.env.API_PORT;
+      process.env.API_PORT = '59871'; // nothing listens here
+      try {
+        await expect(u.main([dir, '--rolbak'])).rejects.toThrow(/不认识的参数/);
+        await expect(u.main([dir, 'extra', '--check'])).rejects.toThrow(/多余的参数/);
+        expect(await u.main([dir, '--from-zip', zipPath, '--check'])).toBe(0);
+        expect(read('dist/server/index.mjs')).toBe('server');
+        // a first run that got killed half-way ...
+        const backup = u.applyPlan(dir, filesOf({ 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'half' }), u.planUpdate(dir, filesOf({ 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'half' })), { fromVersion: '1.0.0', toVersion: '1.1.0' });
+        markIncomplete(backup);
+        write('package.json', pkgJson('1.0.0'));
+        // ... then the real update runs: it restores first, then updates
+        expect(await u.main([dir, '--from-zip', zipPath, '--yes'])).toBe(0);
+        expect(read('dist/server/index.mjs')).toBe('new-server');
+        expect(await u.main([dir, '--from-zip', zipPath, '--yes'])).toBe(0); // up to date
+        expect(await u.main([dir, '--rollback'])).toBe(0); // one rollback is enough
+        expect(tree()).toEqual(original);
+        await expect(u.main([dir, '--rollback'])).rejects.toThrow(/没有可还原/);
+      } finally {
+        if (savedPort === undefined) delete process.env.API_PORT; else process.env.API_PORT = savedPort;
+        root = outer;
+      }
+    });
   });
 });
