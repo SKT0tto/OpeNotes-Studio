@@ -137,7 +137,7 @@ test('without an AI model: one line at the top, rule generation works, free text
       provider: null, available: ['anthropic', 'openai'],
       anthropic: { hasKey: false, mask: null, source: null, model: '', baseUrl: '' },
       openai: { hasKey: false, mask: null, source: null, model: '', baseUrl: '' },
-      vision: { hasKey: false, mask: null, source: null, mode: 'auto', model: '', baseUrl: '' },
+      vision: { hasKey: false, mask: null, source: null, mode: 'auto', model: '', baseUrl: '', canSee: null },
       status: { configured: false, provider: null, model: null, verified: 'none', message: '未配置 AI' },
     } })
     : route.fallback());

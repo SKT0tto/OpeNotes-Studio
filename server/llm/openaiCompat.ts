@@ -54,6 +54,10 @@ export function forgetStructuredModes(baseUrl?: string, memory: Map<string, Reme
 
 /** Whether a base|model takes pictures (null = the endpoint does not say). */
 const imageMemory = new Map<string, boolean | null>();
+/** What was learned about a base|model's picture input so far (undefined = never asked, null = the endpoint does not say). */
+export function knownImageInput(baseUrl: string, model: string): boolean | null | undefined {
+  return imageMemory.get(modeKey(baseUrl.trim().replace(/\/+$/, ''), model));
+}
 /** OpenAI content parts: the text, then each picture preceded by its label. */
 export function imageContent(text: string, images: ChatImage[]): Array<Record<string, unknown>> {
   const parts: Array<Record<string, unknown>> = [{ type: 'text', text }];
