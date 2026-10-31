@@ -43,9 +43,64 @@ function closesAtEnd(t: string): boolean {
   return false;
 }
 
-/** A speech tag only: 「立希说，」「素世笑着说，」「灯问。」 (at most 12 characters, ends in 说/问/道/喊/答/叫, at most one punctuation mark after). */
-const SPEECH_TAG = /^[^，。！？!?,.:：；;、]{1,11}[说问道喊答叫][，。:：,]?$/;
-export const isSpeechTag = (t: string): boolean => [...t].length <= 12 && SPEECH_TAG.test(t.trim());
+/**
+ * A speech tag only: 「立希说，」「素世笑着说，」「灯问。」「爱音小声问，」「立希说道。」 A speaker part (name, pronoun, short adverbial phrase), then a speech verb
+ * (说/问/答/喊/叫/嚷/吼, or a compound 说道/问道/笑道/低声道…), at most one punctuation mark after, at most 12 characters. A bare 道 is not enough:
+ * 小道/知道/味道/街道/难道 and 叫做/尖叫 are ordinary words. When in doubt it is NOT a tag (a stray tag is better than lost text).
+ */
+const SPEECH_TAG = /^[^，。！？!?,.:：；;、“”「」『』《》"]{1,11}(?:[说问答笑喊叫嚷吼骂叹]道|[低轻小大柔冷沉]声道|[说问答喊叫嚷吼])[，。:：,]?$/;
+const NOT_SPEECH = /小道|知道|味道|道路|街道|难道|叫做|尖叫|哀叫|嘶叫|鸣叫|啼叫|赤道|轨道|管道|门道|通道|步道|走道|报道|道理|道歉|道谢|学问|疑问|拷问|小说|据说|传说|听说|再说|多说|少说|不再|没有|不必|无法/;
+const NEGATED = /^[不别没无未莫勿]/;
+export const isSpeechTag = (t: string): boolean => {
+  const s = t.trim();
+  return [...s].length <= 12 && SPEECH_TAG.test(s) && !NOT_SPEECH.test(s) && !NEGATED.test(s);
+};
+
+/** A tag about somebody else (「我说」「你说」 are quotes of one's own words, not a tag). */
+const isThirdPartyTag = (t: string): boolean => isSpeechTag(t) && !/^[我你咱]/.test(t.trim());
+
+/**
+ * One speech plus one tag: 「“我们再来一遍。”立希说。」 (tag after), 「立希说：“我们再来一遍。”」 (tag before), also with the outer quotes off
+ * (`我们再来一遍。”立希说。`) and with “” / "" / 「」 / 『』. Returns the bare speech and the tag, or null when the text is not clearly that shape.
+ * Speeches with a tag between them are handled by splitMerged instead.
+ */
+export function stripSingleSpeechTag(raw: string): { text: string; tag: string } | null {
+  let t = raw.trim();
+  const ascii = t.match(/"/g)?.length ?? 0;
+  if (ascii === 2) {
+    let n = 0;
+    t = t.replace(/"/g, () => (n++ === 0 ? '“' : '”'));
+  } else if (ascii > 0) return null;
+  const chars = [...stripQuotes(t)];
+  const firstQ = chars.findIndex((c) => OPENERS.has(c) || CLOSERS.has(c));
+  if (firstQ < 0) return null;
+  let speech: string;
+  let tag: string;
+  if (OPENERS.has(chars[firstQ]!) && firstQ > 0) {
+    // tag before the speech
+    const rest = chars.slice(firstQ).join('');
+    if (!closesAtEnd(rest)) return null;
+    tag = chars.slice(0, firstQ).join('');
+    speech = [...rest].slice(1, -1).join('');
+  } else {
+    // speech first (its opener is the first character, or it is a stray closer), tag after
+    let end = -1;
+    if (CLOSERS.has(chars[firstQ]!)) end = firstQ;
+    else {
+      let depth = 0;
+      for (let i = 0; i < chars.length; i++) {
+        if (OPENERS.has(chars[i]!)) depth++;
+        else if (CLOSERS.has(chars[i]!) && --depth === 0) { end = i; break; }
+      }
+    }
+    if (end < 0) return null;
+    tag = chars.slice(end + 1).join('');
+    speech = chars.slice(OPENERS.has(chars[firstQ]!) ? 1 : 0, end).join('');
+  }
+  const out = stripQuotes(speech);
+  if (out.length === 0 || !isThirdPartyTag(tag)) return null;
+  return { text: out, tag: tag.trim() };
+}
 
 /** `index` ranges of `text` that sit inside any quote (depth > 0 at the character). */
 function quotedMask(text: string): boolean[] {
@@ -134,6 +189,9 @@ export function splitMerged(rawText: string, source?: string): MergedSplit | nul
   const all = pieces.map((p) => ({ kind: p.kind, text: p.kind === 'dialogue' ? stripQuotes(p.text) : p.text.trim() })).filter((p) => p.text.length > 0);
   if (all.length < 3 || !all.some((p) => p.kind === 'narration')) return null;
   const narrations = all.filter((p) => p.kind === 'narration').map((p) => p.text);
+  // a narration that starts with ，/、/和/与/或 or has at most 2 meaningful characters is a piece of a sentence, not a beat of its own: leave the beat whole
+  const piece = narrations.filter((n) => !isSpeechTag(n));
+  if (piece.some((n) => /^[，、和与或]/.test(n) || n.replace(/[\s\p{P}]/gu, '').length <= 2)) return null;
   if (source !== undefined) {
     if (!narrations.every((n) => occursOutsideQuotes(source, n.replace(/[，、。,]+$/, '')))) return null;
   } else if (!stray) return null;

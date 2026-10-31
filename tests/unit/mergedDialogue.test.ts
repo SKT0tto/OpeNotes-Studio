@@ -1,6 +1,6 @@
 /** Dialogue beats that swallowed narration (「台词＋叙述＋台词」 in one beat): detection and the deterministic split. All text is original. */
 import { describe, expect, it } from 'vitest';
-import { splitMerged, splitMergedDialogue, stripQuotes } from '../../shared/director/mergedDialogue';
+import { isSpeechTag, splitMerged, splitMergedDialogue, stripQuotes, stripSingleSpeechTag } from '../../shared/director/mergedDialogue';
 import { validateDirection } from '../../shared/director/validate';
 import { SceneDirectionSchema, type SceneDirection } from '../../shared/schema/ai';
 import { EMOTIONS } from '../../shared/director/vocab';
@@ -60,6 +60,66 @@ describe('splitMergedDialogue: speech tags and spoken lines that start with a qu
   });
 });
 
+describe('L1: speech tag shapes', () => {
+  it('real tags are tags', () => {
+    for (const t of ['立希说，', '素世笑着说，', '灯问。', '爱音小声问，', '立希说道，', '爱音笑道，', '灯喊道。', '素世叫道，', '祥子低声道，', '爱音轻声问，', '立希说：', '乐奈答道，']) expect(isSpeechTag(t), t).toBe(true);
+  });
+  it('ordinary words that end in 道/叫 are not tags', () => {
+    for (const t of ['爱音拐进小道，', '灯这才知道，', '她闻到了熟悉的味道，', '两人走过街道，', '难道，', '她轻轻叫做，', '远处传来尖叫，', '灯不再多说，', '他走上轨道，', '她没有回答，']) expect(isSpeechTag(t), t).toBe(false);
+  });
+  it('narration ending in 小道/知道 is kept, not dropped as a tag', () => {
+    for (const [a, n, b] of [['等等我，', '爱音拐进小道', '喂！'], ['原来是这样，', '灯这才知道', '谢谢你。']] as const) {
+      const src = `“${a}”${n}，“${b}”`;
+      const r = splitMerged(src, src);
+      expect(r?.droppedTags).toEqual([]);
+      expect(r?.pieces.map((p) => `${p.kind}:${p.text}`)).toEqual([`dialogue:${a}`, `narration:${n}。`, `dialogue:${b}`]);
+    }
+    const src = '“好的，”灯说着闻了闻空气里的味道，“好香。”';
+    expect(splitMerged(src, src)?.pieces[1]).toEqual({ kind: 'narration', text: '灯说着闻了闻空气里的味道。' });
+  });
+});
+
+describe('L2: a paragraph that starts with a quoted word is not split into fragments', () => {
+  it('E12: no outer quotes, starts with a quoted word', () => {
+    const src = '“随便你”和“没关系”，这两句话到底有什么区别，灯想了一整晚。';
+    expect(splitMerged(src, src)).toBeNull();
+    expect(splitMerged(src)).toBeNull();
+  });
+  it('narration fragments that start with a comma or have two characters or fewer block the split', () => {
+    for (const src of ['“好”，她笑着点头，“嗯”', '“好”与“不好”，她想了想，“嗯。”', '“行。”她笑“嗯”']) expect(splitMerged(src, src), src).toBeNull();
+  });
+  it('a real narration beat still splits', () => {
+    const src = '“好。”她笑着走到窗边，“嗯。”';
+    expect(splitMerged(src, src)?.pieces.map((p) => p.kind)).toEqual(['dialogue', 'narration', 'dialogue']);
+  });
+});
+
+describe('L3: one speech plus one tag', () => {
+  const cases: Array<[string, string, string]> = [
+    ['“我们再来一遍。”立希说。', '我们再来一遍。', '立希说。'],
+    ['「“我们再来一遍。”立希说。」', '我们再来一遍。', '立希说。'],
+    ['「我们再来一遍。」立希说。', '我们再来一遍。', '立希说。'],
+    ['我们再来一遍。”立希说。', '我们再来一遍。', '立希说。'],
+    ['立希说：“我们再来一遍。”', '我们再来一遍。', '立希说：'],
+    ['立希说，“我们再来一遍。”', '我们再来一遍。', '立希说，'],
+    ['素世笑着说：「没关系，慢慢来。」', '没关系，慢慢来。', '素世笑着说：'],
+    ['"我们再来一遍。"立希说。', '我们再来一遍。', '立希说。'],
+    ['立希说："我们再来一遍。"', '我们再来一遍。', '立希说：'],
+    ['爱音小声问，“真的可以吗？”', '真的可以吗？', '爱音小声问，'],
+    ['“真的可以吗？”爱音问道。', '真的可以吗？', '爱音问道。'],
+  ];
+  it.each(cases)('%s', (raw, text, tag) => {
+    expect(stripSingleSpeechTag(raw)).toEqual({ text, tag });
+  });
+  it('negatives are left alone', () => {
+    for (const raw of [
+      '“等等我。”爱音拐进小道。', '“原来是这样。”灯这才知道。', '“好。”爱音说着把吉他背带往肩上一甩。', '“好。”立希说，“开始吧。”', '我说：“再来一遍。”',
+      '她说“明天见”，然后就走了。', '『春日影』是她写的。', '“《春日影》的谱子，你带来了吗？”', '明天就要演『碧天伴走』了，你紧张吗？', '你说的“没关系”到底是什么意思？', '我今天不太舒服。',
+      '“好。”立希说着，抬手敲了敲鼓面。', '立希说，要不要再来一遍？', "\"Let's go again,\" Rikki said, \"from the chorus.\"",
+    ]) expect(stripSingleSpeechTag(raw), raw).toBeNull();
+  });
+});
+
 describe('validateDirection: merged dialogue', () => {
   const project = skeleton();
   const scene = project.scenes[2]!;
@@ -109,6 +169,15 @@ describe('validateDirection: merged dialogue', () => {
     expect(v.errors).toEqual([]);
     expect(v.value.beats.map((b) => [b.kind, b.text])).toEqual([['dialogue', quotedWord], ['dialogue', '我们再来一遍，'], ['dialogue', '这次从副歌开始。']]);
     expect(v.warnings.some((w) => w.includes('去掉说话标签'))).toBe(true);
+  });
+
+  it('L3 through the validator: a lone speech tag is stripped with a warning', () => {
+    const t = '立希说：“我们再来一遍。”';
+    const ctx2 = { ...base, paragraphs: base.paragraphs.map((p) => (p.index === P0 ? { ...p, text: t } : p)) };
+    const v = validateDirection(dir([mk(t)]), ctx2);
+    expect(v.errors).toEqual([]);
+    expect(v.value.beats.map((b) => [b.kind, b.text])).toEqual([['dialogue', '我们再来一遍。']]);
+    expect(v.warnings.some((w) => w.includes('说话标签「立希说：」'))).toBe(true);
   });
 
   it('beats that reproduce a fixed beat (keepId) are never touched', () => {
