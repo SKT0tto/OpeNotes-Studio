@@ -14,6 +14,8 @@ import { stepIsLive, useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { AiCard } from './ai/AiCard';
 import { MemoryCards } from './MemoryPanel';
+import { overLongRows } from '../longLines';
+import { splitRequestText } from '../longLinesAsk';
 
 
 
@@ -244,6 +246,7 @@ export function AgentCard({ run, project, onFocus }: { run: RunItem; project: Pr
     >
       {run.liveNote && <p className="hint warn" data-testid="agent-live-note">{run.liveNote}</p>}
       {p.claimedWithoutOps && <p className="hint warn" data-testid="agent-claimed">AI 提到但没有执行：{p.claimedWithoutOps}</p>}
+      <LongLinesHint run={run} project={project} />
       {p.question && (
         <div className="agent-question" data-testid="agent-question">
           <strong>{p.question.question}</strong>
@@ -290,3 +293,20 @@ export function ChatTurn({ run, project, onFocus }: { run: RunItem; project: Pro
   );
 }
 
+
+/** The turn left lines that do not fit the dialogue area: say so (only while they still do not) and offer 「拆开」, which sends an explicit request. */
+function LongLinesHint({ run, project }: { run: RunItem; project: Project }) {
+  const a = useAgent();
+  const mine = run.proposal?.longLines ?? [];
+  if (mine.length === 0) return null;
+  const now = overLongRows(project);
+  const still = mine.filter((l) => now.some((r) => r.beatId === l.beatId));
+  if (still.length === 0) return null;
+  const max = still[0]!.max;
+  return (
+    <p className="hint warn ai-longhint" data-testid="agent-longlines">
+      有 {still.length} 句台词超过{max === 2 ? '两' : max}行，超出的部分在画面上看不到。
+      <button className="btn-s accent" disabled={a.running} onClick={() => void a.send(splitRequestText(project, still))} data-testid="agent-longlines-split" title="发一条明确的请求，让 AI 把这几句拆开（一步撤销）">拆开</button>
+    </p>
+  );
+}

@@ -149,6 +149,8 @@ export interface CompiledBeat {
   focus: string[];
   shotType: ShotType;
   dof: number;
+  /** Present (true) only for a beat whose author asked to show the whole text (`Beat.overflow = 'expand'`). */
+  expand?: true;
   /** Travel scenes only: how the camera changes into this beat (editor display). */
   camTravel?: { kind: TravelKind | 'cut' | 'glide'; seconds: number; ease?: string; reason?: string };
 }
@@ -269,6 +271,8 @@ export interface SubtitleRender {
   text: string;
   visibleChars: number;
   totalChars: number;
+  /** Present (true) only for an expanded beat; absent otherwise (old projects evaluate to exactly what they did). */
+  expand?: true;
 }
 
 export interface RenderState {

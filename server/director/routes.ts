@@ -4,6 +4,7 @@ import type { CatalogService } from '../assets/indexer';
 import type { LlmCache } from '../llm/cache';
 import { runBreakdown, type DirectorDeps } from '../llm/director';
 import { runScene, runScenes } from '../llm/sceneRunner';
+import { runSplitLines } from '../llm/splitLines';
 import { SCOPE_NAMES } from '../../shared/director/scope';
 import { ProjectSchema } from '../../shared/schema/project';
 import { DirectorError } from '../llm/pipeline';
@@ -34,7 +35,7 @@ export async function directorDeps(d: DirectorRouteDeps, res: Response, signal: 
   if (engine === 'rule') {
     // the deterministic rule director: no key needed, no cache, answers are labelled `rule`
     const catalog = await d.catalog.get();
-    return { provider: new RuleProvider(catalog), cache: null, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal };
+    return { provider: new RuleProvider(catalog), cache: null, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal, splitLongLines: true };
   }
   const p = d.settings.provider();
   if (!p.provider) {
@@ -44,7 +45,7 @@ export async function directorDeps(d: DirectorRouteDeps, res: Response, signal: 
   const catalog = await d.catalog.get();
   const eff = d.settings.effective();
   return {
-    provider: p.provider, cache: d.cache, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal,
+    provider: p.provider, cache: d.cache, catalog, full: catalog, catalogVersion: catalog.version, refresh, signal, splitLongLines: true,
     ...(eff.provider === 'openai' && isLocal(eff.openai.baseUrl) ? { backgroundLimit: 60 } : {}),
   };
 }
@@ -103,6 +104,25 @@ export function directorRoutes(d: DirectorRouteDeps): Router {
       const result = await runScene(deps, { project, sceneId: body.data.sceneId, scopes: body.data.scopes as never, beatIds: body.data.beatIds, overwriteUser: body.data.overwriteUser }, `g_${Date.now().toString(36)}`);
       if (body.data.engine !== 'rule') d.settings.noteResult(true);
       res.json({ ...result, cached: result.runs.every((x) => x.cached) });
+    } catch (e) {
+      noteFailure(d, e, body.data.engine);
+      fail(res, e);
+    }
+  });
+
+  /** The editor's 「自动拆分」: the pieces for the named long lines (AI when configured, else the rule splitter). Nothing is applied. */
+  r.post('/api/director/split-lines', json, async (req, res) => {
+    const body = z.object({ project: z.unknown(), sceneId: z.string(), beatIds: z.array(z.string()).max(200).optional(), refresh: z.boolean().optional(), engine: z.literal('rule').optional() }).safeParse(req.body);
+    const project = body.success ? parseProject(body.data.project) : null;
+    if (!body.success || !project || !project.scenes.some((s) => s.id === body.data.sceneId)) return void res.status(400).json({ error: { kind: 'bad_request', message: '需要合法的 project 与 sceneId' } });
+    try {
+      // no model configured is not an error here: the deterministic splitter answers
+      const rule = body.data.engine === 'rule' || !d.settings.provider().provider;
+      const deps = await directorDeps(d, res, abortOnClose(res), body.data.refresh === true, rule ? 'rule' : undefined);
+      if (!deps) return;
+      const out = await runSplitLines(deps, project, body.data.sceneId, body.data.beatIds);
+      if (!rule) d.settings.noteResult(true);
+      res.json({ ...out, engine: rule ? 'rule' : 'ai' });
     } catch (e) {
       noteFailure(d, e, body.data.engine);
       fail(res, e);

@@ -2,7 +2,9 @@
  * 「改回去」: the ops that take a project back from `after` to `before`, for the units an earlier assistant turn changed.
  * Computed by diffing the two projects (not by inverting each op), so it works for every op kind and is exact for the fields the
  * agent edits: beat fields, shot, per-person offsets, rhythm overrides, timeline keys (by key id), entrances / exits / start positions,
- * presence, outfits, scene settings, the opening background and inserted / deleted lines. Provenance (`meta.source`) is not restored.
+ * presence, outfits, scene settings, the opening background and inserted / deleted lines (so also the pieces a split added), `overflow` through `dialog_expand`,
+ * and which line a continuation belongs to (`splitFrom`; a delete, move or merge re-points continuations).
+ * Provenance (`meta.source`) is not restored.
  */
 import type { Beat, Project, Scene } from '../schema/project';
 import type { AgentOp } from './ops';
@@ -41,7 +43,7 @@ function sceneRevert(sb: Scene, sa: Scene): AgentOp[] {
   sb.beats.forEach((b, i) => {
     if (afterIds.has(b.id)) return;
     const prev = sb.beats.slice(0, i).reverse().find((x) => afterIds.has(x.id) || ops.some((o) => o.op === 'beat_insert' && o.newId === x.id));
-    ops.push({ op: 'beat_insert', sceneId, afterBeatId: prev?.id ?? null, newId: b.id, beat: { kind: (b.kind === 'establishing' ? 'empty' : b.kind) as 'empty', text: b.text, ...(b.speakerId ? { speakerId: b.speakerId } : {}), ...(b.emotion ? { emotion: b.emotion } : {}) }, reason });
+    ops.push({ op: 'beat_insert', sceneId, afterBeatId: prev?.id ?? null, newId: b.id, beat: { kind: (b.kind === 'establishing' ? 'empty' : b.kind) as 'empty', text: b.text, ...(b.speakerId ? { speakerId: b.speakerId } : {}), ...(b.emotion ? { emotion: b.emotion } : {}), ...(b.splitFrom ? { splitFrom: b.splitFrom } : {}) }, reason });
   });
   // the order of the lines that are in both
   const common = sb.beats.filter((b) => afterIds.has(b.id)).map((b) => b.id);
@@ -90,7 +92,16 @@ function sceneRevert(sb: Scene, sa: Scene): AgentOp[] {
   if (!same(sb.location, sa.location) && sb.location) set.location = { text: sb.location.text, show: sb.location.show };
   if (Object.keys(set).length) ops.push({ op: 'scene_set', sceneId, set, reason } as AgentOp);
   if (sb.background.assetId !== sa.background.assetId) ops.push({ op: 'bg_set', sceneId, at: 'start', assetId: sb.background.assetId, ...(sb.location ? { location: sb.location.text } : {}), reason });
-  return [...ops, ...deletes];
+  // which line a continuation belongs to goes last: deleting / moving / merging lines re-points continuations by itself, so after the
+  // structural ops of this revert it is written again, for every continuation (a no-op where it already matches)
+  const structural = !same(common, nowOrder) || deletes.length > 0 || sb.beats.some((b) => !afterIds.has(b.id));
+  const groups: AgentOp[] = [];
+  for (const bb of sb.beats) {
+    const ba = sa.beats.find((b) => b.id === bb.id);
+    if (!ba) continue;
+    if (bb.splitFrom !== ba.splitFrom || (bb.splitFrom !== undefined && structural)) groups.push({ op: 'beat_set', sceneId, beatId: bb.id, set: { splitFrom: bb.splitFrom ?? null }, reason } as AgentOp);
+  }
+  return [...ops, ...deletes, ...groups];
 }
 
 function beatRevert(sceneId: string, bb: Beat, ba: Beat, reason: string): AgentOp[] {
@@ -98,6 +109,8 @@ function beatRevert(sceneId: string, bb: Beat, ba: Beat, reason: string): AgentO
   const set: Record<string, unknown> = {};
   for (const f of BEAT_FIELDS) if (!same(bb[f], ba[f])) set[f] = f === 'speakerId' || f === 'emotion' ? bb[f] ?? null : bb[f];
   if (Object.keys(set).length) ops.push({ op: 'beat_set', sceneId, beatId: bb.id, set, reason } as AgentOp);
+  // a line shown in full (or not): its own op, because beat_set never writes `overflow`
+  if ((bb.overflow === 'expand') !== (ba.overflow === 'expand')) ops.push({ op: 'dialog_expand', sceneId, beatId: bb.id, on: bb.overflow === 'expand', reason });
   const shot: Record<string, unknown> = {};
   for (const f of SHOT_FIELDS) if (!same(bb.shot[f], ba.shot[f])) shot[f] = bb.shot[f] ?? null;
   if (Object.keys(shot).length) ops.push({ op: 'shot_set', sceneId, beatId: bb.id, set: shot, reason } as AgentOp);

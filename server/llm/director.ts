@@ -21,6 +21,8 @@ export interface DirectorDeps {
   signal?: AbortSignal | undefined;
   /** The user's long-term preferences (assistant memory) for scene direction; absent / null = none, and the scene input stays byte-identical. */
   preferences?: { note: string; items: string[] } | null | undefined;
+  /** Cut lines that do not fit the dialogue area into consecutive lines (a second, small call per scene). Off unless a product route asks for it, so library callers and the golden tests keep today's behaviour. */
+  splitLongLines?: boolean | undefined;
   now?: () => number;
 }
 

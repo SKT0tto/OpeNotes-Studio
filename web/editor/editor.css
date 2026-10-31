@@ -556,3 +556,29 @@
 .director-memory summary { cursor: pointer; color: var(--text-2); }
 .director-memory-list { margin: 2px 0 0 16px; padding: 0; }
 .agent-lightbox img { max-width: 90vw; max-height: 80vh; border-radius: 4px; }
+
+/* long lines (line meter in the inspector, badges in the script, the check list) */
+.line-meter { margin: 2px 12px 8px; }
+.line-meter-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.line-count { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.line-count.warn { color: var(--warn); font-weight: 600; }
+.badge.warn-badge { background: color-mix(in srgb, var(--warn) 18%, transparent); border-color: var(--warn); color: var(--warn); }
+.line-meter .hint { padding: 0; margin: 4px 0; }
+.line-expand { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; color: var(--text-1); }
+.line-expand .hint { padding: 0; margin: 0; }
+.o-cont { flex: none; color: var(--text-3); margin-right: 2px; }
+.o-badge { flex: none; border-radius: 8px; padding: 0 5px; font-size: var(--fs-label); border: 1px solid var(--line); color: var(--text-2); }
+.o-badge.long { border-color: var(--warn); color: var(--warn); }
+.o-longbar { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+.o-longbar .btn-s.warn { border-color: var(--warn); color: var(--warn); }
+.long-list { list-style: none; margin: 0; padding: 0; max-height: 46vh; overflow: auto; }
+.long-list h4 { margin: 8px 0 2px; font-size: var(--fs-label); color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+.long-list li.row { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; border-bottom: 1px solid var(--line); }
+.long-list .txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.long-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.ai-splits { margin: 4px 0; }
+.ai-splits li { margin: 4px 0; }
+.ai-splits .from { color: var(--text-3); }
+.ai-splits .piece { display: block; padding-left: 12px; }
+.ai-splits .why { color: var(--text-3); font-size: var(--fs-label); }
+.ai-longhint { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

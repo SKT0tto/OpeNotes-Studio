@@ -10,18 +10,36 @@ import { lookup, selectable, type DirectorCatalog, type Lookup } from '../direct
 import { categoryProblem } from '../director/validate';
 import { expressionLabel, motionLabel } from '../catalog/labels';
 import { AI_FX, AI_SHOT_TYPES, AI_TRAVEL_SHOT_TYPES, EMOTIONS, INSERT_BOX, MAX_DIM_BEATS, MEMORY_CUE, ONE_SHOT_FX, SPECIAL_ATTENTION } from '../director/vocab';
+import { checkPieces } from '../director/splitLines';
+import { repairPieces } from '../director/splitPieces';
 import { findLockViolations, type LockViolation } from '../project/locks';
 import { clone } from '../project/mutate';
 import { TrackSchema, cameraSystemOf, type Project, type Scene } from '../schema/project';
 import { SHOT_INTENTS } from '../staging/shotIntent';
+import { EXPAND_MAX_VISIBLE } from '../style/dialogLayout';
 import { styleField } from '../style/ournotes';
+import { TEXT_KINDS } from '../timeline/time';
 import { applyOp, fxStates, type Change } from './apply';
-import { AgentOpSchema, type AgentOp } from './ops';
+import { beatLineInfo, dialogMetricsOf } from './lines';
+import { AgentOpSchema, type AgentOp, type SplitPieceInput } from './ops';
 
 export type CheckStatus = 'ok' | 'needs_unlock' | 'needs_confirm' | 'invalid';
 export interface CheckCtx {
   catalog?: DirectorCatalog | undefined;
+  /**
+   * The user's own words ask for a line to be shown in full beyond the dialogue area's maxLines (computed on the server from the instruction
+   * by the agent loop: `asksForDialogExpand`). Without it no op may leave a beat with `overflow: 'expand'` that was not expanded before.
+   */
+  allowDialogExpand?: boolean | undefined;
+  /** The user's own words ask for a line to be cut into several beats (`asksForLineSplit`). Without it `beat_split` and `beat_split_pieces` are refused. */
+  allowLineSplit?: boolean | undefined;
 }
+
+export const LINE_SPLIT_NOT_ASKED = '用户没有要求拆分台词；如果这句超长，请在回复里告诉用户，并询问要不要拆（用户同意后再拆）';
+export const DIALOG_EXPAND_NOT_ASKED = '只有用户明确要求时才能让对话框超过两行；请改用拆分，或在回复里告诉用户这句放不下并询问';
+
+/** Beats that are expanded (`overflow: 'expand'`) in `project`, by id. */
+const expandedBeatIds = (project: Project): Set<string> => new Set(project.scenes.flatMap((s) => s.beats.filter((b) => b.overflow === 'expand').map((b) => b.id)));
 export interface CheckResult {
   status: CheckStatus;
   /** Repairs that were made, or rules that were bent: live mode does not auto-apply an op that has any. */
@@ -122,11 +140,17 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
       if (Object.keys(set).length === 0) s.problems.push('set 是空的');
       if (set.emotion && !(EMOTIONS as readonly string[]).includes(set.emotion)) s.problems.push(`情绪只能取：${EMOTIONS.join(' / ')}`);
       if (set.speakerId) castOk(set.speakerId, false);
+      if (set.splitFrom && (set.splitFrom === input.beatId || !scene.beats.some((x) => x.id === set.splitFrom))) s.problems.push(`续句的首句 ${set.splitFrom} 不在这个场景里`);
       if (set.speakerId && !scene.wardrobe[set.speakerId]) s.notes.push(`${castMember(project, set.speakerId)?.displayName ?? set.speakerId} 不在这个场景里，这句会没有人物画面`);
       for (const c of set.coSpeakers ?? []) castOk(c, false);
       if (set.text !== undefined && set.text.trim() === '' && (set.kind ?? b?.kind) !== 'silent' && (set.kind ?? b?.kind) !== 'empty' && (set.kind ?? b?.kind) !== 'pause') s.problems.push('台词文字不能为空（要清空请把类型改成 silent）');
       if (b && (set.kind ?? b.kind) === 'dialogue' && set.speakerId === null) s.problems.push('对白必须有说话人');
       if (b && (set.kind ?? b.kind) === 'dialogue' && !(set.speakerId ?? b.speakerId)) s.problems.push('把类型改成对白需要同时给出 speakerId');
+      // a text edit that leaves the line too long: a hint only, never split on the side (cutting a line is its own request)
+      if (b && set.text !== undefined && set.text !== b.text) {
+        const info = beatLineInfo(project, scene, { ...b, text: set.text, kind: set.kind ?? b.kind, variant: set.variant ?? b.variant });
+        if (info?.over) s.notes.push(`这句现在是 ${info.lines} 行，超过对话框的 ${info.max} 行（只是提示：没有自动拆分；用户要求时可以用 split_line 拆开）`);
+      }
       break;
     }
     case 'beat_insert': {
@@ -141,10 +165,66 @@ function semantic(project: Project, input: AgentOp, ctx: CheckCtx): Sem {
     case 'beat_delete': beatOk(input.beatId); if (scene.beats.length <= 1) s.problems.push('场景至少要保留一句台词'); break;
     case 'beat_move': beatOk(input.beatId); if (input.afterBeatId !== null) beatOk(input.afterBeatId); if (input.afterBeatId === input.beatId) s.problems.push('不能移到自己后面'); break;
     case 'beat_split': {
+      if (!ctx.allowLineSplit) { s.problems.push(LINE_SPLIT_NOT_ASKED); break; }
       beatOk(input.beatId);
       const b = scene.beats.find((x) => x.id === input.beatId);
       if (b && input.at >= [...b.text].length) s.problems.push(`拆分位置 ${input.at} 超出文字长度 ${[...b.text].length}`);
       if (beatIdx(input.newId) >= 0 || project.scenes.some((x) => x.beats.some((b) => b.id === input.newId))) s.problems.push(`id ${input.newId} 已存在（beat id 在整个项目里必须唯一）`);
+      break;
+    }
+    case 'beat_split_pieces': {
+      if (!ctx.allowLineSplit) { s.problems.push(LINE_SPLIT_NOT_ASKED); break; }
+      beatOk(input.beatId);
+      const b = scene.beats.find((x) => x.id === input.beatId);
+      if (input.newIds.length !== input.pieces.length - 1) s.problems.push(`newIds 需要 ${input.pieces.length - 1} 个（每个后续段一个新 id），现在是 ${input.newIds.length} 个`);
+      const seen = new Set<string>();
+      for (const id of input.newIds) {
+        if (seen.has(id)) s.problems.push(`newIds 里 ${id} 重复`);
+        seen.add(id);
+        if (project.scenes.some((x) => x.beats.some((y) => y.id === id))) s.problems.push(`id ${id} 已存在（beat id 在整个项目里必须唯一）`);
+      }
+      for (const p of input.pieces) if (p.emotion && !(EMOTIONS as readonly string[]).includes(p.emotion)) s.problems.push(`情绪只能取：${EMOTIONS.join(' / ')}`);
+      if (!b) break;
+      if (!TEXT_KINDS.includes(b.kind) || b.text.trim() === '') { s.problems.push('只能拆有台词文字的句子（对白 / 旁白 / 动作）'); break; }
+      const c = checkPieces(b.text, input.pieces.map((p) => p.text), dialogMetricsOf(project, scene, b), b.variant, { maxPieces: 4, maxExtra: 2 });
+      if (!c.ok) { s.problems.push(...c.problems.map((p) => `拆分不合格：${p}`)); break; }
+      if (c.repairs.length) s.warnings.push(...c.repairs);
+      // the performance and camera intent of the later pieces get the same soft repair as the generation's split step; the names of the
+      // motions / expressions were resolved where they were decided (the server), so they pass through here
+      const bi = beatIdx(input.beatId);
+      const rep = repairPieces(
+        input.pieces.map((p, i) => ({
+          text: c.pieces[i]!, why: p.why ?? '', emotion: (p.emotion || b.emotion || 'neutral') as 'neutral', camera: p.camera ?? 'hold', reactionOf: p.reactionOf ?? null,
+          actor: p.motion || p.expression || p.attention ? { motion: p.motion ?? null, expression: p.expression ?? null, attention: p.attention ?? null } : null,
+        })),
+        c.pieces,
+        { speaker: b.kind === 'dialogue' && b.speakerId ? b.speakerId : null, onStage: onStageIds(scene, bi), emotion: b.emotion ?? 'neutral', resolveMotion: (w) => w, resolveExpression: (w) => w, where: `第${bi + 1}句` },
+      );
+      s.warnings.push(...rep.warnings);
+      s.op = {
+        ...input,
+        pieces: input.pieces.map((p, i): SplitPieceInput => {
+          const r = rep.pieces[i]!;
+          return {
+            text: c.pieces[i]!, ...(p.emotion ? { emotion: p.emotion } : {}), ...(i > 0 && r.why ? { why: r.why } : {}),
+            ...(i > 0 && r.camera !== 'hold' ? { camera: r.camera } : {}), ...(i > 0 && r.reactionOf ? { reactionOf: r.reactionOf } : {}),
+            ...(i > 0 && r.actor?.motion ? { motion: r.actor.motion } : {}), ...(i > 0 && r.actor?.expression ? { expression: r.actor.expression } : {}),
+            ...(i > 0 && r.actor?.attention ? { attention: r.actor.attention } : {}),
+          };
+        }),
+      };
+      break;
+    }
+    case 'dialog_expand': {
+      beatOk(input.beatId);
+      if (input.on && !ctx.allowDialogExpand) { s.problems.push(DIALOG_EXPAND_NOT_ASKED); break; }
+      const b = scene.beats.find((x) => x.id === input.beatId);
+      if (b && input.on) {
+        const info = beatLineInfo(project, scene, b);
+        if (!info) s.problems.push('这句没有台词文字，不需要展开');
+        else if (info.lines <= info.max) s.problems.push(`这句只有 ${info.lines} 行，对话框放得下（${info.max} 行），不需要展开`);
+        else if (info.lines > EXPAND_MAX_VISIBLE) s.notes.push(`这句有 ${info.lines} 行，展开后最多同时显示 ${EXPAND_MAX_VISIBLE} 行，其余随打字滚动`);
+      }
       break;
     }
     case 'beat_merge': beatOk(input.beatId); if (beatIdx(input.beatId) >= 0 && beatIdx(input.beatId) === scene.beats.length - 1) s.problems.push('这是最后一句，没有可以合并的下一句'); break;
@@ -382,6 +462,12 @@ export function checkOp(project: Project, raw: unknown, ctx: CheckCtx = {}): Che
   const before = stageIssues(project, project.scenes.find((x) => x.id === op.sceneId)!);
   const applied = applyOp(sim, op, { genId: 'check', now: 0 });
   if (!applied.ok) return base({ status: 'invalid', problems: [applied.error ?? '无法应用'], op, warnings: sem.warnings, notes: sem.notes });
+  // `overflow: 'expand'` is a person's decision: whatever the op, it may only appear when the user asked for it
+  if (!ctx.allowDialogExpand) {
+    const was = expandedBeatIds(project);
+    const fresh = [...expandedBeatIds(sim)].filter((id) => !was.has(id));
+    if (fresh.length > 0) return base({ status: 'invalid', problems: [`${DIALOG_EXPAND_NOT_ASKED}（${fresh.slice(0, 3).join('、')}）`], op, warnings: sem.warnings, notes: sem.notes });
+  }
   const after = stageIssues(sim, sim.scenes.find((x) => x.id === op.sceneId)!);
   const fresh = after.filter((x) => !before.includes(x));
   const warnings = [...sem.warnings, ...fresh.map((x) => `${x}（可以把进场提前到他第一次出现的那一句）`)];

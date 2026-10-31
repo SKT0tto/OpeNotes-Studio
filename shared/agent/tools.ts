@@ -19,7 +19,7 @@ import { expressionLabel, motionLabel } from '../catalog/labels';
 import { resolveStyle } from '../style/ournotes';
 import { HIDDEN_REASON_LABEL, scenePresence } from '../timeline/presence';
 import { applyOp, type Change } from './apply';
-import { KEY_VALUE_SHAPE, checkOp } from './check';
+import { KEY_VALUE_SHAPE, checkOp, type CheckCtx } from './check';
 import { beatDetail, findBeats, sceneTable, type AgentSelection } from './compact';
 import { scopeOf, type AgentOp } from './ops';
 import { BatchModelSchema, BatchSchema, batchEdit } from './batch';
@@ -97,7 +97,11 @@ export interface ToolEnv {
   /** The script sandbox (server side); absent = run_script is not available. */
   scriptRunner?: ScriptRunner | undefined;
   scriptFailures?: number | undefined;
+  /** What the user's own words ask for (`asks.ts`, decided on the server from the instruction): without it no op may split a line or expand a dialogue. */
+  asks?: { lineSplit: boolean; dialogExpand: boolean } | undefined;
 }
+/** The check context of every op the tools produce: the catalog plus what the user asked for. `restore` (revert_turn) brings back an earlier state the user already agreed to. */
+export const checkCtx = (env: ToolEnv, restore = false): CheckCtx => ({ catalog: env.catalog, allowLineSplit: restore || env.asks?.lineSplit === true, allowDialogExpand: restore || env.asks?.dialogExpand === true });
 export const newStats = (): ToolStats => ({ toolCalls: 0, badArgs: 0, opsChecked: 0, opsInvalid: 0, writeCalls: 0, writeFirstTryOk: 0 });
 
 const Id = z.string().min(1);
@@ -124,13 +128,15 @@ export const TOOLS: ToolDef[] = [
   { name: 'get_scene', kind: 'read', description: '读取一个场景的压缩表格（每句一行：说话人、台词、景别、焦点、运镜、特效、情绪、节奏、锁定/手改标记）和人物进出场。from/to 是第几句（从 1 起）。', schema: z.object({ sceneId: sceneArg, from: z.number().int().min(1).optional(), to: z.number().int().min(1).optional() }) },
   { name: 'get_beat', kind: 'read', description: '读取一句的全部细节（文字、镜头、节奏、此时在台上的人、这一句上所有关键帧及其 id、锁和来源）。改完之后用它回读确认。', schema: z.object({ sceneId: sceneArg, beatId: Id }) },
   { name: 'find_beats', kind: 'read', description: '在整个项目里按说话人（名字或 castId）和/或台词片段搜索，返回场景号、句号、beatId。用来解析「灯说“……”那句」「第三场第二个爱音的台词」。引文不必一字不差：没有完全一致的会返回近似匹配。', schema: z.object({ speaker: z.string().optional(), text: z.string().optional(), sceneId: z.string().optional() }) },
-  { name: 'query_beats', kind: 'read', description: '按结构化条件在整个项目里查句子（只读）：场景 / 句号范围、说话人 / 涉及的人、类型、台词包含 / 正则 / 模糊、字数、情绪、景别 / 意图 / 换镜方式 / 运镜 / 焦点、特效及参数、背景、画面上看得见谁（编译后的在场）、句后停顿 / 时长阈值、是否锁定 / 手改；and / or / not 可以嵌套。返回 queryId + 命中数 + 紧凑表格（太多会截断，但 queryId 保存完整结果）。「所有 / 每个 / 整部 / 凡是」这类指令：先 query_beats，再用 batch_edit 的 target.queryId 批量改。', schema: z.object({ filter: BeatFilterSchema.optional().describe('省略 = 所有句子'), limit: z.number().int().min(1).max(200).optional().describe('表格最多列几行，默认 60') }), modelSchema: z.object({ filter: ModelFilterSchema.optional().describe('省略 = 所有句子'), limit: z.number().int().min(1).max(200).optional().describe('表格最多列几行，默认 60') }) },
+  { name: 'query_beats', kind: 'read', description: '按结构化条件在整个项目里查句子（只读）：场景 / 句号范围、说话人 / 涉及的人、类型、台词包含 / 正则 / 模糊、字数、台词在对话框里占几行（linesMin / linesMax）、是否超长放不下（overflow）、是否展开（expanded）、情绪、景别 / 意图 / 换镜方式 / 运镜 / 焦点、特效及参数、背景、画面上看得见谁（编译后的在场）、句后停顿 / 时长阈值、是否锁定 / 手改；and / or / not 可以嵌套。返回 queryId + 命中数 + 紧凑表格（太多会截断，但 queryId 保存完整结果）。「所有 / 每个 / 整部 / 凡是」这类指令：先 query_beats，再用 batch_edit 的 target.queryId 批量改。', schema: z.object({ filter: BeatFilterSchema.optional().describe('省略 = 所有句子'), limit: z.number().int().min(1).max(200).optional().describe('表格最多列几行，默认 60') }), modelSchema: z.object({ filter: ModelFilterSchema.optional().describe('省略 = 所有句子'), limit: z.number().int().min(1).max(200).optional().describe('表格最多列几行，默认 60') }) },
   { name: 'list_options', kind: 'read', description: '查询可用的选项：motion/expression=某角色当前服装可用的动作族/表情；background=按关键词搜背景（最多 12 个）；cast=角色表和他们能换的服装；effects=特效词表。', schema: z.object({ kind: z.enum(['motion', 'expression', 'background', 'cast', 'effects']), castId: z.string().optional(), sceneId: sceneArg, query: z.string().optional() }) },
   { name: 'capture_frames', kind: 'read', description: '看渲染出来的画面（舞台截图，不含对白框）。用在：用户说的是画面本身（怼脸、被挡住、出画、画面太空/太挤、背景太糊、人太小）；或者你改了画面（景别/构图/站位/偏移/运镜/背景/特效等）之后必须核对。beatIds=要看的句子（每句取中间一帧）；samples=2–4 时每句沿时间取多帧（看运镜、进场、动作过程）；times=绝对秒数。一次最多 8 帧，width 默认 480（要看细节再用 640/960）。纯文字/节奏/情绪的改动不用截图；画面改动做完后只截涉及的句子。', schema: z.object({ sceneId: sceneArg, beatIds: z.array(Id).max(8).optional(), times: z.array(z.number().min(0)).max(8).optional(), samples: z.number().int().min(1).max(4).optional(), width: z.union([z.literal(320), z.literal(480), z.literal(640), z.literal(960)]).optional(), question: z.string().max(300).optional().describe('想从画面里确认什么（给视觉模型看的问题）') }) },
   { name: 'ask_user', kind: 'control', description: '目标不明确（多个候选、指代不清、数值缺失）时，向用户问一个简短的澄清问题，然后结束本轮。不要猜。', schema: z.object({ question: z.string().min(1).max(200), options: z.array(z.string().max(60)).max(5).optional() }) },
 
   { name: 'edit_beat', kind: 'write', description: '修改一句的文字/说话人/类型/情绪/切入/时长。speaker 填 castId（null=无）；kind: dialogue|narration|action|pause|silent|empty；emotion 取词表；cutIn: cut|dip_black|dip_white；durationSeconds 填数字=固定时长，null=自动。', schema: z.object({ sceneId: sceneArg, beatId: Id, text: z.string().optional(), speaker: z.string().nullable().optional(), kind: z.string().optional(), variant: z.enum(['normal', 'monologue', 'offscreen']).optional(), emotion: z.string().nullable().optional(), cutIn: z.enum(['cut', 'dip_black', 'dip_white']).optional(), cutInKeepDialog: z.boolean().optional(), durationSeconds: z.number().min(0).max(120).nullable().optional(), trimTo: z.number().int().min(1).optional().describe('把文字截短到前 N 个字'), reason, overwriteManual: manual }) },
-  { name: 'edit_structure', kind: 'write', description: '结构编辑：insert=在 afterBeatId 后（null=最前）插入一句（text/speaker/kind/emotion）；delete=删除；move=移到 afterBeatId 之后；split=在第 at 个字后拆成两句；merge=和下一句合并。', schema: z.object({ sceneId: sceneArg, action: z.enum(['insert', 'delete', 'move', 'split', 'merge']), beatId: Id.optional(), afterBeatId: z.string().nullable().optional(), text: z.string().optional(), speaker: z.string().optional(), kind: z.string().optional(), emotion: z.string().optional(), at: z.number().int().min(1).optional(), reason, overwriteManual: manual }) },
+  { name: 'edit_structure', kind: 'write', description: '结构编辑：insert=在 afterBeatId 后（null=最前）插入一句（text/speaker/kind/emotion）；delete=删除；move=移到 afterBeatId 之后；split=在第 at 个字后拆成两句（只有用户要求拆分时才用；按语义拆长句请用 split_line）；merge=和下一句合并。', schema: z.object({ sceneId: sceneArg, action: z.enum(['insert', 'delete', 'move', 'split', 'merge']), beatId: Id.optional(), afterBeatId: z.string().nullable().optional(), text: z.string().optional(), speaker: z.string().optional(), kind: z.string().optional(), emotion: z.string().optional(), at: z.number().int().min(1).optional(), reason, overwriteManual: manual }) },
+  { name: 'split_line', kind: 'write', description: '把一句放不下的台词按语义和情绪拆成【同一个人】连续说的几句（对话框最多两行）。只有用户明确要求拆分 / 断开 / 修复过长台词时才调用；用户没要求时绝不调用（做别的编辑时发现超长句，只在回复里提一句并问要不要拆）。pieces 必须把原文逐字切开：拼起来与原文一字不差（只有切点处的空格可以去掉），每段不超过两行，2–4 段；断在情绪转折、停顿（……、——之后）、话题转折（不过 / 可是 / 所以 …）或揭示真话之前，不要断在词组或引号中间，不要拆出两三个字的碎片，不要删字、改写或补标点。整句被括号或引号包住时每段各自带上同一对符号。emotions（可选）按段给情绪，没变就省略。后续段沿用第一段的镜头；需要给后段换表情或动作时，在同一轮里接着用 set_actor（beatId 用返回的新 id）。放得下的句子、已经展开的句子不要拆。', schema: z.object({ sceneId: sceneArg, beatId: Id, pieces: z.array(z.string().min(1)).min(2).max(4), emotions: z.array(z.string()).max(4).optional(), reason, overwriteManual: manual }) },
+  { name: 'dialog_expand', kind: 'write', description: '让一句台词在对话框里完整显示（超过两行也不截断：先向下长到 3 行，再向上，超过 6 行随打字滚动）。只有用户明确说要完整显示 / 展开 / 超出屏幕也行 / 不想拆开时才调用；用户没说时绝不调用，超长句优先建议拆分。on=false 取消展开。', schema: z.object({ sceneId: sceneArg, beatId: Id, on: z.boolean().optional().describe('默认 true；false = 取消展开'), reason, overwriteManual: manual }) },
   { name: 'set_shot', kind: 'write', description: '改镜头。type 取景别词表；adjust=tighter/wider 按景别阶梯移一档（steps 档，默认 1）；focus=castId 数组（two_shot 必须 2 人且都在台上）；move: static|push_in|pull_out|pan|track|shake；dof 0–6 或 null；intent/flow 仅「运镜」系统（flow: auto|cut|move）；insertTarget: instrument|scene（instrument=正在演奏的乐器特写，人物必须在演奏；scene=空镜插入背景；没有乐器的手/物件/表情不要用插入镜头，用 cu / ecu）。可一次改多句。绝不写坐标。', schema: z.object({ sceneId: sceneArg, beatIds: z.array(Id).min(1).max(80), type: z.string().optional(), adjust: z.enum(['tighter', 'wider']).optional(), steps: z.number().int().min(1).max(3).optional(), focus: z.array(Id).optional(), move: z.enum(['static', 'push_in', 'pull_out', 'pan', 'track', 'shake']).optional(), dof: z.number().int().min(0).max(6).nullable().optional(), intent: z.string().nullable().optional(), flow: z.enum(['auto', 'cut', 'move', 'glide']).optional(), insertTarget: z.enum(['instrument', 'scene']).optional(), reason, overwriteManual: manual }) },
   { name: 'nudge_shot', kind: 'write', description: '微调这一镜里某人的画面位置：dxSteps（负=往左，正=往右）、dySteps（负=往上，正=往下），每步固定 0.04 个舞台高度；resetOffset=true 清除偏移。「往左一点」=-1…-2 步。', schema: z.object({ sceneId: sceneArg, beatId: Id, castId: Id, dxSteps: z.number().int().min(-10).max(10).optional(), dySteps: z.number().int().min(-10).max(10).optional(), resetOffset: z.boolean().optional(), reason, overwriteManual: manual }) },
   { name: 'set_actor', kind: 'write', description: '设置某人在某句的表演：motion=动作族名（list_options 查）；expression=表情名，null=默认表情；head/body/gaze=看向谁（castId 或 camera/away/down；head/body 无 down）；headTilt=头部俯仰：down=低头（ParamAngleY，pitch -0.6）、up=抬头、level=回正，可单独用（保留原来的朝向），也可和 head 一起；moveTo=走到的站位名（far_left…far_right）+depth（front|mid|back）或 slotSteps（每步 0.1，负=往左）；atOffset 秒；remove=要清除的轨道（motion|expression|head|body|gaze|position）。', schema: z.object({ sceneId: sceneArg, beatId: Id, castId: Id, motion: z.string().optional(), expression: z.string().nullable().optional(), head: attention.optional(), headTilt: z.enum(['down', 'up', 'level']).optional(), body: attention.optional(), gaze: attention.optional(), moveTo: slotEnum.optional(), depth: depthEnum.optional(), slotSteps: z.number().int().min(-10).max(10).optional(), atOffset: z.number().min(0).max(30).optional(), remove: z.array(z.enum(['motion', 'expression', 'head', 'body', 'gaze', 'position'])).optional(), reason, overwriteManual: manual }) },
@@ -143,7 +149,7 @@ export const TOOLS: ToolDef[] = [
   { name: 'set_keyframe', kind: 'write', description: '通用时间线关键帧（编辑器能手动改的都能改）：增/改/删/移动。channel: motion|expression|head|body|gaze|position|opacity|costume|camera|fx|fade|background；actor 通道必须给 castId；camera 通道的 value 只能是 {shot, focus}（不允许手动坐标）。keyId 存在=修改它；shiftSeconds 或 shiftSteps（每步 0.1 秒）=平移时间；remove=删除。表情/动作/看向优先用 set_actor。value 的形状：' + KEY_VALUE_SHAPES, schema: z.object({ sceneId: sceneArg, channel: z.enum(['motion', 'expression', 'head', 'body', 'gaze', 'position', 'opacity', 'costume', 'camera', 'fx', 'fade', 'background']), castId: z.string().optional(), keyId: z.string().optional(), beatId: z.string().optional(), offset: z.number().min(-10).max(60).optional(), value: z.unknown().optional(), duration: z.number().min(0).max(30).optional(), ease: z.string().optional(), remove: z.boolean().optional(), shiftSeconds: z.number().min(-30).max(30).optional(), shiftSteps: z.number().int().min(-50).max(50).optional(), reason, overwriteManual: manual }) },
   { name: 'set_lock', kind: 'write', description: '锁定/解锁。unit: scene|beat|shot|rhythm|wardrobe|blocking|track|key；beat/shot/rhythm 需 beatId；wardrobe/blocking 需 castId；locked=true/false；fields=只锁这些字段（beat: text,speakerId,kind,duration,emotion,cutIn；shot: type,focus,move,dof,transition,intent,offsets），空数组=清除字段锁。', schema: z.object({ sceneId: sceneArg, unit: z.enum(['scene', 'beat', 'shot', 'rhythm', 'wardrobe', 'blocking', 'track', 'key']), beatId: z.string().optional(), castId: z.string().optional(), trackId: z.string().optional(), keyId: z.string().optional(), locked: z.boolean().optional(), fields: z.array(z.string()).optional(), reason }) },
   { name: 'batch_edit', kind: 'write', description: '把【同一个】编辑模板批量用到一批句子上（query_beats 的 queryId / 一个 filter / 明确的 beatId 列表），整批只在卡片上显示成一组（可折叠，展开逐句看），一次应用、一步撤销。用法 A：tool + args = 对每一句调用那个写工具（args 不含 sceneId / beatId / beatIds / fromBeatId / toBeatId，由命中的句子自动填；例如 tool=set_shot args={type:"mcu"}，tool=edit_beat args={emotion:"sad"}，tool=set_timing args={gapSteps:2}，tool=set_fx args={fx:"dim"}（连续句子自动合成一段），tool=nudge_shot / set_actor 需要 args.castId）。用法 B：op = 一个 AgentOp 模板（beat_set / shot_set / shot_offset / timing / fx_range / key_set / beat_delete / lock_set，不含句子 id）。每一项都走和单个工具一样的检查：锁定 / 手改的句子不会被悄悄跳过，会作为「需要你确认」放进卡片。一次最多 400 句。', schema: BatchSchema, modelSchema: BatchModelSchema },
-  { name: 'run_script', kind: 'write', description: '沙箱脚本（最后手段）：工具、query_beats + batch_edit 都表达不了的批量/规则化修改，才写一小段 JavaScript。脚本在隔离沙箱里只读运行（无文件、网络、定时器、import；CPU 约 2 秒、内存 64MB），只能 return 一个 op 数组，不能直接改任何东西；每个 op 照样走检查 / 锁定处理，成为一组变更（卡片上显示「AI 写的脚本」，可展开看源码）。沙箱里有：project（只读 JSON：scenes[].beats[]、cast、tracks…）、scenes()（场景列表）、beats(sceneId 或第几场)（句子行：beatId、beatNo、sceneId、speakerId、speaker、kind、text、chars、emotion、shotType、focus、move、intent、flow、fx、background、visible[]、hidden[]、lineGap、tail、seconds、locked、userEdited）、beat(id)、query(filter)（同 query_beats 的 filter，返回行数组）、visible(beatId)（画面上看得见的 castId 数组）、console.log(...)。op 构造器（sceneId 自动查）：op.setShot(beatId,{type,focus,move,dof,intent,flow:auto|cut|move|glide})、op.setBeat(beatId,{emotion,text,kind,...})、op.setEmotion(beatId,emotion)、op.setTiming(beatIds,{lineGap,tail,readingCps,minLine,textSpeedCps})、op.nudge(beatId,castId,dxSteps,dySteps)、op.setFx(fromBeatId,toBeatId,fx,{tone,edge,strength})、op.insertBeat(afterBeatId|null,{kind,text,speakerId,emotion},sceneId?)（返回的 op.newId 可立刻用于后面的 op）、op.deleteBeat(beatId)、op.moveBeat(beatId,afterBeatId)、op.raw({op:"...",...})。出错（语法、超时、op 不合法）会作为结果返回，修正后可重试（最多约 3 次，失败的脚本不会部分生效）；只 console.log 看数据、return [] 的一次不计入失败。简单需求请用普通工具。', schema: ScriptSchema },
+  { name: 'run_script', kind: 'write', description: '沙箱脚本（最后手段）：工具、query_beats + batch_edit 都表达不了的批量/规则化修改，才写一小段 JavaScript。脚本在隔离沙箱里只读运行（无文件、网络、定时器、import；CPU 约 2 秒、内存 64MB），只能 return 一个 op 数组，不能直接改任何东西；每个 op 照样走检查 / 锁定处理，成为一组变更（卡片上显示「AI 写的脚本」，可展开看源码）。沙箱里有：project（只读 JSON：scenes[].beats[]、cast、tracks…）、scenes()（场景列表）、beats(sceneId 或第几场)（句子行：beatId、beatNo、sceneId、speakerId、speaker、kind、text、chars、emotion、shotType、focus、move、intent、flow、fx、background、visible[]、hidden[]、lineGap、tail、seconds、lines（对话框行数）、overflow（超长）、expanded、locked、userEdited）、beat(id)、query(filter)（同 query_beats 的 filter，返回行数组）、visible(beatId)（画面上看得见的 castId 数组）、console.log(...)。op 构造器（sceneId 自动查）：op.setShot(beatId,{type,focus,move,dof,intent,flow:auto|cut|move|glide})、op.setBeat(beatId,{emotion,text,kind,...})、op.setEmotion(beatId,emotion)、op.setTiming(beatIds,{lineGap,tail,readingCps,minLine,textSpeedCps})、op.nudge(beatId,castId,dxSteps,dySteps)、op.setFx(fromBeatId,toBeatId,fx,{tone,edge,strength})、op.insertBeat(afterBeatId|null,{kind,text,speakerId,emotion},sceneId?)（返回的 op.newId 可立刻用于后面的 op）、op.deleteBeat(beatId)、op.moveBeat(beatId,afterBeatId)、op.raw({op:"...",...})。出错（语法、超时、op 不合法）会作为结果返回，修正后可重试（最多约 3 次，失败的脚本不会部分生效）；只 console.log 看数据、return [] 的一次不计入失败。简单需求请用普通工具。', schema: ScriptSchema },
   { name: 'revert_turn', kind: 'write', description: '「改回去 / 撤销 / 不要了 / 算了 / 还是原来的好」：把之前某一轮已应用的改动精确恢复成那一轮之前的值（对话历史里标着「可用 revert_turn」的轮次）。turnsAgo=1 是上一轮（默认），2 是上上轮；scopes 只撤其中某类（camera|performance|fx|rhythm|structure|staging|background|costume|lock，例如「节奏改回去」=[rhythm]）；beatIds 只撤这些句子上的。不要自己反推旧值。', schema: z.object({ turnsAgo: z.number().int().min(1).max(4).optional(), scopes: z.array(z.enum(['camera', 'performance', 'costume', 'staging', 'fx', 'background', 'structure', 'rhythm', 'lock'])).optional(), beatIds: z.array(Id).optional(), reason }) },
   { name: 'regenerate_scene_camera', kind: 'write', description: '让导演按你的倾向重新给整个场景（或一段句子）设计镜头，只重做镜头，不动节奏、表演、台词。适合「多用双人、少点特写」这类整场倾向；每轮最多 1 次，比较贵。guidance 写明倾向（≤200 字）。手改/锁定的镜头不会被覆盖。', schema: z.object({ sceneId: sceneArg, guidance: z.string().min(1).max(200), beatIds: z.array(Id).max(80).optional() }) },
   // long-term memory (server/agent/memoryStore.ts): not project edits; offered only when the server has a memory store
@@ -159,6 +165,18 @@ const sceneOf = (env: ToolEnv, id?: string): Scene | null => env.sandbox.scenes.
 export function freeBeatId(scene: Scene): string {
   return nextId(`${scene.id}b`, scene.beats.map((b) => b.id), { idSeq: { ...(scene.idSeq ?? {}) } });
 }
+/** `n` distinct fresh beat ids (one per later piece of a split line). */
+export function freeBeatIds(scene: Scene, n: number): string[] {
+  const used = scene.beats.map((b) => b.id);
+  const holder = { idSeq: { ...(scene.idSeq ?? {}) } };
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const id = nextId(`${scene.id}b`, used, holder);
+    used.push(id);
+    out.push(id);
+  }
+  return out;
+}
 export function freeKeyId(scene: Scene): string {
   const used = scene.tracks.flatMap((t) => t.keys.map((k) => k.id));
   return nextId('k', used, { idSeq: { ...(scene.idSeq ?? {}) } });
@@ -173,14 +191,14 @@ const j = (o: unknown) => JSON.stringify(o);
 function followUpProtected(env: ToolEnv, tool: string, op: AgentOp, skipped: string[], asks: unknown[]): void {
   if (skipped.length === 0 || op.op !== 'fx_range' || op.includeProtected) return;
   const follow = { ...op, includeProtected: true, reason: `${op.reason ?? '特效'}（含锁定 / 手改内容）` } as AgentOp;
-  const r = checkOp(env.sandbox, follow, { catalog: env.catalog });
+  const r = checkOp(env.sandbox, follow, checkCtx(env));
   if (r.status !== 'needs_unlock' && r.status !== 'needs_confirm') return;
   env.pending.push({ id: ++env.seq.n, tool, op: r.op, status: r.status, changes: r.changes, warnings: r.warnings, notes: r.notes, violations: r.violations.map((v) => v.label), overwrote: r.overwrote, skipped: r.skipped });
   asks.push({ status: r.status === 'needs_unlock' ? '需要用户确认（有锁定）' : '需要用户确认（会覆盖手改）', 涉及: r.status === 'needs_unlock' ? r.violations.map((v) => v.label) : r.overwrote, 将改: r.changes.map((c) => `${c.where} ${c.field}：${c.before} → ${c.after}`) });
 }
 
 /** Run the ops of a tool call through check -> apply (sandbox) in order; stops at the first op that is not ok. */
-export function commitOps(env: ToolEnv, tool: string, ops: AgentOp[], extra: { manual?: boolean | undefined; continueOnIssue?: boolean | undefined } = {}): string {
+export function commitOps(env: ToolEnv, tool: string, ops: AgentOp[], extra: { manual?: boolean | undefined; continueOnIssue?: boolean | undefined; restore?: boolean | undefined } = {}): string {
   const done: unknown[] = [];
   const asks: unknown[] = [];
   const bad: string[] = [];
@@ -188,7 +206,7 @@ export function commitOps(env: ToolEnv, tool: string, ops: AgentOp[], extra: { m
   for (const raw of ops) {
     const op = extra.manual ? ({ ...raw, overrideUser: true } as AgentOp) : raw;
     env.stats.opsChecked++;
-    const r = checkOp(env.sandbox, op, { catalog: env.catalog });
+    const r = checkOp(env.sandbox, op, checkCtx(env, extra.restore === true));
     if (r.status === 'invalid') {
       env.stats.opsInvalid++;
       bad.push(...r.problems);
@@ -410,6 +428,18 @@ function writeTool(env: ToolEnv, name: string, a: Args): string {
       if (act === 'split') return a.at ? done([{ op: 'beat_split', ...base, beatId: a.beatId, at: a.at, newId: freeBeatId(scene) }]) : j({ 错误: ['split 需要 at（第几个字之后拆开）'] });
       return done([{ op: 'beat_merge', ...base, beatId: a.beatId }]);
     }
+    case 'split_line': {
+      const miss = beatMissing(a.beatId);
+      if (miss) return miss;
+      const pieces = (a.pieces as string[]).map((text, i) => ({ text, ...(a.emotions?.[i] ? { emotion: a.emotions[i] as string } : {}) }));
+      if (a.emotions && (a.emotions as string[]).length !== pieces.length) return j({ 错误: [`emotions 要和 pieces 一样多（${pieces.length} 个），没变的那段也要写，或者整个省略`] });
+      return done([{ op: 'beat_split_pieces', ...base, beatId: a.beatId, pieces, newIds: freeBeatIds(scene, pieces.length - 1) } as AgentOp]);
+    }
+    case 'dialog_expand': {
+      const miss = beatMissing(a.beatId);
+      if (miss) return miss;
+      return done([{ op: 'dialog_expand', ...base, beatId: a.beatId, on: a.on !== false } as AgentOp]);
+    }
     case 'set_shot': {
       const ops: AgentOp[] = [];
       for (const id of a.beatIds as string[]) {
@@ -606,7 +636,7 @@ function revertTurn(env: ToolEnv, a: Args): string {
   };
   const ops = entry.ops.filter((op) => (!scopes || scopes.includes(scopeOf(op))) && (!beats || beatsOf(op).some((b) => beats.includes(b))));
   if (ops.length === 0) return j({ 结果: '按这个范围没有可撤销的改动', 那一轮可撤销的类别: [...new Set(entry.ops.map(scopeOf))] });
-  return commitOps(env, 'revert_turn', ops.map((op) => ({ ...op, reason: `撤销「${entry.instruction.slice(0, 24)}」` }) as AgentOp), { continueOnIssue: true });
+  return commitOps(env, 'revert_turn', ops.map((op) => ({ ...op, reason: `撤销「${entry.instruction.slice(0, 24)}」` }) as AgentOp), { continueOnIssue: true, restore: true });
 }
 
 const rhythmRange: Record<string, [number, number]> = { 'rhythm.readingCps': [2, 30], 'rhythm.tail': [0, 5], 'rhythm.lineGap': [0, 3], 'rhythm.minLine': [0.2, 10], 'rhythm.textSpeedCps': [2, 40] };
@@ -618,7 +648,7 @@ const rhythmRange: Record<string, [number, number]> = { 'rhythm.readingCps': [2,
 function mergeTiming(env: ToolEnv, ops: AgentOp[]): AgentOp[] {
   const out: Array<Extract<AgentOp, { op: 'timing' }>> = [];
   const verdict = new Map<AgentOp, string>();
-  for (const o of ops) verdict.set(o, checkOp(env.sandbox, o, { catalog: env.catalog }).status);
+  for (const o of ops) verdict.set(o, checkOp(env.sandbox, o, checkCtx(env)).status);
   const group = new Map<object, string>();
   for (const o of ops) {
     if (o.op !== 'timing') continue;

@@ -3,7 +3,7 @@ import type { Breakdown, SceneDirection } from '@shared/schema/ai';
 import type { Project, Scene } from '@shared/schema/project';
 
 export interface RunInfo {
-  pass: 'breakdown' | 'scene';
+  pass: 'breakdown' | 'scene' | 'split';
   label: string;
   provider: string;
   model: string;
@@ -18,6 +18,8 @@ export interface BreakdownResponse {
   project: Project;
   warnings: string[];
   runs: RunInfo[];
+  /** Long lines that were cut into consecutive lines (absent when none were). */
+  splits?: Array<{ beatId: string; pieceBeatIds: string[]; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; why: string }> }>;
   cached: boolean;
 }
 export interface MergeConflict { kind: string; label: string }
@@ -30,10 +32,12 @@ export interface SceneResponse {
   direction: SceneDirection;
   warnings: string[];
   runs: RunInfo[];
+  /** Long lines that were cut into consecutive lines (absent when none were). */
+  splits?: Array<{ beatId: string; pieceBeatIds: string[]; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; why: string }> }>;
   cached: boolean;
 }
 export interface BatchItem { sceneId: string; result?: SceneResponse; error?: { kind: string; message: string } }
-export interface BatchProgress { sceneId: string; title: string; state: 'start' | 'done' | 'error'; message?: string; kind?: string; cached?: boolean; result?: SceneResponse }
+export interface BatchProgress { sceneId: string; title: string; state: 'start' | 'done' | 'error'; /** With `start`: the scene is cutting `count` long lines (its second step). */ phase?: 'split'; count?: number; message?: string; kind?: string; cached?: boolean; result?: SceneResponse }
 
 /** A failed AI request: `kind` (not_configured, auth, network, truncated, repair_failed, ...) and a message safe to show. */
 export class DirectorApiError extends Error {
@@ -92,4 +96,20 @@ export async function postScenes(project: Project, o: SceneOptions & { sceneIds?
   }
   if (!items) throw new DirectorApiError('server', '连接中断，没有收到结果');
   return items;
+}
+
+export interface SplitLinesResponse {
+  sceneId: string;
+  engine: 'ai' | 'rule';
+  splits: Array<{ beatId: string; by: 'ai' | 'retry' | 'rule'; pieces: Array<{ text: string; emotion: string; why: string; camera?: 'closer' | 'reaction'; reactionOf?: string; motion?: string; expression?: string; attention?: string }> }>;
+  skipped: Array<{ beatId: string; reason: string }>;
+  warnings: string[];
+  runs: RunInfo[];
+}
+
+/** The editor's 「自动拆分」: the pieces the server decided for these long lines (nothing is applied). */
+export async function postSplitLines(project: Project, sceneId: string, beatIds?: string[], o: { refresh?: boolean; engine?: 'rule' } = {}, signal?: AbortSignal): Promise<SplitLinesResponse> {
+  const res = await postJson('/api/director/split-lines', { project, sceneId, ...(beatIds ? { beatIds } : {}), ...o }, signal);
+  if (!res.ok) throw await failure(res);
+  return (await res.json()) as SplitLinesResponse;
 }

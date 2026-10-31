@@ -1,8 +1,9 @@
 /** Compact, token-cheap text views of the project for the agent: one line per scene, one line per beat, a full dump of one beat on demand. */
-import { cameraSystemOf, type Beat, type Project } from '../schema/project';
+import { cameraSystemOf, type Beat, type Project, type Scene } from '../schema/project';
 import { resolveStyle } from '../style/ournotes';
 import { fxStates, keyValueText, CHANNEL_NAME } from './apply';
 import { onStageIds } from './check';
+import { beatLineInfo, lineFlag } from './lines';
 import { HIDDEN_REASON_LABEL, scenePresence, type BeatPresence } from '../timeline/presence';
 
 export const clip = (s: string, n: number) => ([...s].length > n ? `${[...s].slice(0, n).join('')}…` : s);
@@ -113,10 +114,17 @@ export function sceneTable(project: Project, sceneId: string, range: { from?: nu
     const b = scene.beats[i - 1]!;
     const rhythm = Object.entries(b.style.overrides).filter(([k]) => k.startsWith('rhythm.')).map(([k, v]) => `${k.slice(7)}=${String(v)}`).join(',') || (b.duration.mode === 'fixed' ? `固定${b.duration.seconds}s` : '—');
     const flow = b.shot.transition === 'cut' ? 'cut' : b.shot.transition === 'travel' ? 'move' : b.shot.transition ?? 'auto';
-    rows.push([i, b.id, KIND[b.kind], nameOf(project, b.speakerId), `「${clip(b.text, 20)}」`, shotCell(project, b), b.shot.focus.map((f) => nameOf(project, f)).join('+') || '—', `${b.shot.move}${travel ? `/${b.shot.intent ?? '—'}/${flow}` : ''}`, fx[i - 1], b.emotion ?? '—', rhythm, lockFlags(b) || '—', screenCell(project, presence[i - 1], total)].join('|'));
+    rows.push([i, b.id, KIND[b.kind], nameOf(project, b.speakerId), `「${clip(b.text, 20)}」`, shotCell(project, b), b.shot.focus.map((f) => nameOf(project, f)).join('+') || '—', `${b.shot.move}${travel ? `/${b.shot.intent ?? '—'}/${flow}` : ''}`, fx[i - 1], b.emotion ?? '—', rhythm, [lockFlags(b), b.splitFrom !== undefined ? '续句' : '', lineFlag(beatLineInfo(project, scene, b))].filter(Boolean).join(' ') || '—', screenCell(project, presence[i - 1], total)].join('|'));
   }
   const absent = Object.keys(scene.blocking).filter((c) => !onStageIds(scene, 0).has(c)).map((c) => `${nameOf(project, c)}(第${scene.beats.findIndex((b) => b.id === scene.blocking[c]!.enter?.beatId) + 1}句进)`);
   return [head, `人物:\n${stage.join('\n')}`, absent.length ? `开场未在台上: ${absent.join('，')}` : '', bgKeys.length ? `场景内换背景: ${bgKeys.join('，')}` : '', '「画面上的人」= 这一句实际显示的人物（已扣除未进场/离场、空镜句、空镜背景、透明度 0；单人景别只拍焦点）；景别后的「景深N」= 背景虚化（0–6，越大背景越糊），「偏移」= 这一镜里人物的画面偏移（舞台高度为单位，绝对值大了会出画）', cols, ...rows].filter(Boolean).join('\n');
+}
+
+/** 「，3 行，超长（对话框 2 行）」 / 「，3 行，已展开」 for the read-back of one beat; '' when the line is fine. */
+function lineText(project: Project, scene: Scene, b: Beat): string {
+  const li = beatLineInfo(project, scene, b);
+  if (!li || (!li.expanded && !li.over)) return '';
+  return `，${li.lines} 行${li.expanded ? '，已展开' : `，超长（对话框 ${li.max} 行）`}`;
 }
 
 /** Everything about one beat (read-back for verification): fields, shot, rhythm, and its keys. */
@@ -137,7 +145,8 @@ export function beatDetail(project: Project, sceneId: string, beatId: string): s
   return [
     `第${i + 1}句 ${b.id} 所在场景 ${scene.id}「${scene.title}」 [${meta(b.meta)}]`,
     `类型=${b.kind} 形式=${b.variant} 说话人=${nameOf(project, b.speakerId)}${b.coSpeakers.length ? `+${b.coSpeakers.map((c) => nameOf(project, c)).join('、')}` : ''} 情绪=${b.emotion ?? '—'} 切入=${b.cutIn}${b.cutInKeepDialog ? '(保留对白)' : ''}`,
-    `文字(${[...b.text].length}字)：${b.text}`,
+    `文字(${[...b.text].length}字${lineText(project, scene, b)})：${b.text}${b.splitFrom !== undefined ? `
+这是拆开的长句的后续段（首段 ${b.splitFrom}），镜头跟着首段走` : ''}`,
     `镜头 [${meta(b.shot.meta)}]：${JSON.stringify({ type: b.shot.type, focus: b.shot.focus, move: b.shot.move, dof: b.shot.dof, transition: b.shot.transition, intent: b.shot.intent, insertBox: b.shot.insertBox, offsets: b.shot.offsets })}`,
     `节奏 [${meta(b.style.meta)}]：覆盖=${JSON.stringify(b.style.overrides)} 生效 readingCps=${style.readingCps} tail=${style.tail} lineGap=${style.lineGap} minLine=${style.minLine}；时长=${b.duration.mode === 'fixed' ? `固定${b.duration.seconds}s` : '自动'}`,
     `此时在台上（按进出场）：${on || '—'}`,

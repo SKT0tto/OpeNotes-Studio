@@ -17,13 +17,15 @@ type Shot = Partial<SceneDirection['beats'][number]['shot']>;
 interface BeatSpec { speaker?: string | null; text?: string; focus?: string[]; type?: string; intent?: string | null; flow?: string | null; reason?: string; para?: number; enter?: string[]; exit?: string[]; insertTarget?: string | null; kind?: 'dialogue' | 'narration' | 'silent'; shot?: Shot }
 
 const actor = (castId: string, o: { enter?: boolean; exit?: boolean } = {}) => ({ castId, motion: null, expression: null, attention: null, enter: !!o.enter, exit: !!o.exit, move: null });
-/** A dialogue beat by default; its text is the paragraph's own text, so it traces back to the source. */
+/** The first quoted speech of a paragraph (a paragraph with a speech tag in the middle is not one dialogue line), else the paragraph itself. */
+const lineOf = (para: string): string => /“([^”]*)”/.exec(para)?.[1] ?? para;
+/** A dialogue beat by default; its text is the paragraph's own (first) line, so it traces back to the source. */
 function beat(o: BeatSpec = {}): SceneDirection['beats'][number] {
   const para = o.para ?? P0;
   const kind = o.kind ?? (o.speaker === null ? 'silent' : 'dialogue');
   const speaker = kind === 'dialogue' ? (o.speaker ?? A) : null;
   return {
-    keepId: null, paragraph: para, kind, speaker, text: kind === 'silent' ? '' : o.text ?? paragraphs[para]!.text, emotion: EMOTIONS[0]!, reason: o.reason ?? 'r',
+    keepId: null, paragraph: para, kind, speaker, text: kind === 'silent' ? '' : o.text ?? (kind === 'dialogue' ? lineOf(paragraphs[para]!.text) : paragraphs[para]!.text), emotion: EMOTIONS[0]!, reason: o.reason ?? 'r',
     shot: { type: (o.type ?? 'mcu') as never, focus: o.focus ?? (speaker ? [speaker] : [A]), move: 'static', dof: null, ...(o.insertTarget !== undefined ? { insertTarget: o.insertTarget as never } : {}), ...(o.intent !== undefined ? { intent: o.intent as never } : {}), ...(o.flow !== undefined ? { flow: o.flow as never } : {}), ...o.shot },
     cutIn: 'cut', fx: 'none',
     actors: [...(o.enter ?? []).map((c) => actor(c, { enter: true })), ...(o.exit ?? []).map((c) => actor(c, { exit: true }))],
@@ -31,6 +33,17 @@ function beat(o: BeatSpec = {}): SceneDirection['beats'][number] {
 }
 const direction = (...beats: SceneDirection['beats']): SceneDirection => SceneDirectionTravelSchema.parse({ reason: 'r', blocking: [], transitionIn: 'cut', bgm: null, costumeChanges: [], beats });
 const run = (d: SceneDirection, over: Partial<Parameters<typeof validateDirection>[1]> = {}) => validateDirection(d, { ...base, ...over });
+
+describe('a speech-tag paragraph stages correctly in travel', () => {
+  it('a beat that packs 「“A，”X说，“B。”」 becomes two dialogue beats of the speaker, with no narration beat', () => {
+    const tagged = '“你们太慢了。”立希说，“新歌的副歌还一点头绪都没有，今天一定要定下来。”';
+    const v = run(direction(beat({ speaker: A, focus: [A], text: tagged }), beat({ speaker: B, focus: [B], para: P0 + 1 })), { paragraphs: base.paragraphs.map((p) => (p.index === P0 ? { ...p, text: tagged } : p)) });
+    expect(v.errors).toEqual([]);
+    expect(v.value.beats.map((b) => b.kind)).toEqual(['dialogue', 'dialogue', 'dialogue']);
+    expect(v.value.beats.slice(0, 2).map((b) => b.text)).toEqual(['你们太慢了。', '新歌的副歌还一点头绪都没有，今天一定要定下来。']);
+    expect(v.value.beats.slice(0, 2).map((b) => b.shot.focus)).toEqual([[A], [A]]);
+  });
+});
 
 describe('travel two-shot pairs keep their meaning (change 2)', () => {
   it('keeps the model\'s pair when the partner is on stage, even when somebody stands between them', () => {
@@ -205,15 +218,15 @@ describe('shot.flow is tolerant (change 7)', () => {
 
 describe('the travel prompt explains why (change 5); the classic prompt is byte-identical', () => {
   // scene-4 (v0.4 effects) changed only the fx and cutIn lines of scene-3 (promptScene4.test.ts diffs them line by line); this hash pins the new text
-  it('classic: text, schema, schema name and version are exactly what scene-6 is', () => {
+  it('classic: text, schema, schema name and version are exactly what scene-7 is (scene-6 plus the long-line rule)', () => {
     const c = scenePromptFor('classic');
-    expect(createHash('sha256').update(c.system).digest('hex')).toBe('21aa09577f6149602f6349e8ac0018a723393ab869f86575d03e75a550bbfdb2');
-    expect(c.promptVersion).toBe('scene-6');
+    expect(createHash('sha256').update(c.system).digest('hex')).toBe('84ac468b47a6ffdf92a7b0ce9f0458b1974a8121cbb59ceceb20e3672728df0d');
+    expect(c.promptVersion).toBe('scene-7');
     expect(c.schemaName).toBe('SceneDirection');
     expect(c.schema).toBe(SceneDirectionSchema);
   });
-  it('travel: version scene-6+travel-9; every intent has a question with a right and a wrong example', () => {
-    expect(SCENE_TRAVEL_VERSION).toBe('scene-6+travel-9');
+  it('travel: version scene-7+travel-9; every intent has a question with a right and a wrong example', () => {
+    expect(SCENE_TRAVEL_VERSION).toBe('scene-7+travel-9');
     for (const i of ['continue', 'exchange', 'emphasis', 'reaction', 'reveal', 'release', 'rupture']) expect(SCENE_TRAVEL_SECTION).toContain(`- ${i}：`);
     for (const i of ['continue', 'exchange', 'emphasis', 'reaction', 'reveal', 'release']) {
       const line = SCENE_TRAVEL_SECTION.split('\n').find((l) => l.startsWith(`- ${i}：`))!;

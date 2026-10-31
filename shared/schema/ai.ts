@@ -85,5 +85,36 @@ const TravelShot = SceneBeat.shape.shot.extend({
   intent: z.enum(SHOT_INTENTS).nullable().optional(),
 });
 export const SceneDirectionTravelSchema = SceneDirectionSchema.extend({ beats: z.array(SceneBeat.extend({ shot: TravelShot })) });
-export type SceneDirection = z.infer<typeof SceneDirectionTravelSchema>;
-export type DirectedBeat = SceneDirection['beats'][number];
+type ModelDirection = z.infer<typeof SceneDirectionTravelSchema>;
+/**
+ * One beat of a direction. `splitOf` is set by the long-line split step on the later pieces of a line it cut: the index (in the same
+ * `beats` array) of the first piece. It is not part of the model's schema; `expandScene` turns it into `Beat.splitFrom`.
+ */
+export type DirectedBeat = ModelDirection['beats'][number] & { splitOf?: number | undefined };
+export type SceneDirection = Omit<ModelDirection, 'beats'> & { beats: DirectedBeat[] };
+
+// ---- Long-line split: the second, small call (one per scene) that cuts lines that do not fit the dialogue area ----------------
+export const SPLIT_CAMERAS = ['hold', 'closer', 'reaction'] as const;
+export const LineSplitSchema = z.object({
+  lines: z.array(
+    z.object({
+      id: z.string(),
+      pieces: z.array(
+        z.object({
+          /** The piece of the original text, verbatim. */
+          text: z.string(),
+          /** Why the cut is here (<= 20 characters); required for a piece that is not 'hold'. */
+          why: z.string(),
+          emotion: z.enum(EMOTIONS),
+          /** The first piece keeps the director's camera and ignores this. A word that is not a camera intent means hold. */
+          camera: z.enum(SPLIT_CAMERAS).catch('hold'),
+          /** With camera = reaction: the listener's castId. */
+          reactionOf: z.string().nullable().optional(),
+          /** The speaker's performance in this piece (ignored for the first piece); null = no change. */
+          actor: z.object({ motion: z.string().nullable(), expression: z.string().nullable(), attention: z.string().nullable() }).nullable().optional(),
+        }),
+      ),
+    }),
+  ),
+});
+export type LineSplit = z.infer<typeof LineSplitSchema>;

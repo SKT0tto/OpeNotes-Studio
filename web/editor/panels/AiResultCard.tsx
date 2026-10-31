@@ -5,6 +5,7 @@
 import { Fragment, useMemo } from 'react';
 import { DIFF_LABEL, type DiffScope } from '@shared/director/diff';
 import { shownState, type Card, type ShownState } from './ai/genTurn';
+import { clip } from '@shared/agent/compact';
 
 export type { Card, CardState } from './ai/genTurn';
 
@@ -59,6 +60,7 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
           <ul className="ai-warn">{r.report.protectedKept.map((t, i) => <li key={i}>{t}</li>)}</ul>
         </details>
       )}
+      {r.splits && r.splits.length > 0 && <SplitSection splits={r.splits} />}
       {r.applied && shown !== 'pending' && scopes.length > 0 && (
         <p className="hint ai-diff-line">{scopes.map((sc) => `${DIFF_LABEL[sc]} ${diff.counts[sc]}`).join(' · ')}</p>
       )}
@@ -118,6 +120,27 @@ export function SceneResult({ card, live, open, single = false, onToggle, onAcce
         {!isRule && <p className="hint">{r.direction.reason}</p>}
         <pre className="ai-json" data-testid="ai-intent">{JSON.stringify(r.direction, null, 1)}</pre>
       </details>
+    </details>
+  );
+}
+
+const BY_LABEL = { ai: 'AI 拆分', retry: 'AI 拆分（重试）', rule: '规则拆分' } as const;
+
+/** 「长句拆分 N」: the long lines this result cut into consecutive lines: the original line, its pieces, who cut it and why there. */
+function SplitSection({ splits }: { splits: NonNullable<Card['result']['splits']> }) {
+  return (
+    <details className="ai-splits" data-testid="ai-splits">
+      <summary>长句拆分 <span className="badge" data-testid="ai-splits-count">{splits.length}</span> <span className="hint">放不进对话框的台词，按语义拆成连续几句</span></summary>
+      <ul>
+        {splits.map((sp) => (
+          <li key={sp.beatId} data-testid="ai-split" data-by={sp.by}>
+            <span className="from">「{clip(sp.pieces.map((p) => p.text).join(''), 36)}」 → {sp.pieces.length} 句 · {BY_LABEL[sp.by]}</span>
+            {sp.pieces.map((p, i) => (
+              <span key={i} className="piece" data-testid="ai-split-piece">{i + 1}. {p.text}{p.why ? <span className="why"> · {p.why}</span> : null}</span>
+            ))}
+          </li>
+        ))}
+      </ul>
     </details>
   );
 }

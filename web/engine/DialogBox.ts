@@ -3,7 +3,11 @@
  * bottom, a plain white name, a thin fading rule under it and the text (STYLE_REFERENCE 7.1). Theme "plate" is the
  * earlier rounded panel with a coloured name plate. Every size is a share of the stage height, so it scales with the
  * preview; the reveal itself is time-driven by evaluate(), so seeking shows exactly the right amount of text.
+ * The default theme renders the explicit lines computed by `shared/style/dialogLayout` (`white-space: pre`), the same function the director
+ * and the editor use to decide whether a line fits, so measurement and picture agree. An expanded line (`overflow: 'expand'`) grows down up to
+ * three lines, moves the whole dialogue area up for 4-6 lines and scrolls with the typewriter beyond six.
  */
+import { dialogView } from '@shared/style/dialogLayout';
 import type { SubtitleRender, UiStyle } from '@shared/timeline/types';
 
 export interface Speaker {
@@ -32,6 +36,8 @@ export class DialogBox {
   private shown = '';
   private hasName = false;
   private laidOutH = 0;
+  /** Lines the dialogue area is currently moved up by (expanded lines of 4+ rows). */
+  private shiftUp = 0;
   private plateColor = '#888';
 
   constructor(
@@ -77,18 +83,22 @@ export class DialogBox {
     const wasHidden = this.el.style.display === 'none';
     this.el.style.display = '';
     const nm = this.nameOf(sub, d);
-    // Layout only when something that shapes it changed (style, name present, size): not on every frame / typed character.
-    const relayout = wasHidden || this.ui !== d || this.hasName !== !!nm || this.laidOutH !== this.host.clientHeight;
-    this.ui = d;
-    this.hasName = !!nm;
-    this.plateColor = nm?.color ?? '#888';
-    this.name.firstChild!.textContent = nm?.text ?? '';
     const count = revealAll ? sub.totalChars : sub.visibleChars;
     const chars = [...sub.text];
     const wrap = sub.variant === 'monologue' && d.monologueBrackets && !/^[（(]/.test(sub.text);
     this.shown = chars.slice(0, count).join('');
     if (wrap) this.shown = `（${this.shown}${count >= sub.totalChars ? '）' : ''}`;
-    this.text.textContent = this.shown;
+    // the default theme draws the explicit lines of the shared layout; an expanded 4+ row line moves the dialogue area up
+    const view = d.theme === 'plate' ? null : dialogView(sub.text, sub.variant, d, count, sub.totalChars, !!sub.expand);
+    const shiftUp = view?.shiftUp ?? 0;
+    // Layout only when something that shapes it changed (style, name present, size, rows moved up): not on every frame / typed character.
+    const relayout = wasHidden || this.ui !== d || this.hasName !== !!nm || this.laidOutH !== this.host.clientHeight || this.shiftUp !== shiftUp;
+    this.ui = d;
+    this.shiftUp = shiftUp;
+    this.hasName = !!nm;
+    this.plateColor = nm?.color ?? '#888';
+    this.name.firstChild!.textContent = nm?.text ?? '';
+    this.text.textContent = view ? view.rows.join('\n') : this.shown;
     this.el.dataset.theme = d.theme;
     this.el.dataset.kind = sub.kind;
     this.marker.hidden = count < sub.totalChars;
@@ -112,16 +122,19 @@ export class DialogBox {
       return;
     }
     const rgb = hexRgb(d.color);
-    const full = ((d.gradientY1 - d.gradientY0) / (1 - d.gradientY0)) * 100;
+    // an expanded line of 4+ rows moves the whole area (gradient, name, rule, text) up; the gradient keeps its fade length and just starts higher
+    const up = this.shiftUp * d.lineHeight;
+    const gy0 = d.gradientY0 - up;
+    const full = ((d.gradientY1 - d.gradientY0) / (1 - gy0)) * 100;
     this.marker.style.cssText = 'display:none';
-    this.grad.style.cssText = `position:absolute;left:0;right:0;top:${px(d.gradientY0)};bottom:0;background:linear-gradient(to bottom,rgba(${rgb},0) 0%,rgba(${rgb},${d.maxAlpha}) ${full}%,rgba(${rgb},${d.maxAlpha}) 100%)`;
+    this.grad.style.cssText = `position:absolute;left:0;right:0;top:${px(gy0)};bottom:0;background:linear-gradient(to bottom,rgba(${rgb},0) 0%,rgba(${rgb},${d.maxAlpha}) ${full}%,rgba(${rgb},${d.maxAlpha}) 100%)`;
     this.name.style.cssText = `position:absolute;display:${this.hasName ? 'block' : 'none'};left:${pxl(d.nameLeft)};top:0;font-size:${px(d.nameSize)};line-height:${px(d.nameSize)};font-weight:${d.nameWeight};color:${d.nameColor};white-space:nowrap;text-shadow:${shadow}`;
-    this.rule.style.cssText = `position:absolute;display:${this.hasName ? 'block' : 'none'};left:${pxl(d.ruleLeft)};top:${px(d.ruleY)};width:${px(d.ruleLength)};height:${Math.max(1, d.ruleThickness * H)}px;background:linear-gradient(to right,${d.ruleColor} 0%,${d.ruleColor} 55%,rgba(${hexRgb(d.ruleColor)},0) 100%)`;
-    this.text.style.cssText = `position:absolute;left:${pxl(d.textLeft)};top:${px(d.textTop)};width:${px(d.textWidth)};max-height:${px(d.lineHeight * d.maxLines)};overflow:hidden;font-size:${px(d.textSize)};line-height:${px(d.lineHeight)};font-weight:${d.textWeight};color:#fff;white-space:pre-wrap;word-break:break-all;text-shadow:${shadow}`;
+    this.rule.style.cssText = `position:absolute;display:${this.hasName ? 'block' : 'none'};left:${pxl(d.ruleLeft)};top:${px(d.ruleY - up)};width:${px(d.ruleLength)};height:${Math.max(1, d.ruleThickness * H)}px;background:linear-gradient(to right,${d.ruleColor} 0%,${d.ruleColor} 55%,rgba(${hexRgb(d.ruleColor)},0) 100%)`;
+    this.text.style.cssText = `position:absolute;left:${pxl(d.textLeft)};top:${px(d.textTop - up)};width:${px(d.textWidth)};font-size:${px(d.textSize)};line-height:${px(d.lineHeight)};font-weight:${d.textWeight};color:#fff;white-space:pre;text-shadow:${shadow}`;
     // Exact baseline: measure where the zero-size inline box of the name sits, then shift the name onto the style's baseline y.
     if (this.hasName) {
       const off = this.baseline.getBoundingClientRect().bottom - this.name.getBoundingClientRect().top;
-      this.name.style.top = `${d.nameBaseline * H - off}px`;
+      this.name.style.top = `${(d.nameBaseline - up) * H - off}px`;
     }
   }
 

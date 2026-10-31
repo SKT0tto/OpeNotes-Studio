@@ -257,6 +257,7 @@ export function evaluate(c: CompiledProject, tIn: number): RenderState {
     subtitle = {
       beatId: beat.id, kind: beat.kind, variant: beat.variant, coSpeakers: beat.coSpeakers, speakerId: beat.speakerId, text: beat.text, totalChars: total,
       visibleChars: Math.min(total, Math.floor((t - beat.start) * beat.cps)),
+      ...(beat.expand ? { expand: true as const } : {}),
     };
   }
 
