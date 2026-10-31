@@ -39,6 +39,7 @@ export async function mockAiConfigured(page: Page): Promise<void> {
       provider: 'openai', available: ['anthropic', 'openai'],
       anthropic: { hasKey: false, mask: null, source: null, model: '', baseUrl: '' },
       openai: { hasKey: false, mask: null, source: null, model: 'fixture', baseUrl: '' },
+      vision: { hasKey: false, mask: null, source: null, mode: 'auto', model: '', baseUrl: '', canSee: null },
       status: { configured: true, provider: 'openai', model: 'fixture', verified: 'none', message: 'Fixture AI configured' },
     } })
     : route.fallback());

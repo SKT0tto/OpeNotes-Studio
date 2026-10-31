@@ -36,5 +36,14 @@ export const useAiSettings = create<AiSettingsState>((set, get) => ({
   },
 }));
 
+/** Shown (tooltip and notice) when pictures would be dropped. */
+export const BLIND_NOTICE = '当前 AI 看不到图片：请在 AI 设置里配置能看图的模型或视觉模型';
+
+/**
+ * True only when the server knows attached pictures would be dropped (vision off, no separate vision model configured, or a main model
+ * whose endpoint says it takes no pictures). Unknown capability (`canSee` null) is not blind: the picture is accepted.
+ */
+export const cannotSeeImages = (s: Pick<AiSettingsState, 'settings' | 'loading' | 'error'>): boolean => !s.loading && !s.error && s.settings !== null && s.settings.status.configured && s.settings.vision?.canSee === false;
+
 /** True only when the settings are known and no AI is configured: the free-text box is then disabled and generation defaults to the rule generator. */
 export const noAi = (s: Pick<AiSettingsState, 'settings' | 'loading' | 'error'>): boolean => !s.loading && !s.error && s.settings !== null && !s.settings.status.configured;

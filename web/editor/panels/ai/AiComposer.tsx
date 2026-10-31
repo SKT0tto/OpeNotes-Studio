@@ -16,7 +16,7 @@ import { useProject } from '../../../store/projectStore';
 import { notify, useUi } from '../../../store/uiStore';
 import { isDirectedScene, useDirectorRun, type DirectorEnv } from '../directorRun';
 import { EXPERIMENTAL_TIP, ExperimentalBadge } from '../MemoryPanel';
-import { noAi, useAiSettings } from './aiSettings';
+import { BLIND_NOTICE, cannotSeeImages, noAi, useAiSettings } from './aiSettings';
 import { beatTarget } from './generateActions';
 import { GeneratePopover } from './GeneratePopover';
 import { routeIntent } from './intent';
@@ -62,11 +62,14 @@ export function AiComposer({ env, popoverOpen, setPopoverOpen, onOpenSettings }:
   const ctxText = multi ?? (scene ? `第${sceneNo(project, scene.id)}场${beatIdx >= 0 ? ` · 第${beatIdx + 1}句` : ''}${selection.castId ? ` · ${project.cast.find((c) => c.id === selection.castId)?.displayName ?? ''}` : ''}` : '整个项目');
   const last = runs.at(-1);
   const without = noAi(aiState);
+  // pictures the AI could not see are refused up front (button, paste and drop alike) instead of being accepted and silently dropped
+  const blind = cannotSeeImages(aiState);
   const hasText = !!project.source.text;
   const busy = running || genBusy;
 
   const addFiles = async (files: File[]) => {
     if (files.length === 0) return;
+    if (blind) return void notify(BLIND_NOTICE, 'warn');
     const { items, problems } = await filesToAttachments(files, MAX_FRAMES - attach.length);
     if (items.length) a.setAttachments((cur) => [...cur, ...items].slice(0, MAX_FRAMES));
     if (problems.length) notify(problems.join('；'), 'warn');
@@ -160,7 +163,7 @@ export function AiComposer({ env, popoverOpen, setPopoverOpen, onOpenSettings }:
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(text); } }} />
       </div>
       <div className="ai-buttons-row">
-        <button className="btn-s" data-testid="agent-attach" title={`附上截图或短视频（拖进来、粘贴也可以；最多 ${MAX_FRAMES} 张，视频取几帧）`} disabled={running || attach.length >= MAX_FRAMES} onClick={() => fileInput.current?.click()}>附图</button>
+        <button className="btn-s" data-testid="agent-attach" title={blind ? BLIND_NOTICE : `附上截图或短视频（拖进来、粘贴也可以；最多 ${MAX_FRAMES} 张，视频取几帧）`} disabled={blind || running || attach.length >= MAX_FRAMES} onClick={() => fileInput.current?.click()}>附图</button>
         <button className={`btn-s${popoverOpen ? ' on' : ''}`} aria-expanded={popoverOpen} data-testid="ai-gen-chip" onClick={() => setPopoverOpen(!popoverOpen)} title="生成：重新生成场景的演出，先看差异再应用">生成 ▾</button>
         <span className="grow" />
         {genBusy ? <button className="btn danger" data-testid="ai-cancel" onClick={() => useDirectorRun.getState().cancel()}>停止</button>

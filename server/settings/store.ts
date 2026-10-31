@@ -2,11 +2,11 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  DEFAULT_ANTHROPIC_MODEL, LlmSettingsPatchSchema, NOT_CONFIGURED_MESSAGE, StoredLlmSettingsSchema, VISION_MODES, maskKey,
+  DEFAULT_ANTHROPIC_MODEL, LlmSettingsPatchSchema, NOT_CONFIGURED_MESSAGE, StoredLlmSettingsSchema, VISION_MODES, maskKey, visionCanSee,
   type LlmProviderId, type LlmSettingsPatch, type PublicKeyInfo, type PublicLlmSettings, type StoredLlmSettings, type VisionMode,
 } from '../../shared/schema/settings';
 import { AnthropicProvider } from '../llm/anthropic';
-import { OpenAiCompatProvider, forgetStructuredModes, forgetToolsSupport } from '../llm/openaiCompat';
+import { OpenAiCompatProvider, forgetStructuredModes, forgetToolsSupport, knownImageInput } from '../llm/openaiCompat';
 import type { LlmProvider } from '../llm/provider';
 
 type Env = Record<string, string | undefined>;
@@ -179,6 +179,20 @@ export class LlmSettings {
     return sep ? { mode: 'describe', model: sep.model, provider: sep } : null;
   }
 
+  /** Whether attached pictures reach a model that can see them (see `visionCanSee`); an OpenAI-compatible model counts as known only once its endpoint was asked. */
+  private canSee(): boolean | null {
+    const eff = this.effective();
+    const mainImage = eff.provider === 'openai' && eff.openai.baseUrl ? knownImageInput(eff.openai.baseUrl, eff.openai.model) ?? null : null;
+    return visionCanSee({ mode: eff.vision.mode, provider: this.provider().provider ? eff.provider : null, mainImage, separate: this.separateVision() !== null });
+  }
+
+  /** Asks the main endpoint once about its picture input (cached per model) so that `view().vision.canSee` can be definite. */
+  async probeVision(signal?: AbortSignal): Promise<void> {
+    const eff = this.effective();
+    if (eff.vision.mode !== 'auto' || eff.provider !== 'openai') return;
+    await this.provider().provider?.imageInput?.(signal).catch(() => null);
+  }
+
   view(): PublicLlmSettings {
     const eff = this.effective();
     const info = (k: string | undefined, source: 'env' | 'file' | null): PublicKeyInfo => ({ hasKey: !!k, mask: k ? maskKey(k) : null, source });
@@ -189,7 +203,7 @@ export class LlmSettings {
       available: this.deps.fixtureProvider ? ['anthropic', 'openai', 'fixture'] : ['anthropic', 'openai'],
       anthropic: { ...info(eff.anthropic.apiKey, eff.anthropic.keySource), model: eff.anthropic.model, baseUrl: eff.anthropic.baseUrl },
       openai: { ...info(eff.openai.apiKey, eff.openai.keySource), model: eff.openai.model, baseUrl: eff.openai.baseUrl },
-      vision: { ...info(eff.vision.apiKey, eff.vision.keySource), mode: eff.vision.mode, model: eff.vision.model, baseUrl: eff.vision.baseUrl },
+      vision: { ...info(eff.vision.apiKey, eff.vision.keySource), mode: eff.vision.mode, model: eff.vision.model, baseUrl: eff.vision.baseUrl, canSee: this.canSee() },
       status: p.provider ? this.configuredStatus(eff.provider, model, p.provider) : { configured: false, provider: eff.provider, model, verified: 'none' as const, message: p.message },
     };
   }

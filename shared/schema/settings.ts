@@ -18,6 +18,21 @@ export const StoredLlmSettingsSchema = z.object({
  */
 export const VISION_MODES = ['auto', 'main', 'separate', 'off'] as const;
 export type VisionMode = (typeof VISION_MODES)[number];
+
+/**
+ * Whether the AI can see pictures with this setup: true / false when known, null when it cannot be told (an OpenAI-compatible server that does
+ * not list its input modalities). Only `false` means attached pictures will be dropped; the UI warns on that alone.
+ * `mainImage` = what the main endpoint says about its model (null = unknown).
+ */
+export function visionCanSee(a: { mode: VisionMode; provider: LlmProviderId | null; mainImage: boolean | null; separate: boolean }): boolean | null {
+  if (a.mode === 'off') return false;
+  if (a.mode === 'separate') return a.separate;
+  if (a.provider === null || a.provider === 'fixture') return null;
+  if (a.mode === 'main') return true; // the user insists: pictures go to the main model
+  if (a.provider === 'anthropic' || a.mainImage === true) return true;
+  if (a.separate) return true; // described in words by the separate model
+  return a.mainImage === false ? false : null;
+}
 export type StoredLlmSettings = z.infer<typeof StoredLlmSettingsSchema>;
 
 /** What a client may send to change settings. `apiKey: ''` or `null` clears the stored key; absent keeps it. */
@@ -44,7 +59,13 @@ export interface PublicLlmSettings {
   anthropic: PublicKeyInfo & { model: string; baseUrl: string };
   openai: PublicKeyInfo & { model: string; baseUrl: string };
   /** The separate vision model (only used in mode separate, or in auto when the main model takes no pictures). */
-  vision: PublicKeyInfo & { mode: VisionMode; model: string; baseUrl: string };
+  vision: PublicKeyInfo & {
+    mode: VisionMode;
+    model: string;
+    baseUrl: string;
+    /** Whether the AI can see attached pictures / screenshots with this setup (see `visionCanSee`); null = cannot be told, no warning. */
+    canSee: boolean | null;
+  };
   status: {
     /** A usable key / address is present (not whether the provider accepts it). */
     configured: boolean;

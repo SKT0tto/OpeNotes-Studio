@@ -287,7 +287,7 @@ test.describe('AI settings and generation failures', () => {
     provider: 'anthropic', available: ['anthropic', 'openai'],
     anthropic: { hasKey: false, mask: null, source: null, model: 'claude-sonnet-5-5', baseUrl: '' },
     openai: { hasKey: false, mask: null, source: null, model: '', baseUrl: '' },
-    vision: { hasKey: false, mask: null, source: null, mode: 'auto', model: '', baseUrl: '' },
+    vision: { hasKey: false, mask: null, source: null, mode: 'auto', model: '', baseUrl: '', canSee: null },
     status: { configured: false, provider: 'anthropic', model: null, verified: 'none', message: '未配置 AI：Anthropic 缺少 API key（请在设置中填写，或设置环境变量 ANTHROPIC_API_KEY）' },
     ...over,
   });

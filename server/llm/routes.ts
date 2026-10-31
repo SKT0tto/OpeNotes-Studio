@@ -10,7 +10,10 @@ export const errorBody = (e: unknown) =>
 /** `GET/PUT /api/llm/settings` (masked keys only) and `POST /api/llm/test` (always HTTP 200; `ok:false` carries the reason). */
 export function llmRoutes(settings: LlmSettings): Router {
   const r = Router();
-  r.get('/api/llm/settings', (_req, res) => void res.json(settings.view()));
+  r.get('/api/llm/settings', async (_req, res) => {
+    await settings.probeVision().catch(() => undefined);
+    res.json(settings.view());
+  });
   r.put('/api/llm/settings', express.json({ limit: '16kb' }), (req, res) => {
     try {
       res.json(settings.patch(req.body));
