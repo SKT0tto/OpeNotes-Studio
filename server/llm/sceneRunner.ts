@@ -67,6 +67,11 @@ const MIN_TOKENS_PER_PARA = 250;
 const MAX_TOKENS_PER_PARA = 900;
 /** Measured tokens per paragraph get this much head room before they size the next span. */
 const MEASURED_HEADROOM = 1.3;
+/**
+ * Output tokens per character of source text: the floor of a span's budget, so one very long paragraph (a page-long monologue that the
+ * model cuts into many beats at its emotional turns) is not sized like a short one.
+ */
+const TOKENS_PER_CHAR = 4;
 
 const protectedBeat = (b: Beat, overwrite: boolean) => b.meta.locked || (b.meta.lockedFields?.length ?? 0) > 0 || (!overwrite && b.meta.source === 'user') || b.overflow === 'expand';
 
@@ -130,7 +135,7 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
   const chunkWarnings: string[] = [];
   /** Output tokens per paragraph: starts at the default, then follows the provider's own usage numbers. */
   let tpp = TOKENS_PER_PARA;
-  const direct = async (paras: Paragraph[], prev: SceneDirectionInput['previousScene'], fixedHere: Beat[], label: string, continuation?: SceneDirectionInput['continuation']): Promise<SceneDirection> => {
+  const direct = async (paras: Paragraph[], prev: SceneDirectionInput['previousScene'], fixedHere: Beat[], label: string, continuation?: SceneDirectionInput['continuation'], keepWhole = false): Promise<SceneDirection> => {
     const lastPara = inScene.at(-1)!.index;
     const more = paras.at(-1)!.index < lastPara;
     const nextPara = inScene.find((p) => p.index > paras.at(-1)!.index)?.index ?? lastPara;
@@ -147,12 +152,14 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
       ...(structure && more ? { sceneContinues: { note: `注意：这一段不是整个场景的结尾，场景在第 ${nextPara} 段之后还会继续（后面还有对白和事件）。所以这一段的最后一拍不要给场尾收束：不要用 release、拉远成群像、pull_out 或黑场式的收尾，镜头和节奏保持「场景正在进行」的状态；真正的场尾由最后一段处理。`, nextParagraph: nextPara } } : {}),
       ...(d.preferences?.items.length ? { preferences: d.preferences } : {}),
       ...(req.guidance ? { guidance: { note: '这是用户（或助手）对本场景镜头的倾向：在不违反上面规则的前提下优先满足；不要因此改动对白、节奏、表演。', text: req.guidance } } : {}),
+      ...(keepWhole ? { keepLinesWhole: { note: '这一段原文很长，上一次的回答超出了长度上限。这次请每一句台词只写成一个节拍，不要按语气拆成几拍，叙述也尽量合并；放不下对话框的长句程序会在下一步再拆。' } } : {}),
       fixedBeats: fixedHere.map(fixedInput),
       mode: { scopes: req.scopes, ...(req.beatIds ? { focusBeatIds: fixedHere.map((b) => b.id) } : {}) },
     };
     const range = { start: paras[0]!.index, end: paras.at(-1)!.index };
     const fixedIds = new Set(fixedHere.map((b) => b.id));
-    const tokens = Math.min(cap, structure ? 1500 + tpp * paras.length : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length)));
+    const chars = paras.reduce((n, p) => n + p.text.length, 0);
+    const tokens = keepWhole ? cap : Math.min(cap, structure ? 1500 + Math.max(tpp * paras.length, TOKENS_PER_CHAR * chars) : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length)));
     const step = (maxTokens: number) => runStep({
       provider: d.provider, cache: d.cache, promptVersion: sys.promptVersion, pass: 'scene', label, refresh: d.refresh === true,
       req: { system: sys.system, input: sceneInput(input), schema: sys.schema, schemaName: sys.schemaName, maxTokens, signal: d.signal },
@@ -174,9 +181,10 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
         return v;
       },
     });
-    // a cut-off answer is retried once with room for twice as much (the span is split instead when it is long enough)
+    // a cut-off answer is retried once with room for twice as much, or the whole cap for a single paragraph (that cannot be split further);
+    // a span that is long enough is split instead
     const { value, info } = await step(tokens).catch((e) => {
-      if (e instanceof LlmError && e.kind === 'truncated' && (!structure || paras.length < 4) && tokens < cap) return step(Math.min(cap, tokens * 2));
+      if (e instanceof LlmError && e.kind === 'truncated' && (!structure || paras.length < 4) && tokens < cap) return step(structure && paras.length === 1 ? cap : Math.min(cap, tokens * 2));
       throw e;
     });
     runs.push(info);
@@ -236,7 +244,19 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
         const mid = Math.ceil(part.length / 2);
         await callPart(part.slice(0, mid), depth + 1);
         await callPart(part.slice(mid), depth + 1);
-      } else throw new LlmError('truncated', '输出过长被截断：请缩小范围或重试');
+        return;
+      }
+      // one paragraph that does not fit even at the cap (a page-long monologue cut into many beats): one beat per line this time
+      if (part.length === 1) {
+        try {
+          const dir = await direct(part, direction ? tail() : prev0, only ?? fixedIn(part), label(part, ' · 整句'), carry(part), true);
+          direction = direction ? combine(direction, dir) : dir;
+          return;
+        } catch (e2) {
+          if (!(e2 instanceof LlmError && e2.kind === 'truncated')) throw e2;
+        }
+      }
+      throw new LlmError('truncated', '输出过长被截断：请缩小范围或重试');
     }
   };
   /** Focus mode: only the paragraphs of the chosen lines, plus one paragraph before and after, go to the model. */

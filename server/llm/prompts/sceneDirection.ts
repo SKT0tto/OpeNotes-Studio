@@ -78,6 +78,8 @@ export interface SceneDirectionInput {
   guidance?: { note: string; text: string };
   /** Only when the user has saved preferences (assistant memory) and lets the director use them; absent otherwise (same bytes, same cache key). */
   preferences?: { note: string; items: string[] };
+  /** Only on the last try of a single paragraph whose answer was cut off even at the provider's cap: one beat per line, the split step cuts long ones. */
+  keepLinesWhole?: { note: string };
   fixedBeats: Array<{ keepId: string; paragraph: number; kind: string; speaker: string | null; text: string; lockedFields?: string[] }>;
   mode: { scopes: string[]; focusBeatIds?: string[] };
 }
