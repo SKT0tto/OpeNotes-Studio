@@ -197,5 +197,7 @@ describe('vision capability flag', () => {
     expect(cannotSeeImages(s(true, true))).toBe(false);
     expect(cannotSeeImages(s(false, false))).toBe(false);
     expect(cannotSeeImages({ loading: true, error: null, settings: null })).toBe(false);
+    // settings from an older server carry no vision block: no warning, and no crash of the AI panel
+    expect(cannotSeeImages({ loading: false, error: null, settings: { status: { configured: true } } as never })).toBe(false);
   });
 });
