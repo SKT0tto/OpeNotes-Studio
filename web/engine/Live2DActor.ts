@@ -152,9 +152,16 @@ export class Live2DActor {
     core.setParameterValueByIndex(this.mouthIndex, Math.max(core.getParameterValueByIndex(this.mouthIndex), p.min + (p.max - p.min) * this.mouth));
   }
 
-  /** Run `seconds` of model time in small steps (physics settles after a seek / swap). */
+  /**
+   * Run `seconds` of model time in small steps (physics settles after a seek / swap). `model.update` only advances the clock, so
+   * every step also runs the internal update (motions, physics, pose): otherwise the whole span would be applied as one big step
+   * on the next rendered frame and the hair / clothes would jump.
+   */
   settle(seconds: number, stepMs = 33): void {
-    for (let t = 0; t < seconds * 1000; t += stepMs) this.model.update(stepMs);
+    for (let t = 0; t < seconds * 1000; t += stepMs) {
+      this.model.update(stepMs);
+      this.updateHidden();
+    }
   }
 
   /**
