@@ -34,8 +34,8 @@ export interface BreakdownResult {
   runs: RunInfo[];
 }
 
-/** Output budget of one breakdown call: about 600 tokens per scene, generous (an unused budget costs nothing); a truncated answer is split and retried. */
-const breakdownTokens = (n: number, cap = 16000) => Math.min(cap, 4000 + n * 120);
+/** Output budget of one breakdown call: about 600 tokens per scene, doubled (an unused budget costs nothing); a truncated answer is split and retried. */
+const breakdownTokens = (n: number, cap = 16000) => Math.min(cap, 2 * (4000 + n * 120));
 
 async function breakdownChunk(d: DirectorDeps, system: string, prefix: string, paras: Paragraph[], carry: BreakdownCarry | null, runs: RunInfo[], depth = 0): Promise<Breakdown> {
   const first = paras[0]!.index;

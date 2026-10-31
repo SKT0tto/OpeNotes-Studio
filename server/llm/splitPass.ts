@@ -30,14 +30,15 @@ export const MAX_LINES_PER_CALL = 20;
 /**
  * The output budget of one call: every line is answered with its pieces repeated verbatim plus a reason / emotion / camera each, about
  * `300 + 1.3 x characters` tokens (a real 13-line scene came to ~410 per line), with 40% headroom, plus a thinking allowance (a floor of
- * 4096 per call, like the other director calls' 4000+ bases). A budget that is too tight cuts the answer off and costs a second call.
+ * 4096 per call, like the other director calls' 4000+ bases), all doubled. A budget that is too tight cuts the answer off and costs a
+ * second call; an unused one costs nothing.
  */
 /** Reasoning tokens of a thinking model (deepseek-flash...) count against `max_tokens` too: every call gets at least this much on top of the visible JSON. */
 export const SPLIT_THINKING_ALLOWANCE = 4096;
 
 export function splitOutputBudget(textLengths: readonly number[], cap: number): number {
   const need = textLengths.reduce((s, n) => s + 300 + 1.3 * n, 0);
-  return Math.min(cap, Math.ceil(SPLIT_THINKING_ALLOWANCE + 1.4 * need));
+  return Math.min(cap, Math.ceil(2 * (SPLIT_THINKING_ALLOWANCE + 1.4 * need)));
 }
 
 export interface SplitPassArgs {

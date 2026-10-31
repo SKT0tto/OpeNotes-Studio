@@ -72,6 +72,11 @@ const MEASURED_HEADROOM = 1.3;
  * model cuts into many beats at its emotional turns) is not sized like a short one.
  */
 const TOKENS_PER_CHAR = 4;
+/**
+ * A call is allowed twice the output it is estimated to need: an unused budget costs nothing, while a cut-off answer costs a retry.
+ * Spans are still planned on the estimate (planCap), so this changes how far a call may run, not how the scene is split.
+ */
+export const BUDGET_HEADROOM = 2;
 
 const protectedBeat = (b: Beat, overwrite: boolean) => b.meta.locked || (b.meta.lockedFields?.length ?? 0) > 0 || (!overwrite && b.meta.source === 'user') || b.overflow === 'expand';
 
@@ -162,7 +167,8 @@ export async function runScene(d: DirectorDeps, req: SceneRequest, genId: string
     const range = { start: paras[0]!.index, end: paras.at(-1)!.index };
     const fixedIds = new Set(fixedHere.map((b) => b.id));
     const chars = paras.reduce((n, p) => n + p.text.length, 0);
-    const tokens = keepWhole ? cap : Math.min(cap, structure ? 1500 + Math.max(tpp * paras.length, TOKENS_PER_CHAR * chars) : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length)));
+    const estimate = structure ? 1500 + Math.max(tpp * paras.length, TOKENS_PER_CHAR * chars) : Math.max(4000, 1500 + 700 * Math.max(1, fixedHere.length));
+    const tokens = keepWhole ? cap : Math.min(cap, BUDGET_HEADROOM * estimate);
     const step = (maxTokens: number) => runStep({
       provider: d.provider, cache: d.cache, promptVersion: sys.promptVersion, pass: 'scene', label, refresh: d.refresh === true,
       req: { system: sys.system, input: sceneInput(input), schema: sys.schema, schemaName: sys.schemaName, maxTokens, signal: d.signal },
