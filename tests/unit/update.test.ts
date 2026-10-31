@@ -349,6 +349,31 @@ describe('install fixtures', () => {
       expect(tree()).toEqual(original);
     });
 
+    it('a file locked during --rollback: the version stays new, a second rollback after unlocking restores exactly the old install', () => {
+      install('1.0.0', { 'dist/web/old.js': 'old' });
+      const original = tree();
+      apply('1.0.0', '1.1.0', next());
+      u.tuning.retries = 1;
+      let locked = true;
+      failRename('dist/server/index.mjs', () => locked, 'EPERM');
+      expect(() => u.rollbackLatest(root)).toThrow(/没能还原[\s\S]*index\.mjs/);
+      expect(read('package.json')).toContain('1.1.0'); // not restored while something else failed
+      locked = false;
+      expect(u.rollbackLatest(root)?.manifest.from).toBe('1.0.0');
+      expect(tree()).toEqual(original);
+    });
+
+    it('tie-breaks backups with the same createdAt by sequence', () => {
+      install('1.0.0', {});
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-10-30T00:00:00Z'));
+      try {
+        apply('1.0.0', '1.0.1', pkgFiles('1.0.1', { 'dist/web/a.js': 'a' }));
+        apply('1.0.1', '1.0.2', pkgFiles('1.0.2', { 'dist/web/a.js': 'b' }));
+      } finally { vi.useRealTimers(); }
+      expect(u.rollbackLatest(root)?.manifest.from).toBe('1.0.1');
+    });
+
     it('a successful auto-restore says so', () => {
       install('1.0.0', {});
       const files = next();
@@ -369,6 +394,17 @@ describe('install fixtures', () => {
         expect(fs.readdirSync(abs('docs'))).toEqual(['GUIDE.md']);
       });
     }
+  });
+
+  it('a directory renamed only in case ends up under the new name', () => {
+    install('1.0.0', { 'examples/Old/a.json': 'a' });
+    apply('1.0.0', '1.1.0', pkgFiles('1.1.0', { 'examples/old/a.json': 'a' }));
+    expect(fs.readdirSync(abs('examples'))).toEqual(['old']);
+  });
+
+  it('a missing --from-zip file gives a Chinese error', async () => {
+    install('1.0.0', {});
+    await expect(u.main([root, '--from-zip', path.join(root, 'nope.zip')])).rejects.toThrow(/读不到发布包.*文件不存在/);
   });
 
   describe('asset-labels merge', () => {

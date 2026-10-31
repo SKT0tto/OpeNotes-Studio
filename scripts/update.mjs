@@ -297,7 +297,7 @@ export function listBackups(root) {
   for (const d of fs.readdirSync(base)) {
     try { out.push({ dir: path.join(base, d), manifest: JSON.parse(fs.readFileSync(path.join(base, d, 'manifest.json'), 'utf8')) }); } catch { /* 不是备份 */ }
   }
-  return out.sort((a, b) => String(a.manifest.createdAt ?? '').localeCompare(String(b.manifest.createdAt ?? '')) || a.dir.localeCompare(b.dir));
+  return out.sort((a, b) => String(a.manifest.createdAt ?? '').localeCompare(String(b.manifest.createdAt ?? '')) || (a.manifest.seq ?? 0) - (b.manifest.seq ?? 0) || a.dir.localeCompare(b.dir));
 }
 
 /** 备份旧文件，再原子写入新文件、删除多余文件。失败会尽力还原，并把失败项写进错误信息。返回备份目录。 */
@@ -309,7 +309,7 @@ export function applyPlan(root, files, plan, { fromVersion, toVersion }) {
     backup = path.join(base, `${fromVersion}-${localStamp()}-${crypto.randomBytes(3).toString('hex')}`);
     try { fs.mkdirSync(backup); break; } catch (e) { if (e.code !== 'EEXIST') throw e; }
   }
-  const manifest = { from: fromVersion, to: toVersion, createdAt: new Date().toISOString(), added: plan.add, changed: plan.change, removed: plan.remove, completed: false, rolledBack: false };
+  const manifest = { from: fromVersion, to: toVersion, createdAt: new Date().toISOString(), added: plan.add, changed: plan.change, removed: plan.remove, completed: false, rolledBack: false, seq: Math.max(0, ...listBackups(root).map((b) => b.manifest.seq ?? 0)) + 1 };
   try {
     for (const rel of [...plan.change, ...plan.remove]) {
       fs.mkdirSync(path.dirname(path.join(backup, rel)), { recursive: true });
@@ -322,6 +322,7 @@ export function applyPlan(root, files, plan, { fromVersion, toVersion }) {
   }
   try {
     for (const rel of plan.remove) removeFile(path.join(root, rel));
+    removeEmptyDirs(root); // a directory renamed only in case must be gone before the new one is written
     for (const rel of [...plan.add, ...plan.change]) writeAtomic(path.join(root, rel), plan.overrides[rel] ?? files.get(rel).read(), files.get(rel).mode & 0o111);
     removeEmptyDirs(root);
   } catch (e) {
@@ -357,10 +358,17 @@ export function restoreBackup(root, backup) {
   const m = JSON.parse(fs.readFileSync(path.join(backup, 'manifest.json'), 'utf8'));
   const failed = [];
   const attempt = (rel, fn) => { try { fn(); } catch (e) { failed.push({ rel, error: e.message }); } };
-  for (const rel of m.added) if (!isProtected(rel)) attempt(rel, () => removeFile(path.join(root, rel)));
-  for (const rel of [...m.changed, ...m.removed]) {
-    if (isProtected(rel)) continue;
-    attempt(rel, () => writeAtomic(path.join(root, rel), fs.readFileSync(path.join(backup, rel)), rel.endsWith('.sh')));
+  m.rollbackStarted = true; // from now on the install may be half way between `to` and `from`
+  writeManifest(backup, m);
+  const put = (rel) => attempt(rel, () => writeAtomic(path.join(root, rel), fs.readFileSync(path.join(backup, rel)), rel.endsWith('.sh')));
+  const del = (rel) => attempt(rel, () => removeFile(path.join(root, rel)));
+  const ok = (rel) => !isProtected(rel);
+  for (const rel of m.added.filter((r) => ok(r) && !LAST.includes(r))) del(rel);
+  for (const rel of [...m.changed, ...m.removed].filter((r) => ok(r) && !LAST.includes(r))) put(rel);
+  // package.json (the version) and the manifest go back last, and only when everything else did: a failed rollback keeps the new version and can simply be run again
+  if (!failed.length) {
+    for (const rel of m.added.filter((r) => ok(r) && LAST.includes(r))) del(rel);
+    for (const rel of [...m.changed, ...m.removed].filter((r) => ok(r) && LAST.includes(r)).sort(lastFirst)) put(rel);
   }
   for (const rel of [...m.added, ...m.changed, ...m.removed]) {
     try { fs.rmSync(`${path.join(root, rel)}.update-tmp`, { force: true }); } catch { /* 尽力 */ }
@@ -389,7 +397,7 @@ export function rollbackLatest(root) {
   const { version } = findInstall(root);
   const last = listBackups(root).filter((b) => b.manifest.completed !== false && !b.manifest.rolledBack).pop();
   if (!last) return null;
-  if (last.manifest.to !== version) throw new Error(`最近一次更新是 ${last.manifest.from} -> ${last.manifest.to}，但当前安装的是 ${version}，不能直接还原（安装可能被手动改动过）。备份仍在 ${last.dir}。`);
+  if (last.manifest.to !== version && !(last.manifest.rollbackStarted && last.manifest.from === version)) throw new Error(`最近一次更新是 ${last.manifest.from} -> ${last.manifest.to}，但当前安装的是 ${version}，不能直接还原（安装可能被手动改动过）。备份仍在 ${last.dir}。`);
   const { manifest, failed } = restoreBackup(root, last.dir);
   if (failed.length) throw new Error(`有 ${failed.length} 个文件没能还原：${failed.map((f) => f.rel).join('、')}。请关闭 OpeNotes Studio 和其它占用这些文件的程序，再运行一次 --rollback。`);
   return { dir: last.dir, manifest };
@@ -538,7 +546,10 @@ export async function main(argv = process.argv.slice(2)) {
   }
 
   const release = args.releaseJson ? JSON.parse(fs.readFileSync(args.releaseJson, 'utf8')) : args.zip ? null : await fetchLatestRelease();
-  let buf = args.zip ? fs.readFileSync(args.zip) : undefined;
+  let buf;
+  if (args.zip) {
+    try { buf = fs.readFileSync(args.zip); } catch (e) { throw new Error(`读不到发布包 ${path.resolve(args.zip)}：${e.code === 'ENOENT' ? '文件不存在' : e.message}`, { cause: e }); }
+  }
   let latest;
   let asset;
   let notes = '';
@@ -582,7 +593,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (plan.labels && plan.change.includes(LABELS)) {
     const l = plan.labels;
     console.log(`\n标签文件 ${LABELS} 在本地有改动，已按条目合并：保留你的 ${l.kept.length} 条编辑。`);
-    if (l.overridden.length) console.log(`以下条目的你的编辑比新版的旧，被新版覆盖了（旧文件在备份里）：${l.overridden.join('、')}`);
+    if (l.overridden.length) console.log(`以下条目新版有更新，已采用新版（你本地的版本在备份里）：${l.overridden.join('、')}`);
     if (l.rulesKept) console.log('提示：你本地的标签 rules 与新版不同，已保留你的设置。');
   }
 
