@@ -30,7 +30,8 @@
     "lint": "eslint .",
     "pack-assets": "tsx scripts/pack-assets.ts",
     "start:dev": "tsx server/index.ts",
-    "package-release": "node scripts/package-release.mjs"
+    "package-release": "node scripts/package-release.mjs",
+    "update": "node scripts/update.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0",

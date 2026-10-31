@@ -107,6 +107,8 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 4. 首次启动会安装运行依赖，并提示处理 Cubism Core。
 5. 浏览器打开后，按照配置向导检查运行环境、导入素材，并按需配置 AI。
 
+**更新**：发行包内置更新脚本（v1.0.0 之后的版本才带，1.0.0 需要先手动下载一次新版）。先关闭程序，再双击 `Update-Windows.cmd`（macOS / Linux 运行 `bash update.sh`）：它会检查 GitHub 上的新正式版，只替换有变化的文件，`data/`、`.env`、`studio.config.json`、`vendor/` 和素材不会被改动；旧文件备份在 `update-backup/`，加 `--rollback` 可还原，加 `--check` 只检查不更新。
+
 默认访问地址为 [http://127.0.0.1:5274](http://127.0.0.1:5274)。使用期间请保持启动窗口开启。
 
 关于素材格式、导入步骤和常见报错，请看[完整使用教程](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md)。
