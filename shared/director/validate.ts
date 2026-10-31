@@ -15,7 +15,7 @@ import { normalizeIntents } from './intentNormalize';
 import { allowedBackgrounds, bandText, bgFit, sceneBands, type SceneWho } from './bandFit';
 import { restorePunctuationDialogue } from './punctuationLines';
 import { EVENT_CUE, autoSelectable, bgCategoryOf } from './bgCategory';
-import { splitMerged, stripQuotes } from './mergedDialogue';
+import { splitMerged, stripQuotes, stripSingleSpeechTag } from './mergedDialogue';
 
 export interface Validated<T> {
   value: T;
@@ -436,8 +436,14 @@ export function validateDirection(input: SceneDirection, ctx: DirectionContext):
     } else if (b.speaker !== null) b.speaker = null;
     if (b.kind === 'dialogue' && b.keepId === null) {
       // spoken lines are shown without their quotation marks (the name plate already says who speaks)
-      const t = stripQuotes(b.text);
-      if (t !== b.text && t.length > 0) b.text = t;
+      const tagged = stripSingleSpeechTag(b.text, paraOf(b.paragraph)?.text);
+      if (tagged) {
+        warnings.push(`${where}的对白带着说话标签「${tagged.tag}」，已去掉`);
+        b.text = tagged.text;
+      } else {
+        const t = stripQuotes(b.text);
+        if (t !== b.text && t.length > 0) b.text = t;
+      }
     }
     if (b.kind === 'silent') b.text = '';
     // text must come from the source paragraph (beats the model only reproduces from the project - locked or hand-written - are exempt)
