@@ -4,6 +4,7 @@ import demoJson from '../../tests/fixtures/demo-project.json';
 import type { Health } from '../api';
 import { loadProject } from '../projectsApi';
 import { AspectBox } from '../ui/AspectBox';
+import { RateSelect } from '../ui/RateSelect';
 import { PlaySeek, PlayTime } from './PlayClock';
 import { usePlayerHost } from './usePlayerHost';
 
@@ -126,9 +127,7 @@ export function PlayPage({ health, projectId }: { health: Health; projectId: str
           <button onClick={advance} disabled={!ready} data-testid="play-next" title="推进台词或显示全文（空格）">下一句 <span aria-hidden="true">›</span></button>
           <label className="play-auto"><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} data-testid="play-auto" />自动推进</label>
           <span className="play-control-spacer" />
-          <label>速度<select value={rate} onChange={(e) => setRate(Number(e.target.value))} data-testid="play-rate">
-            {[0.25, 0.5, 1, 2, 4].map((r) => <option key={r} value={r}>{r}×</option>)}
-          </select></label>
+          <label>速度<RateSelect value={rate} onChange={setRate} /></label>
           <label>画幅<select value={aspect} onChange={(e) => setAspect(Number(e.target.value))} data-testid="play-aspect">
             {ASPECTS.map(([l, v]) => <option key={l} value={v}>{l}</option>)}
           </select></label>

@@ -103,3 +103,6 @@ button.card:hover { border-color: var(--accent); }
 /* Shared stage host, also used by the editor. Player layout lives in play/play.css. */
 .play-stage { position: relative; width: 100%; height: 100%; background: #000; cursor: pointer; user-select: none; }
 .play-stage canvas { display: block; width: 100%; height: 100%; }
+
+/* speed menu: the typed custom speed (web/ui/RateSelect.tsx) */
+.rate-input { width: 4.6em; font: inherit; }

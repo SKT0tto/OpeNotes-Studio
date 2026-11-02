@@ -6,6 +6,7 @@ import type { usePlayerHost } from '../../play/usePlayerHost';
 import { useProject } from '../../store/projectStore';
 import { useUi } from '../../store/uiStore';
 import { AspectBox } from '../../ui/AspectBox';
+import { RateSelect } from '../../ui/RateSelect';
 import { PlaySeek, PlayTime } from '../../play/PlayClock';
 import { StageOverlay } from '../stageTools/StageOverlay';
 import { useRenderState } from '../useRenderState';
@@ -96,9 +97,7 @@ export function Preview({ host, project, catalog }: { host: Host; project: Proje
         <PlaySeek playerRef={playerRef} ready={ready} duration={info.duration} onSeek={seek} testId="play-seek" />
         <span className="tc dim" data-testid="play-duration">{fmt(info.duration)}</span>
         <label className="inline">速度
-          <select value={rate} onChange={(e) => { set({ rate: Number(e.target.value) }); if (playerRef.current) playerRef.current.rate = Number(e.target.value); }} data-testid="play-rate">
-            {[0.25, 0.5, 1, 2, 4].map((r) => <option key={r} value={r}>{r}×</option>)}
-          </select>
+          <RateSelect value={rate} onChange={(r) => { set({ rate: r }); if (playerRef.current) playerRef.current.rate = r; }} />
         </label>
         <span className="dim" data-testid="play-status">{error ? '' : status}</span>
       </div>
