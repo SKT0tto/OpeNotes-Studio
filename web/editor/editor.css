@@ -29,6 +29,11 @@
 
 /* top bar */
 .ws-top { display: flex; align-items: center; gap: 6px; height: var(--topbar-h); padding: 0 10px; background: var(--bg-2); border-bottom: 1px solid var(--line); flex: none; }
+/* brand at the left of the top bar: the wordmark on wide windows, the square icon when the bar gets crowded */
+.ws-logo { display: inline-flex; align-items: center; flex: none; margin: 0 8px 0 2px; }
+.ws-logo-word { display: block; height: 18px; width: auto; }
+.ws-logo-icon { display: none; width: 24px; height: 24px; border-radius: 6px; }
+@media (max-width: 1360px) { .ws-logo-word { display: none; } .ws-logo-icon { display: block; } }
 .ws-title { font-size: var(--fs-title); font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sep { width: 1px; height: 18px; background: var(--line); margin: 0 4px; }
 .save-state { font-size: var(--fs-label); padding: 2px 8px; border-radius: 10px; background: var(--bg-3); color: var(--text-2); }

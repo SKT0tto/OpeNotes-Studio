@@ -28,6 +28,8 @@ import { Modal } from './ui';
 import { useCatalog } from './useCatalog';
 import { useRenderState } from './useRenderState';
 import { SHORTCUTS, useShortcuts } from './useShortcuts';
+import wordmarkUrl from './brand/wordmark.svg?url';
+import iconUrl from './brand/icon.svg?url';
 
 const AGENT_OPEN_KEY = 'studio.agent.open';
 const readAgentOpen = (): boolean => {
@@ -283,6 +285,10 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   return (
     <div className="ws" data-testid="workspace">
       <header className="ws-top">
+        <span className="ws-logo" title="OpeNotes Studio">
+          <img className="ws-logo-word" src={wordmarkUrl} alt="OpeNotes Studio" />
+          <img className="ws-logo-icon" src={iconUrl} alt="" />
+        </span>
         <button className="btn" onClick={onExit} data-testid="btn-projects" title="返回项目列表">‹ 项目</button>
         <button className="btn primary" disabled={presenting || saveState === 'saving'} onClick={() => void presentProject()} data-testid="btn-present" title="保存当前项目并进入播放器">{presenting ? '准备放映…' : '▶ 放映'}</button>
         <span className="ws-title" data-testid="ws-title" title={project.id}>{project.title}</span>
