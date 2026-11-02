@@ -79,6 +79,7 @@ p { margin: 0 0 .8em; }
 .pill-tag span { background: var(--pink); color: #fff; border-radius: 999px; padding: 1px 12px; }
 .hero h1 { font-size: clamp(44px, 7.2vw, 84px); font-weight: 900; letter-spacing: -.01em; margin: 18px 0 6px; color: var(--ink); line-height: 1.08; }
 .hero h1 span { color: var(--pink); }
+.hero-wordmark { display: block; width: min(100%, 620px); height: auto; margin: 6px 0 4px; }
 .tagline { font-size: clamp(22px, 3vw, 32px); font-weight: 800; margin: 0 0 14px; color: var(--ink); }
 .tagline::after { content: ""; display: block; width: 120px; height: 8px; margin-top: 6px; border-radius: 8px; background: linear-gradient(90deg, #ff9cc2, #ffd36b, #8ec9ff); }
 .lead { color: var(--muted); font-size: 17px; max-width: 34em; }

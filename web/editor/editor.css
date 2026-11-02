@@ -227,8 +227,8 @@
 .title-screen { position: relative; pointer-events: none; min-height: 100%; display: grid; grid-template-rows: 1fr auto; padding: clamp(28px, 6vh, 64px) clamp(24px, 5.5vw, 88px) 64px; gap: 20px; }
 .title-menu { align-self: center; width: min(500px, 100%); display: flex; flex-direction: column; pointer-events: auto; }
 .wordmark { display: flex; align-items: center; gap: 18px; }
-.hub .hub-logo { width: 64px; height: 64px; flex: none; border-radius: 17px; box-shadow: 0 10px 34px color-mix(in srgb, var(--brand-1) 45%, transparent), inset 0 0 0 1px rgba(255, 255, 255, .15); }
-.hub-title h1 { margin: 0; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.05; font-weight: 800; letter-spacing: -.015em; white-space: nowrap; background: linear-gradient(100deg, #fff 35%, color-mix(in srgb, var(--brand-2) 75%, #fff) 70%, var(--brand-3)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .5)); }
+.hub-title h1 { margin: 0; line-height: 0; }
+.hub-wordmark { display: block; width: clamp(260px, 30vw, 440px); height: auto; filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .5)); }
 .tagline { margin: 6px 0 0; display: flex; align-items: center; gap: 10px; font-size: var(--fs-label); letter-spacing: .16em; color: var(--text-2); }
 .ver-pill { letter-spacing: 0; padding: 1px 8px; border-radius: 999px; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-1); background: color-mix(in srgb, var(--brand-2) 24%, transparent); border: 1px solid color-mix(in srgb, var(--brand-2) 50%, transparent); }
 .lede { margin: 16px 0 0; max-width: 40ch; color: var(--text-2); font-size: var(--fs-title); line-height: 1.65; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
@@ -409,7 +409,6 @@
   .title-screen { display: flex; flex-direction: column; padding: 92px 16px 20px; gap: 24px; pointer-events: auto; }
   .title-menu { width: 100%; }
   .recent-strip { align-self: stretch; }
-  .hub .hub-logo { width: 52px; height: 52px; border-radius: 14px; }
   .corner-tr { top: 14px; right: 16px; left: 16px; align-items: flex-end; }
   .env-pop { width: 100%; }
   .hub-foot { position: static; max-width: none; text-align: left; padding: 0 16px 20px; }

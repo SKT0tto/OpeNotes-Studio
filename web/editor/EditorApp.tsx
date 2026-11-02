@@ -18,6 +18,7 @@ import { HubCharacter, HubCharacterMenu, HubModelPicker, useHubCharacterPrefs } 
 import { DEFAULT_PLACEMENT, resolveHubModel } from './hubCharacterLogic';
 import { HubBackgroundMenu, HubBackgroundPicker, useHubBackgroundPrefs, useHubCustomImage, StageBackground } from './HubBackground';
 import { effectiveBackgroundPrefs, resolveHubBackground, shouldPersistBackgroundFallback } from './hubBackgroundLogic';
+import wordmarkUrl from './brand/wordmark.svg?url';
 
 const when = (t: number) => new Date(t).toLocaleString('zh-CN', { hour12: false });
 const ago = (t: number) => {
@@ -233,14 +234,8 @@ export function EditorApp({ health, onHealthChanged }: { health: Health; onHealt
       <main className="title-screen">
         <section className="title-menu" aria-label="开始">
           <header className="wordmark">
-            <svg className="hub-logo" viewBox="0 0 48 48" aria-hidden="true">
-              <defs><linearGradient id="hl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#5b8cff" /><stop offset="1" stopColor="#b48cff" /></linearGradient></defs>
-              <rect width="48" height="48" rx="12" fill="url(#hl)" />
-              <path d="M18 33V15l14-3v18" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="14.5" cy="33" r="3.5" fill="#fff" /><circle cx="28.5" cy="30" r="3.5" fill="#fff" />
-            </svg>
             <div className="hub-title">
-              <h1>OpeNotes Studio</h1>
+              <h1><img className="hub-wordmark" src={wordmarkUrl} alt="OpeNotes Studio" width={1330} height={180} /></h1>
               <p className="tagline">Live2D 剧情演出工作室 <span className="ver-pill">v{health.version}</span></p>
             </div>
           </header>
