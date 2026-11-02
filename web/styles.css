@@ -104,5 +104,7 @@ button.card:hover { border-color: var(--accent); }
 .play-stage { position: relative; width: 100%; height: 100%; background: #000; cursor: pointer; user-select: none; }
 .play-stage canvas { display: block; width: 100%; height: 100%; }
 
-/* speed menu: the typed custom speed (web/ui/RateSelect.tsx) */
-.rate-input { width: 4.6em; font: inherit; }
+/* speed menu: the typed custom speed (web/ui/RateSelect.tsx), drawn like the select it replaces */
+.rate-input { box-sizing: border-box; width: 65px; padding: 3px 7px; background: var(--bg-3); color: var(--text-1); border: 1px solid var(--accent); border-radius: var(--radius-s); font: inherit; text-align: center; outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+.rate-input::placeholder { color: var(--text-3, var(--text-2)); }
+.ws .rate-input { height: 24px; }
