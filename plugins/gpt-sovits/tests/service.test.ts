@@ -265,12 +265,11 @@ describe('new versions of one line (regenerate)', () => {
 
   it('keeps the newest 5 versions of a line and the one the line points to, and prunes the rest', async () => {
     const p = project();
-    let last: VoiceJobView | null = null;
     const made: string[] = [];
     for (let i = 0; i < 8; i++) {
-      last = await run(p, sc, { regenerate: true });
-      apply(p, last);
-      made.push(last.results[0]!.voice.file!);
+      const v = await run(p, sc, { regenerate: true });
+      apply(p, v);
+      made.push(v.results[0]!.voice.file!);
     }
     const files = beatFiles();
     expect(files).toHaveLength(5);
