@@ -1,7 +1,8 @@
 /** 「配音」: the GPT-SoVITS auto voice-over plugin: server address, per-character voices (with 「自动匹配」), and generation for the project / scene. */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MatchResult, MatchRow } from '../match/match';
-import { DEFAULT_SOVITS_ENDPOINT, hasVoice, type VoiceProfile, type VoiceScope, type VoiceSettings } from '../schema';
+import { DEFAULT_SOVITS_ENDPOINT, hasVoice } from '../profile';
+import type { VoiceProfile, VoiceScope, VoiceSettings } from '../schema';
 import { host, previewVoice, requestMatch, testVoiceConnection } from './api';
 import { cancelJob, jobRunning, loadSettings, runJob, saveSettings, useVoice } from './store';
 

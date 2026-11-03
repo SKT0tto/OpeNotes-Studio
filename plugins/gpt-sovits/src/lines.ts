@@ -1,5 +1,6 @@
 import type { Beat, Project } from '../../../shared/schema/project';
-import { hasVoice, type VoiceProfile } from './schema';
+import { hasVoice } from './profile';
+import type { VoiceProfile } from './schema';
 
 /** A beat the plugin voices: a spoken line (any variant) with a speaker. Narration, actions, pauses ... are never voiced. */
 export const isSpokenBeat = (b: Pick<Beat, 'kind' | 'speakerId'>): boolean => b.kind === 'dialogue' && !!b.speakerId;

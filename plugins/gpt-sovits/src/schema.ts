@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
-/** Default address of GPT-SoVITS `api_v2.py`. */
-export const DEFAULT_SOVITS_ENDPOINT = 'http://127.0.0.1:9880';
+import { DEFAULT_SOVITS_ENDPOINT, hasVoice } from './profile';
+
+export { DEFAULT_SOVITS_ENDPOINT, hasVoice };
 
 /** A character's voice (keyed by cast `characterKey`, shared by every project). A profile without `refAudioPath` = the character is not voiced. */
 export const VoiceProfileSchema = z.object({
@@ -42,7 +43,6 @@ export const VoiceSettingsPatchSchema = z.object({
 });
 export type VoiceSettingsPatch = z.infer<typeof VoiceSettingsPatchSchema>;
 
-export const hasVoice = (p: VoiceProfile | undefined): p is VoiceProfile & { refAudioPath: string } => !!p?.refAudioPath?.trim();
 
 const blank = (x: string | undefined): string | undefined => (x && x.trim() !== '' ? x.trim() : undefined);
 
