@@ -23,6 +23,9 @@ import { importRoutes } from './assets/import/routes';
 import { HaneokaSource } from './assets/sources/haneoka';
 import { sourceRoutes } from './assets/sources/routes';
 import { SetupStore, setupRoutes } from './setup/routes';
+import { VoiceService } from './voice/service';
+import { voiceRoutes } from './voice/routes';
+import { VoiceSettingsStore } from './voice/store';
 
 export interface AppHandle {
   app: Express;
@@ -105,6 +108,8 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
   app.use(backgroundRoutes(config));
   app.use(hubBackgroundRoutes(config));
   app.use(thumbRoutes(config, env.THUMB_SHEET_DIR ? { sheetDir: env.THUMB_SHEET_DIR } : {}));
+  const voiceSettings = new VoiceSettingsStore(path.resolve(env.VOICE_SETTINGS_FILE ?? path.join(config.dataDir, 'voice.local.json')));
+  app.use(voiceRoutes(voiceSettings, new VoiceService({ settings: voiceSettings, projectsDir: path.join(config.dataDir, 'projects'), provider: () => llm.provider(), cache: llmCache })));
   app.use(projectRoutes(config));
 
   const webDist = path.resolve('dist', 'web');
