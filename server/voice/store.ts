@@ -46,6 +46,10 @@ export class VoiceSettingsStore {
       textLang: p.textLang?.trim() || cur.textLang,
       profiles,
     };
+    for (const k of ['defaultGptWeights', 'defaultSovitsWeights'] as const) {
+      const v = k in p ? p[k]?.trim() : cur[k];
+      if (v) next[k] = v;
+    }
     this.write(next);
     return next;
   }

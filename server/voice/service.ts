@@ -7,7 +7,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Beat, Project } from '../../shared/schema/project';
-import { hasVoice, type VoiceBeatResult, type VoiceJobView, type VoiceProfile, type VoiceScope, type VoiceSettings } from '../../shared/schema/voice';
+import { effectiveProfile, hasVoice, leakMessage, weightsLeak, type VoiceBeatResult, type VoiceJobView, type VoiceProfile, type VoiceScope, type VoiceSettings } from '../../shared/schema/voice';
 import { hasWords, profileOfBeat, spokenText } from '../../shared/voice/lines';
 import { wavSeconds } from '../../shared/voice/wav';
 import type { LlmCache } from '../llm/cache';
@@ -191,8 +191,12 @@ export class VoiceService {
     const byChar = new Map<string, Target[]>();
     for (const t of sound) byChar.set(t.characterKey, [...(byChar.get(t.characterKey) ?? []), t]);
     for (const group of byChar.values()) {
-      const profile = group[0]!.profile;
       const name = group[0]!.displayName;
+      if (weightsLeak(settings, group[0]!.profile).length > 0) {
+        for (const t of group) this.fail(job, t.beat.id, leakMessage(name));
+        continue;
+      }
+      const profile = effectiveProfile(settings, group[0]!.profile) as VoiceProfile & { refAudioPath: string };
       // files that are already there need no server at all
       const pending: Array<{ t: Target; hash: string }> = [];
       for (const t of group) {
@@ -287,7 +291,9 @@ export class VoiceService {
     const profile = settings.profiles[characterKey];
     if (!hasVoice(profile)) throw new VoiceError(400, '这个角色还没有设置参考音频');
     if (this.running()) throw new VoiceError(409, '配音任务正在运行，等它结束后再试听');
-    await this.ensureWeights(settings.endpoint, profile, signal);
-    return tts(settings.endpoint, { text, textLang: settings.textLang, profile }, signal);
+    if (weightsLeak(settings, profile).length > 0) throw new VoiceError(400, leakMessage(characterKey));
+    const eff = effectiveProfile(settings, profile) as VoiceProfile & { refAudioPath: string };
+    await this.ensureWeights(settings.endpoint, eff, signal);
+    return tts(settings.endpoint, { text, textLang: settings.textLang, profile: eff }, signal);
   }
 }

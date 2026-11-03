@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ProjectSchema, type Project } from '../../shared/schema/project';
-import { VoiceSettingsSchema } from '../../shared/schema/voice';
+import { VoiceSettingsSchema, effectiveProfile, weightsLeak } from '../../shared/schema/voice';
 import { exportEnvelope, parseImport } from '../../shared/project/exchange';
 import { resolveStyle } from '../../shared/style/ournotes';
 import { compileProject } from '../../shared/timeline/compile';
@@ -160,5 +160,35 @@ describe('VoiceSettingsStore', () => {
     expect(s.profiles['001']).toEqual({ refAudioPath: 'r.wav', promptText: 'x', promptLang: 'ja', speed: 1.1 });
     expect(store.patch({ profiles: { '001': null } }).profiles).toEqual({});
     expect(() => store.patch({ volume: 3 })).toThrow();
+  });
+});
+
+describe('effective weights and the leak guard', () => {
+  const base = { refAudioPath: 'r.wav', promptText: '', promptLang: 'ja', speed: 1 };
+  const settings = (o: object = {}) => VoiceSettingsSchema.parse({ enabled: true, ...o });
+  it('a blank profile weight falls back to the default; an explicit one wins', () => {
+    const s = settings({ defaultGptWeights: 'dg.ckpt', defaultSovitsWeights: 'ds.pth' });
+    expect(effectiveProfile(s, base)).toMatchObject({ gptWeights: 'dg.ckpt', sovitsWeights: 'ds.pth' });
+    expect(effectiveProfile(s, { ...base, gptWeights: 'own.ckpt' })).toMatchObject({ gptWeights: 'own.ckpt', sovitsWeights: 'ds.pth' });
+    expect(effectiveProfile(settings(), base).gptWeights).toBeUndefined();
+  });
+  it('blank weights leak only when another profile uses explicit ones', () => {
+    const a = { ...base, gptWeights: 'a.ckpt', sovitsWeights: 'a.pth' };
+    expect(weightsLeak(settings({ profiles: { x: base, y: base } }), base)).toEqual([]); // everyone shares the start-up model
+    expect(weightsLeak(settings({ profiles: { a, x: base } }), base)).toEqual(['GPT', 'SoVITS']);
+    expect(weightsLeak(settings({ profiles: { a, x: { ...base, gptWeights: 'x.ckpt' } } }), { ...base, gptWeights: 'x.ckpt' })).toEqual(['SoVITS']);
+    expect(weightsLeak(settings({ defaultGptWeights: 'd.ckpt', defaultSovitsWeights: 'd.pth', profiles: { a, x: base } }), base)).toEqual([]);
+  });
+  it('the hash follows the default weights', () => {
+    const h = (s: object) => voiceHash('こんにちは', effectiveProfile(settings(s), base), 'ja');
+    expect(h({ defaultGptWeights: 'a.ckpt' })).not.toBe(h({}));
+    expect(h({ defaultGptWeights: 'a.ckpt' })).not.toBe(h({ defaultGptWeights: 'b.ckpt' }));
+    expect(h({ defaultGptWeights: 'a.ckpt' })).toBe(h({ defaultGptWeights: 'a.ckpt' }));
+  });
+  it('the store keeps and clears the defaults', () => {
+    const store = new VoiceSettingsStore(path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'voice-')), 'v.json'));
+    expect(store.patch({ defaultGptWeights: ' g.ckpt ' }).defaultGptWeights).toBe('g.ckpt');
+    expect(store.patch({ enabled: true }).defaultGptWeights).toBe('g.ckpt');
+    expect(store.patch({ defaultGptWeights: '' }).defaultGptWeights).toBeUndefined();
   });
 });

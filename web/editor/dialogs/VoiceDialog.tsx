@@ -20,6 +20,8 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
   const [endpoint, setEndpoint] = useState(DEFAULT_SOVITS_ENDPOINT);
   const [volume, setVolume] = useState(1);
   const [textLang, setTextLang] = useState('ja');
+  const [defGpt, setDefGpt] = useState('');
+  const [defSov, setDefSov] = useState('');
   const [profiles, setProfiles] = useState<Record<string, VoiceProfile>>({});
   const [conn, setConn] = useState<{ ok: boolean; message: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -35,6 +37,8 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
     setVolume(s.volume);
     setTextLang(s.textLang);
     setProfiles(s.profiles);
+    setDefGpt(s.defaultGptWeights ?? '');
+    setDefSov(s.defaultSovitsWeights ?? '');
   }, []);
   useEffect(() => {
     void useVoice.getState().load().then((s) => s && adopt(s));
@@ -59,7 +63,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
     try {
       const profs: Record<string, VoiceProfile | null> = {};
       for (const [k, v] of Object.entries(profiles)) profs[k] = v.refAudioPath?.trim() || v.gptWeights?.trim() || v.sovitsWeights?.trim() || v.promptText ? v : null;
-      adopt(await useVoice.getState().save({ enabled, endpoint, volume, textLang, profiles: profs }));
+      adopt(await useVoice.getState().save({ enabled, endpoint, volume, textLang, defaultGptWeights: defGpt, defaultSovitsWeights: defSov, profiles: profs }));
       setSaved(true);
       return true;
     } catch (e) {
@@ -141,6 +145,9 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
 
           <h3 className="voice-h">角色声线</h3>
           <p className="hint">路径是 GPT-SoVITS 所在电脑上的路径。权重留空 = 沿用服务当前已加载的模型。参考音频建议 3–10 秒、与参考文本一致。</p>
+          <label className="srow"><span>默认 GPT 权重</span><input className="text" value={defGpt} onChange={(e) => { setDefGpt(e.target.value); setSaved(false); }} placeholder=".ckpt（可空）" data-testid="voice-def-gpt" /></label>
+          <label className="srow"><span>默认 SoVITS 权重</span><input className="text" value={defSov} onChange={(e) => { setDefSov(e.target.value); setSaved(false); }} placeholder=".pth（可空）" data-testid="voice-def-sovits" /></label>
+          <p className="hint">角色的权重留空时用这里的；也留空 = 用 GPT-SoVITS 启动时加载的模型（这时请让所有角色都留空，否则会串用别人的模型）。</p>
           {rows.length === 0 && <p className="hint">项目里还没有角色。</p>}
           {rows.map((r) => {
             const p = profiles[r.key] ?? BLANK;

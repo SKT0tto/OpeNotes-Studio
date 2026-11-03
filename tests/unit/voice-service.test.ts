@@ -222,6 +222,28 @@ describe('voice job against a fake GPT-SoVITS', () => {
   });
 });
 
+describe('per-character models', () => {
+  it('fails a line whose character has no weights while another character uses its own', async () => {
+    store.patch({ profiles: { '001': profile('a'), '002': { ...profile('b'), gptWeights: '', sovitsWeights: '' } } });
+    const p = project();
+    const v = await run(p, { kind: 'scene', sceneId: 's1' });
+    const key = (id: string) => p.cast.find((c) => c.id === p.scenes[0]!.beats.find((b) => b.id === id)!.speakerId)!.characterKey;
+    expect(v.errors.length).toBeGreaterThan(0);
+    for (const e of v.errors) {
+      expect(key(e.beatId)).toBe('002');
+      expect(e.message).toContain('没有填权重');
+    }
+    expect(v.results.some((r) => r.voice.file && key(r.beatId) === '001')).toBe(true);
+  });
+  it('uses the default weights for a blank profile, once', async () => {
+    store.patch({ defaultGptWeights: 'dg.ckpt', defaultSovitsWeights: 'ds.pth', profiles: { '001': { ...profile('a'), gptWeights: '', sovitsWeights: '' }, '002': { ...profile('b'), gptWeights: '', sovitsWeights: '' } } });
+    const v = await run(project(), { kind: 'scene', sceneId: 's1' });
+    expect(v.errors).toEqual([]);
+    const w = sovits.calls.filter((c) => c.path.startsWith('/set_'));
+    expect(w.map((c) => c.query!.weights_path).sort()).toEqual(['dg.ckpt', 'ds.pth']);
+  });
+});
+
 describe('voice routes', () => {
   let base: string;
   let close: () => void;
