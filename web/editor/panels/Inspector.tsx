@@ -25,6 +25,7 @@ import { useSceneFit } from '../bg/bgFit';
 import { BgPicker } from '../bg/BgPicker';
 import { BgThumb } from '../bg/BgThumb';
 import { StyleSection } from './StyleFields';
+import { VoiceFields } from './VoiceFields';
 import { cachedLineInfo, expandHint, lineIndicator } from '../longLines';
 import { splitLongLines, useSplitRun } from '../longLinesRun';
 
@@ -441,7 +442,7 @@ function BeatFields({ project, scene, beat, compiled }: { project: Project; scen
           )}
         </Row>
       </Section>
-
+      <VoiceFields project={project} scene={scene} beat={beat} />
     </>
   );
 }

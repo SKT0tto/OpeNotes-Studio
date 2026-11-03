@@ -17,6 +17,7 @@ import { registerDebugApp, registerDebugBoxes, registerDebugCamera, registerDebu
 import { ensureRuntime } from '../engine/runtime';
 import { frameTimes } from '@shared/agent/frames';
 import { registerFrameGrabber } from '../agentFrames';
+import { useVoice } from '../store/voiceStore';
 
 export interface PlayInfo {
   t: number;
@@ -72,6 +73,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
     let unsubscribe: (() => void) | null = null;
     let unsubscribeSlow: (() => void) | null = null;
     let removeRestore: (() => void) | null = null;
+    let unsubscribeVoice: (() => void) | null = null;
     const audio = new AudioEngine();
     const el = host.current!;
     setError(null);
@@ -124,6 +126,14 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       player = await Player.create(stage, library, audio, first);
       if (dead) return;
       player.auto = autoRef.current;
+      // voice-over plugin (off unless enabled in its settings): follows the settings, which may change while the editor is open
+      const applyVoice = () => {
+        const v = useVoice.getState().settings;
+        player!.setVoice(!!v?.enabled, v?.volume ?? 1);
+      };
+      applyVoice();
+      unsubscribeVoice = useVoice.subscribe(applyVoice);
+      void useVoice.getState().load();
       hudRef.current = hud;
       hud.setAuto(autoRef.current);
       playerRef.current = player;
@@ -183,6 +193,7 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       registerDebugApp(null);
       unsubscribe?.();
       unsubscribeSlow?.();
+      unsubscribeVoice?.();
       player?.dispose();
       playerRef.current = null;
       hudRef.current = null;

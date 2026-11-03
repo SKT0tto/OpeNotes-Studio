@@ -6,7 +6,7 @@
 import type { Project } from '@shared/schema/project';
 import { compileProject } from '@shared/timeline/compile';
 import { evaluate } from '@shared/timeline/evaluate';
-import type { CompiledBeat, CompiledProject, RenderState } from '@shared/timeline/types';
+import type { CompiledBeat, CompiledProject, RenderState, VoiceEvent } from '@shared/timeline/types';
 import type { Ticker } from 'pixi.js';
 import type { AudioEngine } from './AudioEngine';
 import type { ModelLibrary } from './ModelLibrary';
@@ -64,6 +64,12 @@ export class Player {
   private bgmKey = '';
   /** Audio stays untouched until the first user-initiated play (browser autoplay policy). */
   private audioOn = false;
+  /** Voice-over (the GPT-SoVITS plugin): off unless the host turns it on; the volume is the plugin's setting. */
+  private voiceEnabled = false;
+  private voiceKey = '';
+  /** Bumped by every seek: a voice line that is playing restarts from the new position. */
+  private seekEpoch = 0;
+  private voiceRate = 1;
 
   private constructor(
     private readonly stage: Stage,
@@ -112,6 +118,14 @@ export class Player {
     return true;
   }
 
+  /** Turns the voice-over on / off and sets its volume (0..1). Off = recorded lines are neither played nor drive the mouth. */
+  setVoice(enabled: boolean, volume: number): void {
+    this.voiceEnabled = enabled;
+    this.audio.setVoiceVolume(volume);
+    if (!enabled) this.audio.stopVoice();
+    this.voiceKey = '';
+  }
+
   get isPlaying(): boolean {
     return this.playing;
   }
@@ -148,6 +162,7 @@ export class Player {
     this.playing = true;
     this.waiting = false;
     this.audioOn = true;
+    this.voiceKey = '';
     if (this.lastState) this.fireSlow(this.lastState);
     await this.audio.resume().catch(() => undefined);
     if (this.lastState) void this.syncAudio(this.lastState);
@@ -155,12 +170,15 @@ export class Player {
 
   pause(): void {
     this.playing = false;
+    this.audio.stopVoice();
+    this.voiceKey = '';
     if (this.lastState) this.fireSlow(this.lastState);
     void this.audio.suspend().catch(() => undefined);
   }
 
   /** Jump anywhere: the frame is exactly evaluate(t) with models / motions / physics prepared first. */
   async seek(t: number): Promise<void> {
+    this.seekEpoch++;
     this.t = Math.min(this.duration, Math.max(0, t));
     this.waiting = false;
     if (this.busy) {
@@ -317,6 +335,8 @@ export class Player {
   }
 
   private render(state: RenderState): void {
+    if (this.audioOn) this.syncVoice();
+    this.lipSync(state);
     this.stage.apply(state);
     this.lastState = state;
     if (this.audioOn) void this.syncAudio(state);
@@ -333,6 +353,63 @@ export class Player {
       this.prefetched.delete(next);
       console.error(e);
     });
+  }
+
+  /** The voiced line whose beat is on screen at `this.t` (its recording may be shorter than the beat), or null. */
+  private voiceEventAt(t: number): { ev: VoiceEvent; end: number } | null {
+    const events = this.compiled.voice;
+    if (!events) return null;
+    let ev: VoiceEvent | undefined;
+    for (const e of events) if (e.at <= t + 1e-9) ev = e;
+    if (!ev) return null;
+    for (const sc of this.compiled.scenes) {
+      const b = sc.beats.find((x) => x.id === ev!.beatId);
+      if (b) return t < b.end ? { ev, end: b.end } : null;
+    }
+    return null;
+  }
+
+  /** Starts the voice of the beat that is on screen (from the right offset), stops it when the beat is left; prefetches the next lines. */
+  private syncVoice(): void {
+    if (!this.voiceEnabled || !this.compiled.voice) return;
+    if (!this.playing) {
+      this.audio.stopVoice();
+      return;
+    }
+    if (this.rate !== this.voiceRate) {
+      this.voiceRate = this.rate;
+      this.audio.setVoiceRate(this.rate);
+    }
+    for (const e of this.compiled.voice) if (e.at > this.t && e.at - this.t < 8) void this.audio.loadVoice(e.url).catch(() => undefined);
+    const cur = this.voiceEventAt(this.t);
+    const active = cur && this.t < cur.ev.at + cur.ev.seconds ? cur.ev : null;
+    if (!active) {
+      if (this.audio.voicePlaying) this.audio.stopVoice();
+      this.voiceKey = '';
+      return;
+    }
+    const key = `${active.beatId}|${active.url}|${this.seekEpoch}`;
+    if (key === this.voiceKey) return;
+    this.voiceKey = key; // set first: a failing file is tried once, not on every frame
+    this.audio.stopVoice();
+    void this.audio
+      .loadVoice(active.url)
+      .then((buf) => {
+        if (this.voiceKey !== key || !this.playing) return; // superseded while decoding
+        this.audio.startVoice(buf, Math.max(0, this.t - active.at), this.rate);
+      })
+      .catch((e) => console.warn(`voice ${active.url} failed`, e));
+  }
+
+  /** While a recorded line plays, the speaker's mouth follows the audio; the text-based mouth only drives beats without a recording. */
+  private lipSync(state: RenderState): void {
+    if (!this.voiceEnabled || !this.audioOn || !this.playing || !this.compiled.voice) return;
+    const cur = this.voiceEventAt(this.t);
+    if (!cur) return;
+    const a = state.actors.find((x) => x.castId === cur.ev.speakerId);
+    if (!a) return;
+    const gain = state.ui.performance.mouthGain;
+    a.mouth = Math.min(1, (this.audio.voiceMouth() ?? 0) * gain);
   }
 
   private async audioUrl(assetId: string): Promise<string | null> {

@@ -12,6 +12,7 @@ import { CameraSystemSwitch } from './CameraSystemSwitch';
 import { downloadProject } from './io';
 import { AssetBrowser } from './panels/AssetBrowser';
 import { SettingsDialog } from './dialogs/SettingsDialog';
+import { VoiceDialog } from './dialogs/VoiceDialog';
 import { AiPanel } from './panels/AiPanel';
 import { useDirectorRun, type CameraGenerationRequest } from './panels/directorRun';
 import { useAgent } from '../store/agentStore';
@@ -57,6 +58,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
   const toast = useUi((s) => s.toast);
   const helpOpen = useUi((s) => s.helpOpen);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const [presenting, setPresenting] = useState(false);
   const presentingRef = useRef(false);
   const keySel = useUi((s) => s.keySel);
@@ -310,6 +312,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         <span className="grow" />
         {notice && <span className="notice" data-testid="notice">{notice}</span>}
         <button className="btn" onClick={() => setSettingsOpen(true)} data-testid="btn-settings">AI 设置</button>
+        <button className="btn" onClick={() => setVoiceOpen(true)} data-testid="btn-voice" title="GPT-SoVITS 自动配音（可选插件）">配音</button>
         <button className="btn" onClick={() => set({ helpOpen: true })} data-testid="btn-help" title="快捷键（?）">？ 快捷键</button>
         <button className={`btn toggle${agentOpen ? ' on' : ''}`} onClick={toggleAgent} aria-pressed={agentOpen} data-testid="btn-agent" title="AI 面板（Ctrl+K）：对话、生成、修改">AI</button>
         <button className={`btn toggle${leftOpen ? ' on' : ''}`} onClick={() => dock?.toggle('sidebar')} aria-pressed={leftOpen} title="左栏">▌◧</button>
@@ -336,6 +339,7 @@ export function Workspace({ health, onExit }: { health: Health; onExit: () => vo
         <span>{host.ready ? '预览就绪' : host.status}</span>
       </footer>
       {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {voiceOpen && <VoiceDialog onClose={() => setVoiceOpen(false)} />}
       {helpOpen && (
         <Modal title="快捷键" onClose={() => set({ helpOpen: false })} testid="help-sheet">
           <table className="keys-table"><tbody>{SHORTCUTS.map(([k, d]) => <tr key={k}><td><kbd>{k}</kbd></td><td>{d}</td></tr>)}</tbody></table>
