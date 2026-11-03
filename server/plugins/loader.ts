@@ -128,7 +128,7 @@ export class PluginHost {
       dataDir: path.join(d.dataDir, 'plugins', id),
       rootDataDir: d.dataDir,
       log: (m) => d.log(`[${id}] ${m}`),
-      voice: { write: (p, n, b) => d.voiceFiles.write(p, n, b), read: (p, n) => d.voiceFiles.read(p, n), list: (p) => d.voiceFiles.list(p), remove: (p, n) => d.voiceFiles.remove(p, n) },
+      voice: { write: (p, n, b) => d.voiceFiles.write(p, n, b), read: (p, n) => d.voiceFiles.read(p, n), list: (p) => d.voiceFiles.list(p), listWithTimes: (p) => d.voiceFiles.listWithTimes(p), remove: (p, n) => d.voiceFiles.remove(p, n) },
       llm: {
         available: () => {
           const p = d.llm.provider();

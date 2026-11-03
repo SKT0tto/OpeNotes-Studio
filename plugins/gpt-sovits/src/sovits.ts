@@ -12,6 +12,8 @@ export interface TtsRequest {
   text: string;
   textLang: string;
   profile: Pick<VoiceProfile, 'promptText' | 'promptLang' | 'speed'> & { refAudioPath: string };
+  /** Fixed random seed (a version that can be reproduced); absent = the server's own (-1, random). */
+  seed?: number | undefined;
 }
 
 const base = (endpoint: string) => endpoint.trim().replace(/\/+$/, '');
@@ -67,7 +69,7 @@ export async function tts(endpoint: string, req: TtsRequest, signal?: AbortSigna
     text: req.text, text_lang: req.textLang,
     ref_audio_path: req.profile.refAudioPath, prompt_lang: req.profile.promptLang,
     ...(req.profile.promptText ? { prompt_text: req.profile.promptText } : {}),
-    speed_factor: req.profile.speed, media_type: 'wav', streaming_mode: false, text_split_method: 'cut5', batch_size: 1,
+    speed_factor: req.profile.speed, media_type: 'wav', streaming_mode: false, text_split_method: 'cut5', batch_size: 1, ...(req.seed !== undefined ? { seed: req.seed } : {}),
   };
   const res = await call(endpoint, '/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), timeoutMs: 300_000 }, signal);
   if (!res.ok) throw new SovitsError(`GPT-SoVITS 合成失败：${await reason(res)}`, 'rejected');

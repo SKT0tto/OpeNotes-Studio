@@ -69,6 +69,8 @@ export const BeatVoiceSchema = z.object({
   spoken: z.string().optional(),
   spokenEdited: z.boolean().optional(),
   hash: z.string().optional(),
+  /** Random seed of this take (GPT-SoVITS output is random): the same seed and text reproduce it. */
+  seed: z.number().int().optional(),
   by: z.string().optional(),
 });
 export type BeatVoice = z.infer<typeof BeatVoiceSchema>;

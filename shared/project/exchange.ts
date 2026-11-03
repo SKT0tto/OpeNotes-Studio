@@ -58,6 +58,7 @@ function withoutVoiceFiles(project: Project): Project {
     delete rest.file;
     delete rest.seconds;
     delete rest.hash;
+    delete rest.seed;
     return { ...b, voice: rest };
   }) })) };
 }

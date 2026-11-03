@@ -66,6 +66,8 @@ export interface PluginServerContext {
     write(projectId: string, name: string, bytes: Uint8Array): Promise<void>;
     read(projectId: string, name: string): Promise<Uint8Array | null>;
     list(projectId: string): Promise<string[]>;
+    /** Like `list`, with each file's modification time (ms). */
+    listWithTimes(projectId: string): Promise<Array<{ name: string; mtimeMs: number }>>;
     remove(projectId: string, name: string): Promise<void>;
   };
   llm: {

@@ -37,10 +37,10 @@ export function voiceRoutes(r: Router, settings: VoiceSettingsStore, service: Vo
   });
 
   r.post('/jobs', (req, res) => {
-    const body = z.object({ project: z.unknown(), scope: ScopeSchema, retranslate: z.boolean().optional(), force: z.boolean().optional() }).safeParse(req.body);
+    const body = z.object({ project: z.unknown(), scope: ScopeSchema, retranslate: z.boolean().optional(), force: z.boolean().optional(), regenerate: z.boolean().optional(), overwriteEdited: z.boolean().optional() }).safeParse(req.body);
     const project = body.success ? ProjectSchema.safeParse(body.data.project) : null;
     if (!body.success || !project?.success) throw new VoiceError(400, '需要合法的 project 与 scope');
-    const id = service.start(project.data, body.data.scope as VoiceScope, { retranslate: body.data.retranslate, force: body.data.force });
+    const id = service.start(project.data, body.data.scope as VoiceScope, { retranslate: body.data.retranslate, force: body.data.force, regenerate: body.data.regenerate, overwriteEdited: body.data.overwriteEdited });
     res.status(201).json({ id });
   });
   r.get('/jobs/:id', (req, res) => {

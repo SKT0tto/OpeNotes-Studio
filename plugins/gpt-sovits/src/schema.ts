@@ -85,7 +85,7 @@ export interface VoiceJobItem {
 export interface VoiceBeatResult {
   sceneId: string;
   beatId: string;
-  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; by: string };
+  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; seed?: number; by: string };
 }
 export interface VoiceJobView {
   id: string;

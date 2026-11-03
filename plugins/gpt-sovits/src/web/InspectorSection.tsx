@@ -4,7 +4,7 @@ import type { Beat, Project, Scene } from '../../../../shared/schema/project';
 import { usableVoice } from '../../../../shared/voice/lines';
 import { isSpokenBeat, profileOfBeat } from '../lines';
 import { host } from './api';
-import { jobRunning, loadSettings, runJob, useVoice } from './store';
+import { jobRunning, loadSettings, playVersion, runJob, useVoice } from './store';
 
 export function VoiceSection({ project, scene, beat }: { project: Project; scene: Scene; beat: Beat }) {
   const h = host();
@@ -39,6 +39,18 @@ export function VoiceSection({ project, scene, beat }: { project: Project; scene
       setPlayError(`播放失败：${(e as Error).message}`);
     }
   };
+  const mine = running && job?.scope.kind === 'beat' && job.scope.beatId === beat.id;
+  /** A new version of this line (same Japanese, or retranslated first); it is played as soon as it arrives. */
+  const regenerate = async (retranslate: boolean) => {
+    let overwriteEdited = false;
+    if (retranslate && v?.spokenEdited) {
+      if (!window.confirm('这句日语是你手改过的，重新翻译会覆盖它。继续吗？')) return;
+      overwriteEdited = true;
+    }
+    const view = await runJob({ kind: 'beat', sceneId: scene.id, beatId: beat.id }, { regenerate: true, label: `重新合成配音：${[...beat.text].slice(0, 6).join('')}`, ...(retranslate ? { retranslate: true, overwriteEdited } : {}) });
+    const file = view?.results.find((r) => r.beatId === beat.id)?.voice.file;
+    if (file) await playVersion(project.id, file).catch((e: Error) => setPlayError(`播放失败：${e.message}`));
+  };
   return (
     <Section title="配音（GPT-SoVITS）" hint={profile ? profile.displayName : undefined} testid="insp-voice">
       {!profile && <p className="hint" data-testid="insp-voice-novoice">这位角色还没有设置参考音频，不会配音（顶栏「配音」里设置）。</p>}
@@ -52,7 +64,13 @@ export function VoiceSection({ project, scene, beat }: { project: Project; scene
         </span>
         <button className="btn-s" disabled={!usable} onClick={() => void play()} data-testid="insp-voice-play-gen">▶ 播放</button>
         <button className="btn-s accent" disabled={!profile || running} onClick={() => void runJob({ kind: 'beat', sceneId: scene.id, beatId: beat.id }, stale ? { retranslate: !v?.spokenEdited } : {})} data-testid="insp-voice-gen">
-          {running && job?.scope.kind === 'beat' && job.scope.beatId === beat.id ? '生成中…' : '生成这一句配音'}
+          {mine && job?.mode === 'generate' ? '生成中…' : '生成这一句配音'}
+        </button>
+        <button className="btn-s" disabled={!profile || running || !v?.spoken} onClick={() => void regenerate(false)} title="用同一句日语再合成一版（每次语气略有不同），可撤销回上一版" data-testid="insp-voice-regen">
+          {mine && job?.mode === 'regenerate' ? '合成中…' : '重新合成'}
+        </button>
+        <button className="btn-s" disabled={!profile || running} onClick={() => void regenerate(true)} title="结合上下文重新翻译这一句，再合成一版；可撤销" data-testid="insp-voice-retranslate">
+          {mine && job?.mode === 'retranslate' ? '合成中…' : '重新翻译并合成'}
         </button>
       </Row>
       {playError && <p className="bad">{playError}</p>}

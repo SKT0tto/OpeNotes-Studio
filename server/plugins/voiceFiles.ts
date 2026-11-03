@@ -37,6 +37,15 @@ export class VoiceFiles {
   async list(projectId: string): Promise<string[]> {
     return (await fsp.readdir(this.dir(projectId)).catch(() => [] as string[])).filter(safeVoiceName);
   }
+  async listWithTimes(projectId: string): Promise<Array<{ name: string; mtimeMs: number }>> {
+    const out: Array<{ name: string; mtimeMs: number }> = [];
+    for (const name of await this.list(projectId)) {
+      try {
+        out.push({ name, mtimeMs: (await fsp.stat(path.join(this.dir(projectId), name))).mtimeMs });
+      } catch { /* vanished */ }
+    }
+    return out;
+  }
   async remove(projectId: string, name: string): Promise<void> {
     await fsp.rm(this.file(projectId, name), { force: true });
   }

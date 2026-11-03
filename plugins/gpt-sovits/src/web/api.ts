@@ -40,7 +40,7 @@ export async function previewVoice(characterKey: string, text?: string): Promise
   if (!res.ok) throw await failure(res);
   return res.blob();
 }
-export async function startVoiceJob(project: Project, scope: VoiceScope, opts: { retranslate?: boolean; force?: boolean } = {}): Promise<string> {
+export async function startVoiceJob(project: Project, scope: VoiceScope, opts: { retranslate?: boolean; force?: boolean; regenerate?: boolean; overwriteEdited?: boolean } = {}): Promise<string> {
   const res = await call('jobs', json('POST', { project, scope, ...opts }));
   if (!res.ok) throw await failure(res);
   return ((await res.json()) as { id: string }).id;

@@ -20,6 +20,7 @@ import { startFakeSovits, type FakeSovits } from './helpers/fakeSovits';
 class StubLlm {
   calls = 0;
   lastUser: unknown = null;
+  lastRefresh: boolean | undefined = undefined;
   /** ids to leave out of the answer, once. */
   skip = new Set<string>();
   /** answer with this instead (until reset to null). */
@@ -28,6 +29,7 @@ class StubLlm {
   callJson = async <T,>(req: JsonCallRequest<T>) => {
     this.calls++;
     this.lastUser = req.user;
+    this.lastRefresh = req.refresh;
     const input = req.user as { lines: Array<{ id: string; text: string; translate: boolean }> };
     const lines = input.lines.filter((l) => l.translate && !this.skip.has(l.id)).map((l) => ({ id: l.id, ja: `これは${l.text}です` }));
     this.skip.clear();
@@ -47,7 +49,7 @@ let service: VoiceService;
 let files: VoiceFiles;
 const project = (): Project => ProjectSchema.parse({ ...JSON.parse(JSON.stringify(demo)), id: 'voice_test' });
 
-async function run(p: Project, scope: VoiceScope, opts: { retranslate?: boolean; force?: boolean } = {}): Promise<VoiceJobView> {
+async function run(p: Project, scope: VoiceScope, opts: { retranslate?: boolean; force?: boolean; regenerate?: boolean; overwriteEdited?: boolean } = {}): Promise<VoiceJobView> {
   const id = service.start(p, scope, opts);
   for (let i = 0; i < 400; i++) {
     const v = service.view(id)!;
@@ -133,7 +135,7 @@ describe('voice job against a fake GPT-SoVITS', () => {
     expect(ttsCalls()).toHaveLength(0);
     expect(llm.calls).toBe(0);
     expect(again.results.map((r) => r.voice.file).sort()).toEqual(first.results.map((r) => r.voice.file).sort());
-    // a person edits one Japanese line: only it is synthesised again and its old file goes away
+    // a person edits one Japanese line: only it is synthesised again
     const target = first.results[0]!;
     const beat = p.scenes[0]!.beats.find((b) => b.id === target.beatId)!;
     beat.voice = { src: beat.text, spoken: 'ちょっと違う言い方です', spokenEdited: true };
@@ -141,8 +143,8 @@ describe('voice job against a fake GPT-SoVITS', () => {
     const third = await run(p, sc);
     expect(ttsCalls()).toHaveLength(1);
     expect(third.results.find((r) => r.beatId === target.beatId)!.voice).toMatchObject({ spoken: 'ちょっと違う言い方です', spokenEdited: true });
-    expect(wavs()).toHaveLength(n);
-    expect(wavs()).not.toContain(target.voice.file);
+    expect(wavs()).toHaveLength(n + 1); // the old file stays as an older version (undo may point to it)
+    expect(wavs()).toContain(target.voice.file);
     // force re-synthesises everything
     sovits.calls.length = 0;
     await run(p, sc, { force: true });
@@ -223,6 +225,95 @@ describe('voice job against a fake GPT-SoVITS', () => {
     expect(r2.ja.size).toBe(0);
     expect(r2.failed.size).toBe(1);
     llm.override = null;
+  });
+});
+
+describe('new versions of one line (regenerate)', () => {
+  const sc = { kind: 'beat' as const, sceneId: 's1', beatId: 's1b1' };
+  const apply = (p: Project, v: VoiceJobView) => void (p.scenes[0]!.beats.find((b) => b.id === 's1b1')!.voice = v.results[0]!.voice);
+  const beatFiles = () => wavs().filter((f) => f.startsWith('s1b1-'));
+
+  it('always synthesises, even when the hash matches; sends and stores a seed; the previous version stays', async () => {
+    const p = project();
+    const first = await run(p, sc);
+    apply(p, first);
+    expect(first.results[0]!.voice.seed).toBeUndefined();
+    const oldFile = first.results[0]!.voice.file!;
+    sovits.calls.length = 0;
+    const again = await run(p, sc); // a plain run reuses the file
+    expect(ttsCalls()).toHaveLength(0);
+    expect(again.results[0]!.voice.file).toBe(oldFile);
+    const v2 = await run(p, sc, { regenerate: true });
+    expect(v2.state).toBe('done');
+    expect(ttsCalls()).toHaveLength(1);
+    const seed = ttsCalls()[0]!.body!.seed as number;
+    expect(Number.isInteger(seed)).toBe(true);
+    expect(seed).toBeGreaterThanOrEqual(0);
+    const r = v2.results[0]!.voice;
+    expect(r.seed).toBe(seed);
+    expect(r.hash).toBe(first.results[0]!.voice.hash); // the same Japanese, a different take
+    expect(r.file).toBe(`${oldFile.replace(/\.wav$/, '')}-${seed}.wav`);
+    expect(beatFiles().sort()).toEqual([oldFile, r.file!].sort()); // undo can go back to the old file
+    // the normal job afterwards keeps the chosen version and does not synthesise again
+    apply(p, v2);
+    sovits.calls.length = 0;
+    const normal = await run(p, { kind: 'scene', sceneId: 's1' });
+    expect(ttsCalls().filter((c) => c.body!.text === r.spoken)).toHaveLength(0);
+    expect(normal.results.find((x) => x.beatId === 's1b1')!.voice).toMatchObject({ file: r.file, seed });
+    expect(beatFiles()).toContain(oldFile);
+  });
+
+  it('keeps the newest 5 versions of a line and the one the line points to, and prunes the rest', async () => {
+    const p = project();
+    let last: VoiceJobView | null = null;
+    const made: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      last = await run(p, sc, { regenerate: true });
+      apply(p, last);
+      made.push(last.results[0]!.voice.file!);
+    }
+    const files = beatFiles();
+    expect(files).toHaveLength(5);
+    expect(files).toContain(made[7]);
+    expect(files).toContain(made[6]); // the previous version is always kept
+    // a normal job's cleanup respects the same limit and never deletes kept versions
+    await run(p, { kind: 'scene', sceneId: 's1' });
+    expect(beatFiles().sort()).toEqual(files.sort());
+    // other lines are untouched
+    expect(wavs().some((f) => !f.startsWith('s1b1-'))).toBe(true);
+  });
+
+  it('is for one line only', () => {
+    expect(() => service.start(project(), { kind: 'scene', sceneId: 's1' }, { regenerate: true })).toThrow(/单独一句/);
+  });
+
+  it('retranslates one line with its neighbours as context, fresh (not cached), then synthesises a new version', async () => {
+    const p = project();
+    const first = await run(p, sc);
+    apply(p, first);
+    llm.calls = 0;
+    sovits.calls.length = 0;
+    const v = await run(p, sc, { regenerate: true, retranslate: true });
+    expect(llm.calls).toBe(1);
+    expect(llm.lastRefresh).toBe(true);
+    const sent = llm.lastUser as { lines: Array<{ id: string; translate: boolean }> };
+    expect(sent.lines.filter((l) => l.translate).map((l) => l.id)).toEqual(['s1b1']);
+    expect(sent.lines.length).toBeGreaterThan(1); // the lines before / after come along as context
+    expect(ttsCalls()).toHaveLength(1);
+    expect(v.results[0]!.voice.seed).toBeDefined();
+  });
+
+  it('keeps a hand-edited line unless the person confirmed overwriting it', async () => {
+    const p = project();
+    const b = p.scenes[0]!.beats.find((x) => x.id === 's1b1')!;
+    b.voice = { src: b.text, spoken: '手で直した日本語です', spokenEdited: true };
+    const kept = await run(p, sc, { regenerate: true, retranslate: true });
+    expect(kept.results[0]!.voice).toMatchObject({ spoken: '手で直した日本語です', spokenEdited: true });
+    expect(llm.calls).toBe(0);
+    const over = await run(p, sc, { regenerate: true, retranslate: true, overwriteEdited: true });
+    expect(llm.calls).toBe(1);
+    expect(over.results[0]!.voice.spoken).toMatch(/^これは/);
+    expect(over.results[0]!.voice.spokenEdited).toBeUndefined();
   });
 });
 

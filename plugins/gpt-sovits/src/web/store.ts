@@ -12,6 +12,8 @@ export interface ActiveJob {
   projectId: string;
   scope: VoiceScope;
   view: VoiceJobView | null;
+  /** What the person asked for: a plain generation, a new version of one line, or a new version after retranslating it. */
+  mode: 'generate' | 'regenerate' | 'retranslate';
   /** The request is on its way (no job id yet). */
   starting: boolean;
 }
@@ -50,15 +52,30 @@ export async function saveSettings(patch: VoiceSettingsPatch): Promise<VoiceSett
   return settings;
 }
 
-export async function runJob(scope: VoiceScope, opts: { retranslate?: boolean; force?: boolean } = {}): Promise<void> {
+export interface RunOptions { retranslate?: boolean; force?: boolean; regenerate?: boolean; overwriteEdited?: boolean; /** Undo-step label (default: by scope). */ label?: string }
+
+/** Plays a version of a line once (a new version is played right away so the person hears it); a new play stops the previous one. */
+let playing: HTMLAudioElement | null = null;
+export async function playVersion(projectId: string, file: string): Promise<void> {
+  const h = host();
+  playing?.pause();
+  const a = new Audio(h.voice.fileUrl(projectId, file));
+  a.volume = h.voice.getVolume();
+  playing = a;
+  await a.play();
+}
+
+/** Runs a job to the end and returns its final state (null when it could not start). */
+export async function runJob(scope: VoiceScope, opts: RunOptions = {}): Promise<VoiceJobView | null> {
   const h = host();
   const project = h.getStudio().project;
-  if (!project || jobRunning(state.job)) return;
-  const job: ActiveJob = { id: null, projectId: project.id, scope, view: null, starting: true };
+  if (!project || jobRunning(state.job)) return null;
+  const { label: customLabel, ...request } = opts;
+  const job: ActiveJob = { id: null, projectId: project.id, scope, view: null, starting: true, mode: opts.regenerate ? (opts.retranslate ? 'retranslate' : 'regenerate') : 'generate' };
   set({ job });
-  const label = scope.kind === 'beat' ? '生成这一句配音' : scope.kind === 'scene' ? '生成本场景配音' : '生成整个项目配音';
+  const label = customLabel ?? (scope.kind === 'beat' ? '生成这一句配音' : scope.kind === 'scene' ? '生成本场景配音' : '生成整个项目配音');
   try {
-    job.id = await startVoiceJob(project, scope, opts);
+    job.id = await startVoiceJob(project, scope, request);
     set({ job: { ...job, starting: false } });
     for (;;) {
       await new Promise((r) => setTimeout(r, 600));
@@ -72,11 +89,12 @@ export async function runJob(scope: VoiceScope, opts: { retranslate?: boolean; f
       else if (view.state === 'cancelled') h.notify(n > 0 ? `已取消，已完成的 ${n} 句保留（可撤销）` : '已取消', 'info');
       else h.notify(fails > 0 ? `配音完成，${fails} 句失败：${view.errors[0]!.message}` : `配音完成：${view.total} 句${n > 0 ? '（可撤销）' : ''}`, fails > 0 ? 'warn' : 'info');
       set({ job: { ...job, id: null, starting: false, view } });
-      return;
+      return view;
     }
   } catch (e) {
     h.notify(`配音失败：${(e as Error).message}`, 'warn');
     set({ job: null });
+    return null;
   }
 }
 
