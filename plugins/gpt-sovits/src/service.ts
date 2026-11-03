@@ -12,6 +12,7 @@ import { wavSeconds } from '../../../shared/voice/wav';
 import type { VoiceJaLine } from './prompt';
 import { SovitsError, setWeights, tts } from './sovits';
 import type { VoiceSettingsStore } from './store';
+import { fixNames } from './names';
 import { translateLines } from './translate';
 
 export class VoiceError extends Error {
@@ -163,8 +164,9 @@ export class VoiceService {
           if (!text) continue;
           lines.push({ id: b.id, speaker: member?.characterKey ?? '旁白', name: member?.displayName ?? '旁白', emotion: b.emotion ?? null, variant: b.variant, text, translate: ids.has(b.id) });
         }
-        const r = await translateLines({ callJson: this.deps.llm.callJson, signal, scene: { title: scene.title, mood: scene.brief?.mood ?? '' }, lines });
-        for (const [id, text] of r.ja) ja.set(id, { ja: text });
+        const r = await translateLines({ callJson: this.deps.llm.callJson, cast: project.cast.map((c) => ({ key: c.characterKey, name: c.displayName })), signal, scene: { title: scene.title, mood: scene.brief?.mood ?? '' }, lines });
+        const keys = project.cast.map((c) => c.characterKey);
+        for (const [id, text] of r.ja) ja.set(id, { ja: fixNames(text, keys) }); // hand-edited lines never pass through here
         for (const [id, why] of r.failed) this.fail(job, id, why);
         if (signal.aborted) throw new Error('aborted');
       }

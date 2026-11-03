@@ -19,6 +19,7 @@ import { startFakeSovits, type FakeSovits } from './helpers/fakeSovits';
 /** A scripted stand-in for the studio's model call: answers every translate=true line with Japanese made from its text. */
 class StubLlm {
   calls = 0;
+  lastUser: unknown = null;
   /** ids to leave out of the answer, once. */
   skip = new Set<string>();
   /** answer with this instead (until reset to null). */
@@ -26,6 +27,7 @@ class StubLlm {
   available: PluginServerContext['llm']['available'] = () => ({ ok: true });
   callJson = async <T,>(req: JsonCallRequest<T>) => {
     this.calls++;
+    this.lastUser = req.user;
     const input = req.user as { lines: Array<{ id: string; text: string; translate: boolean }> };
     const lines = input.lines.filter((l) => l.translate && !this.skip.has(l.id)).map((l) => ({ id: l.id, ja: `これは${l.text}です` }));
     this.skip.clear();
@@ -221,6 +223,27 @@ describe('voice job against a fake GPT-SoVITS', () => {
     expect(r2.ja.size).toBe(0);
     expect(r2.failed.size).toBe(1);
     llm.override = null;
+  });
+});
+
+describe('names in translations', () => {
+  it('gives the model every cast member with the official Japanese spelling, and repairs variant spellings after', async () => {
+    const p = project();
+    const b = p.scenes[0]!.beats.find((x) => x.kind === 'dialogue' && p.cast.find((c) => c.id === x.speakerId)!.characterKey === '001')!;
+    llm.override = { lines: p.scenes[0]!.beats.filter((x) => x.kind === 'dialogue' && x.speakerId).map((x) => ({ id: x.id, ja: x.id === b.id ? '灯ちゃん、おはよう。高松灯さんだよね' : 'これはテストです' })) };
+    const v = await run(p, { kind: 'scene', sceneId: p.scenes[0]!.id });
+    llm.override = null;
+    expect(v.results.find((r) => r.beatId === b.id)!.voice.spoken).toBe('燈ちゃん、おはよう。高松燈さんだよね');
+    const sent = llm.lastUser as { characters: Array<{ key: string; ja?: string; given?: string; family?: string }> };
+    expect(sent.characters.find((c) => c.key === '001')).toMatchObject({ ja: '高松燈', given: '燈', family: '高松' });
+    expect(sent.characters.find((c) => c.key === '003')).toMatchObject({ ja: '要楽奈' }); // a cast member who does not speak here
+  });
+  it('leaves hand-edited Japanese alone', async () => {
+    const p = project();
+    const b = p.scenes[0]!.beats.find((x) => x.kind === 'dialogue' && p.cast.find((c) => c.id === x.speakerId)!.characterKey === '001')!;
+    b.voice = { src: b.text, spoken: '灯ちゃん', spokenEdited: true };
+    const v = await run(p, { kind: 'beat', sceneId: p.scenes[0]!.id, beatId: b.id });
+    expect(v.results[0]!.voice.spoken).toBe('灯ちゃん');
   });
 });
 

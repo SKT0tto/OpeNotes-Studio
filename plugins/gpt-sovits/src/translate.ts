@@ -4,6 +4,7 @@
  * then reported as failed (the line stays unvoiced; nothing is invented).
  */
 import type { z } from 'zod';
+import { JA_NAMES } from '../../../shared/catalog/romaji';
 import type { PluginServerContext } from '../../../shared/plugins/api';
 import { VOICE_JA_PROMPT_VERSION, VOICE_JA_SCHEMA_NAME, VOICE_JA_SYSTEM, VoiceTranslationSchema, type VoiceJaInput, type VoiceJaLine } from './prompt';
 
@@ -22,6 +23,8 @@ export interface TranslateArgs {
   scene: { title: string; mood: string };
   /** The scene's lines in order, context lines included (`translate:false`). */
   lines: VoiceJaLine[];
+  /** Everyone in the project's cast, so names of people who do not speak in these lines are given too. */
+  cast?: Array<{ key: string; name: string }> | undefined;
 }
 export interface TranslateResult {
   ja: Map<string, string>;
@@ -44,7 +47,12 @@ export async function translateLines(a: TranslateArgs): Promise<TranslateResult>
   const ja = new Map<string, string>();
   const failed = new Map<string, string>();
   const todo = a.lines.filter((l) => l.translate);
-  const characters = [...new Map(a.lines.map((l) => [l.speaker, { key: l.speaker, name: l.name }])).values()];
+  const base = new Map<string, { key: string; name: string }>(a.lines.map((l) => [l.speaker, { key: l.speaker, name: l.name }]));
+  for (const c of a.cast ?? []) if (!base.has(c.key)) base.set(c.key, c);
+  const characters = [...base.values()].map((c) => {
+    const j = JA_NAMES[c.key];
+    return { ...c, ...(j ? { ja: j.full, given: j.given, family: j.family } : {}) };
+  });
 
   const ask = async (ids: string[]): Promise<Map<string, string>> => {
     const idSet = new Set(ids);

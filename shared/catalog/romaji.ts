@@ -34,6 +34,20 @@ export const NAME_PARTS: Record<string, NameParts> = {
   '010': { family: '丰川', given: '祥子', familyR: 'togawa', givenR: 'sakiko', kana: ['さきこ'] },
 };
 
+/** Official Japanese spellings (full / given / family name), for the keys whose spelling is certain. */
+export const JA_NAMES: Record<string, { full: string; given: string; family: string }> = {
+  '001': { full: '高松燈', given: '燈', family: '高松' },
+  '002': { full: '千早愛音', given: '愛音', family: '千早' },
+  '003': { full: '要楽奈', given: '楽奈', family: '要' },
+  '004': { full: '長崎そよ', given: 'そよ', family: '長崎' },
+  '005': { full: '椎名立希', given: '立希', family: '椎名' },
+  '006': { full: '三角初華', given: '初華', family: '三角' },
+  '007': { full: '若葉睦', given: '睦', family: '若葉' },
+  '008': { full: '八幡海鈴', given: '海鈴', family: '八幡' },
+  '009': { full: '祐天寺にゃむ', given: 'にゃむ', family: '祐天寺' },
+  '010': { full: '豊川祥子', given: '祥子', family: '豊川' },
+};
+
 /** Japanese (shinjitai) / traditional kanji -> the simplified form the data file uses, for the characters that occur in names. */
 export const KANJI_TO_SIMPLIFIED: Record<string, string> = {
   燈: '灯', 愛: '爱', 楽: '乐', 樂: '乐', 豊: '丰', 豐: '丰', 葉: '叶', 長: '长', 鈴: '铃', 華: '华', 蛍: '萤', 螢: '萤', 沢: '泽', 澤: '泽',

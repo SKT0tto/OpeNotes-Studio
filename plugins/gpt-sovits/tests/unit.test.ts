@@ -7,7 +7,9 @@ import { hasWords, profileOfBeat, spokenText } from '../src/lines';
 import { VoiceSettingsSchema, effectiveProfile, weightsLeak } from '../src/schema';
 import { VOICE_FILE, voiceFileName, voiceHash } from '../src/service';
 import { VoiceSettingsStore } from '../src/store';
+import { fixNames } from '../src/names';
 import { cleanJa } from '../src/translate';
+import { VOICE_JA_PROMPT_VERSION, VOICE_JA_SYSTEM } from '../src/prompt';
 import demo from '../../../tests/fixtures/demo-project.json';
 
 describe('voice hash and file names', () => {
@@ -95,5 +97,29 @@ describe('effective weights and the leak guard', () => {
     expect(store.patch({ defaultGptWeights: ' g.ckpt ' }).defaultGptWeights).toBe('g.ckpt');
     expect(store.patch({ enabled: true }).defaultGptWeights).toBe('g.ckpt');
     expect(store.patch({ defaultGptWeights: '' }).defaultGptWeights).toBeUndefined();
+  });
+});
+
+describe('fixNames', () => {
+  it('writes a name used as a name in its Japanese spelling', () => {
+    expect(fixNames('灯ちゃん、おはよう', ['001'])).toBe('燈ちゃん、おはよう');
+    expect(fixNames('灯の', ['001'])).toBe('燈の');
+    expect(fixNames('灯', ['001'])).toBe('燈');
+    expect(fixNames('ねえ、灯。', ['001'])).toBe('ねえ、燈。');
+    expect(fixNames('高松灯さん', ['001'])).toBe('高松燈さん');
+    expect(fixNames('爱音って呼んで', ['002'])).toBe('愛音って呼んで');
+    expect(fixNames('若叶さんと丰川祥子', ['007', '010'])).toBe('若葉さんと豊川祥子');
+  });
+  it('does not touch the character inside longer words', () => {
+    for (const t of ['灯り', '電灯', '灯台', '街灯の下で', '灯火']) expect(fixNames(t, ['001'])).toBe(t);
+  });
+  it('only repairs variant spellings: other names and unknown keys stay', () => {
+    expect(fixNames('爽世ちゃん', ['004'])).toBe('爽世ちゃん'); // そよ is a different spelling, not a kanji variant
+    expect(fixNames('灯ちゃん', ['999'])).toBe('灯ちゃん');
+    expect(fixNames('灯ちゃん', [])).toBe('灯ちゃん');
+  });
+  it('the prompt demands exact names and carries the new version', () => {
+    expect(VOICE_JA_PROMPT_VERSION).toBe('voice-ja-3');
+    expect(VOICE_JA_SYSTEM).toContain('characters[].ja');
   });
 });
