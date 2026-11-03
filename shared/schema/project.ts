@@ -56,6 +56,21 @@ export const ShotSchema = z.object({
   meta: MetaSchema,
 });
 
+/**
+ * Auto voice-over of one line (the GPT-SoVITS plugin). Optional and never defaulted: a project that never used the plugin has no such key.
+ * `ja` = the spoken Japanese; `jaEdited` = a person wrote it (re-translation keeps it); `src` = the exact Chinese text it was made for (the voice is ignored once the line's text differs);
+ * `file` = wav in `data/projects/<id>/voice/`; `seconds` = its length; `hash` = what the audio was made from (text + voice profile).
+ */
+export const BeatVoiceSchema = z.object({
+  ja: z.string(),
+  jaEdited: z.boolean().optional(),
+  src: z.string().optional(),
+  file: z.string().optional(),
+  seconds: z.number().min(0).optional(),
+  hash: z.string().optional(),
+});
+export type BeatVoice = z.infer<typeof BeatVoiceSchema>;
+
 export const BeatSchema = z.object({
   id: Id,
   /**
@@ -87,6 +102,8 @@ export const BeatSchema = z.object({
    * director and the splitter never write it (`check.ts` enforces it for assistant ops).
    */
   overflow: z.enum(['expand']).optional(),
+  /** Generated voice-over (see `BeatVoiceSchema`). */
+  voice: BeatVoiceSchema.optional(),
   shot: ShotSchema,
   style: StyleSchema,
   meta: MetaSchema,

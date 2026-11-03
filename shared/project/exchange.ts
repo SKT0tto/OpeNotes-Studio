@@ -49,8 +49,22 @@ export function collectRefs(project: Project): Refs {
   return { models: sorted(models), backgrounds: sorted(backgrounds), audio: sorted(audio) };
 }
 
+/** Generated voice files stay on this machine: the export keeps the Japanese text of a line but not the audio reference. */
+function withoutVoiceFiles(project: Project): Project {
+  if (!project.scenes.some((s) => s.beats.some((b) => b.voice?.file !== undefined))) return project;
+  return { ...project, scenes: project.scenes.map((s) => ({ ...s, beats: s.beats.map((b) => {
+    if (!b.voice) return b;
+    const rest = { ...b.voice };
+    delete rest.file;
+    delete rest.seconds;
+    delete rest.hash;
+    return { ...b, voice: rest };
+  }) })) };
+}
+
 export function exportEnvelope(project: Project, catalogVersion: string, now = new Date()) {
-  return { format: EXPORT_FORMAT, formatVersion: 1 as const, exportedAt: now.toISOString(), catalogVersion, refs: collectRefs(project), project };
+  const exported = withoutVoiceFiles(project);
+  return { format: EXPORT_FORMAT, formatVersion: 1 as const, exportedAt: now.toISOString(), catalogVersion, refs: collectRefs(exported), project: exported };
 }
 
 export type ImportResult = { ok: true; project: Project; catalogVersion: string | null } | { ok: false; error: string };
