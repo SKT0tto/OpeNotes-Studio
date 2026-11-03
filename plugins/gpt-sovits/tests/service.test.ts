@@ -4,44 +4,45 @@ import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import express from 'express';
 import type { AddressInfo } from 'node:net';
-import { ProjectSchema, type Project } from '../../shared/schema/project';
-import type { VoiceJobView, VoiceScope } from '../../shared/schema/voice';
-import { wavSeconds } from '../../shared/voice/wav';
-import { LlmCache } from '../../server/llm/cache';
-import { inputText, validateOutput, zeroUsage, type LlmProvider, type StructuredRequest, type StructuredResult } from '../../server/llm/provider';
-import { VoiceService, voiceHash } from '../../server/voice/service';
-import { voiceRoutes } from '../../server/voice/routes';
-import { VoiceSettingsStore } from '../../server/voice/store';
-import { translateLines } from '../../server/voice/translate';
-import demo from '../fixtures/demo-project.json';
-import { startFakeSovits, type FakeSovits } from '../helpers/fakeSovits';
+import { ProjectSchema, type Project } from '../../../shared/schema/project';
+import type { JsonCallRequest, PluginServerContext } from '../../../shared/plugins/api';
+import { wavSeconds } from '../../../shared/voice/wav';
+import { VoiceFiles, voiceFileRoutes } from '../../../server/plugins/voiceFiles';
+import type { VoiceJobView, VoiceScope } from '../src/schema';
+import { voiceRoutes } from '../src/routes';
+import { VoiceService, voiceHash } from '../src/service';
+import { VoiceSettingsStore } from '../src/store';
+import { translateLines } from '../src/translate';
+import demo from '../../../tests/fixtures/demo-project.json';
+import { startFakeSovits, type FakeSovits } from './helpers/fakeSovits';
 
-/** A scripted stand-in for the model: answers every translate=true line with Japanese made from its text. */
-class StubJa implements LlmProvider {
-  readonly id = 'fixture' as const;
-  readonly model = 'stub-ja';
+/** A scripted stand-in for the studio's model call: answers every translate=true line with Japanese made from its text. */
+class StubLlm {
   calls = 0;
   /** ids to leave out of the answer, once. */
   skip = new Set<string>();
-  async generateStructured<T>(req: StructuredRequest<T>): Promise<Omit<StructuredResult<T>, 'cached'>> {
+  /** answer with this instead (until reset to null). */
+  override: unknown = null;
+  available: PluginServerContext['llm']['available'] = () => ({ ok: true });
+  callJson = async <T,>(req: JsonCallRequest<T>) => {
     this.calls++;
-    const input = JSON.parse(inputText(req.input)) as { lines: Array<{ id: string; text: string; translate: boolean }> };
+    const input = req.user as { lines: Array<{ id: string; text: string; translate: boolean }> };
     const lines = input.lines.filter((l) => l.translate && !this.skip.has(l.id)).map((l) => ({ id: l.id, ja: `これは${l.text}です` }));
     this.skip.clear();
-    const raw = JSON.stringify({ lines });
-    return { data: validateOutput(req.schema, JSON.parse(raw), raw), usage: zeroUsage(), raw, warnings: [] };
-  }
-  async test() {
-    return { model: this.model, latencyMs: 0 };
+    const raw = this.override ?? { lines };
+    return { data: req.schema.parse(raw), cached: false };
+  };
+  api(): PluginServerContext['llm'] {
+    return { available: () => this.available(), callJson: this.callJson };
   }
 }
 
 let sovits: FakeSovits;
 let dir: string;
 let store: VoiceSettingsStore;
-let llm: StubJa;
+let llm: StubLlm;
 let service: VoiceService;
-let noProvider = false;
+let files: VoiceFiles;
 const project = (): Project => ProjectSchema.parse({ ...JSON.parse(JSON.stringify(demo)), id: 'voice_test' });
 
 async function run(p: Project, scope: VoiceScope, opts: { retranslate?: boolean; force?: boolean } = {}): Promise<VoiceJobView> {
@@ -67,9 +68,9 @@ beforeEach(() => {
   dir = fs.mkdtempSync(path.join(os.tmpdir(), 'voice-svc-'));
   store = new VoiceSettingsStore(path.join(dir, 'voice.local.json'));
   store.patch({ enabled: true, endpoint: sovits.url, profiles: { '001': profile('a'), '002': profile('b') } });
-  llm = new StubJa();
-  noProvider = false;
-  service = new VoiceService({ settings: store, projectsDir: path.join(dir, 'projects'), cache: new LlmCache(path.join(dir, 'cache')), provider: () => (noProvider ? { provider: null, message: '未配置 AI' } : { provider: llm }) });
+  llm = new StubLlm();
+  files = new VoiceFiles(path.join(dir, 'projects'));
+  service = new VoiceService({ settings: store, voice: files, llm: llm.api() });
   sovits.calls.length = 0;
   sovits.failText.clear();
   sovits.bogusHeader = false;
@@ -87,12 +88,12 @@ describe('voice job against a fake GPT-SoVITS', () => {
     expect(v.errors).toEqual([]);
     expect(v.results).toHaveLength(spoken.length);
     for (const r of v.results) {
-      expect(r.voice.ja).toMatch(/^これは/);
+      expect(r.voice.spoken).toMatch(/^これは/);
       expect(r.voice.src).toBe(scene.beats.find((b) => b.id === r.beatId)!.text);
       const file = path.join(dir, 'projects', 'voice_test', 'voice', r.voice.file!);
       expect(wavSeconds(fs.readFileSync(file))).toBeCloseTo(r.voice.seconds!, 2);
-      expect(r.voice.seconds).toBeCloseTo(0.12 * [...r.voice.ja].length, 1);
-      expect(r.voice.hash).toBe(voiceHash(r.voice.ja, { ...profile(p.cast.find((c) => c.id === scene.beats.find((b) => b.id === r.beatId)!.speakerId)!.characterKey === '001' ? 'a' : 'b') }, 'ja'));
+      expect(r.voice.seconds).toBeCloseTo(0.12 * [...r.voice.spoken].length, 1);
+      expect(r.voice.hash).toBe(voiceHash(r.voice.spoken, { ...profile(p.cast.find((c) => c.id === scene.beats.find((b) => b.id === r.beatId)!.speakerId)!.characterKey === '001' ? 'a' : 'b') }, 'ja'));
     }
     // weights: once per character
     const weightCalls = sovits.calls.filter((c) => c.path.startsWith('/set_'));
@@ -133,11 +134,11 @@ describe('voice job against a fake GPT-SoVITS', () => {
     // a person edits one Japanese line: only it is synthesised again and its old file goes away
     const target = first.results[0]!;
     const beat = p.scenes[0]!.beats.find((b) => b.id === target.beatId)!;
-    beat.voice = { ja: 'ちょっと違う言い方です', jaEdited: true };
+    beat.voice = { src: beat.text, spoken: 'ちょっと違う言い方です', spokenEdited: true };
     sovits.calls.length = 0;
     const third = await run(p, sc);
     expect(ttsCalls()).toHaveLength(1);
-    expect(third.results.find((r) => r.beatId === target.beatId)!.voice).toMatchObject({ ja: 'ちょっと違う言い方です', jaEdited: true });
+    expect(third.results.find((r) => r.beatId === target.beatId)!.voice).toMatchObject({ spoken: 'ちょっと違う言い方です', spokenEdited: true });
     expect(wavs()).toHaveLength(n);
     expect(wavs()).not.toContain(target.voice.file);
     // force re-synthesises everything
@@ -152,7 +153,7 @@ describe('voice job against a fake GPT-SoVITS', () => {
     const v = await run(p, { kind: 'beat', sceneId: 's1', beatId: 's1b1' });
     expect(v.state).toBe('done');
     const r = v.results[0]!;
-    expect(r.voice.seconds).toBeCloseTo(0.12 * [...r.voice.ja].length, 1);
+    expect(r.voice.seconds).toBeCloseTo(0.12 * [...r.voice.spoken].length, 1);
   });
 
   it('reports a rejected line and carries on with the rest', async () => {
@@ -160,8 +161,8 @@ describe('voice job against a fake GPT-SoVITS', () => {
     const first = await run(p, { kind: 'scene', sceneId: 's1' });
     const bad = first.results[1]!;
     for (const f of wavs()) fs.rmSync(path.join(dir, 'projects', 'voice_test', 'voice', f));
-    sovits.failText.add(bad.voice.ja);
-    for (const r of first.results) p.scenes[0]!.beats.find((b) => b.id === r.beatId)!.voice = { ja: r.voice.ja, src: r.voice.src! };
+    sovits.failText.add(bad.voice.spoken);
+    for (const r of first.results) p.scenes[0]!.beats.find((b) => b.id === r.beatId)!.voice = { spoken: r.voice.spoken, src: r.voice.src };
     const v = await run(p, { kind: 'scene', sceneId: 's1' });
     expect(v.state).toBe('done');
     expect(v.errors).toHaveLength(1);
@@ -186,11 +187,11 @@ describe('voice job against a fake GPT-SoVITS', () => {
 
   it('needs a configured AI for translation, but not when the Japanese is already there', async () => {
     const p = project();
-    noProvider = true;
+    llm.available = () => ({ ok: false, message: '未配置 AI' });
     const v = await run(p, { kind: 'beat', sceneId: 's1', beatId: 's1b1' });
     expect(v.state).toBe('failed');
     expect(v.error).toContain('需要 AI');
-    p.scenes[0]!.beats[0]!.voice = { ja: 'もう訳してあります', jaEdited: true };
+    p.scenes[0]!.beats[0]!.voice = { src: p.scenes[0]!.beats[0]!.text, spoken: 'もう訳してあります', spokenEdited: true };
     expect((await run(p, { kind: 'beat', sceneId: 's1', beatId: 's1b1' })).state).toBe('done');
   });
 
@@ -212,13 +213,14 @@ describe('voice job against a fake GPT-SoVITS', () => {
     const p = project();
     const lines = p.scenes[0]!.beats.filter((b) => b.kind === 'dialogue' && b.speakerId).map((b) => ({ id: b.id, speaker: 'x', name: 'x', emotion: null, variant: 'normal' as const, text: b.text, translate: true }));
     llm.skip.add(lines[0]!.id);
-    const r = await translateLines({ provider: llm, cache: null, scene: { title: 't', mood: '' }, lines });
+    const r = await translateLines({ callJson: llm.callJson, scene: { title: 't', mood: '' }, lines });
     expect(r.ja.size).toBe(lines.length);
     expect(llm.calls).toBe(2);
-    const bad: LlmProvider = { ...llm, generateStructured: async <T,>(req: StructuredRequest<T>) => ({ data: validateOutput(req.schema, { lines: [{ id: lines[0]!.id, ja: '中文没有假名' }] }, ''), usage: zeroUsage(), raw: '', warnings: [] }) } as never;
-    const r2 = await translateLines({ provider: bad, cache: null, scene: { title: 't', mood: '' }, lines: lines.slice(0, 1) });
+    llm.override = { lines: [{ id: lines[0]!.id, ja: '中文没有假名' }] };
+    const r2 = await translateLines({ callJson: llm.callJson, scene: { title: 't', mood: '' }, lines: lines.slice(0, 1) });
     expect(r2.ja.size).toBe(0);
     expect(r2.failed.size).toBe(1);
+    llm.override = null;
   });
 });
 
@@ -250,11 +252,16 @@ describe('voice routes', () => {
   beforeAll(async () => {
     const d = fs.mkdtempSync(path.join(os.tmpdir(), 'voice-route-'));
     const st = new VoiceSettingsStore(path.join(d, 'v.json'));
-    const svc = new VoiceService({ settings: st, projectsDir: path.join(d, 'projects'), cache: null, provider: () => ({ provider: new StubJa() }) });
+    const vf = new VoiceFiles(path.join(d, 'projects'));
+    const svc = new VoiceService({ settings: st, voice: vf, llm: new StubLlm().api() });
     fs.mkdirSync(path.join(d, 'projects', 'p1', 'voice'), { recursive: true });
     fs.writeFileSync(path.join(d, 'projects', 'p1', 'voice', 'b1-0123abcd.wav'), 'RIFFdata');
     const app = express();
-    app.use(voiceRoutes(st, svc));
+    const router = express.Router();
+    router.use(express.json());
+    voiceRoutes(router, st, svc);
+    app.use('/api/plugins/gpt-sovits', router);
+    app.use(voiceFileRoutes(vf));
     const server = app.listen(0, '127.0.0.1');
     await new Promise((r) => server.once('listening', r));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
@@ -263,22 +270,22 @@ describe('voice routes', () => {
   afterAll(() => close());
 
   it('serves settings and tests the connection', async () => {
-    expect(await (await fetch(`${base}/api/voice/settings`)).json()).toMatchObject({ enabled: false, endpoint: 'http://127.0.0.1:9880', volume: 1, textLang: 'ja' });
-    const put = await fetch(`${base}/api/voice/settings`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ enabled: true, endpoint: sovits.url }) });
+    expect(await (await fetch(`${base}/api/plugins/gpt-sovits/settings`)).json()).toMatchObject({ enabled: false, endpoint: 'http://127.0.0.1:9880', textLang: 'ja' });
+    const put = await fetch(`${base}/api/plugins/gpt-sovits/settings`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ enabled: true, endpoint: sovits.url }) });
     expect((await put.json()).enabled).toBe(true);
-    expect((await fetch(`${base}/api/voice/settings`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ volume: 9 }) })).status).toBe(400);
-    expect(await (await fetch(`${base}/api/voice/test`, { method: 'POST' })).json()).toMatchObject({ ok: true });
-    expect(await (await fetch(`${base}/api/voice/test`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: 'http://127.0.0.1:9' }) })).json()).toMatchObject({ ok: false });
+    expect((await fetch(`${base}/api/plugins/gpt-sovits/settings`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: 5 }) })).status).toBe(400);
+    expect(await (await fetch(`${base}/api/plugins/gpt-sovits/test`, { method: 'POST' })).json()).toMatchObject({ ok: true });
+    expect(await (await fetch(`${base}/api/plugins/gpt-sovits/test`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: 'http://127.0.0.1:9' }) })).json()).toMatchObject({ ok: false });
   });
   it('previews a voice and serves files only by safe names', async () => {
-    await fetch(`${base}/api/voice/settings`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ profiles: { '001': profile('a') } }) });
-    const res = await fetch(`${base}/api/voice/preview`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ characterKey: '001' }) });
+    await fetch(`${base}/api/plugins/gpt-sovits/settings`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ profiles: { '001': profile('a') } }) });
+    const res = await fetch(`${base}/api/plugins/gpt-sovits/preview`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ characterKey: '001' }) });
     expect(res.headers.get('content-type')).toContain('audio/wav');
     expect(wavSeconds(new Uint8Array(await res.arrayBuffer()))).toBeGreaterThan(0.5);
-    expect((await fetch(`${base}/api/voice/preview`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ characterKey: '999' }) })).status).toBe(400);
+    expect((await fetch(`${base}/api/plugins/gpt-sovits/preview`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ characterKey: '999' }) })).status).toBe(400);
     expect((await fetch(`${base}/api/projects/p1/voice/b1-0123abcd.wav`)).status).toBe(200);
     expect((await fetch(`${base}/api/projects/p1/voice/..%2Fproject.json`)).status).toBe(400);
     expect((await fetch(`${base}/api/projects/p1/voice/b2-0123abcd.wav`)).status).toBe(404);
-    expect((await fetch(`${base}/api/voice/jobs/nope`)).status).toBe(404);
+    expect((await fetch(`${base}/api/plugins/gpt-sovits/jobs/nope`)).status).toBe(404);
   });
 });

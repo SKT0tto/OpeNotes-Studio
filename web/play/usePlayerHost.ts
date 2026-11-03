@@ -17,7 +17,7 @@ import { registerDebugApp, registerDebugBoxes, registerDebugCamera, registerDebu
 import { ensureRuntime } from '../engine/runtime';
 import { frameTimes } from '@shared/agent/frames';
 import { registerFrameGrabber } from '../agentFrames';
-import { useVoice } from '../store/voiceStore';
+import { useVoicePrefs } from '../store/voicePrefs';
 
 export interface PlayInfo {
   t: number;
@@ -126,14 +126,10 @@ export function usePlayerHost(health: Health, project: Project | null, initKey: 
       player = await Player.create(stage, library, audio, first);
       if (dead) return;
       player.auto = autoRef.current;
-      // voice-over plugin (off unless enabled in its settings): follows the settings, which may change while the editor is open
-      const applyVoice = () => {
-        const v = useVoice.getState().settings;
-        player!.setVoice(!!v?.enabled, v?.volume ?? 1);
-      };
+      // recorded lines: the volume follows the preference (a plugin's settings page may change it while the editor is open)
+      const applyVoice = () => player!.setVoiceVolume(useVoicePrefs.getState().volume);
       applyVoice();
-      unsubscribeVoice = useVoice.subscribe(applyVoice);
-      void useVoice.getState().load();
+      unsubscribeVoice = useVoicePrefs.subscribe(applyVoice);
       hudRef.current = hud;
       hud.setAuto(autoRef.current);
       playerRef.current = player;

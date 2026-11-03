@@ -1,19 +1,15 @@
 /**
  * The voice-over job: translate the voiced lines into Japanese, then synthesise them one after the other (a GPU server: never in parallel)
- * and keep the wav files in `data/projects/<id>/voice/<beatId>-<hash8>.wav`. The server does not write project.json: the finished job hands the
+ * and keep the wav files (via `ctx.voice`) in `data/projects/<id>/voice/<beatId>-<hash8>.wav`. The server does not write project.json: the finished job hands the
  * editor one `voice` object per beat, which it applies as a single undo step (see `VoiceJobView.results`).
  */
 import { createHash, randomBytes } from 'node:crypto';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import type { Beat, Project } from '../../shared/schema/project';
-import { effectiveProfile, hasVoice, leakMessage, weightsLeak, type VoiceBeatResult, type VoiceJobView, type VoiceProfile, type VoiceScope, type VoiceSettings } from '../../shared/schema/voice';
-import { hasWords, profileOfBeat, spokenText } from '../../shared/voice/lines';
-import { wavSeconds } from '../../shared/voice/wav';
-import type { LlmCache } from '../llm/cache';
-import type { LlmProvider } from '../llm/provider';
-import type { VoiceJaLine } from '../llm/prompts/voiceJa';
-import { PROJECT_ID } from '../projects/store';
+import type { PluginServerContext } from '../../../shared/plugins/api';
+import type { Beat, Project } from '../../../shared/schema/project';
+import { effectiveProfile, hasVoice, leakMessage, weightsLeak, type VoiceBeatResult, type VoiceJobView, type VoiceProfile, type VoiceScope, type VoiceSettings } from './schema';
+import { hasWords, profileOfBeat, spokenText } from './lines';
+import { wavSeconds } from '../../../shared/voice/wav';
+import type { VoiceJaLine } from './prompt';
 import { SovitsError, setWeights, tts } from './sovits';
 import type { VoiceSettingsStore } from './store';
 import { translateLines } from './translate';
@@ -32,12 +28,12 @@ const safeId = (id: string) => id.replace(/[^A-Za-z0-9_-]/g, '_');
 export const voiceFileName = (beatId: string, hash: string) => `${safeId(beatId)}-${hash.slice(0, 8)}.wav`;
 export const VOICE_FILE = /^[A-Za-z0-9_-]+-[0-9a-f]{8}\.wav$/;
 
+export const PLUGIN_ID = 'gpt-sovits';
+
 export interface VoiceServiceDeps {
   settings: VoiceSettingsStore;
-  /** `data/projects` */
-  projectsDir: string;
-  provider(): { provider: LlmProvider } | { provider: null; message: string };
-  cache: LlmCache | null;
+  voice: PluginServerContext['voice'];
+  llm: PluginServerContext['llm'];
 }
 
 interface Target {
@@ -74,11 +70,6 @@ export class VoiceService {
   private readonly loaded = new Map<string, { gpt?: string; sovits?: string }>();
 
   constructor(private readonly deps: VoiceServiceDeps) {}
-
-  voiceDir(projectId: string): string {
-    if (!PROJECT_ID.test(projectId)) throw new VoiceError(400, `项目 id 不合法："${projectId}"`);
-    return path.join(this.deps.projectsDir, projectId, 'voice');
-  }
 
   private running(): Job | undefined {
     return [...this.jobs.values()].find((j) => j.state === 'running');
@@ -150,13 +141,13 @@ export class VoiceService {
     const need = new Set<string>();
     for (const t of targets) {
       const v = t.beat.voice;
-      if (v?.ja && v.jaEdited) ja.set(t.beat.id, { ja: v.ja, jaEdited: true });
-      else if (v?.ja && !opts.retranslate && (v.src === undefined || v.src === t.beat.text)) ja.set(t.beat.id, { ja: v.ja });
+      if (v?.spoken && v.spokenEdited) ja.set(t.beat.id, { ja: v.spoken, jaEdited: true });
+      else if (v?.spoken && !opts.retranslate && v.src === t.beat.text) ja.set(t.beat.id, { ja: v.spoken });
       else need.add(t.beat.id);
     }
     if (need.size > 0) {
-      const p = this.deps.provider();
-      if (!p.provider) throw new VoiceError(503, `需要 AI 把台词译成日语，但${p.message}`);
+      const p = this.deps.llm.available();
+      if (!p.ok) throw new VoiceError(503, `需要 AI 把台词译成日语，但${p.message}`);
       const sceneIds = [...new Set(targets.filter((t) => need.has(t.beat.id)).map((t) => t.sceneId))];
       let n = 0;
       for (const scene of project.scenes) {
@@ -172,7 +163,7 @@ export class VoiceService {
           if (!text) continue;
           lines.push({ id: b.id, speaker: member?.characterKey ?? '旁白', name: member?.displayName ?? '旁白', emotion: b.emotion ?? null, variant: b.variant, text, translate: ids.has(b.id) });
         }
-        const r = await translateLines({ provider: p.provider, cache: this.deps.cache, signal, scene: { title: scene.title, mood: scene.brief?.mood ?? '' }, lines });
+        const r = await translateLines({ callJson: this.deps.llm.callJson, signal, scene: { title: scene.title, mood: scene.brief?.mood ?? '' }, lines });
         for (const [id, text] of r.ja) ja.set(id, { ja: text });
         for (const [id, why] of r.failed) this.fail(job, id, why);
         if (signal.aborted) throw new Error('aborted');
@@ -181,13 +172,11 @@ export class VoiceService {
     // keep the Japanese even when the sound later fails
     for (const t of targets) {
       const j = ja.get(t.beat.id);
-      if (j) job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { ja: j.ja, ...(j.jaEdited ? { jaEdited: true } : {}), src: t.beat.text } });
+      if (j) job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { src: t.beat.text, spoken: j.ja, ...(j.jaEdited ? { spokenEdited: true } : {}), by: PLUGIN_ID } });
     }
     const sound = targets.filter((t) => ja.has(t.beat.id));
 
     // ---- 2. sound, character by character ------------------------------------------------------------------
-    const dir = this.voiceDir(project.id);
-    await fs.mkdir(dir, { recursive: true });
     const byChar = new Map<string, Target[]>();
     for (const t of sound) byChar.set(t.characterKey, [...(byChar.get(t.characterKey) ?? []), t]);
     for (const group of byChar.values()) {
@@ -203,9 +192,9 @@ export class VoiceService {
         const text = ja.get(t.beat.id)!;
         const hash = voiceHash(text.ja, profile, settings.textLang);
         const file = voiceFileName(t.beat.id, hash);
-        const secs = opts.force ? null : await this.existing(path.join(dir, file));
+        const secs = opts.force ? null : await this.existing(project.id, file);
         if (secs !== null) {
-          await this.removeStale(dir, t.beat.id, file);
+          await this.removeStale(project.id, t.beat.id, file);
           this.finish(job, t, text, file, secs, hash);
         } else pending.push({ t, hash });
       }
@@ -228,10 +217,8 @@ export class VoiceService {
           const secs = wavSeconds(bytes);
           if (secs === null || secs <= 0) throw new SovitsError('GPT-SoVITS 返回的不是可读的 WAV 音频', 'rejected');
           const file = voiceFileName(t.beat.id, hash);
-          const tmp = path.join(dir, `.${file}.${process.pid}.tmp`);
-          await fs.writeFile(tmp, bytes);
-          await fs.rename(tmp, path.join(dir, file));
-          await this.removeStale(dir, t.beat.id, file);
+          await this.deps.voice.write(project.id, file, bytes);
+          await this.removeStale(project.id, t.beat.id, file);
           this.finish(job, t, text, file, secs, hash);
         } catch (e) {
           if (signal.aborted) throw e;
@@ -249,21 +236,19 @@ export class VoiceService {
   }
 
   private finish(job: Job, t: Target, text: { ja: string; jaEdited?: boolean }, file: string, seconds: number, hash: string): void {
-    job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { ja: text.ja, ...(text.jaEdited ? { jaEdited: true } : {}), src: t.beat.text, file, seconds: Math.round(seconds * 1000) / 1000, hash } });
+    job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { src: t.beat.text, spoken: text.ja, ...(text.jaEdited ? { spokenEdited: true } : {}), file, seconds: Math.round(seconds * 1000) / 1000, hash, by: PLUGIN_ID } });
     job.done++;
   }
 
-  private async existing(file: string): Promise<number | null> {
-    try {
-      return wavSeconds(await fs.readFile(file));
-    } catch {
-      return null;
-    }
+  private async existing(projectId: string, name: string): Promise<number | null> {
+    const bytes = await this.deps.voice.read(projectId, name);
+    return bytes ? wavSeconds(bytes) : null;
   }
 
-  private async removeStale(dir: string, beatId: string, keep: string): Promise<void> {
-    const re = new RegExp(`^${safeId(beatId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-[0-9a-f]{8}\\.wav$`);
-    for (const f of await fs.readdir(dir).catch(() => [] as string[])) if (f !== keep && re.test(f)) await fs.rm(path.join(dir, f), { force: true });
+  private async removeStale(projectId: string, beatId: string, keep: string): Promise<void> {
+    const prefix = `${safeId(beatId)}-`; // safeId leaves only [A-Za-z0-9_-]
+    const re = new RegExp(`^${prefix}[0-9a-f]{8}[.]wav$`);
+    for (const f of await this.deps.voice.list(projectId)) if (f !== keep && re.test(f)) await this.deps.voice.remove(projectId, f);
   }
 
   /** Loads the character's weights, once: only when given and different from what this service loaded last. */

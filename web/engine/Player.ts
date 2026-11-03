@@ -64,8 +64,6 @@ export class Player {
   private bgmKey = '';
   /** Audio stays untouched until the first user-initiated play (browser autoplay policy). */
   private audioOn = false;
-  /** Voice-over (the GPT-SoVITS plugin): off unless the host turns it on; the volume is the plugin's setting. */
-  private voiceEnabled = false;
   private voiceKey = '';
   /** Bumped by every seek: a voice line that is playing restarts from the new position. */
   private seekEpoch = 0;
@@ -118,12 +116,9 @@ export class Player {
     return true;
   }
 
-  /** Turns the voice-over on / off and sets its volume (0..1). Off = recorded lines are neither played nor drive the mouth. */
-  setVoice(enabled: boolean, volume: number): void {
-    this.voiceEnabled = enabled;
+  /** Playback volume of recorded lines (0..1). */
+  setVoiceVolume(volume: number): void {
     this.audio.setVoiceVolume(volume);
-    if (!enabled) this.audio.stopVoice();
-    this.voiceKey = '';
   }
 
   get isPlaying(): boolean {
@@ -371,7 +366,7 @@ export class Player {
 
   /** Starts the voice of the beat that is on screen (from the right offset), stops it when the beat is left; prefetches the next lines. */
   private syncVoice(): void {
-    if (!this.voiceEnabled || !this.compiled.voice) return;
+    if (!this.compiled.voice) return;
     if (!this.playing) {
       this.audio.stopVoice();
       return;
@@ -403,7 +398,7 @@ export class Player {
 
   /** While a recorded line plays, the speaker's mouth follows the audio; the text-based mouth only drives beats without a recording. */
   private lipSync(state: RenderState): void {
-    if (!this.voiceEnabled || !this.audioOn || !this.playing || !this.compiled.voice) return;
+    if (!this.audioOn || !this.playing || !this.compiled.voice) return;
     const cur = this.voiceEventAt(this.t);
     if (!cur) return;
     const a = state.actors.find((x) => x.castId === cur.ev.speakerId);

@@ -21,7 +21,7 @@
     "dev": "concurrently -k -n server,web -c blue,green \"npm:dev:server\" \"npm:dev:web\"",
     "dev:server": "tsx watch server/index.ts",
     "dev:web": "vite",
-    "build": "vite build && node scripts/build-server.mjs",
+    "build": "vite build && node scripts/build-server.mjs && node scripts/build-plugins.mjs",
     "start": "node dist/server/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --project unit",
@@ -31,6 +31,7 @@
     "pack-assets": "tsx scripts/pack-assets.ts",
     "start:dev": "tsx server/index.ts",
     "package-release": "node scripts/package-release.mjs",
+    "package-plugin": "node scripts/package-plugin.mjs",
     "update": "node scripts/update.mjs"
   },
   "dependencies": {

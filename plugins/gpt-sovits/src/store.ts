@@ -1,20 +1,27 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { VoiceSettingsPatchSchema, VoiceSettingsSchema, type VoiceSettings, type VoiceSettingsPatch } from '../../shared/schema/voice';
+import { VoiceSettingsPatchSchema, VoiceSettingsSchema, type VoiceSettings, type VoiceSettingsPatch } from './schema';
+
+const clean = (x: string | undefined): string | undefined => (x && x.trim() !== '' ? x.trim() : undefined);
 
 /**
- * GPT-SoVITS plugin settings: `data/voice.local.json` (gitignored with the rest of `data/`). Plain paths and an address; no secrets.
- * Invalid / missing file = the defaults (plugin off).
+ * GPT-SoVITS plugin settings: `data/plugins/gpt-sovits/settings.json` (gitignored with the rest of `data/`). Plain paths and an address; no secrets.
+ * An invalid / missing file = the defaults (plugin off). Before the plugin existed the same settings lived in `data/voice.local.json`:
+ * that file is read when the new one is missing (its fields are all still valid; `volume` moved to the studio).
  */
 export class VoiceSettingsStore {
-  constructor(private readonly file: string) {}
+  constructor(private readonly file: string, private readonly legacyFile?: string) {}
 
   read(): VoiceSettings {
-    try {
-      return VoiceSettingsSchema.parse(JSON.parse(fs.readFileSync(this.file, 'utf8')));
-    } catch {
-      return VoiceSettingsSchema.parse({});
+    for (const f of [this.file, this.legacyFile]) {
+      if (!f) continue;
+      try {
+        return VoiceSettingsSchema.parse(JSON.parse(fs.readFileSync(f, 'utf8')));
+      } catch {
+        /* missing or invalid: next */
+      }
     }
+    return VoiceSettingsSchema.parse({});
   }
 
   private write(s: VoiceSettings): void {
@@ -32,7 +39,6 @@ export class VoiceSettingsStore {
     for (const [key, v] of Object.entries(p.profiles ?? {})) {
       if (v === null) delete profiles[key];
       else {
-        const clean = (x: string | undefined) => (x && x.trim() !== '' ? x.trim() : undefined);
         const gpt = clean(v.gptWeights);
         const sov = clean(v.sovitsWeights);
         const ref = clean(v.refAudioPath);
@@ -42,12 +48,12 @@ export class VoiceSettingsStore {
     const next: VoiceSettings = {
       enabled: p.enabled ?? cur.enabled,
       endpoint: (p.endpoint ?? cur.endpoint).trim().replace(/\/+$/, '') || cur.endpoint,
-      volume: p.volume ?? cur.volume,
       textLang: p.textLang?.trim() || cur.textLang,
+      refDirs: (p.refDirs ?? cur.refDirs).map((d) => d.trim()).filter(Boolean),
       profiles,
     };
-    for (const k of ['defaultGptWeights', 'defaultSovitsWeights'] as const) {
-      const v = k in p ? p[k]?.trim() : cur[k];
+    for (const k of ['defaultGptWeights', 'defaultSovitsWeights', 'sovitsRoot'] as const) {
+      const v = k in p ? clean(p[k]) : cur[k];
       if (v) next[k] = v;
     }
     this.write(next);

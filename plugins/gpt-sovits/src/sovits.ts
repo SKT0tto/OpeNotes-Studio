@@ -1,5 +1,5 @@
 /** Client of GPT-SoVITS `api_v2.py`. Every failure becomes a `SovitsError` with a Chinese message that is safe to show. */
-import type { VoiceProfile } from '../../shared/schema/voice';
+import type { VoiceProfile } from './schema';
 
 export class SovitsError extends Error {
   constructor(message: string, readonly kind: 'unreachable' | 'rejected' | 'aborted' | 'timeout') {

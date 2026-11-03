@@ -18,11 +18,13 @@ export type VoiceProfile = z.infer<typeof VoiceProfileSchema>;
 export const VoiceSettingsSchema = z.object({
   enabled: z.boolean().default(false),
   endpoint: z.string().default(DEFAULT_SOVITS_ENDPOINT),
-  volume: z.number().min(0).max(1).default(1),
   textLang: z.string().default('ja'),
   /** Used by a character whose own weights are blank. Both blank = the models GPT-SoVITS loaded at start-up. */
   defaultGptWeights: z.string().optional(),
   defaultSovitsWeights: z.string().optional(),
+  /** The GPT-SoVITS install folder on THIS computer (for 「自动匹配」), and extra folders of reference audio. */
+  sovitsRoot: z.string().optional(),
+  refDirs: z.array(z.string()).default([]),
   profiles: z.record(z.string(), VoiceProfileSchema).default({}),
 });
 export type VoiceSettings = z.infer<typeof VoiceSettingsSchema>;
@@ -31,10 +33,11 @@ export type VoiceSettings = z.infer<typeof VoiceSettingsSchema>;
 export const VoiceSettingsPatchSchema = z.object({
   enabled: z.boolean().optional(),
   endpoint: z.string().optional(),
-  volume: z.number().min(0).max(1).optional(),
   textLang: z.string().optional(),
   defaultGptWeights: z.string().optional(),
   defaultSovitsWeights: z.string().optional(),
+  sovitsRoot: z.string().optional(),
+  refDirs: z.array(z.string()).optional(),
   profiles: z.record(z.string(), VoiceProfileSchema.nullable()).optional(),
 });
 export type VoiceSettingsPatch = z.infer<typeof VoiceSettingsPatchSchema>;
@@ -82,7 +85,7 @@ export interface VoiceJobItem {
 export interface VoiceBeatResult {
   sceneId: string;
   beatId: string;
-  voice: { ja: string; jaEdited?: boolean; src?: string; file?: string; seconds?: number; hash?: string };
+  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; by: string };
 }
 export interface VoiceJobView {
   id: string;

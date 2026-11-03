@@ -1,5 +1,5 @@
 /** Translation of voiced lines into spoken Japanese (the GPT-SoVITS voice-over plugin). */
-import { VoiceTranslationSchema } from '../../../shared/schema/voice';
+import { VoiceTranslationSchema } from './schema';
 
 export const VOICE_JA_PROMPT_VERSION = 'voice-ja-2';
 export const VOICE_JA_SCHEMA_NAME = 'VoiceTranslation';

@@ -1,24 +1,17 @@
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ProjectSchema, type Project } from '../../shared/schema/project';
-import { VoiceSettingsSchema, effectiveProfile, weightsLeak } from '../../shared/schema/voice';
 import { exportEnvelope, parseImport } from '../../shared/project/exchange';
 import { resolveStyle } from '../../shared/style/ournotes';
 import { compileProject } from '../../shared/timeline/compile';
 import { beatSeconds, sceneTimes } from '../../shared/timeline/time';
-import { hasWords, profileOfBeat, spokenText, usableVoice } from '../../shared/voice/lines';
+import { usableVoice } from '../../shared/voice/lines';
 import { makeWav, wavSeconds } from '../../shared/voice/wav';
-import { VOICE_FILE, voiceFileName, voiceHash } from '../../server/voice/service';
-import { VoiceSettingsStore } from '../../server/voice/store';
-import { cleanJa } from '../../server/voice/translate';
 import demo from '../fixtures/demo-project.json';
 import { MINI_CTX, miniProject } from './helpers/synthetic';
 
 const st = resolveStyle(null).values;
-const dur = (voice?: { ja?: string; file?: string; seconds?: number; src?: string }, text = '短') =>
-  beatSeconds({ kind: 'dialogue', text, duration: { mode: 'auto', seconds: 0 }, ...(voice ? { voice: { ja: 'x', ...voice } } : {}) }, st);
+const dur = (voice?: { file?: string; seconds?: number; src?: string }, text = '短') =>
+  beatSeconds({ kind: 'dialogue', text, duration: { mode: 'auto', seconds: 0 }, ...(voice ? { voice: { src: text, ...voice } } : {}) }, st);
 
 describe('wavSeconds', () => {
   it('reads the length of a normal header', () => {
@@ -41,23 +34,6 @@ describe('wavSeconds', () => {
   });
 });
 
-describe('voice hash and file names', () => {
-  const profile = { refAudioPath: 'a.wav', promptText: 'p', promptLang: 'ja', speed: 1 };
-  it('changes with the text, the profile and the language, and nothing else', () => {
-    const h = voiceHash('こんにちは', profile, 'ja');
-    expect(voiceHash('こんにちは', { ...profile }, 'ja')).toBe(h);
-    expect(voiceHash('こんばんは', profile, 'ja')).not.toBe(h);
-    expect(voiceHash('こんにちは', { ...profile, speed: 1.1 }, 'ja')).not.toBe(h);
-    expect(voiceHash('こんにちは', { ...profile, gptWeights: 'g.ckpt' }, 'ja')).not.toBe(h);
-    expect(voiceHash('こんにちは', profile, 'en')).not.toBe(h);
-  });
-  it('file names are safe and recognised by the serving route', () => {
-    const f = voiceFileName('s1:b/2', voiceHash('x', profile, 'ja'));
-    expect(f).toMatch(VOICE_FILE);
-    expect(VOICE_FILE.test('../project.json')).toBe(false);
-  });
-});
-
 describe('beatSeconds with a voice', () => {
   it('is unchanged without a voice and for a voice that is shorter than the text', () => {
     expect(dur()).toBeCloseTo(1.8);
@@ -70,8 +46,8 @@ describe('beatSeconds with a voice', () => {
   });
   it('ignores a recording made for other text, and never touches a fixed duration', () => {
     expect(dur({ file: 'a.wav', seconds: 6, src: '别的字' })).toBeCloseTo(1.8);
-    expect(beatSeconds({ kind: 'dialogue', text: '短', duration: { mode: 'fixed', seconds: 2 }, voice: { ja: 'x', file: 'a.wav', seconds: 9 } }, st)).toBe(2);
-    expect(usableVoice({ text: '短', voice: { ja: 'x', file: 'a.wav', seconds: 1, src: '短' } })).toEqual({ file: 'a.wav', seconds: 1 });
+    expect(beatSeconds({ kind: 'dialogue', text: '短', duration: { mode: 'fixed', seconds: 2 }, voice: { src: '短', file: 'a.wav', seconds: 9 } }, st)).toBe(2);
+    expect(usableVoice({ text: '短', voice: { src: '短', file: 'a.wav', seconds: 1 } })).toEqual({ file: 'a.wav', seconds: 1 });
   });
 });
 
@@ -79,7 +55,7 @@ describe('compile with voice', () => {
   const voiced = (): Project => {
     const p = miniProject();
     const b = p.scenes[0]!.beats.find((x) => x.kind === 'dialogue' && x.speakerId)!;
-    b.voice = { ja: 'こんにちは', file: 'b-12345678.wav', seconds: 5 };
+    b.voice = { src: b.text, spoken: 'こんにちは', file: 'b-12345678.wav', seconds: 5 };
     return p;
   };
   it('emits a voice event at the beat start and lengthens the beat', () => {
@@ -106,89 +82,19 @@ describe('schema compatibility', () => {
   });
   it('voice survives a parse and is optional', () => {
     const raw = JSON.parse(JSON.stringify(demo));
-    raw.scenes[0].beats[0].voice = { ja: 'やあ', jaEdited: true, file: 'x-00000000.wav', seconds: 1.5, hash: 'h' };
+    raw.scenes[0].beats[0].voice = { src: '好', spoken: 'やあ', spokenEdited: true, file: 'x-00000000.wav', seconds: 1.5, hash: 'h', by: 'p' };
     const p = ProjectSchema.parse(raw);
-    expect(p.scenes[0]!.beats[0]!.voice).toEqual({ ja: 'やあ', jaEdited: true, file: 'x-00000000.wav', seconds: 1.5, hash: 'h' });
-    raw.scenes[0].beats[0].voice = { ja: 3 };
+    expect(p.scenes[0]!.beats[0]!.voice).toEqual({ src: '好', spoken: 'やあ', spokenEdited: true, file: 'x-00000000.wav', seconds: 1.5, hash: 'h', by: 'p' });
+    raw.scenes[0].beats[0].voice = { spoken: 3 };
     expect(() => ProjectSchema.parse(raw)).toThrow();
   });
   it('export keeps the Japanese text but not the audio files; import still works', () => {
     const raw = JSON.parse(JSON.stringify(demo));
-    raw.scenes[0].beats[0].voice = { ja: 'やあ', file: 'x-00000000.wav', seconds: 1.5, hash: 'h' };
+    raw.scenes[0].beats[0].voice = { src: '好', spoken: 'やあ', file: 'x-00000000.wav', seconds: 1.5, hash: 'h' };
     const env = exportEnvelope(ProjectSchema.parse(raw), 'v');
     const r = parseImport(JSON.stringify(env));
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.project.scenes[0]!.beats[0]!.voice).toEqual({ ja: 'やあ' });
+    if (r.ok) expect(r.project.scenes[0]!.beats[0]!.voice).toEqual({ src: '好', spoken: 'やあ' });
   });
 });
 
-describe('lines and translation checks', () => {
-  const project = ProjectSchema.parse(demo);
-  const beat = { kind: 'dialogue' as const, speakerId: 'c_001' };
-  it('only spoken dialogue of a voiced character is voiced', () => {
-    const profiles = { '001': { refAudioPath: 'r.wav', promptText: '', promptLang: 'ja', speed: 1 }, '002': { promptText: '', promptLang: 'ja', speed: 1 } };
-    expect(profileOfBeat(project, beat, profiles)?.characterKey).toBe('001');
-    expect(profileOfBeat(project, { kind: 'dialogue', speakerId: 'c_002' }, profiles)).toBeNull(); // no reference audio
-    expect(profileOfBeat(project, { kind: 'narration', speakerId: 'c_001' }, profiles)).toBeNull();
-    expect(profileOfBeat(project, { kind: 'dialogue' }, profiles)).toBeNull();
-    expect(profileOfBeat(project, { kind: 'action', speakerId: 'c_001' }, profiles)).toBeNull();
-  });
-  it('spokenText removes brackets, stage directions and name plates', () => {
-    expect(spokenText('（我不知道……）')).toBe('我不知道……');
-    expect(spokenText('「早上好」')).toBe('早上好');
-    expect(spokenText('灯：你好', ['灯'])).toBe('你好');
-    expect(spokenText('你好（笑）再见')).toBe('你好再见');
-    expect(hasWords('……')).toBe(false);
-    expect(hasWords('啊……')).toBe(true);
-  });
-  it('cleanJa keeps Japanese and drops wrappers; a non-Japanese answer is refused', () => {
-    expect(cleanJa('「おはよう」')).toBe('おはよう');
-    expect(cleanJa('  ふふっ、 そうだね ')).toBe('ふふっ、 そうだね');
-    expect(cleanJa('早上好')).toBeNull();
-    expect(cleanJa('')).toBeNull();
-  });
-});
-
-describe('VoiceSettingsStore', () => {
-  const tmp = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'voice-')), 'voice.local.json');
-  it('defaults to off and keeps profiles per character', () => {
-    const store = new VoiceSettingsStore(tmp());
-    expect(store.read()).toEqual(VoiceSettingsSchema.parse({}));
-    expect(store.read().enabled).toBe(false);
-    const s = store.patch({ enabled: true, endpoint: 'http://127.0.0.1:9999/', profiles: { '001': { refAudioPath: ' r.wav ', promptText: 'x', promptLang: '', speed: 1.1 } } });
-    expect(s.endpoint).toBe('http://127.0.0.1:9999');
-    expect(s.profiles['001']).toEqual({ refAudioPath: 'r.wav', promptText: 'x', promptLang: 'ja', speed: 1.1 });
-    expect(store.patch({ profiles: { '001': null } }).profiles).toEqual({});
-    expect(() => store.patch({ volume: 3 })).toThrow();
-  });
-});
-
-describe('effective weights and the leak guard', () => {
-  const base = { refAudioPath: 'r.wav', promptText: '', promptLang: 'ja', speed: 1 };
-  const settings = (o: object = {}) => VoiceSettingsSchema.parse({ enabled: true, ...o });
-  it('a blank profile weight falls back to the default; an explicit one wins', () => {
-    const s = settings({ defaultGptWeights: 'dg.ckpt', defaultSovitsWeights: 'ds.pth' });
-    expect(effectiveProfile(s, base)).toMatchObject({ gptWeights: 'dg.ckpt', sovitsWeights: 'ds.pth' });
-    expect(effectiveProfile(s, { ...base, gptWeights: 'own.ckpt' })).toMatchObject({ gptWeights: 'own.ckpt', sovitsWeights: 'ds.pth' });
-    expect(effectiveProfile(settings(), base).gptWeights).toBeUndefined();
-  });
-  it('blank weights leak only when another profile uses explicit ones', () => {
-    const a = { ...base, gptWeights: 'a.ckpt', sovitsWeights: 'a.pth' };
-    expect(weightsLeak(settings({ profiles: { x: base, y: base } }), base)).toEqual([]); // everyone shares the start-up model
-    expect(weightsLeak(settings({ profiles: { a, x: base } }), base)).toEqual(['GPT', 'SoVITS']);
-    expect(weightsLeak(settings({ profiles: { a, x: { ...base, gptWeights: 'x.ckpt' } } }), { ...base, gptWeights: 'x.ckpt' })).toEqual(['SoVITS']);
-    expect(weightsLeak(settings({ defaultGptWeights: 'd.ckpt', defaultSovitsWeights: 'd.pth', profiles: { a, x: base } }), base)).toEqual([]);
-  });
-  it('the hash follows the default weights', () => {
-    const h = (s: object) => voiceHash('こんにちは', effectiveProfile(settings(s), base), 'ja');
-    expect(h({ defaultGptWeights: 'a.ckpt' })).not.toBe(h({}));
-    expect(h({ defaultGptWeights: 'a.ckpt' })).not.toBe(h({ defaultGptWeights: 'b.ckpt' }));
-    expect(h({ defaultGptWeights: 'a.ckpt' })).toBe(h({ defaultGptWeights: 'a.ckpt' }));
-  });
-  it('the store keeps and clears the defaults', () => {
-    const store = new VoiceSettingsStore(path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'voice-')), 'v.json'));
-    expect(store.patch({ defaultGptWeights: ' g.ckpt ' }).defaultGptWeights).toBe('g.ckpt');
-    expect(store.patch({ enabled: true }).defaultGptWeights).toBe('g.ckpt');
-    expect(store.patch({ defaultGptWeights: '' }).defaultGptWeights).toBeUndefined();
-  });
-});

@@ -3,9 +3,12 @@
  * Each call returns `{lines:[{id, ja}]}`; an id the model skipped, or an answer that is not Japanese-looking text, is asked for again once,
  * then reported as failed (the line stays unvoiced; nothing is invented).
  */
-import { LlmCache, generateCached } from '../llm/cache';
-import { LlmError, type LlmProvider } from '../llm/provider';
-import { VOICE_JA_PROMPT_VERSION, VOICE_JA_SCHEMA_NAME, VOICE_JA_SYSTEM, VoiceTranslationSchema, type VoiceJaInput, type VoiceJaLine } from '../llm/prompts/voiceJa';
+import type { z } from 'zod';
+import type { PluginServerContext } from '../../../shared/plugins/api';
+import { VOICE_JA_PROMPT_VERSION, VOICE_JA_SCHEMA_NAME, VOICE_JA_SYSTEM, VoiceTranslationSchema, type VoiceJaInput, type VoiceJaLine } from './prompt';
+
+/** The studio's structured-JSON call (`ctx.llm.callJson`); tests pass a stub. */
+export type CallJson = PluginServerContext['llm']['callJson'];
 
 /** Lines per call. */
 export const VOICE_LINES_PER_CALL = 25;
@@ -13,8 +16,7 @@ export const VOICE_LINES_PER_CALL = 25;
 const THINKING_ALLOWANCE = 4096;
 
 export interface TranslateArgs {
-  provider: LlmProvider;
-  cache: LlmCache | null;
+  callJson: CallJson;
   refresh?: boolean | undefined;
   signal?: AbortSignal | undefined;
   scene: { title: string; mood: string };
@@ -50,11 +52,10 @@ export async function translateLines(a: TranslateArgs): Promise<TranslateResult>
     const last = a.lines.length - 1 - [...a.lines].reverse().findIndex((l) => idSet.has(l.id));
     const window = a.lines.slice(Math.max(0, first - 3), last + 3);
     const input: VoiceJaInput = { scene: a.scene, characters, lines: window.map((l) => ({ ...l, translate: idSet.has(l.id) })) };
-    const r = await generateCached(
-      a.provider, a.cache, VOICE_JA_PROMPT_VERSION,
-      { system: VOICE_JA_SYSTEM, input, schema: VoiceTranslationSchema, schemaName: VOICE_JA_SCHEMA_NAME, maxTokens: voiceBudget(window.filter((l) => idSet.has(l.id)).map((l) => [...l.text].length)), signal: a.signal },
-      a.refresh ? { refresh: true } : {},
-    );
+    const r = await a.callJson<z.infer<typeof VoiceTranslationSchema>>({
+      system: VOICE_JA_SYSTEM, user: input, schema: VoiceTranslationSchema, schemaName: VOICE_JA_SCHEMA_NAME, promptVersion: VOICE_JA_PROMPT_VERSION,
+      maxTokens: voiceBudget(window.filter((l) => idSet.has(l.id)).map((l) => [...l.text].length)), signal: a.signal, refresh: a.refresh,
+    });
     const out = new Map<string, string>();
     for (const l of r.data.lines) {
       if (!idSet.has(l.id) || out.has(l.id)) continue;
@@ -73,7 +74,7 @@ export async function translateLines(a: TranslateArgs): Promise<TranslateResult>
       try {
         for (const [k, v] of await ask(missing)) got.set(k, v);
       } catch (e) {
-        if (a.signal?.aborted || (e instanceof LlmError && (e.kind === 'aborted' || e.kind === 'auth' || e.kind === 'not_configured'))) throw e;
+        if (a.signal?.aborted || ['aborted', 'auth', 'not_configured'].includes((e as { kind?: string }).kind ?? '')) throw e;
         lastError = (e as Error).message;
       }
     }

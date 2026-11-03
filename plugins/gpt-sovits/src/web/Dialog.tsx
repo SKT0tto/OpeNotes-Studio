@@ -1,27 +1,35 @@
-/** 「配音」: the GPT-SoVITS auto voice-over plugin (off by default): server address, per-character voices, and generation for the project / scene. */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_SOVITS_ENDPOINT, hasVoice, type VoiceProfile, type VoiceScope, type VoiceSettings } from '@shared/schema/voice';
-import { previewVoice, testVoiceConnection } from '../../voiceApi';
-import { useProject } from '../../store/projectStore';
-import { jobRunning, useVoice } from '../../store/voiceStore';
-import { useCatalog } from '../useCatalog';
-import { Modal } from '../ui';
+/** 「配音」: the GPT-SoVITS auto voice-over plugin: server address, per-character voices (with 「自动匹配」), and generation for the project / scene. */
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { MatchResult, MatchRow } from '../match/match';
+import { DEFAULT_SOVITS_ENDPOINT, hasVoice, type VoiceProfile, type VoiceScope, type VoiceSettings } from '../schema';
+import { host, previewVoice, requestMatch, testVoiceConnection } from './api';
+import { cancelJob, jobRunning, loadSettings, runJob, saveSettings, useVoice } from './store';
 
 const BLANK: VoiceProfile = { promptText: '', promptLang: 'ja', speed: 1 };
+const SOURCE_LABEL = { filename: '文件名', ai: 'AI' } as const;
+
+/** Would applying this row replace something the person already filled in? */
+export function overwrites(row: MatchRow, cur: VoiceProfile | undefined): boolean {
+  if (!cur) return false;
+  const differs = (a: string | undefined, b: string | undefined) => !!a && !!b && a !== b;
+  return differs(cur.gptWeights, row.gpt) || differs(cur.sovitsWeights, row.sovits) || differs(cur.refAudioPath, row.ref?.path);
+}
 
 export function VoiceDialog({ onClose }: { onClose: () => void }) {
-  const project = useProject((s) => s.project)!;
-  const selection = useProject((s) => s.selection);
-  const catalog = useCatalog();
+  const h = host();
+  const { Modal } = h.ui;
+  const { project, selection } = h.useStudio();
   const settings = useVoice((s) => s.settings);
   const loadError = useVoice((s) => s.loadError);
   const job = useVoice((s) => s.job);
   const [enabled, setEnabled] = useState(false);
   const [endpoint, setEndpoint] = useState(DEFAULT_SOVITS_ENDPOINT);
-  const [volume, setVolume] = useState(1);
+  const [volume, setVolume] = useState(h.voice.getVolume());
   const [textLang, setTextLang] = useState('ja');
   const [defGpt, setDefGpt] = useState('');
   const [defSov, setDefSov] = useState('');
+  const [sovitsRoot, setSovitsRoot] = useState('');
+  const [refDirs, setRefDirs] = useState('');
   const [profiles, setProfiles] = useState<Record<string, VoiceProfile>>({});
   const [conn, setConn] = useState<{ ok: boolean; message: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -29,29 +37,32 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
   const [saved, setSaved] = useState(false);
   const [retranslate, setRetranslate] = useState(false);
   const [force, setForce] = useState(false);
+  const [match, setMatch] = useState<MatchResult | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
   const audio = useRef<HTMLAudioElement | null>(null);
 
-  const adopt = useCallback((s: VoiceSettings) => {
+  const adopt = (s: VoiceSettings) => {
     setEnabled(s.enabled);
     setEndpoint(s.endpoint);
-    setVolume(s.volume);
     setTextLang(s.textLang);
     setProfiles(s.profiles);
     setDefGpt(s.defaultGptWeights ?? '');
     setDefSov(s.defaultSovitsWeights ?? '');
-  }, []);
+    setSovitsRoot(s.sovitsRoot ?? '');
+    setRefDirs(s.refDirs.join('\n'));
+  };
   useEffect(() => {
-    void useVoice.getState().load().then((s) => s && adopt(s));
-  }, [adopt]);
+    void loadSettings().then((s) => s && adopt(s));
+  }, []);
   useEffect(() => () => audio.current?.pause(), []);
 
   // one row per character of the project's cast, then the voices saved for characters that are not in it
   const rows = useMemo(() => {
     const out: Array<{ key: string; name: string }> = [];
-    for (const c of project.cast) if (!out.some((r) => r.key === c.characterKey)) out.push({ key: c.characterKey, name: c.displayName });
-    for (const key of Object.keys(profiles)) if (!out.some((r) => r.key === key)) out.push({ key, name: catalog?.characters.find((c) => c.key === key)?.name ?? key });
+    for (const c of project?.cast ?? []) if (!out.some((r) => r.key === c.characterKey)) out.push({ key: c.characterKey, name: c.displayName });
+    for (const key of Object.keys(profiles)) if (!out.some((r) => r.key === key)) out.push({ key, name: key });
     return out;
-  }, [project.cast, profiles, catalog]);
+  }, [project?.cast, profiles]);
 
   const patchProfile = (key: string, p: Partial<VoiceProfile>) => {
     setSaved(false);
@@ -63,7 +74,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
     try {
       const profs: Record<string, VoiceProfile | null> = {};
       for (const [k, v] of Object.entries(profiles)) profs[k] = v.refAudioPath?.trim() || v.gptWeights?.trim() || v.sovitsWeights?.trim() || v.promptText ? v : null;
-      adopt(await useVoice.getState().save({ enabled, endpoint, volume, textLang, defaultGptWeights: defGpt, defaultSovitsWeights: defSov, profiles: profs }));
+      adopt(await saveSettings({ enabled, endpoint, textLang, defaultGptWeights: defGpt, defaultSovitsWeights: defSov, sovitsRoot, refDirs: refDirs.split(/\r?\n/).map((x) => x.trim()).filter(Boolean), profiles: profs }));
       setSaved(true);
       return true;
     } catch (e) {
@@ -104,17 +115,51 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
 
   const generate = async (scope: VoiceScope) => {
     if (!(await save())) return;
-    void useVoice.getState().run(scope, { ...(retranslate ? { retranslate: true } : {}), ...(force ? { force: true } : {}) });
+    void runJob(scope, { ...(retranslate ? { retranslate: true } : {}), ...(force ? { force: true } : {}) });
+  };
+
+  const autoMatch = async () => {
+    setError(null);
+    setBusy('match');
+    setMatch(null);
+    try {
+      const r = await requestMatch(rows, sovitsRoot, refDirs.split(/\r?\n/).map((x) => x.trim()).filter(Boolean));
+      setMatch(r);
+      setPicked(new Set(r.rows.filter((row) => !overwrites(row, profiles[row.characterKey])).map((row) => row.characterKey)));
+    } catch (e) {
+      setError(`自动匹配失败：${(e as Error).message}`);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const applyPicked = () => {
+    if (!match) return;
+    setSaved(false);
+    setProfiles((cur) => {
+      const next = { ...cur };
+      for (const row of match.rows) {
+        if (!picked.has(row.characterKey)) continue;
+        next[row.characterKey] = {
+          ...BLANK, ...cur[row.characterKey],
+          ...(row.gpt ? { gptWeights: row.gpt } : {}), ...(row.sovits ? { sovitsWeights: row.sovits } : {}),
+          ...(row.ref ? { refAudioPath: row.ref.path, ...(row.ref.text ? { promptText: row.ref.text } : {}), promptLang: row.ref.lang || 'ja' } : {}),
+        };
+      }
+      return next;
+    });
+    setMatch(null);
   };
 
   const running = jobRunning(job);
   const view = job?.view ?? null;
   const voicedKeys = rows.filter((r) => hasVoice(profiles[r.key])).length;
-  const scene = project.scenes.find((s) => s.id === selection.sceneId) ?? null;
+  const scene = project?.scenes.find((s) => s.id === selection.sceneId) ?? null;
   const pct = view && view.total > 0 ? Math.round((view.done / view.total) * 100) : 0;
+  const base = (p: string) => p.split(/[\\/]/).slice(-1)[0] ?? p;
 
   return (
-    <Modal title="配音（GPT-SoVITS）" onClose={onClose} testid="voice-dialog" wide>
+    <Modal title="配音（GPT-SoVITS 插件）" onClose={onClose} testid="voice-dialog" wide>
       {!settings ? (
         <p className="hint">{loadError ?? '读取中…'}</p>
       ) : (
@@ -124,7 +169,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
           </p>
           <label className="srow">
             <span>启用</span>
-            <span><input type="checkbox" checked={enabled} onChange={(e) => { setEnabled(e.target.checked); setSaved(false); }} data-testid="voice-enabled" /> 播放时使用配音（默认关闭）</span>
+            <span><input type="checkbox" checked={enabled} onChange={(e) => { setEnabled(e.target.checked); setSaved(false); }} data-testid="voice-enabled" /> 使用配音插件（默认关闭）</span>
           </label>
           <label className="srow">
             <span>服务地址</span>
@@ -135,19 +180,55 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
           </label>
           {conn && <p className={conn.ok ? 'ok' : 'bad'} data-testid="voice-conn">{conn.message}</p>}
           <label className="srow">
-            <span>音量</span>
-            <span className="voice-line"><input type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => { setVolume(Number(e.target.value)); setSaved(false); }} data-testid="voice-volume" /><span>{Math.round(volume * 100)}%</span></span>
+            <span>播放音量</span>
+            <span className="voice-line"><input type="range" min={0} max={1} step={0.05} value={volume} onChange={(e) => { setVolume(Number(e.target.value)); h.voice.setVolume(Number(e.target.value)); }} data-testid="voice-volume" /><span>{Math.round(volume * 100)}%</span></span>
           </label>
           <label className="srow">
             <span>合成语言</span>
             <input className="text" value={textLang} onChange={(e) => { setTextLang(e.target.value); setSaved(false); }} placeholder="ja" data-testid="voice-textlang" />
           </label>
 
+          <h3 className="voice-h">自动匹配</h3>
+          <label className="srow"><span>GPT-SoVITS 文件夹</span><input className="text" value={sovitsRoot} onChange={(e) => { setSovitsRoot(e.target.value); setSaved(false); }} placeholder="D:\GPT-SoVITS\GPT-SoVITS-v5-…" data-testid="voice-root" /></label>
+          <label className="srow"><span>其他参考音频文件夹</span><textarea className="area" rows={2} value={refDirs} onChange={(e) => { setRefDirs(e.target.value); setSaved(false); }} placeholder="每行一个文件夹（可空）；每个角色一个子文件夹最好" data-testid="voice-refdirs" /></label>
+          <p className="hint">只在 GPT-SoVITS 和本软件在同一台电脑上时可用：扫描 GPT_weights* / SoVITS_weights* 里的权重，和 ref* / 参考音频* 里的参考音频，按文件名与文件夹名对应到角色；对不上的再请 AI 帮忙。</p>
+          <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
+            <button className="btn" disabled={busy === 'match' || !sovitsRoot.trim() || rows.length === 0} onClick={() => void autoMatch()} data-testid="voice-automatch">{busy === 'match' ? '扫描中…' : '自动匹配'}</button>
+          </div>
+          {match && (
+            <div data-testid="voice-match">
+              <p className="hint">扫描到 GPT 权重 {match.scanned.gpt} 个、SoVITS 权重 {match.scanned.sovits} 个、参考音频 {match.scanned.refs} 个。{match.ai === 'unavailable' ? ' 没有配置 AI，只按文件名匹配。' : match.ai === 'failed' ? ' AI 匹配失败。' : ''}</p>
+              {match.warnings.map((w) => <p key={w} className="warn">{w}</p>)}
+              <table className="voice-match-table">
+                <thead><tr><th /><th>角色</th><th>GPT</th><th>SoVITS</th><th>参考音频 / 文本</th><th>来源</th></tr></thead>
+                <tbody>
+                  {match.rows.map((r) => (
+                    <tr key={r.characterKey} data-testid={`voice-match-${r.characterKey}`}>
+                      <td><input type="checkbox" checked={picked.has(r.characterKey)} onChange={(e) => setPicked((p) => { const n = new Set(p); if (e.target.checked) n.add(r.characterKey); else n.delete(r.characterKey); return n; })} /></td>
+                      <td>{r.name}{overwrites(r, profiles[r.characterKey]) && <small className="warn"> 会覆盖已填的</small>}</td>
+                      <td title={r.gpt}>{r.gpt ? base(r.gpt) : '—'}</td>
+                      <td title={r.sovits}>{r.sovits ? base(r.sovits) : '—'}</td>
+                      <td title={r.ref?.path}>{r.ref ? <>{base(r.ref.path)}<br /><small>{r.ref.text || '（没有文本，请手填）'}</small></> : '—'}</td>
+                      <td>{SOURCE_LABEL[r.source]}{r.reason ? <small> · {r.reason}</small> : null}</td>
+                    </tr>
+                  ))}
+                  {match.unmatched.map((k) => (
+                    <tr key={k} data-testid={`voice-unmatched-${k}`}><td /><td>{rows.find((r) => r.key === k)?.name ?? k}</td><td colSpan={4} className="hint">未找到</td></tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
+                <button className="btn primary" disabled={picked.size === 0} onClick={applyPicked} data-testid="voice-match-apply">应用所选</button>
+                <button className="btn" onClick={() => setMatch(null)}>关闭</button>
+              </div>
+              <p className="hint">应用后记得点下面的「保存设置」。</p>
+            </div>
+          )}
+
           <h3 className="voice-h">角色声线</h3>
-          <p className="hint">路径是 GPT-SoVITS 所在电脑上的路径。权重留空 = 沿用服务当前已加载的模型。参考音频建议 3–10 秒、与参考文本一致。</p>
           <label className="srow"><span>默认 GPT 权重</span><input className="text" value={defGpt} onChange={(e) => { setDefGpt(e.target.value); setSaved(false); }} placeholder=".ckpt（可空）" data-testid="voice-def-gpt" /></label>
           <label className="srow"><span>默认 SoVITS 权重</span><input className="text" value={defSov} onChange={(e) => { setDefSov(e.target.value); setSaved(false); }} placeholder=".pth（可空）" data-testid="voice-def-sovits" /></label>
-          <p className="hint">角色的权重留空时用这里的；也留空 = 用 GPT-SoVITS 启动时加载的模型（这时请让所有角色都留空，否则会串用别人的模型）。</p>
+          <p className="hint">角色的权重留空时用这里的；也留空 = 用 GPT-SoVITS 启动时加载的模型（这时请让所有角色都留空，否则会串用别人的模型）。路径是 GPT-SoVITS 所在电脑上的路径；参考音频建议 3–10 秒、与参考文本一致。</p>
           {rows.length === 0 && <p className="hint">项目里还没有角色。</p>}
           {rows.map((r) => {
             const p = profiles[r.key] ?? BLANK;
@@ -185,7 +266,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
           <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
             <button className="btn primary" disabled={running || !enabled || voicedKeys === 0} onClick={() => void generate({ kind: 'project' })} data-testid="voice-gen-project">生成整个项目的配音</button>
             <button className="btn" disabled={running || !enabled || voicedKeys === 0 || !scene} onClick={() => scene && void generate({ kind: 'scene', sceneId: scene.id })} data-testid="voice-gen-scene" title={scene ? `场景：${scene.title}` : '先选一个场景'}>生成当前场景</button>
-            {running && <button className="btn" onClick={() => useVoice.getState().cancel()} data-testid="voice-cancel">取消</button>}
+            {running && <button className="btn" onClick={() => cancelJob()} data-testid="voice-cancel">取消</button>}
           </div>
           {(running || view) && (
             <div data-testid="voice-progress">
