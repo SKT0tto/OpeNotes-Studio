@@ -7,7 +7,7 @@
  */
 import { z } from 'zod';
 import type { PluginServerContext } from '../../../../shared/plugins/api';
-import { aliasesOf, scoreText } from './names';
+import { aliasesOf, scoreText, versionIn } from './names';
 import { scanInstall, type RefFile, type Scan, type WeightFile } from './scan';
 
 export interface MatchCharacter { key: string; name: string }
@@ -42,12 +42,18 @@ function owner(chars: Array<{ key: string; aliases: ReturnType<typeof aliasesOf>
 
 const newest = (a: WeightFile, b: WeightFile) => b.epoch - a.epoch || b.step - a.step || b.mtime - a.mtime;
 
-/** Best GPT / SoVITS of a character: the family that has both (then the newest), highest epoch inside it. */
+/**
+ * Best GPT / SoVITS of a character: the family that has both (then the newest). Inside it, one experiment that has both files
+ * (the plainest stem, e.g. `soyo` over `soyo非夹`), then the highest epoch. Files whose stems do not meet are picked one by one.
+ */
 export function pickWeights(gpt: WeightFile[], sovits: WeightFile[]): { gpt?: WeightFile; sovits?: WeightFile } {
   const families = [...new Set([...gpt, ...sovits].map((w) => w.family))];
   const ranked = families.map((f) => {
-    const g = gpt.filter((w) => w.family === f).sort(newest)[0];
-    const s = sovits.filter((w) => w.family === f).sort(newest)[0];
+    const fg = gpt.filter((w) => w.family === f);
+    const fs = sovits.filter((w) => w.family === f);
+    const shared = [...new Set(fg.map((w) => w.stem))].filter((st) => fs.some((w) => w.stem === st)).sort((a, b) => a.length - b.length || a.localeCompare(b))[0];
+    const g = (shared === undefined ? fg : fg.filter((w) => w.stem === shared)).sort(newest)[0];
+    const s = (shared === undefined ? fs : fs.filter((w) => w.stem === shared)).sort(newest)[0];
     return { f, g, s, both: g && s ? 1 : 0, when: Math.max(g?.mtime ?? 0, s?.mtime ?? 0) };
   }).sort((a, b) => b.both - a.both || b.when - a.when);
   const top = ranked[0];
@@ -55,9 +61,20 @@ export function pickWeights(gpt: WeightFile[], sovits: WeightFile[]): { gpt?: We
 }
 
 const CALM = /平静|通常|普通|normal|neutral|calm/i;
-/** Best reference of a character: 3-10 s long, with its text, a calm emotion tag. */
-export function pickRef(refs: RefFile[]): RefFile | undefined {
-  const score = (r: RefFile) => (r.seconds !== null && r.seconds >= 3 && r.seconds <= 10 ? 4 : r.seconds !== null && r.seconds > 0 && r.seconds <= 14 ? 1 : 0) + (r.text ? 3 : 0) + (CALM.test(r.tag) ? 1 : 0);
+/** Voice variants kept in their own subfolder next to the plain voice. */
+const VARIANT = /夹子音|不演了|不夹|非夹/;
+
+/** Best reference of a character: 3-10 s long, with a usable text, a calm emotion tag, from the model's version, and the plain voice. */
+export function pickRef(refs: RefFile[], opts: { version?: string | undefined } = {}): RefFile | undefined {
+  const want = (opts.version ?? '').toLowerCase();
+  const score = (r: RefFile) => {
+    let n = (r.seconds !== null && r.seconds >= 3 && r.seconds <= 10 ? 4 : r.seconds !== null && r.seconds > 0 && r.seconds <= 14 ? 1 : 0) + (r.text ? 3 : 0) + (CALM.test(r.tag) ? 1 : 0);
+    if (r.textSuspect) n -= 8;
+    const has = r.folders.map(versionIn).find(Boolean);
+    if (want && has) n += has === want ? 3 : -3;
+    if (r.folders.some((f) => VARIANT.test(f))) n -= 2;
+    return n;
+  };
   return [...refs].sort((a, b) => score(b) - score(a) || a.rel.localeCompare(b.rel))[0];
 }
 
@@ -136,7 +153,7 @@ export async function autoMatch(
   for (const c of characters) {
     const m = mine.get(c.key)!;
     const w = pickWeights(m.gpt, m.sovits);
-    const ref = pickRef(m.refs);
+    const ref = pickRef(m.refs, { version: w.sovits?.version || w.gpt?.version });
     if (!w.gpt && !w.sovits && !ref) continue;
     if (w.gpt) claimed.gpt.add(w.gpt.path);
     if (w.sovits) claimed.sovits.add(w.sovits.path);
@@ -146,7 +163,7 @@ export async function autoMatch(
       characterKey: c.key, name: c.name,
       ...(w.gpt ? { gpt: w.gpt.path } : {}), ...(w.sovits ? { sovits: w.sovits.path } : {}),
       ...(ref ? { ref: { path: ref.path, text: ref.text, lang: ref.lang || 'ja' } } : {}),
-      source: 'filename', ...(family ? { reason: `版本 ${family}` } : {}),
+      source: 'filename', ...(family ? { reason: family.startsWith('pack:') ? `${w.sovits?.version || w.gpt?.version || ''} ${family.slice(5)}`.trim() : `版本 ${family}` } : {}),
     });
   }
 

@@ -66,3 +66,15 @@ export function scoreText(aliases: readonly Alias[], parts: readonly string[]): 
   }
   return best;
 }
+
+/** The experiment a checkpoint belongs to: the file name before `-e<N>` / `_e<N>` (`soyo非夹_e8_s616_l128.pth` -> `soyo非夹`), folded. */
+export function stemOf(name: string): string {
+  const base = name.replace(/\.[^.]+$/, '');
+  const cut = /[-_ ]e(?:p(?:och)?)?\d+(?![a-z0-9])/i.exec(base);
+  return fold(cut ? base.slice(0, cut.index) : base).trim();
+}
+
+/** A model version written in a name: `GPT_weights_v2Pro` -> `v2pro`, `训练v4模型时收集的…` -> `v4`; '' when none. */
+export function versionIn(name: string): string {
+  return /(?:^|[^a-z0-9])(v\d+(?:pro(?:plus)?|dev|turbo)?)(?![a-z0-9])/i.exec(name)?.[1]?.toLowerCase() ?? '';
+}
