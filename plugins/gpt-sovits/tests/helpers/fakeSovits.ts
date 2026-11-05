@@ -1,8 +1,9 @@
-/** A tiny stand-in for GPT-SoVITS `api_v2.py`: /set_*_weights and /tts (a sine wave about 0.12 s per character). */
+/** A tiny stand-in for GPT-SoVITS `api_v2.py`: /set_*_weights and /tts (a sine wave 0.2 s per estimated mora; `cutNext` makes takes that end early). */
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import { makeWav } from '../../../../shared/voice/wav';
+import { estimateMorae } from '../../src/check';
 
 export interface FakeSovits {
   url: string;
@@ -14,6 +15,8 @@ export interface FakeSovits {
   failText: Set<string>;
   /** Use a streaming-style header (bogus data size). */
   bogusHeader: boolean;
+  /** The next /tts calls return only this fraction of the sound (a cut-off take), one entry per call. */
+  cutNext: number[];
   /** Milliseconds each /tts call takes. */
   delayMs: number;
   close(): Promise<void>;
@@ -22,7 +25,7 @@ export interface FakeSovits {
 export async function startFakeSovits(): Promise<FakeSovits> {
   const calls: FakeSovits['calls'] = [];
   const failures: string[] = [];
-  const state = { failText: new Set<string>(), bogusHeader: false, delayMs: 0 };
+  const state = { failText: new Set<string>(), bogusHeader: false, delayMs: 0, cutNext: [] as number[] };
   const app = express();
   app.use(express.json());
   for (const kind of ['gpt', 'sovits']) {
@@ -41,7 +44,7 @@ export async function startFakeSovits(): Promise<FakeSovits> {
     if (forced || state.failText.has(text)) return void res.status(400).json({ message: 'tts failed', Exception: forced ?? 'forced' });
     for (const k of ['text', 'text_lang', 'ref_audio_path', 'prompt_lang']) if (typeof body[k] !== 'string' || body[k] === '') return void res.status(400).json({ message: `${k} is required` });
     const rate = 16000;
-    const n = Math.max(1, Math.round(0.12 * [...text].length * rate));
+    const n = Math.max(1, Math.round(0.2 * Math.max(1, estimateMorae(text)) * (state.cutNext.shift() ?? 1) * rate));
     const samples = new Int16Array(n);
     for (let i = 0; i < n; i++) samples[i] = Math.round(Math.sin((2 * Math.PI * 220 * i) / rate) * 8000);
     res.type('audio/wav').send(Buffer.from(makeWav(samples, rate, { bogusSize: state.bogusHeader })));
@@ -56,6 +59,8 @@ export async function startFakeSovits(): Promise<FakeSovits> {
     failText: state.failText,
     get bogusHeader() { return state.bogusHeader; },
     set bogusHeader(v: boolean) { state.bogusHeader = v; },
+    get cutNext() { return state.cutNext; },
+    set cutNext(v: number[]) { state.cutNext = v; },
     get delayMs() { return state.delayMs; },
     set delayMs(v: number) { state.delayMs = v; },
     close: () => new Promise((resolve) => { server.close(() => resolve()); server.closeAllConnections?.(); }),

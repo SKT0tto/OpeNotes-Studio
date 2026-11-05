@@ -85,7 +85,7 @@ export interface VoiceJobItem {
 export interface VoiceBeatResult {
   sceneId: string;
   beatId: string;
-  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; seed?: number; by: string };
+  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; seed?: number; suspect?: boolean; by: string };
 }
 export interface VoiceJobView {
   id: string;
@@ -95,6 +95,12 @@ export interface VoiceJobView {
   total: number;
   done: number;
   errors: Array<{ beatId: string; message: string }>;
+  /** Lines that were made but probably end early (the missing-word check failed after the retries). */
+  warnings: Array<{ beatId: string; message: string }>;
+  /** Lines whose sound is really done in this job (reused files count; failed, skipped and not-yet-reached lines do not). */
+  completed: number;
+  /** Extra takes made because a take looked cut off. */
+  retries: number;
   results: VoiceBeatResult[];
   /** Fatal reason when `state` is `failed`. */
   error?: string;

@@ -1,6 +1,7 @@
 /** Reads a GPT-SoVITS install folder: trained weights and reference audio (with the text each reference says). */
 import fs from 'node:fs';
 import path from 'node:path';
+import { cleanPath } from '../paths';
 import { mp3Seconds } from './mp3';
 import { runOf, stemOf, stripTags, versionIn } from './names';
 import { splitBareTag } from './tags';
@@ -43,16 +44,34 @@ export interface Scan {
   sovits: WeightFile[];
   refs: RefFile[];
   warnings: string[];
+  /** What each scanned folder held (for explaining an empty result). */
+  report: ScanReport[];
+  /** The folders that were scanned (the only places a reference clip may be streamed from). */
+  dirs: string[];
 }
 
 const AUDIO = /\.(wav|mp3|flac|ogg)$/i;
+/** Weights, audio and the text files that sit next to audio. Everything else is not looked at (and is not counted). */
+const WANTED = /\.(ckpt|pth|wav|mp3|flac|ogg|list|txt|lab)$/i;
+/** Weights and audio per scanned folder (each folder has its own budget: a big install cannot use up the budget of a pack). */
 const MAX_FILES = 6000;
+/** Directory entries looked at per scanned folder (a guard for trees that hold very many files of no interest). */
+const MAX_ENTRIES = 60000;
 const MAX_DEPTH = 5;
 
 const RVC = /rvc/i;
+/** Trees that never hold models or references (pretrained base models, a bundled Python, tools, caches, logs). */
+const SKIP_DIR = /^(pretrained_models|runtime|tools|node_modules|__pycache__|site-packages|\.git|\.?venv|temp|tmp|logs?|output|\$recycle\.bin|system volume information)$/i;
+/** A GPT-SoVITS install also keeps its own source here. */
+const INSTALL_CODE_DIR = /^(GPT_SoVITS|GPT-SoVITS|tools|docs|i18n)$/i;
 
-function walk(dir: string, depth: number, out: string[], skipRvc = false): void {
-  if (depth > MAX_DEPTH || out.length >= MAX_FILES) return;
+export interface Collected { files: string[]; counted: number; entries: number; truncated: boolean }
+
+function walk(dir: string, depth: number, c: Collected, opts: { skipRvc: boolean; skip?: RegExp }): void {
+  if (depth > MAX_DEPTH || c.counted >= MAX_FILES || c.entries >= MAX_ENTRIES) {
+    if (c.counted >= MAX_FILES || c.entries >= MAX_ENTRIES) c.truncated = true;
+    return;
+  }
   let entries: fs.Dirent[];
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -60,14 +79,24 @@ function walk(dir: string, depth: number, out: string[], skipRvc = false): void 
     return;
   }
   for (const e of entries) {
+    c.entries++;
     const full = path.join(dir, e.name);
-    if (/^pretrained_models$/i.test(e.name)) continue;
     if (e.isDirectory()) {
-      if (skipRvc && RVC.test(e.name)) continue; // RVC voice-conversion models also end in .pth
-      walk(full, depth + 1, out, skipRvc);
+      if (SKIP_DIR.test(e.name) || opts.skip?.test(e.name)) continue;
+      if (opts.skipRvc && RVC.test(e.name)) continue; // RVC voice-conversion models also end in .pth
+      walk(full, depth + 1, c, opts);
+    } else if (e.isFile() && WANTED.test(e.name)) {
+      c.files.push(full);
+      if (!/\.(list|txt|lab)$/i.test(e.name)) c.counted++;
     }
-    else if (e.isFile()) out.push(full);
   }
+}
+
+/** The weights / audio / text files under `dir`. */
+export function collect(dir: string, opts: { skipRvc?: boolean; skip?: RegExp } = {}): Collected {
+  const c: Collected = { files: [], counted: 0, entries: 0, truncated: false };
+  walk(dir, 0, c, { skipRvc: opts.skipRvc ?? false, ...(opts.skip ? { skip: opts.skip } : {}) });
+  return c;
 }
 
 const familyOf = (folder: string, prefix: string): string => folder.slice(prefix.length).replace(/^[_-]+/, '') || 'v1';
@@ -86,52 +115,57 @@ export function sovitsVersion(file: string): string {
   }
 }
 
-function weightOf(root: string, base: string, f: string, family: string, names: readonly string[], seen: Set<string>): WeightFile | null {
+function weightOf(base: string, f: string, family: string, names: readonly string[], seen: Set<string>, lead: readonly string[], rel: string): WeightFile | null {
   const key = path.resolve(f).toLowerCase();
   if (seen.has(key)) return null;
   seen.add(key);
-  const parts = path.relative(base, f).split(path.sep);
+  const parts = [...lead, ...path.relative(base, f).split(path.sep)];
   const run = runOf(path.basename(f));
   let mtime = 0;
   try {
     mtime = fs.statSync(f).mtimeMs;
   } catch { /* unreadable */ }
   const version = (/\.pth$/i.test(f) ? sovitsVersion(f) : '') || versionIn(names.join(' '));
-  return { path: f, rel: path.relative(root, f).split(path.sep).join('/'), parts, family, epoch: run.epoch, step: run.step, mtime, stem: stemOf(path.basename(f)), version };
+  return { path: f, rel, parts, family, epoch: run.epoch, step: run.step, mtime, stem: stemOf(path.basename(f)), version };
 }
 
-function weights(root: string, prefixRe: RegExp, prefix: string, ext: RegExp, seen: Set<string>): WeightFile[] {
+/** Path shown for a file: relative to the first folder the person gave when it is inside it, else `<scanned folder>/<rest>`. */
+const relIn = (primary: string | undefined, dir: string, f: string): string => {
+  const inPrimary = primary ? path.relative(primary, f) : '';
+  const r = primary && inPrimary && !inPrimary.startsWith('..') && !path.isAbsolute(inPrimary) ? inPrimary : path.join(path.basename(dir), path.relative(dir, f));
+  return r.split(path.sep).join('/');
+};
+
+/** The install's own weight folders (`GPT_weights_v2Pro/...`): the family is the version in the folder name. */
+function installWeights(primary: string | undefined, dir: string, prefixRe: RegExp, prefix: string, ext: RegExp, seen: Set<string>): WeightFile[] {
   const out: WeightFile[] = [];
   let top: string[];
   try {
-    top = fs.readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory() && prefixRe.test(d.name) && !RVC.test(d.name)).map((d) => d.name);
+    top = fs.readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory() && prefixRe.test(d.name) && !RVC.test(d.name)).map((d) => d.name);
   } catch {
     return out;
   }
   for (const folder of top) {
-    const files: string[] = [];
-    walk(path.join(root, folder), 0, files, true);
-    for (const f of files) {
+    const c = collect(path.join(dir, folder), { skipRvc: true });
+    for (const f of c.files) {
       if (!ext.test(f)) continue;
-      const w = weightOf(root, path.join(root, folder), f, familyOf(folder, prefix), [folder], seen);
+      const w = weightOf(path.join(dir, folder), f, familyOf(folder, prefix), [folder], seen, [], relIn(primary, dir, f));
       if (w) out.push(w);
     }
   }
   return out;
 }
 
-/** Weights that sit in a reference folder the person added (a downloaded pack kept where it is). GPT and SoVITS of one folder form one family. */
-function extraWeights(root: string, dirs: readonly string[], ext: RegExp, seen: Set<string>): WeightFile[] {
+/** Weights found anywhere in a folder (a downloaded pack kept where it is, a character folder, a parent of installs). */
+function packWeights(primary: string | undefined, dir: string, files: readonly string[], ext: RegExp, seen: Set<string>): WeightFile[] {
   const out: WeightFile[] = [];
-  for (const dir of dirs) {
-    if (RVC.test(path.basename(dir))) continue;
-    const files: string[] = [];
-    walk(dir, 0, files, true);
-    for (const f of files) {
-      if (!ext.test(f)) continue;
-      const w = weightOf(root, dir, f, `pack:${path.basename(dir)}`, [path.basename(dir)], seen);
-      if (w) out.push(w);
-    }
+  for (const f of files) {
+    if (!ext.test(f)) continue;
+    const segs = path.relative(dir, f).split(path.sep).slice(0, -1);
+    const wf = segs.find((x) => /^(GPT|SoVITS)_weights/i.test(x));
+    const family = wf ? familyOf(wf, /^GPT/i.test(wf) ? 'GPT_weights' : 'SoVITS_weights') : `pack:${path.basename(dir)}`;
+    const w = weightOf(dir, f, family, [path.basename(dir), ...segs], seen, [path.basename(dir)], relIn(primary, dir, f));
+    if (w) out.push(w);
   }
   return out;
 }
@@ -185,77 +219,134 @@ function wavLength(file: string): number | null {
   }
 }
 
-function refs(root: string, dirs: string[]): RefFile[] {
+function refsFrom(primary: string | undefined, dir: string, files: readonly string[], seen: Set<string>): RefFile[] {
   const out: RefFile[] = [];
-  const seen = new Set<string>();
-  for (const dir of dirs) {
-    const files: string[] = [];
-    walk(dir, 0, files);
-    const lists = readLists(files);
-    for (const f of files) {
-      if (!AUDIO.test(f) || seen.has(f)) continue;
-      seen.add(f);
-      // a folder the user added may itself be named after the character
-      const own = /^(ref|参考音频)/i.test(path.basename(dir)) ? [] : [path.basename(dir)];
-      const folders = [...own, ...path.relative(dir, f).split(path.sep).slice(0, -1)];
-      const raw = path.basename(f).replace(/\.[^.]+$/, '');
-      let tag = /【([^】]*)】/.exec(raw)?.[1] ?? '';
-      let text = '';
-      let lang = '';
-      let textFrom: RefFile['textFrom'] = 'none';
-      for (const ext of ['.txt', '.lab']) {
-        try {
-          const t = fs.readFileSync(f.replace(/\.[^.]+$/, ext), 'utf8').split(/\r?\n/).map((l) => l.trim()).find(Boolean);
-          if (t) {
-            text = t;
-            textFrom = 'txt';
-            break;
-          }
-        } catch { /* none */ }
-      }
-      if (!text) {
-        const l = lists.get(path.basename(f).toLowerCase());
-        if (l) {
-          text = l.text;
-          lang = l.lang;
-          textFrom = 'list';
+  const lists = readLists([...files]);
+  for (const f of files) {
+    if (!AUDIO.test(f)) continue;
+    const key = path.resolve(f).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    // a folder the user added may itself be named after the character
+    const own = /^(ref|参考音频)/i.test(path.basename(dir)) ? [] : [path.basename(dir)];
+    const folders = [...own, ...path.relative(dir, f).split(path.sep).slice(0, -1)];
+    const raw = path.basename(f).replace(/\.[^.]+$/, '');
+    let tag = /【([^】]*)】/.exec(raw)?.[1] ?? '';
+    let text = '';
+    let lang = '';
+    let textFrom: RefFile['textFrom'] = 'none';
+    for (const ext of ['.txt', '.lab']) {
+      try {
+        const t = fs.readFileSync(f.replace(/\.[^.]+$/, ext), 'utf8').split(/\r?\n/).map((l) => l.trim()).find(Boolean);
+        if (t) {
+          text = t;
+          textFrom = 'txt';
+          break;
         }
-      }
-      let base = stripTags(raw);
-      const bare = splitBareTag(base);
-      const suspect = bare.suspect;
-      if (bare.tag) tag = tag || bare.tag;
-      base = bare.rest;
-      if (!text && looksLikeSentence(base)) {
-        text = base;
-        textFrom = 'filename';
-      }
-      out.push({ path: f, rel: path.relative(root, f).split(path.sep).join('/'), folders, base, text, lang: lang || (text ? guessLang(text) : ''), seconds: /\.wav$/i.test(f) ? wavLength(f) : /\.mp3$/i.test(f) ? mp3Seconds(f) : null, tag, ...(suspect && textFrom === 'filename' ? { textSuspect: true } : {}), textFrom });
+      } catch { /* none */ }
     }
+    if (!text) {
+      const l = lists.get(path.basename(f).toLowerCase());
+      if (l) {
+        text = l.text;
+        lang = l.lang;
+        textFrom = 'list';
+      }
+    }
+    let base = stripTags(raw);
+    const bare = splitBareTag(base);
+    const suspect = bare.suspect;
+    if (bare.tag) tag = tag || bare.tag;
+    base = bare.rest;
+    if (!text && looksLikeSentence(base)) {
+      text = base;
+      textFrom = 'filename';
+    }
+    out.push({ path: f, rel: relIn(primary, dir, f), folders, base, text, lang: lang || (text ? guessLang(text) : ''), seconds: /\.wav$/i.test(f) ? wavLength(f) : /\.mp3$/i.test(f) ? mp3Seconds(f) : null, tag, ...(suspect && textFrom === 'filename' ? { textSuspect: true } : {}), textFrom });
   }
   return out;
 }
 
-/** Folders that hold reference audio: `ref*`, `参考音频*` under the install folder, and the extra folders. */
-export function refFolders(root: string, extra: readonly string[]): string[] {
-  const dirs: string[] = [];
+/** Reference folders inside an install: `ref*`, `参考音频*`. */
+function refFoldersIn(dir: string): string[] {
   try {
-    for (const d of fs.readdirSync(root, { withFileTypes: true })) if (d.isDirectory() && (/^ref/i.test(d.name) || /^参考音频/.test(d.name))) dirs.push(path.join(root, d.name));
-  } catch { /* unreadable root */ }
-  for (const e of extra) if (e.trim() && fs.existsSync(e)) dirs.push(path.resolve(e));
-  return [...new Set(dirs)];
+    return fs.readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory() && (/^ref/i.test(d.name) || /^参考音频/.test(d.name))).map((d) => path.join(dir, d.name));
+  } catch {
+    return [];
+  }
 }
 
-export function scanInstall(root: string, extraRefDirs: readonly string[] = []): Scan {
+export interface ScanReport {
+  path: string;
+  role: 'primary' | 'extra';
+  ckpt: number;
+  pth: number;
+  audio: number;
+  /** The folder holds more than the scan reads (the files after the limit were not looked at). */
+  truncated: boolean;
+}
+
+const dirOk = (d: string): boolean => {
+  try {
+    return fs.statSync(d).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Scans the folders the person gave: a GPT-SoVITS install (GPT_weights* / SoVITS_weights* / ref*), a downloaded pack, a single
+ * character's folder, or a folder that holds several of them. Every folder is read recursively (the install's own weight and reference
+ * folders first, so they keep their version); each folder has its own file budget.
+ */
+export function scanInstall(rootInput: string, extraInput: readonly string[] = []): Scan {
   const warnings: string[] = [];
-  if (!root.trim()) throw new Error('还没有填 GPT-SoVITS 文件夹');
-  if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) throw new Error(`找不到文件夹：${root}（自动匹配只能在 GPT-SoVITS 和本软件在同一台电脑上时使用）`);
-  const seen = new Set<string>();
-  const extra = [...new Set(extraRefDirs.filter((e) => e.trim() && fs.existsSync(e)).map((e) => path.resolve(e)))];
-  const gpt = weights(root, /^GPT_weights/i, 'GPT_weights', /\.ckpt$/i, seen);
-  const sovits = weights(root, /^SoVITS_weights/i, 'SoVITS_weights', /\.pth$/i, seen);
-  gpt.push(...extraWeights(root, extra, /\.ckpt$/i, seen));
-  sovits.push(...extraWeights(root, extra, /\.pth$/i, seen));
-  if (gpt.length === 0 && sovits.length === 0) warnings.push('没有在 GPT_weights* / SoVITS_weights* 里找到 .ckpt / .pth 权重');
-  return { gpt, sovits, refs: refs(root, refFolders(root, extraRefDirs)), warnings };
+  const root = cleanPath(rootInput);
+  const extras = extraInput.map(cleanPath).filter(Boolean);
+  if (!root && extras.length === 0) throw new Error('还没有填模型文件夹（GPT-SoVITS 安装目录、整合包文件夹，或某个角色的文件夹）');
+  const wanted: Array<{ dir: string; role: 'primary' | 'extra' }> = [];
+  const known = new Set<string>();
+  const add = (raw: string, role: 'primary' | 'extra') => {
+    const key = path.resolve(raw).toLowerCase();
+    if (known.has(key)) return;
+    if (!fs.existsSync(raw)) {
+      warnings.push(`找不到文件夹：${raw}（已跳过；自动匹配只能在 GPT-SoVITS 和本软件在同一台电脑上时使用）`);
+      return;
+    }
+    if (!dirOk(raw)) {
+      warnings.push(`这不是文件夹：${raw}（请填文件夹，不是某个文件；已跳过）`);
+      return;
+    }
+    known.add(key);
+    wanted.push({ dir: path.resolve(raw), role });
+  };
+  if (root) add(root, 'primary');
+  for (const e of extras) add(e, 'extra');
+  if (wanted.length === 0) throw new Error(warnings.join('；') || '没有可以扫描的文件夹');
+
+  const primary = wanted.find((w) => w.role === 'primary')?.dir ?? wanted[0]!.dir;
+  const seenW = new Set<string>();
+  const seenR = new Set<string>();
+  const gpt: WeightFile[] = [];
+  const sovits: WeightFile[] = [];
+  const refs: RefFile[] = [];
+  const report: ScanReport[] = [];
+  for (const { dir, role } of wanted) {
+    // the install's own folders first (they carry the version), then everything else in the folder
+    gpt.push(...installWeights(primary, dir, /^GPT_weights/i, 'GPT_weights', /\.ckpt$/i, seenW));
+    sovits.push(...installWeights(primary, dir, /^SoVITS_weights/i, 'SoVITS_weights', /\.pth$/i, seenW));
+    for (const rd of refFoldersIn(dir)) {
+      const c = collect(rd);
+      refs.push(...refsFrom(primary, rd, c.files, seenR));
+    }
+    const isInstall = ['api_v2.py', 'webui.py', 'api.py'].some((n) => fs.existsSync(path.join(dir, n)));
+    const c = collect(dir, { skipRvc: true, ...(isInstall ? { skip: INSTALL_CODE_DIR } : {}) });
+    gpt.push(...packWeights(primary, dir, c.files, /\.ckpt$/i, seenW));
+    sovits.push(...packWeights(primary, dir, c.files, /\.pth$/i, seenW));
+    refs.push(...refsFrom(primary, dir, c.files, seenR));
+    report.push({ path: dir, role, ckpt: c.files.filter((f) => /\.ckpt$/i.test(f)).length, pth: c.files.filter((f) => /\.pth$/i.test(f)).length, audio: c.files.filter((f) => AUDIO.test(f)).length, truncated: c.truncated });
+    if (c.truncated) warnings.push(`文件夹里的文件太多，只读了一部分：${dir}（请直接填模型所在的更小的文件夹）`);
+  }
+  if (gpt.length === 0 && sovits.length === 0) warnings.push('没有找到 .ckpt / .pth 权重');
+  return { gpt, sovits, refs, warnings, report, dirs: wanted.map((w) => w.dir) };
 }

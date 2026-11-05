@@ -68,6 +68,10 @@ export class Player {
   /** Bumped by every seek: a voice line that is playing restarts from the new position. */
   private seekEpoch = 0;
   private voiceRate = 1;
+  /** `seekEpoch` as of the previous voice sync: tells a line the clock just reached from a line a seek landed on. */
+  private voiceEpochSeen = 0;
+  /** The voiced line whose text a click has already completed (the clock and the voice carry on; the next click moves to the next line). */
+  private revealedBeat: string | null = null;
 
   private constructor(
     private readonly stage: Stage,
@@ -174,6 +178,7 @@ export class Player {
   /** Jump anywhere: the frame is exactly evaluate(t) with models / motions / physics prepared first. */
   async seek(t: number): Promise<void> {
     this.seekEpoch++;
+    this.revealedBeat = null;
     this.t = Math.min(this.duration, Math.max(0, t));
     this.waiting = false;
     if (this.busy) {
@@ -200,6 +205,13 @@ export class Player {
     if (!s) return;
     const beat = this.currentBeat();
     if (s.subtitle && s.subtitle.visibleChars < s.subtitle.totalChars && beat) {
+      // a line whose voice is still playing: only the text is completed, the clock and the voice are not touched
+      const v = this.voiceEventAt(this.t);
+      if (v && v.ev.beatId === beat.id && this.t < v.ev.at + v.ev.seconds) {
+        this.revealedBeat = beat.id;
+        this.dirty = true;
+        return;
+      }
       void this.seek(beat.textEnd + 1e-3);
       return;
     }
@@ -329,7 +341,10 @@ export class Player {
     return canvas;
   }
 
-  private render(state: RenderState): void {
+  private render(shown: RenderState): void {
+    let state = shown;
+    if (state.subtitle?.beatId !== this.revealedBeat) this.revealedBeat = null;
+    else if (state.subtitle && state.subtitle.visibleChars < state.subtitle.totalChars) state = { ...state, subtitle: { ...state.subtitle, visibleChars: state.subtitle.totalChars } };
     if (this.audioOn) this.syncVoice();
     this.lipSync(state);
     this.stage.apply(state);
@@ -375,6 +390,8 @@ export class Player {
       this.voiceRate = this.rate;
       this.audio.setVoiceRate(this.rate);
     }
+    const seekedSince = this.seekEpoch !== this.voiceEpochSeen;
+    this.voiceEpochSeen = this.seekEpoch;
     for (const e of this.compiled.voice) if (e.at > this.t && e.at - this.t < 8) void this.audio.loadVoice(e.url).catch(() => undefined);
     const cur = this.voiceEventAt(this.t);
     const active = cur && this.t < cur.ev.at + cur.ev.seconds ? cur.ev : null;
@@ -386,12 +403,16 @@ export class Player {
     const key = `${active.beatId}|${active.url}|${this.seekEpoch}`;
     if (key === this.voiceKey) return;
     this.voiceKey = key; // set first: a failing file is tried once, not on every frame
+    // A line the clock just reached (or a jump to its very start) plays from its first sample, even when decoding takes a few hundred
+    // milliseconds; only a real jump into the middle of a line, or a resume there, starts at the offset the clock has by then.
+    const reached = this.t - active.at;
+    const fromStart = reached < 0.05 || (!seekedSince && reached < 0.5);
     this.audio.stopVoice();
     void this.audio
       .loadVoice(active.url)
       .then((buf) => {
         if (this.voiceKey !== key || !this.playing) return; // superseded while decoding
-        this.audio.startVoice(buf, Math.max(0, this.t - active.at), this.rate);
+        this.audio.startVoice(buf, fromStart ? 0 : Math.max(0, this.t - active.at), this.rate);
       })
       .catch((e) => console.warn(`voice ${active.url} failed`, e));
   }

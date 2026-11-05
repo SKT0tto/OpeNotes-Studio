@@ -44,10 +44,26 @@ describe('beatSeconds with a voice', () => {
     const r = st.rhythm;
     expect(dur({ file: 'a.wav', seconds: 6 })).toBeCloseTo(6 + r.tail + r.lineGap);
   });
-  it('ignores a recording made for other text, and never touches a fixed duration', () => {
+  it('ignores a recording made for other text', () => {
     expect(dur({ file: 'a.wav', seconds: 6, src: '别的字' })).toBeCloseTo(1.8);
-    expect(beatSeconds({ kind: 'dialogue', text: '短', duration: { mode: 'fixed', seconds: 2 }, voice: { src: '短', file: 'a.wav', seconds: 9 } }, st)).toBe(2);
+    expect(beatSeconds({ kind: 'dialogue', text: '短', duration: { mode: 'fixed', seconds: 2 }, voice: { src: '别的字', file: 'a.wav', seconds: 9 } }, st)).toBe(2);
     expect(usableVoice({ text: '短', voice: { src: '短', file: 'a.wav', seconds: 1 } })).toEqual({ file: 'a.wav', seconds: 1 });
+  });
+});
+
+describe('fixed duration with a voice', () => {
+  const r = st.rhythm;
+  const fixed = (seconds: number, voice?: { src: string; file?: string; seconds?: number }) => beatSeconds({ kind: 'dialogue', text: '短', duration: { mode: 'fixed', seconds }, ...(voice ? { voice } : {}) }, st);
+  it('is as written without a usable voice', () => {
+    expect(fixed(2)).toBe(2);
+    expect(fixed(2, { src: '短' })).toBe(2);
+  });
+  it('is not shorter than a usable voice plus tail and gap, but a longer fixed value stays', () => {
+    expect(fixed(2, { src: '短', file: 'a.wav', seconds: 5.68 })).toBeCloseTo(5.68 + r.tail + r.lineGap);
+    expect(fixed(20, { src: '短', file: 'a.wav', seconds: 5.68 })).toBe(20);
+  });
+  it('never touches a non-dialogue fixed beat', () => {
+    expect(beatSeconds({ kind: 'pause', text: '', duration: { mode: 'fixed', seconds: 2 }, voice: { src: '', file: 'a.wav', seconds: 9 } }, st)).toBe(2);
   });
 });
 

@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { cleanPath } from './paths';
 import { VoiceSettingsPatchSchema, VoiceSettingsSchema, type VoiceSettings, type VoiceSettingsPatch } from './schema';
 
-const clean = (x: string | undefined): string | undefined => (x && x.trim() !== '' ? x.trim() : undefined);
+/** A path as pasted (surrounding quotes and spaces removed); blank = absent. */
+const clean = (x: string | undefined): string | undefined => cleanPath(x) || undefined;
 
 /**
  * GPT-SoVITS plugin settings: `data/plugins/gpt-sovits/settings.json` (gitignored with the rest of `data/`). Plain paths and an address; no secrets.
@@ -49,7 +51,7 @@ export class VoiceSettingsStore {
       enabled: p.enabled ?? cur.enabled,
       endpoint: (p.endpoint ?? cur.endpoint).trim().replace(/\/+$/, '') || cur.endpoint,
       textLang: p.textLang?.trim() || cur.textLang,
-      refDirs: (p.refDirs ?? cur.refDirs).map((d) => d.trim()).filter(Boolean),
+      refDirs: (p.refDirs ?? cur.refDirs).map(cleanPath).filter(Boolean),
       profiles,
     };
     for (const k of ['defaultGptWeights', 'defaultSovitsWeights', 'sovitsRoot'] as const) {

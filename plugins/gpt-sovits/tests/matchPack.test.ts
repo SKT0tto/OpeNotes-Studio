@@ -165,7 +165,7 @@ describe('pickRef', () => {
     const v4 = r('v4/a.mp3', { folders: ['训练v4模型时收集的x的参考音频'] });
     const v4variant = r('v4/夹子音/a.mp3', { folders: ['训练v4模型时收集的x的参考音频', '夹子音'] });
     expect(pickRef([v2, v4variant, v4], { version: 'v4' })).toBe(v4);
-    expect(pickRef([v2, v4, v4variant])).toBe(v2); // no version: the old ranking
+    expect(pickRef([v2, v4, v4variant])).toBe(v4); // no model version: the clean v4 transcripts still come first
     const long = r('v4/b.mp3', { folders: ['训练v4模型时收集的x的参考音频'], seconds: 6 });
     expect(pickRef([v4variant, long], { version: 'v4' })).toBe(long);
   });
@@ -174,6 +174,7 @@ describe('pickRef', () => {
     const ok = r('b.mp3', { seconds: 4 });
     expect(pickRef([bad, ok])).toBe(ok);
     expect(pickRef([r('x.wav', { seconds: 1 }), r('y.mp3', { seconds: 5 })])!.rel).toBe('y.mp3');
+    expect(pickRef([r('x.wav', { seconds: 2.9 }), r('z.wav', { seconds: 10.5 })])).toBeUndefined(); // v4 refuses anything outside 3-10 s
   });
   it('end to end: a v4 pack picks the v4 folder, the plain model and its own pair', async () => {
     put(pack, '长崎素世/soyo-e10.ckpt');

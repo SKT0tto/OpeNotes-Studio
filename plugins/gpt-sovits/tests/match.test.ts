@@ -104,6 +104,7 @@ describe('auto match by name', () => {
     touch('SoVITS_weights_v2Pro/灯_e8_s200.pth');
     touch('SoVITS_weights_v2Pro/灯_e4_s100.pth');
     touch('GPT_weights/takamatsu_tomori_e30.ckpt'); // a higher epoch, but in another family without a SoVITS pair
+    touch('GPT_weights/mystery.ckpt'); // nobody's
     const r = await autoMatch(stubLlm({ matches: [] }, false).llm, { sovitsRoot: root, refDirs: [] }, CAST);
     const row = r.rows.find((x) => x.characterKey === '001')!;
     expect(row.source).toBe('filename');
@@ -181,7 +182,7 @@ describe('auto match: AI fallback', () => {
 
 describe('review table', () => {
   it('rows that would replace a filled field start unchecked', () => {
-    const row = { characterKey: '001', name: '高松灯', gpt: 'a.ckpt', source: 'filename' as const };
+    const row = { characterKey: '001', name: '高松灯', inProject: true, gpt: 'a.ckpt', source: 'filename' as const, variants: [], variant: 0, candidates: [] };
     expect(overwrites(row, undefined)).toBe(false);
     expect(overwrites(row, { promptText: '', promptLang: 'ja', speed: 1 })).toBe(false);
     expect(overwrites(row, { promptText: '', promptLang: 'ja', speed: 1, gptWeights: 'a.ckpt' })).toBe(false);
