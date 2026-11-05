@@ -53,6 +53,12 @@ export async function getVoiceJob(id: string): Promise<VoiceJobView> {
 export async function cancelVoiceJob(id: string): Promise<void> {
   await call(`jobs/${encodeURIComponent(id)}/cancel`, { method: 'POST' });
 }
+/** A reference clip of the latest scan (the server plays only files inside the scanned folders). */
+export async function previewRef(file: string): Promise<Blob> {
+  const res = await call(`ref-audio?path=${encodeURIComponent(file)}`);
+  if (!res.ok) throw await failure(res);
+  return res.blob();
+}
 export async function requestMatch(characters: MatchCharacter[], sovitsRoot: string, refDirs: string[]): Promise<MatchResult> {
   const res = await call('match', json('POST', { characters, sovitsRoot, refDirs }));
   if (!res.ok) throw await failure(res);

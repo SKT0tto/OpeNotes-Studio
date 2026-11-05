@@ -1,7 +1,7 @@
 /**
  * Client state of the plugin: its settings (loaded from the server), and the one running voice job.
  * A job runs on the server; this store starts it, polls its progress, and applies the finished lines to the open project as ONE undo step
- * through the studio's `applyBeatVoice` (a cancelled job applies the lines that were done). The server never writes project.json.
+ * through the studio's `applyBeatVoice` (a cancelled job applies the lines that were done; a line that was not finished keeps the recording it had). The server never writes project.json.
  */
 import { useSyncExternalStore } from 'react';
 import type { VoiceJobView, VoiceScope, VoiceSettings, VoiceSettingsPatch } from '../schema';
@@ -85,9 +85,17 @@ export async function runJob(scope: VoiceScope, opts: RunOptions = {}): Promise<
       const cur = h.getStudio().project;
       const n = cur && cur.id === job.projectId ? h.applyBeatVoice(view.results.map((r) => ({ sceneId: r.sceneId, beatId: r.beatId, voice: r.voice })), label) : 0;
       const fails = view.errors.length;
-      if (view.state === 'failed') h.notify(`配音失败：${view.error ?? view.message}`, 'warn');
-      else if (view.state === 'cancelled') h.notify(n > 0 ? `已取消，已完成的 ${n} 句保留（可撤销）` : '已取消', 'info');
-      else h.notify(fails > 0 ? `配音完成，${fails} 句失败：${view.errors[0]!.message}` : `配音完成：${view.total} 句${n > 0 ? '（可撤销）' : ''}`, fails > 0 ? 'warn' : 'info');
+      const warns = view.warnings.length;
+      const made = view.completed;
+      if (view.state === 'failed') h.notify(`配音失败：${view.error ?? view.message}${made > 0 ? `（已完成的 ${made} 句保留，可撤销）` : '（原有的配音都没动）'}`, 'warn');
+      else if (view.state === 'cancelled') h.notify(made > 0 ? `已取消：已完成 ${made} 句，保留（可撤销）；其余句子保持原样` : '已取消：原有的配音都没动', 'info');
+      else {
+        const parts = [`配音完成：已完成 ${made} 句${n > 0 ? '（可撤销）' : ''}`];
+        if (view.retries > 0) parts.push(`疑似漏字重试 ${view.retries} 次`);
+        if (fails > 0) parts.push(`${fails} 句失败：${view.errors[0]!.message}`);
+        if (warns > 0) parts.push(`${warns} 句可能没读完，请试听（检查器里有提示）`);
+        h.notify(parts.join('；'), fails > 0 || warns > 0 ? 'warn' : 'info');
+      }
       set({ job: { ...job, id: null, starting: false, view } });
       return view;
     }

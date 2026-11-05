@@ -73,6 +73,7 @@ export function VoiceSection({ project, scene, beat }: { project: Project; scene
           {mine && job?.mode === 'retranslate' ? '合成中…' : '重新翻译并合成'}
         </button>
       </Row>
+      {usable && v?.suspect && <p className="warn" data-testid="insp-voice-suspect">这一句可能没读完（重试后声音仍比日语应有的短）：请听一遍，不对就点「重新合成」。</p>}
       {playError && <p className="bad">{playError}</p>}
     </Section>
   );
