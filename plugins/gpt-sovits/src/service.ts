@@ -13,7 +13,7 @@ import { wavSeconds } from '../../../shared/voice/wav';
 import type { VoiceJaLine } from './prompt';
 import { SovitsError, setWeights, tts } from './sovits';
 import type { VoiceSettingsStore } from './store';
-import { fixNames } from './names';
+import { fixAddress, fixNames } from './names';
 import { translateLines } from './translate';
 
 export class VoiceError extends Error {
@@ -155,10 +155,11 @@ export class VoiceService {
     // ---- 1. Japanese text ---------------------------------------------------------------------------------
     const ja = new Map<string, { ja: string; jaEdited?: boolean }>();
     const need = new Set<string>();
+    const speakerOf = new Map(targets.map((t) => [t.beat.id, t.characterKey]));
     for (const t of targets) {
       const v = t.beat.voice;
       if (v?.spoken && v.spokenEdited && !opts.overwriteEdited) ja.set(t.beat.id, { ja: v.spoken, jaEdited: true });
-      else if (v?.spoken && !opts.retranslate && v.src === t.beat.text) ja.set(t.beat.id, { ja: fixNames(v.spoken, project.cast.map((c) => c.characterKey)) }); // an old cached translation gets the name repair too
+      else if (v?.spoken && !opts.retranslate && v.src === t.beat.text) { const keys = project.cast.map((c) => c.characterKey); ja.set(t.beat.id, { ja: fixAddress(fixNames(v.spoken, keys), t.characterKey, keys) }); } // an old cached translation gets the name / address repair too
       else need.add(t.beat.id);
     }
     if (need.size > 0) {
@@ -181,7 +182,7 @@ export class VoiceService {
         }
         const r = await translateLines({ refresh: opts.retranslate, callJson: this.deps.llm.callJson, cast: project.cast.map((c) => ({ key: c.characterKey, name: c.displayName })), signal, scene: { title: scene.title, mood: scene.brief?.mood ?? '' }, lines });
         const keys = project.cast.map((c) => c.characterKey);
-        for (const [id, text] of r.ja) ja.set(id, { ja: fixNames(text, keys) }); // hand-edited lines never pass through here
+        for (const [id, text] of r.ja) ja.set(id, { ja: fixAddress(fixNames(text, keys), speakerOf.get(id), keys) }); // hand-edited lines never pass through here
         for (const [id, why] of r.failed) this.fail(job, id, why);
         if (signal.aborted) throw new Error('aborted');
       }

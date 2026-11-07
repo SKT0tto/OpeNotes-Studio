@@ -4,6 +4,7 @@
  * then reported as failed (the line stays unvoiced; nothing is invented).
  */
 import type { z } from 'zod';
+import { addressForm, selfForm } from '../../../shared/catalog/addressing';
 import { JA_NAMES } from '../../../shared/catalog/romaji';
 import type { PluginServerContext } from '../../../shared/plugins/api';
 import { VOICE_JA_PROMPT_VERSION, VOICE_JA_SCHEMA_NAME, VOICE_JA_SYSTEM, VoiceTranslationSchema, type VoiceJaInput, type VoiceJaLine } from './prompt';
@@ -49,9 +50,16 @@ export async function translateLines(a: TranslateArgs): Promise<TranslateResult>
   const todo = a.lines.filter((l) => l.translate);
   const base = new Map<string, { key: string; name: string }>(a.lines.map((l) => [l.speaker, { key: l.speaker, name: l.name }]));
   for (const c of a.cast ?? []) if (!base.has(c.key)) base.set(c.key, c);
-  const characters = [...base.values()].map((c) => {
+  const people = [...base.values()];
+  const characters = people.map((c) => {
     const j = JA_NAMES[c.key];
-    return { ...c, ...(j ? { ja: j.full, given: j.given, family: j.family } : {}) };
+    const self = selfForm(c.key);
+    const address: Record<string, string> = {};
+    for (const o of people) {
+      const f = o.key === c.key ? null : addressForm(c.key, o.key);
+      if (f) address[o.name] = f;
+    }
+    return { ...c, ...(j ? { ja: j.full, given: j.given, family: j.family } : {}), ...(self ? { self } : {}), ...(Object.keys(address).length ? { address } : {}) };
   });
 
   const ask = async (ids: string[]): Promise<Map<string, string>> => {

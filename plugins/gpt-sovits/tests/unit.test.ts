@@ -119,7 +119,7 @@ describe('fixNames', () => {
     expect(fixNames('灯ちゃん', [])).toBe('灯ちゃん');
   });
   it('the prompt demands exact names and carries the new version', () => {
-    expect(VOICE_JA_PROMPT_VERSION).toBe('voice-ja-3');
+    expect(VOICE_JA_PROMPT_VERSION).toBe('voice-ja-4');
     expect(VOICE_JA_SYSTEM).toContain('characters[].ja');
   });
 });

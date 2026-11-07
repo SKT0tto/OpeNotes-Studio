@@ -502,6 +502,37 @@ describe('names in translations', () => {
   });
 });
 
+describe('address forms in translations', () => {
+  const beatBy = (p: Project, key: string) => p.scenes[0]!.beats.find((x) => x.kind === 'dialogue' && p.cast.find((c) => c.id === x.speakerId)!.characterKey === key)!;
+  it('repairs a cached translation', async () => {
+    const p = project();
+    const b = beatBy(p, '002');
+    b.voice = { src: b.text, spoken: '燈ちゃん、あたしは行くよ' };
+    const v = await run(p, { kind: 'beat', sceneId: p.scenes[0]!.id, beatId: b.id });
+    expect(v.results[0]!.voice.spoken).toBe('ともりん、私は行くよ');
+    expect(llm.calls).toBe(0);
+  });
+  it('repairs new translations and sends self / address in the prompt input', async () => {
+    const p = project();
+    const b = beatBy(p, '002');
+    llm.override = { lines: p.scenes[0]!.beats.filter((x) => x.kind === 'dialogue' && x.speakerId).map((x) => ({ id: x.id, ja: x.id === b.id ? '燈、おはよう' : 'これはテストです' })) };
+    const v = await run(p, { kind: 'scene', sceneId: p.scenes[0]!.id });
+    llm.override = null;
+    expect(v.results.find((r) => r.beatId === b.id)!.voice.spoken).toBe('ともりん、おはよう');
+    const sent = llm.lastUser as { characters: Array<{ key: string; self?: string; address?: Record<string, string> }> };
+    const c2 = sent.characters.find((c) => c.key === '002')!;
+    expect(c2.self).toBe('私');
+    expect(c2.address?.[p.cast.find((c) => c.characterKey === '001')!.displayName]).toBe('ともりん');
+  });
+  it('leaves hand-edited Japanese alone', async () => {
+    const p = project();
+    const b = beatBy(p, '002');
+    b.voice = { src: b.text, spoken: '燈ちゃん、あたしね', spokenEdited: true };
+    const v = await run(p, { kind: 'beat', sceneId: p.scenes[0]!.id, beatId: b.id });
+    expect(v.results[0]!.voice.spoken).toBe('燈ちゃん、あたしね');
+  });
+});
+
 describe('per-character models', () => {
   it('fails a line whose character has no weights while another character uses its own', async () => {
     store.patch({ profiles: { '001': profile('a'), '002': { ...profile('b'), gptWeights: '', sovitsWeights: '' } } });
