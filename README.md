@@ -8,7 +8,7 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 
 [项目主页](https://skt0tto.github.io/OpeNotes-Studio/) · [下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [使用教程](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md) · [问题反馈](https://github.com/SKT0tto/OpeNotes-Studio/issues)
 
-> **v1.0.3** 已发布：倍速可自选（0.1×–8×），新 logo，拖动进度条后动作更准，Claude 能看图；AI 助手与 AI 生成合二为一，长台词按语义和情绪拆分，首页可自定义背景；1.0.1 起可用 `Update-Windows.cmd` 自动更新。[下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md)
+> **v1.1.0** 已发布：新增插件系统，以及实验性的 AI 配音插件（GPT-SoVITS，单独下载），可以给对白自动配日语；此前的版本带来了自选倍速、新 logo、AI 助手与 AI 生成合二为一、长台词按语义拆分等，1.0.1 起可用 `Update-Windows.cmd` 自动更新。[下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md)
 
 > 本项目为非官方同人项目。程序不附带游戏素材和 Live2D Cubism Core，使用前需要自行准备素材，并遵守相应的使用许可。
 
@@ -88,6 +88,18 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 项目可以导出为 `.openotes.json` 文件，之后继续导入编辑。
 
 **项目文件只保存演出数据和素材引用，不包含模型、背景或音频。** 分享项目时，对方也需要准备对应素材。
+
+### 插件与 AI 配音（实验性）
+
+可选功能以插件形式单独发布，主下载包里不含插件，不装插件一切照旧。安装方法：从 [Releases](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) 下载 `openotes-plugin-<名字>-v<版本>.zip`，解压到软件文件夹（得到 `plugins/<名字>/plugin.json`），重启即可；更新软件时不会动 `plugins/`。详见发行包里的 `docs/PLUGINS.md`。
+
+**GPT-SoVITS 自动配音（实验性）**：用你自己运行的 [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) 和角色模型，给对白自动配日语。
+
+- AI 先把中文台词译成口语日语，按角色的性格、彼此的称呼和自称来说（例如爱音叫灯「ともりん」）；再按每个角色的参考音频逐句合成，播放时说话人的嘴随声音开合。旁白不配音。
+- 只填一个「模型文件夹」（整合包或下载的模型包都行），就能自动认出每个角色的模型和参考音频，并在核对表里换版本、换参考音频、试听。
+- 单句可以「重新合成」或「重新翻译并合成」，每次都保留为新版本，可以撤销；合成后会自动检查明显的漏读并重试。
+
+这是**实验性功能**：效果取决于你的模型和参考音频，可能读漏、读错或语气不对（漏读检查对语速快的短句可能误报），请逐句试听后再用。需要能运行 GPT-SoVITS 的电脑，以及已配置的 AI（用于翻译）；软件和插件都不提供任何声音模型。详细设置见插件的 [README](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/plugins/gpt-sovits/README.md)。
 
 ## 第一次使用
 
@@ -172,6 +184,10 @@ AI 生成结果会受到模型能力、提示内容和素材库完整程度影�
 
 目前这里的导出指项目文件，用于备份和继续编辑。需要视频时，可以在播放器中放映并使用录屏工具录制。
 
+**配音插件会自带声音模型吗？**
+
+不会。插件只负责翻译、调用和播放，声音来自你自己运行的 GPT-SoVITS 和你自己准备的角色模型。配音文件保存在本机的项目数据里，导出的项目文件不包含配音。
+
 ## 从源码运行
 
 需要 Node.js 22+ 和 npm。
@@ -214,6 +230,7 @@ server/     项目管理、素材索引与 AI 接口
 shared/     数据结构、分镜规则与时间轴计算
 tests/      测试与示例数据
 examples/   示例故事
+plugins/    插件（单独发布，例如 gpt-sovits）
 docs/       使用教程与说明
 ```
 
@@ -231,7 +248,7 @@ docs/       使用教程与说明
 
 ## 致谢与许可
 
-项目使用 React、Pixi.js、untitled-pixi-live2d-engine、Vite 等开源组件。详细说明见[第三方组件清单](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/THIRD_PARTY.md)。
+项目使用 React、Pixi.js、untitled-pixi-live2d-engine、Vite 等开源组件。详细说明见[第三方组件清单](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/THIRD_PARTY.md)。配音插件里角色之间的称呼整理自[萌娘百科](https://zh.moegirl.org.cn/)各角色条目的「称呼一览」。
 
 程序代码采用 **GPL-3.0-or-later** 许可，详见 [LICENSE](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/LICENSE)。
 
