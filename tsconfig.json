@@ -15,5 +15,5 @@
     "types": ["node"],
     "paths": { "@shared/*": ["./shared/*"] }
   },
-  "include": ["shared", "server", "web", "tests", "*.ts"]
+  "include": ["shared", "server", "web", "tests", "plugins", "*.ts"]
 }

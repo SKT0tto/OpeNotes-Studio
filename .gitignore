@@ -35,3 +35,8 @@ dev-notes/
 # release package output (npm run package-release)
 /release/
 
+
+# built plugin entries (npm run build / package-plugin)
+plugins/*/server.mjs
+plugins/*/web.js
+plugins/*/web.js.map

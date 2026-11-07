@@ -1,4 +1,5 @@
 import type { Beat, Project, Scene } from '../schema/project';
+import { usableVoice } from '../voice/lines';
 import { resolveStyle, type ResolvedStyle, type StyleValues } from '../style/ournotes';
 
 /** Beat kinds whose text is shown in the dialogue area. */
@@ -52,11 +53,15 @@ export function establishingSeconds(style: StyleValues, fadeIn: number, banner: 
 
 /**
  * auto: dialogue / narration = max(minLine, chars / readingCps + tail) + lineGap (never shorter than the typewriter);
- * silent / empty beats use their default seconds; fixed = as written.
+ * silent / empty beats use their default seconds; fixed = as written (but a voiced dialogue line is never shorter than its recording). A dialogue line with a generated voice lasts at least `voice.seconds + tail + lineGap`.
  */
-export function beatSeconds(beat: Pick<Beat, 'kind' | 'text' | 'duration'>, style: StyleValues, ctx: { fadeIn?: number; banner?: boolean } = {}): number {
-  if (beat.duration.mode === 'fixed') return beat.duration.seconds;
+export function beatSeconds(beat: Pick<Beat, 'kind' | 'text' | 'duration' | 'voice'>, style: StyleValues, ctx: { fadeIn?: number; banner?: boolean } = {}): number {
   const r = style.rhythm;
+  if (beat.duration.mode === 'fixed') {
+    // a fixed dialogue line is as written, but never shorter than its usable recording (plus the tail and gap): the voice is not cut off
+    const fv = beat.kind === 'dialogue' ? usableVoice(beat) : null;
+    return fv ? Math.max(beat.duration.seconds, fv.seconds + r.tail + r.lineGap) : beat.duration.seconds;
+  }
   switch (beat.kind) {
     case 'pause':
       return beat.duration.seconds > 0 ? beat.duration.seconds : r.minLine;
@@ -68,7 +73,10 @@ export function beatSeconds(beat: Pick<Beat, 'kind' | 'text' | 'duration'>, styl
       return establishingSeconds(style, ctx.fadeIn ?? 0, ctx.banner ?? false);
     default: {
       const n = textChars(beat.text);
-      return Math.max(r.minLine, n / r.readingCps + r.tail, n / r.textSpeedCps + 0.3) + r.lineGap;
+      const base = Math.max(r.minLine, n / r.readingCps + r.tail, n / r.textSpeedCps + 0.3) + r.lineGap;
+      // a voiced line lasts at least as long as its recording (plus the same tail and gap): the voice is never cut off
+      const v = usableVoice(beat);
+      return v ? Math.max(base, v.seconds + r.tail + r.lineGap) : base;
     }
   }
 }

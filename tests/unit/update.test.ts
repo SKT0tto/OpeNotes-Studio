@@ -80,7 +80,7 @@ describe('zip reader', () => {
     const loose = await makeZip({ 'x.txt': '1' });
     expect(() => u.packageFiles(u.readZip(two))).toThrow(/多个顶层/);
     expect(() => u.packageFiles(u.readZip(loose))).toThrow(/顶层/);
-    for (const p of ['data/p.json', '.env', 'studio.config.json', 'node_modules/x/i.js', 'vendor/core.js', 'Data/p.json']) {
+    for (const p of ['data/p.json', '.env', 'studio.config.json', 'node_modules/x/i.js', 'vendor/core.js', 'Data/p.json', 'plugins/gpt-sovits/server.mjs', 'Plugins/x/web.js']) {
       const z = await makeZip({ [`top/${p}`]: '1' });
       expect(() => u.packageFiles(u.readZip(z))).toThrow(/受保护/);
     }
@@ -171,7 +171,7 @@ describe('install fixtures', () => {
   const write = (rel: string, c: string) => { fs.mkdirSync(path.dirname(abs(rel)), { recursive: true }); fs.writeFileSync(abs(rel), c); };
   const read = (rel: string) => fs.readFileSync(abs(rel), 'utf8');
   const exists = (rel: string) => fs.existsSync(abs(rel));
-  const protectedFiles = { 'data/projects/p1/project.json': 'MY STORY', '.env': 'SECRET=1', 'studio.config.json': '{"port":1}', 'node_modules/x/index.js': 'nm', 'vendor/live2dcubismcore.min.js': 'core', 'assets/m/a.moc3': 'asset' };
+  const protectedFiles = { 'data/projects/p1/project.json': 'MY STORY', '.env': 'SECRET=1', 'studio.config.json': '{"port":1}', 'node_modules/x/index.js': 'nm', 'vendor/live2dcubismcore.min.js': 'core', 'assets/m/a.moc3': 'asset', 'plugins/gpt-sovits/plugin.json': '{"id":"gpt-sovits"}', 'plugins/gpt-sovits/server.mjs': 'plugin code' };
   /** an install at `version` whose files are exactly `o` (+ a matching release-files.json when withManifest) */
   const install = (version: string, o: Record<string, string>, withManifest = true) => {
     const all = { 'package.json': pkgJson(version), 'dist/server/index.mjs': 'server', ...o };
@@ -237,7 +237,7 @@ describe('install fixtures', () => {
 
     it('ignores protected or unsafe paths listed in a tampered manifest', () => {
       install('1.0.0', {});
-      write('release-files.json', JSON.stringify({ files: { '.env': 'x', 'data/projects/p1/project.json': 'x', '../evil': 'x' } }));
+      write('release-files.json', JSON.stringify({ files: { 'plugins/gpt-sovits/server.mjs': 'x', '.env': 'x', 'data/projects/p1/project.json': 'x', '../evil': 'x' } }));
       const plan = u.planUpdate(root, filesOf({ 'package.json': pkgJson('1.1.0'), 'dist/server/index.mjs': 'server' }));
       expect(plan.remove).toEqual([]);
     });

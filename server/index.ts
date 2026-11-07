@@ -8,7 +8,9 @@ import { loadDotEnv } from './settings/store';
 const realEnv = { ...process.env };
 loadDotEnv('.env'); // never printed; keys stay in process.env
 const config = loadConfig();
-const { app } = createApp(config, (m) => console.log(`[studio] ${m}`), { dotEnv: { file: path.resolve('.env'), base: realEnv } });
+const { app, plugins } = createApp(config, (m) => console.log(`[studio] ${m}`), { dotEnv: { file: path.resolve('.env'), base: realEnv } });
+
+await plugins.loadAll(); // optional add-ons from plugins/: a broken one is logged and skipped
 
 app.listen(config.port, '127.0.0.1', () => {
   console.log(`[studio] server http://127.0.0.1:${config.port}  ASSET_ROOT=${config.assetRoot}`);

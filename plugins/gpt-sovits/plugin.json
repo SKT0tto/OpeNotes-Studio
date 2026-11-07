@@ -1,0 +1,9 @@
+{
+  "id": "gpt-sovits",
+  "name": "GPT-SoVITS 自动配音（实验性）",
+  "version": "0.1.0",
+  "description": "实验性的 AI 配音插件：用你自己的 GPT-SoVITS 给对白自动配日语，AI 译成口语日语，按角色声线逐句合成。效果因模型而异，可能读漏或读错，请试听后再用。",
+  "minStudioVersion": "1.1.0",
+  "server": "server.mjs",
+  "web": "web.js"
+}

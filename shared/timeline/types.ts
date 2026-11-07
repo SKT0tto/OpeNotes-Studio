@@ -217,11 +217,22 @@ export interface CompiledScene {
   };
 }
 
+/** One voiced line: starts with its beat. `url` is served by the project's voice route. */
+export interface VoiceEvent {
+  at: number;
+  beatId: string;
+  speakerId: string;
+  url: string;
+  seconds: number;
+}
+
 export interface CompiledProject {
   duration: number;
   scenes: CompiledScene[];
   bgm: Array<{ at: number; assetId: string | null; volume: number }>;
   se: Array<{ at: number; assetId: string; volume: number }>;
+  /** Generated voice-over, one entry per voiced line, by start time. Present only when some line has a voice file (a project without one compiles to the old object). */
+  voice?: VoiceEvent[];
   fade: FadeKey[];
   /** Emotion effects on the screen: strengths 0..1 and the Dutch roll in degrees. */
   fx: { anxiety: NumKey[]; glow: NumKey[]; roll: NumKey[]; memory?: NumKey[]; memoryLook?: MemoryLookKey[]; dim?: NumKey[]; shake?: ShakeWindow[]; daze?: NumKey[]; blink?: NumKey[] };

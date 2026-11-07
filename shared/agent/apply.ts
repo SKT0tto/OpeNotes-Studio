@@ -228,6 +228,7 @@ export function applyOp(project: Project, op: AgentOp, ctx: ApplyCtx): ApplyResu
         const c: Beat = { ...clone(b), id: op.newIds[k]!, text: p.text, splitFrom: head, cutIn: 'cut', cutInKeepDialog: false, meta: freshMeta(op, ctx), style: { overrides: clone(b.style.overrides), meta: freshMeta(op, ctx) } };
         delete c.sourceOffset;
         delete c.overflow;
+        delete c.voice;
         if (p.emotion) c.emotion = p.emotion;
         if (p.why) c.meta.reason = p.why;
         // the same shot as the first piece, held (no move, no new framing)

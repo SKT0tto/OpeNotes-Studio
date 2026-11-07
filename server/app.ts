@@ -23,12 +23,16 @@ import { importRoutes } from './assets/import/routes';
 import { HaneokaSource } from './assets/sources/haneoka';
 import { sourceRoutes } from './assets/sources/routes';
 import { SetupStore, setupRoutes } from './setup/routes';
+import { PluginHost } from './plugins/loader';
+import { VoiceFiles, voiceFileRoutes } from './plugins/voiceFiles';
 
 export interface AppHandle {
   app: Express;
   catalog: CatalogService;
   llm: LlmSettings;
   llmCache: LlmCache;
+  /** Call `await plugins.loadAll()` once at start-up (plugins are optional add-ons in `plugins/`). */
+  plugins: PluginHost;
 }
 
 export interface AppExtras {
@@ -105,6 +109,10 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
   app.use(backgroundRoutes(config));
   app.use(hubBackgroundRoutes(config));
   app.use(thumbRoutes(config, env.THUMB_SHEET_DIR ? { sheetDir: env.THUMB_SHEET_DIR } : {}));
+  const voiceFiles = new VoiceFiles(path.join(config.dataDir, 'projects'));
+  app.use(voiceFileRoutes(voiceFiles));
+  const plugins = new PluginHost({ pluginsDir: path.resolve(env.PLUGINS_DIR ?? 'plugins'), dataDir: config.dataDir, llm, cache: llmCache, voiceFiles, log, dev: import.meta.url.endsWith('.ts') });
+  app.use(plugins.router);
   app.use(projectRoutes(config));
 
   const webDist = path.resolve('dist', 'web');
@@ -112,7 +120,7 @@ export function createApp(config: StudioConfig, log: (msg: string) => void = () 
     app.use(express.static(webDist));
     app.get('/{*splat}', (_req, res) => res.sendFile(path.join(webDist, 'index.html')));
   }
-  return { app, catalog, llm, llmCache };
+  return { app, catalog, llm, llmCache, plugins };
 }
 
 let fixture: FixtureProvider | null = null;

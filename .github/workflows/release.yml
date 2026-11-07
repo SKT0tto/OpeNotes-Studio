@@ -25,6 +25,8 @@ jobs:
       - run: npm run build
       - name: Assemble the package
         run: node scripts/package-release.mjs --tag "$GITHUB_REF_NAME"
+      - name: Package the plugins (released separately from the main download)
+        run: node scripts/package-plugin.mjs gpt-sovits
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
@@ -32,4 +34,6 @@ jobs:
           # a tag with a suffix (v1.0.0-beta.1) is a test version: a pre-release, never "latest"
           prerelease: ${{ contains(github.ref_name, '-') }}
           body_path: release/RELEASE_NOTES.md
-          files: release/OpeNotes-Studio-${{ github.ref_name }}.zip
+          files: |
+            release/OpeNotes-Studio-${{ github.ref_name }}.zip
+            release/openotes-plugin-*.zip

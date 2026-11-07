@@ -18,11 +18,12 @@ import { EMOTION_GESTURE, familyOfName, idleFamilyOf, isLiveSet, isLoopFamily, m
 import { DIP_WHITE, SHAKE_SECONDS, FLASH_PEAK, FLASH_RISE, FLASH_SECONDS, MEMORY_DEFAULT_EDGE, MEMORY_DEFAULT_TONE } from './fxParams';
 import { clipOverlaps, lastBefore, sampleKeys } from './sample';
 import type { StyleValues } from '../style/ournotes';
+import { usableVoice } from '../voice/lines';
 import { evaluate } from './evaluate';
 import { EMPTY_KINDS, TEXT_KINDS, sceneTimes, type SceneTime } from './time';
 import { SHOT_RANK, aiCutHonoured, decideTravel, hashSeed, type TravelShotInfo } from './travelPolicy';
 import type {
-  BgSegment, CameraKey, CompileContext, CompiledActor, CompiledBeat, CompiledProject, CompiledScene, ExprEvent, FadeKey, GazeKey, MemoryLookKey, ModelKey, ShakeWindow, MotionEvent, NumKey, PosKey, RuleKey, UiStyle,
+  BgSegment, CameraKey, CompileContext, CompiledActor, CompiledBeat, CompiledProject, CompiledScene, ExprEvent, FadeKey, GazeKey, MemoryLookKey, ModelKey, ShakeWindow, MotionEvent, NumKey, PosKey, RuleKey, UiStyle, VoiceEvent,
 } from './types';
 
 /** Glide length used when a beat asks for `transition: 'glide'` while the style's glideSeconds is 0. */
@@ -53,6 +54,7 @@ export function compileProject(project: Project, ctx: CompileContext): CompiledP
   const times = sceneTimes(project);
   const bgm: CompiledProject['bgm'] = [];
   const se: CompiledProject['se'] = [];
+  const voice: VoiceEvent[] = [];
   const fx: CompiledProject['fx'] = { anxiety: [], glow: [], roll: [] };
   const memory: NumKey[] = [];
   const dim: NumKey[] = [];
@@ -64,6 +66,10 @@ export function compileProject(project: Project, ctx: CompileContext): CompiledP
 
   const scenes = project.scenes.map((scene, index) => {
     const out = compileScene(project, scene, index, times[index]!, ctx, warnings, fade);
+    times[index]!.list.forEach((b, k) => {
+      const v = usableVoice(b);
+      if (v && b.speakerId) voice.push({ at: times[index]!.beats[k]!.start, beatId: b.id, speakerId: b.speakerId, url: `/api/projects/${encodeURIComponent(project.id)}/voice/${encodeURIComponent(v.file)}`, seconds: v.seconds });
+    });
     if (scene.audio.bgm) bgm.push({ at: times[index]!.start, assetId: scene.audio.bgm.assetId, volume: scene.audio.bgm.volume });
     const abs = absoluteTime(scene, times[index]!, warnings);
     for (const { k, at } of collect(scene, 'bgm', (t) => t.target.kind === 'audio', abs)) bgm.push({ at, assetId: k.value.assetId, volume: k.value.volume });
@@ -111,7 +117,7 @@ export function compileProject(project: Project, ctx: CompileContext): CompiledP
     if (blink.some((k) => k.value > 0)) fxOut.blink = clipOverlaps(blink);
   }
   if (shake.length > 0) fxOut.shake = shake.sort((a, b) => a.start - b.start);
-  return { duration: times.at(-1)?.end ?? 0, scenes, bgm, se, fade, fx: fxOut, warnings };
+  return { duration: times.at(-1)?.end ?? 0, scenes, bgm, se, ...(voice.length > 0 ? { voice: voice.sort((a, b) => a.at - b.at) } : {}), fade, fx: fxOut, warnings };
 }
 
 /** A memory key without its own tone / edge (typically the one that switches it off) keeps the look of the key before it, so the fade-out looks like the effect. */

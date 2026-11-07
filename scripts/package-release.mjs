@@ -36,13 +36,14 @@ const ENTRIES = [
   ['README.md', 'README.md'],
   ['CHANGELOG.md', 'CHANGELOG.md'],
   ['docs/GUIDE_ASSETS.md', 'docs/GUIDE_ASSETS.md'],
+  ['plugins/README.md', 'docs/PLUGINS.md'], // plugins are released separately (npm run package-plugin) and never ship in this package; this explains how to install one
   ['asset-labels', 'asset-labels'],
   ['examples', 'examples'],
   ['studio.config.example.json', 'studio.config.example.json'],
   ['.env.example', '.env.example'],
 ];
 // Defence in depth: nothing that must never ship, whatever ENTRIES grows into.
-const FORBIDDEN = /^assets(\/|$)|(^|\/)(node_modules|tests|site|\.github|\.git|data|data-test|vendor|\.verify|dev-notes)(\/|$)|(^|\/)\.env$|\.(moc3|model3\.json|motion3\.json|exp3\.json|physics3\.json)$|live2dcubismcore/i;
+const FORBIDDEN = /^assets(\/|$)|(^|\/)(node_modules|tests|site|\.github|\.git|data|data-test|vendor|\.verify|dev-notes)(\/|$)|^plugins\/[^/]+\/|(^|\/)\.env$|\.(moc3|model3\.json|motion3\.json|exp3\.json|physics3\.json)$|live2dcubismcore/i;
 
 function walk(abs, dest, out) {
   const st = fs.statSync(abs);

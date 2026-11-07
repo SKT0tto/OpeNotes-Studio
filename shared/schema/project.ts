@@ -56,6 +56,27 @@ export const ShotSchema = z.object({
   meta: MetaSchema,
 });
 
+/**
+ * Recorded voice of one line (hand-recorded, or made by a plugin such as GPT-SoVITS). Optional and never defaulted: a project without voice has no such key.
+ * `src` = the exact Chinese text the voice was made for (the voice is ignored once the line's text differs);
+ * `file` = audio in `data/projects/<id>/voice/`; `seconds` = its length; `spoken` = the words actually spoken (any language);
+ * `spokenEdited` = a person wrote `spoken`; `hash` = what the audio was made from; `by` = id of the plugin that made it.
+ */
+export const BeatVoiceSchema = z.object({
+  src: z.string(),
+  file: z.string().optional(),
+  seconds: z.number().min(0).optional(),
+  spoken: z.string().optional(),
+  spokenEdited: z.boolean().optional(),
+  hash: z.string().optional(),
+  /** Random seed of this take (GPT-SoVITS output is random): the same seed and text reproduce it. */
+  seed: z.number().int().optional(),
+  /** The take probably ends before the text does (a missing-word check failed even after retries). Informational; cleared by the next take. */
+  suspect: z.boolean().optional(),
+  by: z.string().optional(),
+});
+export type BeatVoice = z.infer<typeof BeatVoiceSchema>;
+
 export const BeatSchema = z.object({
   id: Id,
   /**
@@ -87,6 +108,8 @@ export const BeatSchema = z.object({
    * director and the splitter never write it (`check.ts` enforces it for assistant ops).
    */
   overflow: z.enum(['expand']).optional(),
+  /** Recorded voice (see `BeatVoiceSchema`). */
+  voice: BeatVoiceSchema.optional(),
   shot: ShotSchema,
   style: StyleSchema,
   meta: MetaSchema,

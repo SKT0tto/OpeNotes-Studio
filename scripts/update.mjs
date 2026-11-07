@@ -4,7 +4,7 @@
 //   （Windows 双击 Update-Windows.cmd；macOS / Linux 运行 bash update.sh）
 //
 // 流程：定位安装目录 -> 查询 GitHub 最新正式版 -> 下载发布包 -> 逐文件 sha256 比对 -> 只写入有变化的文件。
-// data/、.env、studio.config.json、node_modules/、vendor/ 和素材库永远不会被碰；只删除「上一版发布包清单
+// data/、plugins/（用户装的插件）、.env、studio.config.json、node_modules/、vendor/ 和素材库永远不会被碰；只删除「上一版发布包清单
 // (release-files.json) 里有、新版没有」的文件，没有清单（从 1.0.x 升级）时不删任何文件。
 // asset-labels/backgrounds.json 被本地改过时按条目合并，保留你在标签工作台里的编辑。
 // 被替换或删除的旧文件先备份到 update-backup/<旧版本>-<本地时间>-<随机>/，--rollback 还原；中断的更新下次运行时自动还原。
@@ -29,7 +29,7 @@ export const MANAGED_FILES = [
   'LICENSE', 'NOTICE', 'THIRD_PARTY.md', 'README.md', 'CHANGELOG.md', 'studio.config.example.json', '.env.example',
 ];
 /** 无论如何都不读、不写、不删的位置（第一段，不区分大小写）。 */
-const PROTECTED = ['data', '.env', 'studio.config.json', 'node_modules', 'vendor', 'assets', BACKUP_DIR, '.git'];
+const PROTECTED = ['data', 'plugins', '.env', 'studio.config.json', 'node_modules', 'vendor', 'assets', BACKUP_DIR, '.git'];
 export const isProtected = (rel) => PROTECTED.includes(rel.split('/')[0].toLowerCase());
 const LAST = [MANIFEST, 'package-lock.json', 'package.json']; // 最后写入：中途失败时版本号仍是旧的，重跑即可
 const lastFirst = (a, b) => LAST.indexOf(a) - LAST.indexOf(b) || a.localeCompare(b);
