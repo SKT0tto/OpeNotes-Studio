@@ -14,7 +14,7 @@ OpeNotes Studio 的可选功能以插件形式单独发布，**主下载包里�
 
 官方插件：
 
-- `gpt-sovits`：用你自己的 GPT-SoVITS 给对白自动配日语（见 `plugins/gpt-sovits/README.md`）。
+- `gpt-sovits`（实验性）：用你自己的 GPT-SoVITS 给对白自动配日语（见 `plugins/gpt-sovits/README.md`）。
 
 ## 给开发者：插件长什么样
 
