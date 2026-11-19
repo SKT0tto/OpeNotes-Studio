@@ -10,7 +10,7 @@ import { storedBeatTimes, type Channel, type TrackTarget } from '@shared/project
 import type { CompactCatalog } from '@shared/schema/assets';
 import type { Project } from '@shared/schema/project';
 import type { usePlayerHost } from '../../play/usePlayerHost';
-import { addKeyAt, bakeRuleKeys, editBeat, editScene, lockTrack, moveKeys, patchKey, positionAt, selectActor, setManualCamera } from '../../store/actions';
+import { addKeyAt, bakeRuleKeys, editBeat, editScene, lockTrack, moveKeys, patchKey, positionAt, selectActor, setManualCamera, unmuteRuleKey } from '../../store/actions';
 import { useProject } from '../../store/projectStore';
 import { notify, useUi } from '../../store/uiStore';
 import { cameraOfBeat } from '../stageTools/camera';
@@ -157,20 +157,21 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
   const allKeys = groups.flatMap((g) => g.lanes.flatMap((l) => l.keys.map((k) => ({ l, k }))));
   const keyDown = (e: React.PointerEvent, k: LaneKey) => {
     e.stopPropagation(); // a key never starts a box selection / seek on the lane under it
-    if (k.ghost) return;
+    if (k.muted) return;
     const sel = useUi.getState().keySel;
     let next = sel;
     if (e.shiftKey) next = sel.includes(k.id) ? sel.filter((x) => x !== k.id) : [...sel, k.id];
     else if (!sel.includes(k.id)) next = [k.id];
-    set({ keySel: next, inspectorTab: next.length > 0 ? 'key' : useUi.getState().inspectorTab });
-    if (e.shiftKey) return;
+    const ghostKeys = Object.fromEntries(allKeys.filter((x) => x.k.ghost && next.includes(x.k.id)).map((x) => [x.k.id, x.k.ghost!]));
+    set({ keySel: next, ghostKeys, inspectorTab: next.length > 0 ? 'key' : useUi.getState().inspectorTab });
+    if (e.shiftKey || k.ghost) return;
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     const picked = allKeys.filter((x) => next.includes(x.k.id));
-    const free = picked.filter((x) => !x.k.locked);
+    const free = picked.filter((x) => !x.k.locked && !x.k.ghost);
     const orig = new Map(free.map((x) => [x.k.id, x.k.at]));
     const others = allKeys.filter((x) => !next.includes(x.k.id)).map((x) => x.k.at);
     drag.current = {
-      at: k.at, ids: [...orig.keys()], orig, primary: free.some((x) => x.k.id === k.id) ? k.id : (free[0]?.k.id ?? k.id), x0: e.clientX, moved: false, blocked: free.length === 0,
+      at: k.at, ids: [...orig.keys()], orig, primary: free.some((x) => x.k.id === k.id) ? k.id : (free[0]?.k.id ?? k.id), x0: e.clientX, moved: false, blocked: free.length === 0 && picked.some((x) => !x.k.ghost),
       copy: e.altKey, lastDt: 0, snap: snapPoints(project, sceneIndex, [live.current.info.t, ...others]),
     };
     if (free.length < picked.length && free.length > 0) notify(`${picked.length - free.length} 个锁定的关键帧不会移动`);
@@ -563,9 +564,9 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                           <div key={k.id} className="tl-keywrap" style={{ left: x(k.at) }}>
                             {k.duration > 0 && <span className={`tl-span${fxKey ? ' fx' : ''}`} style={{ width: k.duration * pps }} />}
                             <span
-                              className={`tl-key${selected ? ' sel' : ''}${k.locked ? ' locked' : ''}${k.ghost ? ' ghost' : ''}`}
+                              className={`tl-key${selected ? ' sel' : ''}${k.locked ? ' locked' : ''}${k.ghost ? ' ghost' : ''}${k.muted ? ' muted' : ''}`}
                               data-key-id={k.id}
-                              data-ghost={k.ghost ? '1' : '0'}
+                              data-ghost={k.ghost || k.muted ? '1' : '0'}
                               data-testid={`tl-key-${k.id}`}
                               title={k.title}
                               onPointerDown={(e) => keyDown(e, k)}
@@ -574,12 +575,13 @@ export function Timeline({ project, host, catalog }: { project: Project; host: H
                               onDoubleClick={(e) => {
                                 e.stopPropagation();
                                 if (k.ghost) bakeRuleKeys(scene.id, k.ghost.castId, k.ghost.keys);
+                                else if (k.muted) unmuteRuleKey(scene.id, k.muted);
                               }}
                             >
                               {k.locked && <span className="tl-lockmark"><LockIcon locked size={10} /></span>}
                             </span>
                             <span className="tl-key-label">{k.label}</span>
-                            {!k.ghost && (
+                            {!k.ghost && !k.muted && (
                               <span className="tl-dur" title="拖动调整过渡时长" data-testid={`tl-dur-${k.id}`} style={{ left: Math.max(k.duration * pps, 11) }} onPointerDown={(e) => durDown(e, k)} onPointerMove={(e) => durMove(e, k)} onPointerUp={durUp} />
                             )}
                           </div>

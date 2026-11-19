@@ -8,7 +8,7 @@ import { EASE_NAMES, ease, type EaseName } from '@shared/timeline/easing';
 import { FX_KINDS, MEMORY_EDGES, MEMORY_TONES } from '@shared/schema/project';
 import { MEMORY_DEFAULT_EDGE, MEMORY_DEFAULT_TONE } from '@shared/timeline/fxParams';
 import { useState } from 'react';
-import { deleteKeys, lockKey, moveKeys, patchKey } from '../../store/actions';
+import { bakeRuleKeys, deleteKeys, lockKey, moveKeys, muteRuleKeys, parseGhostId, patchKey } from '../../store/actions';
 import { useSceneFit } from '../bg/bgFit';
 import { BgPicker } from '../bg/BgPicker';
 import { useProject } from '../../store/projectStore';
@@ -37,8 +37,37 @@ export function KeyFields({ project, scene, catalog }: { project: Project; scene
   const found = keySel.map((id) => locateKey(scene, id)).filter((x): x is NonNullable<typeof x> => !!x);
   const seal = useProject.getState().seal;
   const first = found[0];
+  const ghostIds = keySel.filter((id) => parseGhostId(id));
+  const ghostKeys = useUi((s) => s.ghostKeys);
   const castId = first && first.track.target.kind === 'actor' ? first.track.target.castId : null;
   const model = useModelEntry(castId ? scene.wardrobe[castId]?.modelId : null);
+  if (ghostIds.length > 0) {
+    const total = found.length + ghostIds.length;
+    if (total > 1) {
+      return (
+        <div data-testid="key-multi">
+          <div className="subhead">已选 {total} 个关键帧（含 {ghostIds.length} 个规则导演自动生成）</div>
+          <Row label="操作">
+            <button className="btn-s danger" data-testid="key-delete" onClick={() => deleteKeys(scene.id, keySel)}>删除所选</button>
+          </Row>
+          <p className="hint">删除自动生成的关键帧 = 不再自动生成（可在时间轴上双击灰色标记恢复）。</p>
+        </div>
+      );
+    }
+    const id = ghostIds[0]!;
+    const mute = parseGhostId(id)!;
+    const gk = ghostKeys[id];
+    return (
+      <div data-testid="key-ghost">
+        <div className="subhead">规则导演自动生成</div>
+        <p className="hint">这个关键帧不是你做的，是规则导演在播放时自动加的，没有存进项目。可以转成真正的关键帧再编辑，或者让它不再自动生成。</p>
+        <Row label="操作">
+          <button className="btn-s" data-testid="key-ghost-bake" disabled={!gk} onClick={() => { if (!gk) return; bakeRuleKeys(scene.id, gk.castId, gk.keys); useUi.getState().set({ keySel: [] }); }}>转为关键帧</button>
+          <button className="btn-s danger" data-testid="key-ghost-mute" onClick={() => { muteRuleKeys(scene.id, [mute]); useUi.getState().set({ keySel: [] }); }}>不再自动生成</button>
+        </Row>
+      </div>
+    );
+  }
   if (!first) {
     return (
       <div className="empty-state" data-testid="key-empty">
