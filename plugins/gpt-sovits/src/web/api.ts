@@ -1,6 +1,6 @@
 import type { HostApi } from '../../../../shared/plugins/api';
 import type { Project } from '../../../../shared/schema/project';
-import type { MatchCharacter, MatchResult } from '../match/match';
+import type { MatchCharacter, MatchResult, RefCandidate } from '../match/match';
 import type { VoiceJobView, VoiceScope, VoiceSettings, VoiceSettingsPatch } from '../schema';
 
 export const PLUGIN_ID = 'gpt-sovits';
@@ -63,4 +63,10 @@ export async function requestMatch(characters: MatchCharacter[], sovitsRoot: str
   const res = await call('match', json('POST', { characters, sovitsRoot, refDirs }));
   if (!res.ok) throw await failure(res);
   return (await res.json()) as MatchResult;
+}
+/** The reference clips found in the model folders for each character (no AI, no proposal). */
+export async function scanRefs(characters: MatchCharacter[], sovitsRoot: string, refDirs: string[]): Promise<Record<string, RefCandidate[]>> {
+  const res = await call('scan-refs', json('POST', { characters, sovitsRoot, refDirs }));
+  if (!res.ok) throw await failure(res);
+  return ((await res.json()) as { candidates: Record<string, RefCandidate[]> }).candidates;
 }

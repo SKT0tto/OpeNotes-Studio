@@ -7,7 +7,7 @@ import type { PluginServerContext } from '../../../shared/plugins/api';
 import { VoiceFiles } from '../../../server/plugins/voiceFiles';
 import { refChanged, refSignature, resolveRef } from '../src/lines';
 import type { RefCandidate } from '../src/match/match';
-import { suggestEmotionRefs } from '../src/match/emotionFill';
+import { suggestEmotionPicks, suggestEmotionRefs } from '../src/match/emotionFill';
 import { configuredRef } from '../src/match/routes';
 import { VoiceSettingsSchema, type VoiceProfile } from '../src/schema';
 import { VoiceService, voiceHash } from '../src/service';
@@ -90,6 +90,40 @@ describe('suggestEmotionRefs', () => {
   it('ignores untagged clips and clips of unknown length', () => {
     const out = suggestEmotionRefs([cand({ path: 'a.wav', tag: '吐槽' }), cand({ path: 'b.wav', tag: '' }), cand({ path: 'x.wav', tag: '劝导', seconds: null })]);
     expect(Object.keys(out)).toEqual(['angry']);
+  });
+});
+
+describe('suggestEmotionPicks with real-looking tag lists', () => {
+  const tomori = [
+    cand({ path: 'n.wav', tag: '叙述', calm: true, seconds: 5 }),
+    cand({ path: 'praise.wav', tag: '赞叹', seconds: 4.8 }),
+    cand({ path: 'happy.wav', tag: '开心', seconds: 4.1, text: 'ありがとう、立希ちゃん' }),
+    cand({ path: 'tears.wav', tag: '真情吐露', seconds: 4.4, text: 'みんなバラバラになって辛くて辛くて' }),
+    cand({ path: 'panic.wav', tag: '惊慌失措', seconds: 3.5 }),
+    cand({ path: 'sad.wav', tag: '悲伤', seconds: 5 }),
+    cand({ path: 'think.wav', tag: '内心独白', seconds: 5 }),
+    cand({ path: 'shy.wav', tag: '吐露', seconds: 5 }),
+    cand({ path: 'shaky.wav', tag: '颤颤巍巍地吐露', seconds: 5 }),
+    cand({ path: 'adv.wav', tag: '劝导', seconds: 5 }),
+  ];
+  it('a tag equal to the emotion label wins over a synonym', () => {
+    expect(suggestEmotionPicks(tomori).happy).toMatchObject({ path: 'happy.wav', weak: false });
+  });
+  it('an extreme delivery is never used for serious, neutral or thinking', () => {
+    const out = suggestEmotionPicks(tomori);
+    expect(out.serious?.path).toBe('adv.wav');
+    expect(Object.values(out).filter((p) => ['tears.wav', 'panic.wav'].includes(p.path))).toHaveLength(1); // only for its own emotion
+    const only = suggestEmotionPicks([cand({ path: 'tears.wav', tag: '真情吐露' }), cand({ path: 'panic.wav', tag: '惊慌失措' }), cand({ path: 's.wav', tag: '悲伤，叙述' })]);
+    expect(only.serious).toBeUndefined();
+    expect(only.neutral).toBeUndefined();
+    expect(only.thinking).toBeUndefined();
+    expect(only.shy).toBeUndefined();
+  });
+  it('an extreme clip is a weak fit only for the emotion it matches', () => {
+    const only = suggestEmotionPicks([cand({ path: 'panic.wav', tag: '惊慌失措' })]);
+    expect(only.surprised).toMatchObject({ path: 'panic.wav', weak: true });
+    expect(suggestEmotionPicks([cand({ path: 'panic.wav', tag: '惊慌失措' }), cand({ path: 'u.wav', tag: '惊讶' })]).surprised).toMatchObject({ path: 'u.wav', weak: false });
+    expect(suggestEmotionPicks(tomori).shy).toMatchObject({ path: 'shy.wav', weak: false });
   });
 });
 

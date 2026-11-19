@@ -64,6 +64,25 @@ export function matchRoutes(ctx: PluginServerContext, settings: VoiceSettingsSto
       throw new VoiceError(400, (e as Error).message);
     }
   });
+  /** `POST /scan-refs`: the same scan as `/match`, without the AI step or any proposal: just the reference clips found for each character. */
+  ctx.router.post('/scan-refs', async (req, res) => {
+    const body = z.object({ characters: z.array(z.object({ key: z.string().min(1), name: z.string() })).max(200), sovitsRoot: z.string().optional(), refDirs: z.array(z.string()).optional() }).safeParse(req.body);
+    if (!body.success) throw new VoiceError(400, '需要 characters');
+    const cur = settings.read();
+    const root = cleanPath(body.data.sovitsRoot) || cur.sovitsRoot;
+    const refDirs = (body.data.refDirs ?? cur.refDirs).map(cleanPath).filter(Boolean);
+    const ctl = new AbortController();
+    res.on('close', () => !res.writableEnded && ctl.abort());
+    try {
+      const noAi: Pick<PluginServerContext, 'llm'> = { llm: { ...ctx.llm, available: () => ({ ok: false, message: '' }) } };
+      const result = await autoMatch(noAi, { sovitsRoot: root, refDirs }, body.data.characters, ctl.signal);
+      scanned = result.dirs;
+      res.json({ candidates: Object.fromEntries(result.rows.map((r) => [r.characterKey, r.candidates])), dirs: result.dirs });
+    } catch (e) {
+      if (ctl.signal.aborted) return;
+      throw new VoiceError(400, (e as Error).message);
+    }
+  });
   ctx.router.get('/ref-audio', (req, res) => {
     const p = typeof req.query.path === 'string' ? req.query.path : '';
     const real = insideScanned(p, scanned) ?? configuredRef(p, settings.read());
