@@ -73,6 +73,13 @@ export const BeatVoiceSchema = z.object({
   seed: z.number().int().optional(),
   /** The take probably ends before the text does (a missing-word check failed even after retries). Informational; cleared by the next take. */
   suspect: z.boolean().optional(),
+  /**
+   * The reference clip a person pinned for this line (plugin-defined): `'default'` = the character's main reference, an emotion key = that emotion's
+   * clip, or a custom clip. Absent = automatic (by the line's emotion).
+   */
+  ref: z.union([z.string(), z.object({ path: z.string(), text: z.string().default(''), lang: z.string().default('ja') })]).optional(),
+  /** Which non-main reference clip this audio was made with (absent = the main one); lets the editor see that a changed choice needs a new take. */
+  refUsed: z.string().optional(),
   by: z.string().optional(),
 });
 export type BeatVoice = z.infer<typeof BeatVoiceSchema>;

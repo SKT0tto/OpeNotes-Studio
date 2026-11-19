@@ -8,7 +8,7 @@ import { MAX_TAKES, judgeTake, type Verdict } from './check';
 import type { PluginServerContext } from '../../../shared/plugins/api';
 import type { Beat, Project } from '../../../shared/schema/project';
 import { effectiveProfile, hasVoice, leakMessage, weightsLeak, type VoiceBeatResult, type VoiceJobView, type VoiceProfile, type VoiceScope, type VoiceSettings } from './schema';
-import { hasWords, profileOfBeat, spokenText } from './lines';
+import { hasWords, profileOfBeat, refSignature, resolveRef, spokenText, type ResolvedRef } from './lines';
 import { wavSeconds } from '../../../shared/voice/wav';
 import type { VoiceJaLine } from './prompt';
 import { SovitsError, setWeights, tts } from './sovits';
@@ -26,6 +26,9 @@ export class VoiceError extends Error {
 export function voiceHash(ja: string, profile: VoiceProfile, textLang: string): string {
   return createHash('sha256').update(JSON.stringify([ja, profile.gptWeights ?? '', profile.sovitsWeights ?? '', profile.refAudioPath ?? '', profile.promptText, profile.promptLang, profile.speed, textLang])).digest('hex');
 }
+/** The character's profile with the reference clip this line uses (weights and speed are the character's). Main-reference lines are unchanged, so their hash is. */
+const lineProfile = (profile: VoiceProfile & { refAudioPath: string }, t: Pick<Target, 'ref'>): VoiceProfile & { refAudioPath: string } =>
+  t.ref.main ? profile : { ...profile, refAudioPath: t.ref.ref.path, promptText: t.ref.ref.text, promptLang: t.ref.ref.lang };
 const safeId = (id: string) => id.replace(/[^A-Za-z0-9_-]/g, '_');
 /**
  * `<beatId>-<hash8>-<seed>.wav`: every take made now carries its seed, so no take ever overwrites another (the browser caches decoded audio by
@@ -50,6 +53,8 @@ interface Target {
   characterKey: string;
   displayName: string;
   profile: VoiceProfile & { refAudioPath: string };
+  /** The reference clip this line is made with (its pin, else its emotion's clip, else the main one). */
+  ref: ResolvedRef;
 }
 
 interface Job {
@@ -114,7 +119,7 @@ export class VoiceService {
         const p = profileOfBeat(project, beat, settings.profiles);
         if (!p) continue;
         if (!hasWords(spokenText(beat.text, [p.displayName]))) continue;
-        out.push({ sceneId: scene.id, beat, characterKey: p.characterKey, displayName: p.displayName, profile: p.profile });
+        out.push({ sceneId: scene.id, beat, characterKey: p.characterKey, displayName: p.displayName, profile: p.profile, ref: resolveRef(p.profile, beat) });
       }
     }
     if (scope.kind === 'beat' && out.length === 0) throw new VoiceError(400, '这一句不配音：只有对白（不含旁白、动作、停顿），并且说话的角色已设置参考音频');
@@ -195,9 +200,9 @@ export class VoiceService {
       const cur = t.beat.voice;
       if (cur && cur.src === t.beat.text && cur.spoken === j.ja && !!cur.spokenEdited === !!j.jaEdited) continue;
       const old = cur?.file && cur.src === t.beat.text && cur.seconds !== undefined
-        ? { file: cur.file, seconds: cur.seconds, ...(cur.hash ? { hash: cur.hash } : {}), ...(cur.seed !== undefined ? { seed: cur.seed } : {}), ...(cur.suspect ? { suspect: true as const } : {}) }
+        ? { file: cur.file, seconds: cur.seconds, ...(cur.hash ? { hash: cur.hash } : {}), ...(cur.seed !== undefined ? { seed: cur.seed } : {}), ...(cur.suspect ? { suspect: true as const } : {}), ...(cur.refUsed ? { refUsed: cur.refUsed } : {}) }
         : {};
-      job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { src: t.beat.text, spoken: j.ja, ...(j.jaEdited ? { spokenEdited: true } : {}), ...old, by: PLUGIN_ID } });
+      job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { src: t.beat.text, spoken: j.ja, ...(j.jaEdited ? { spokenEdited: true } : {}), ...old, ...(cur?.ref !== undefined ? { ref: cur.ref } : {}), by: PLUGIN_ID } });
     }
     const sound = targets.filter((t) => ja.has(t.beat.id));
 
@@ -215,7 +220,7 @@ export class VoiceService {
       const pending: Array<{ t: Target; hash: string }> = [];
       for (const t of group) {
         const text = ja.get(t.beat.id)!;
-        const hash = voiceHash(text.ja, profile, settings.textLang);
+        const hash = voiceHash(text.ja, lineProfile(profile, t), settings.textLang);
         if (opts.regenerate) {
           pending.push({ t, hash });
           continue;
@@ -249,7 +254,7 @@ export class VoiceService {
         if (signal.aborted) throw new Error('aborted');
         const text = ja.get(t.beat.id)!;
         try {
-          const take = await this.bestTake(job, name, text.ja, profile, settings, signal);
+          const take = await this.bestTake(job, name, text.ja, lineProfile(profile, t), settings, signal);
           let seed = take.seed;
           while ((await this.existing(project.id, voiceFileName(t.beat.id, hash, seed))) !== null) seed = randomInt(0, 2 ** 31 - 1); // never over a take that is there
           const file = voiceFileName(t.beat.id, hash, seed);
@@ -295,7 +300,7 @@ export class VoiceService {
   }
 
   private finish(job: Job, t: Target, text: { ja: string; jaEdited?: boolean }, file: string, seconds: number, hash: string, seed?: number, suspect?: boolean): void {
-    job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { src: t.beat.text, spoken: text.ja, ...(text.jaEdited ? { spokenEdited: true } : {}), file, seconds: Math.round(seconds * 1000) / 1000, hash, ...(seed !== undefined ? { seed } : {}), ...(suspect ? { suspect: true } : {}), by: PLUGIN_ID } });
+    job.results.set(t.beat.id, { sceneId: t.sceneId, beatId: t.beat.id, voice: { src: t.beat.text, spoken: text.ja, ...(text.jaEdited ? { spokenEdited: true } : {}), file, seconds: Math.round(seconds * 1000) / 1000, hash, ...(seed !== undefined ? { seed } : {}), ...(suspect ? { suspect: true } : {}), ...(t.beat.voice?.ref !== undefined ? { ref: t.beat.voice.ref } : {}), ...(refSignature(t.ref) ? { refUsed: refSignature(t.ref) } : {}), by: PLUGIN_ID } });
     job.done++;
     job.completed++;
   }

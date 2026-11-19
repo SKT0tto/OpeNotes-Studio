@@ -1,10 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { cleanPath } from './paths';
-import { VoiceSettingsPatchSchema, VoiceSettingsSchema, type VoiceSettings, type VoiceSettingsPatch } from './schema';
+import { EMOTIONS } from '../../../shared/director/vocab';
+import { VoiceSettingsPatchSchema, VoiceSettingsSchema, type RefClip, type VoiceSettings, type VoiceSettingsPatch } from './schema';
 
 /** A path as pasted (surrounding quotes and spaces removed); blank = absent. */
 const clean = (x: string | undefined): string | undefined => cleanPath(x) || undefined;
+
+/** Emotion references as stored: known emotions only, pasted quotes removed, blank paths dropped; nothing left = absent. */
+export function cleanEmotionRefs(refs: Record<string, RefClip> | undefined): Record<string, RefClip> | undefined {
+  const out: Record<string, RefClip> = {};
+  for (const [emotion, r] of Object.entries(refs ?? {})) {
+    const path = clean(r.path);
+    if (!(EMOTIONS as readonly string[]).includes(emotion) || !path) continue;
+    out[emotion] = { path, text: r.text.trim(), lang: r.lang.trim() || 'ja' };
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
 
 /**
  * GPT-SoVITS plugin settings: `data/plugins/gpt-sovits/settings.json` (gitignored with the rest of `data/`). Plain paths and an address; no secrets.
@@ -44,7 +56,8 @@ export class VoiceSettingsStore {
         const gpt = clean(v.gptWeights);
         const sov = clean(v.sovitsWeights);
         const ref = clean(v.refAudioPath);
-        profiles[key] = { ...(gpt ? { gptWeights: gpt } : {}), ...(sov ? { sovitsWeights: sov } : {}), ...(ref ? { refAudioPath: ref } : {}), promptText: v.promptText.trim(), promptLang: v.promptLang.trim() || 'ja', speed: v.speed };
+        const emotionRefs = cleanEmotionRefs(v.emotionRefs);
+        profiles[key] = { ...(gpt ? { gptWeights: gpt } : {}), ...(sov ? { sovitsWeights: sov } : {}), ...(ref ? { refAudioPath: ref } : {}), promptText: v.promptText.trim(), promptLang: v.promptLang.trim() || 'ja', speed: v.speed, ...(emotionRefs ? { emotionRefs } : {}) };
       }
     }
     const next: VoiceSettings = {
