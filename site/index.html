@@ -58,7 +58,7 @@
   </div>
   <div class="wrap hero-in">
     <div class="hero-copy">
-      <p class="pill-tag"><span>v1.1.1</span>开源 · GPL-3.0 · 非官方同人项目</p>
+      <p class="pill-tag"><span>v1.2.0</span>开源 · GPL-3.0 · 非官方同人项目</p>
       <h1 id="hero-title"><img class="hero-wordmark" src="logo-wordmark.svg" alt="OpeNotes Studio" width="1330" height="180" /></h1>
       <p class="tagline">把小说，演成一场 Live。</p>
       <p class="lead">基于 Live2D 的 AI 剧情演出导演与制作平台。一键把小说转成《BanG Dream! Our Notes》风格的动态剧情演出——分场、选景、换装、镜头与表演由 AI 导演完成，每一句、每一帧仍由你精细手调。</p>
@@ -182,7 +182,7 @@
     <header class="sec-head"><p class="en">HOW TO START</p><h2 id="start-title">开始使用</h2><p class="sub">需要 Node.js 22 及以上（开发使用 24）。不想用命令行？从 <a href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener">Releases</a> 下载 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）即可；下面是开发者方式。</p></header>
     <div class="glass dl">
       <div><h3>最简单：下载 zip，双击开演</h3><p>从 Releases 下载最新 zip，解压后双击 <code>Start-Windows.cmd</code>（macOS / Linux 运行 <code>./start.sh</code>）。</p></div>
-      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载 v1.1.1</a>
+      <a class="btn btn-primary" href="https://github.com/SKT0tto/OpeNotes-Studio/releases/latest" target="_blank" rel="noopener"><svg aria-hidden="true" width="20" height="20"><use href="#i-down"/></svg>下载 v1.2.0</a>
     </div>
     <div class="cmds">
       <div class="cmd glass"><div class="cmd-h"><span class="n">1</span><div><h3>获取代码并安装依赖</h3><p>克隆仓库后安装 npm 依赖。</p></div></div><div class="code"><button class="copy" type="button" aria-label="复制命令"><svg aria-hidden="true" width="16" height="16"><use href="#i-copy"/></svg><span>复制</span></button><pre><code>git clone https://github.com/SKT0tto/OpeNotes-Studio.git openotes-studio
@@ -202,6 +202,7 @@ cp studio.config.example.json studio.config.json
   <div class="wrap narrow">
     <header class="sec-head"><p class="en">UPDATES</p><h2 id="updates-title">更新</h2><p class="sub">完整记录见 <a href="https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG</a>。</p></header>
     <ul class="news">
+      <li><span class="ver">v1.2.0</span><p>AI 配音插件更新到 v0.2.0（需要主程序 1.2.0）：可以给每个角色按情绪配参考音频（可按文件名标签自动填），每一句也能单独选用哪段参考音频，换了语气更贴台词；角色名按官方读音发给 GPT-SoVITS，燈、楽奈、立希、豊川这些名字不再读错。已生成的配音不受影响，想更新读音就对那一句点「重新合成」。</p></li>
       <li><span class="ver">v1.1.1</span><p>删掉人物的表情或动作关键帧后，规则导演自动补上的蓝色虚线关键帧现在也能选中删掉（或点「不再自动生成」），之后不会再冒出来；被屏蔽的位置留一个灰色标记，双击即可恢复。下载包里的 README 也更新到了最新。</p></li>
       <li><span class="ver">v1.1.0</span><p>新增插件系统，以及实验性的 AI 配音插件 GPT-SoVITS（单独下载）：用你自己的 GPT-SoVITS 模型给对白配日语，AI 把台词译成口语日语，按角色的称呼习惯说话，逐句合成，播放时嘴随声音开合。可以自动匹配模型、单句重新合成、自动检查漏读。效果取决于模型，请试听后再用。不装插件，一切照旧。</p></li>
       <li><span class="ver">v1.0.3</span><p>速度菜单增加到 11 档（0.25× 到 4×），也能选「自定义…」自己输入 0.1× 到 8× 的倍速。编辑器顶栏也加上了新 logo。</p></li>
@@ -263,7 +264,7 @@ cp studio.config.example.json studio.config.json
       <nav aria-label="页脚链接"><a href="https://github.com/SKT0tto/OpeNotes-Studio" target="_blank" rel="noopener">GitHub</a><a href="https://www.gnu.org/licenses/gpl-3.0.html" rel="noopener">GPL-3.0</a><a href="https://space.bilibili.com/358479834" target="_blank" rel="noopener noreferrer">bilibili</a><a href="#top">回到顶部 ↑</a></nav>
     </div>
     <p><strong>免责声明：</strong>OpeNotes Studio 是非官方同人项目。BanG Dream!、Our Notes 及所有相关角色、名称与素材均为 Bushiroad、Craft Egg 及其他权利方的财产；本项目与其无任何关联，亦未获其认可。本项目不包含任何游戏素材与 Live2D Cubism Core，用户须自行准备合法获取的素材并遵守相应条款。本页所有界面与图形均为原创示意。</p>
-    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v1.1.1</p>
+    <p>© 2026 bilibili @羽丘魅魔高松灯 · 以 GPL-3.0-or-later 发布 · v1.2.0</p>
   </div>
 </footer>
 <div class="toast" role="status" aria-live="polite"></div>
