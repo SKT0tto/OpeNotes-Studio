@@ -120,8 +120,8 @@ export function fixAddress(spoken: string, speakerKey: string | null | undefined
 }
 
 const HONORIFIC_ONLY = /^(ちゃん|さん|くん|君|先輩|せんぱい|様|さま)/;
-/** Single-kanji parts that are also everyday words (要 / 藤 / 蛍 / 凪): only a name when an honorific follows. */
-const WORD_LIKE = new Set(['要', '藤', '蛍', '凪']);
+/** Single-kanji parts that are also everyday words (要): only a name when an honorific follows. */
+const WORD_LIKE = new Set(['要']);
 const READING_AFTER = /^(ちゃん|さん|くん|君|先輩|せんぱい|様|さま|って|の|は|が|も|と|に|を|へ|や|よ|ね|で|か|だ|です|から|たち|、|。|！|？|!|\?|…|・|」|』|）|$)/;
 const hasKanji = (s: string) => /[一-鿿]/.test(s);
 
@@ -147,8 +147,19 @@ function readName(text: string, from: string, to: string): string {
 }
 
 /**
- * The text GPT-SoVITS gets: kanji spellings of the cast's names rewritten into their official kana readings (pyopenjtalk misreads 燈, 楽奈, 立希 ...).
- * Full name first (also with a space or ・ between), then family, then given name. Kana-only parts stay. The stored `spoken` is never changed.
+ * Name parts that pyopenjtalk misreads (from g2p checks on 2026-11-22), as `<key>f` (family) / `<key>g` (given). Only these are rewritten, in
+ * katakana (hiragana names get mis-segmented: はま-, まは- read as particles); every other part stays in kanji, which it reads correctly.
+ */
+const MISREAD = new Set([
+  '001g', '002g', '003g', '003f', '005g', '006g', '007g', '008g', '010f', '010g', '013f', '013g', '014g',
+  '017f', '019f', '020g', '021f', '021g', '022f', '022g', '023g', '025g',
+]);
+const toKatakana = (s: string) => s.replace(/[ぁ-ゖ]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60));
+
+/**
+ * The text GPT-SoVITS gets: the misread kanji name parts of the cast rewritten into katakana readings (燈 -> トモリ, 豊川 -> トガワ).
+ * Full name first (also with a space or ・ between; each part on its own, 高松燈 -> 高松トモリ), then family, then given name. The stored
+ * `spoken` is never changed.
  */
 export function readingForTts(ja: string, castKeys: readonly string[]): string {
   let t = ja;
@@ -156,9 +167,11 @@ export function readingForTts(ja: string, castKeys: readonly string[]): string {
     const n = JA_NAMES[key];
     const k = JA_NAME_KANA[key];
     if (!n || !k) continue;
-    for (const sep of ['', ' ', '　', '・']) t = readName(t, n.family + sep + n.given, k.family + sep + k.given);
-    t = readName(t, n.family, k.family);
-    t = readName(t, n.given, k.given);
+    const fam = MISREAD.has(`${key}f`) ? toKatakana(k.family) : n.family;
+    const giv = MISREAD.has(`${key}g`) ? toKatakana(k.given) : n.given;
+    if (fam !== n.family || giv !== n.given) for (const sep of ['', ' ', '　', '・']) t = readName(t, n.family + sep + n.given, fam + sep + giv);
+    if (fam !== n.family) t = readName(t, n.family, fam);
+    if (giv !== n.given) t = readName(t, n.given, giv);
   }
   return t;
 }
