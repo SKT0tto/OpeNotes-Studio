@@ -1,11 +1,13 @@
 /** 「配音」: the GPT-SoVITS auto voice-over plugin: server address, per-character voices (with 「自动匹配」), and generation for the project / scene. */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { EMOTION_LABEL } from '../../../../shared/catalog/labels';
 import { NAME_PARTS } from '../../../../shared/catalog/romaji';
+import { suggestEmotionPicks } from '../match/emotionFill';
 import type { MatchResult, MatchRow, RefCandidate } from '../match/match';
 import { cleanPath, cleanPathList } from '../paths';
 import { DEFAULT_SOVITS_ENDPOINT, hasVoice } from '../profile';
-import type { VoiceProfile, VoiceScope, VoiceSettings } from '../schema';
-import { host, previewRef, previewVoice, requestMatch, testVoiceConnection } from './api';
+import type { RefClip, VoiceProfile, VoiceScope, VoiceSettings } from '../schema';
+import { host, previewRef, previewVoice, requestMatch, scanRefs, testVoiceConnection } from './api';
 import { cancelJob, jobRunning, loadSettings, runJob, saveSettings, useVoice } from './store';
 
 const BLANK: VoiceProfile = { promptText: '', promptLang: 'ja', speed: 1 };
@@ -69,6 +71,13 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
   const [choices, setChoices] = useState<Record<string, RowChoice>>({});
   const [applied, setApplied] = useState<string | null>(null);
   const [playingRef, setPlayingRef] = useState<string | null>(null);
+  /** Reference clips found by the latest scan, per character (the emotion tables choose from them). */
+  const [scans, setScans] = useState<Record<string, RefCandidate[]>>({});
+  /** Emotion rows (`<character>:<emotion>`) the person switched to a hand-typed path. */
+  const [scanning, setScanning] = useState(false);
+  /** Rows (`<character>:<emotion>`) whose proposed clip is an extreme delivery that only just fits. */
+  const [weakRows, setWeakRows] = useState<Set<string>>(new Set());
+  const [customRows, setCustomRows] = useState<Set<string>>(new Set());
   const audio = useRef<HTMLAudioElement | null>(null);
 
   const adopt = (s: VoiceSettings) => {
@@ -113,7 +122,8 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
       const profs: Record<string, VoiceProfile | null> = {};
       for (const [k, v] of Object.entries(withProfiles ?? profiles)) {
         const c: VoiceProfile = { ...v, ...(v.refAudioPath ? { refAudioPath: cleanPath(v.refAudioPath) } : {}), ...(v.gptWeights ? { gptWeights: cleanPath(v.gptWeights) } : {}), ...(v.sovitsWeights ? { sovitsWeights: cleanPath(v.sovitsWeights) } : {}) };
-        profs[k] = c.refAudioPath?.trim() || c.gptWeights?.trim() || c.sovitsWeights?.trim() || c.promptText ? c : null;
+        if (v.emotionRefs) c.emotionRefs = Object.fromEntries(Object.entries(v.emotionRefs).map(([e, r]) => [e, { ...r, path: cleanPath(r.path) }]));
+        profs[k] = c.refAudioPath?.trim() || c.gptWeights?.trim() || c.sovitsWeights?.trim() || c.promptText || (c.emotionRefs && Object.keys(c.emotionRefs).length > 0) ? c : null;
       }
       adopt(await saveSettings({ enabled, endpoint, textLang, defaultGptWeights: cleanPath(defGpt), defaultSovitsWeights: cleanPath(defSov), sovitsRoot: cleanPath(sovitsRoot), refDirs: extraDirs(), profiles: profs }));
       return true;
@@ -176,6 +186,115 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const setEmotionRef = (key: string, emotion: string, ref: RefClip | null) => {
+    const cur = { ...(profiles[key]?.emotionRefs ?? {}) };
+    if (ref) cur[emotion] = ref;
+    else delete cur[emotion];
+    const { emotionRefs: _drop, ...rest } = profiles[key] ?? BLANK;
+    void _drop;
+    patchProfileReplace(key, { ...rest, ...(Object.keys(cur).length > 0 ? { emotionRefs: cur } : {}) });
+  };
+  const patchProfileReplace = (key: string, p: VoiceProfile) => {
+    touch();
+    setProfiles((c) => ({ ...c, [key]: { ...BLANK, ...p } }));
+  };
+  /** Scans the saved model folders for reference clips (no AI, no review, nothing changed) unless a scan is already in memory. */
+  const ensureScan = async (): Promise<Record<string, RefCandidate[]>> => {
+    if (Object.keys(scans).length > 0 || scanning) return scans;
+    if (!hasFolder) return scans;
+    setScanning(true);
+    try {
+      const known = rows.map((r) => ({ key: r.key, name: r.name }));
+      const found = await scanRefs(known, cleanPath(sovitsRoot), extraDirs());
+      setScans(found);
+      return found;
+    } catch (e) {
+      setError(`扫描参考音频失败：${(e as Error).message}`);
+      return scans;
+    } finally {
+      setScanning(false);
+    }
+  };
+  /** Fills the EMPTY emotion rows from the file-name tags of the scanned clips; nothing is saved until the person saves. */
+  const autoFillEmotions = async (key: string) => {
+    const sc = await ensureScan();
+    const cands = sc[key] ?? [];
+    const proposal = suggestEmotionPicks(cands);
+    const cur = profiles[key]?.emotionRefs ?? {};
+    const add = Object.entries(proposal).filter(([e]) => !cur[e]?.path?.trim());
+    if (add.length === 0) {
+      setError(cands.length > 0 ? '没有可以自动填的：已填过的行不会被改，也没有别的合适的带标签 3–10 秒参考音频（不合适的宁可留空，用默认参考）' : hasFolder ? '没有扫描到这个角色的参考音频' : '请先在上面填「模型文件夹」');
+      return;
+    }
+    setError(null);
+    const { emotionRefs: _drop, ...rest } = profiles[key] ?? BLANK;
+    void _drop;
+    const weak = new Set(weakRows);
+    for (const [e, p] of add) if (p.weak) weak.add(`${key}:${e}`);
+    setWeakRows(weak);
+    patchProfileReplace(key, { ...rest, emotionRefs: { ...cur, ...Object.fromEntries(add.map(([e, p]) => [e, { path: p.path, text: p.text, lang: p.lang }])) } });
+    setApplied(`已按文件名标签填入 ${add.length} 个情绪（${add.map(([e]) => EMOTION_LABEL[e] ?? e).join('、')}）：请检查、试听，没问题再点「保存设置」。没有合适音频的情绪留空（用默认参考）。`);
+  };
+  /** Plays a clip of the emotion table (a hand-typed path is saved first, since the server only plays scanned or saved files). */
+  const hearEmotionRef = async (file: string) => {
+    if (dirty && !(await save())) return;
+    await listenRef(file);
+  };
+  const renderEmotionRefs = (key: string, p: VoiceProfile) => {
+    const cands = scans[key] ?? [];
+    const refs = p.emotionRefs ?? {};
+    const n = Object.values(refs).filter((r) => r.path.trim()).length;
+    return (
+      <details className="voice-emo" data-testid={`voice-emo-${key}`} onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) void ensureScan(); }}>
+        <summary>情绪参考音频{n > 0 ? `（已设 ${n} 个）` : '（可选）'}</summary>
+        <p className="hint">一句台词的情绪（检查器里的「情绪」）对应哪段参考音频；没设的情绪用上面的默认参考。GPT-SoVITS 的语气取自参考音频，所以换音频才能换语气。展开时会按上面的「模型文件夹」自动扫描一次（不动角色声线），下拉框里才有这个角色的音频。</p>
+        <div className="modal-actions" style={{ justifyContent: 'flex-start' }}>
+          <button className="btn-s" disabled={scanning} onClick={() => void autoFillEmotions(key)} title="只填空着的行，不覆盖已填的；填完请检查再保存" data-testid={`voice-emo-autofill-${key}`}>{scanning ? '扫描中…' : '按文件名标签自动填'}</button>
+        </div>
+        {Object.keys(EMOTION_LABEL).map((emotion) => {
+          const ref = refs[emotion];
+          const idx = ref ? cands.findIndex((c) => c.path === ref.path) : -1;
+          const custom = customRows.has(`${key}:${emotion}`);
+          const saved = !custom && !!ref?.path.trim() && idx < 0; // a saved clip that is not in the scan list: still shown, by file name
+          const value = custom ? 'custom' : saved ? 'saved' : ref?.path.trim() ? String(idx) : 'none';
+          return (
+            <div className="srow" key={emotion} data-testid={`voice-emo-row-${key}-${emotion}`}>
+              <span>{EMOTION_LABEL[emotion] ?? emotion}</span>
+              <span className="voice-line">
+                <select className="voice-sel" value={value} data-testid={`voice-emo-sel-${key}-${emotion}`} onChange={(e) => {
+                  const v = e.target.value;
+                  const rows = new Set(customRows);
+                  const weak = new Set(weakRows);
+                  rows.delete(`${key}:${emotion}`);
+                  weak.delete(`${key}:${emotion}`);
+                  setWeakRows(weak);
+                  if (v === 'saved') return;
+                  if (v === 'none') setEmotionRef(key, emotion, null);
+                  else if (v === 'custom') { rows.add(`${key}:${emotion}`); setEmotionRef(key, emotion, ref ?? { path: '', text: '', lang: 'ja' }); }
+                  else { const c = cands[Number(v)]; if (c) setEmotionRef(key, emotion, { path: c.path, text: c.text, lang: c.lang || 'ja' }); }
+                  setCustomRows(rows);
+                }}>
+                  <option value="none">不用（用默认参考）</option>
+                  {saved && ref && <option value="saved">{`${base(ref.path)}（已保存，不在扫描列表里）`}</option>}
+                  {cands.map((c, i) => <option key={c.path} value={i}>{candidateLabel(c)}</option>)}
+                  <option value="custom">自定义路径…</option>
+                </select>
+                <button className="btn-s" disabled={!ref?.path.trim() || playingRef === ref.path} onClick={() => ref && void hearEmotionRef(ref.path)} data-testid={`voice-emo-hear-${key}-${emotion}`}>▶</button>
+              </span>
+              {weakRows.has(`${key}:${emotion}`) && ref && <span className="warn" style={{ gridColumn: '1 / -1' }} data-testid={`voice-emo-weak-${key}-${emotion}`}>⚠ 这段是语气比较极端的音频，只因为没有更合适的才填；试听后不合适就改成「不用」。</span>}
+              {custom && (
+                <span className="voice-line" style={{ gridColumn: '1 / -1' }}>
+                  <input className="text" value={ref?.path ?? ''} placeholder="参考音频路径" data-testid={`voice-emo-path-${key}-${emotion}`} onChange={(e) => setEmotionRef(key, emotion, { path: e.target.value, text: ref?.text ?? '', lang: ref?.lang ?? 'ja' })} />
+                  <input className="text" value={ref?.text ?? ''} placeholder="参考文本（音频里说的话）" data-testid={`voice-emo-text-${key}-${emotion}`} onChange={(e) => setEmotionRef(key, emotion, { path: ref?.path ?? '', text: e.target.value, lang: ref?.lang ?? 'ja' })} />
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </details>
+    );
+  };
+
   const generate = async (scope: VoiceScope) => {
     if (!(await save())) return;
     void runJob(scope, { ...(retranslate ? { retranslate: true } : {}), ...(force ? { force: true } : {}) });
@@ -191,6 +310,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
       const known = new Map(rows.map((r) => [r.key, r.name]));
       const r = await requestMatch([...known].map(([key, name]) => ({ key, name })), cleanPath(sovitsRoot), extraDirs());
       setMatch(r);
+      setScans((cur) => ({ ...cur, ...Object.fromEntries(r.rows.map((row) => [row.characterKey, row.candidates])) }));
       setChoices(Object.fromEntries(r.rows.map((row) => [row.characterKey, initialChoice(row, profiles[row.characterKey])])));
     } catch (e) {
       setError(`自动匹配失败：${(e as Error).message}`);
@@ -363,6 +483,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
                     <button className="btn-s" disabled={!hasVoice(p) || busy !== null || running} onClick={() => void listen(r.key)} data-testid={`voice-listen-${r.key}`}>{busy === `listen:${r.key}` ? '合成中…' : '试听'}</button>
                   </span>
                 </label>
+                {renderEmotionRefs(r.key, p)}
               </fieldset>
             );
           })}
@@ -373,7 +494,7 @@ export function VoiceDialog({ onClose }: { onClose: () => void }) {
           </div>
 
           <h3 className="voice-h">生成配音</h3>
-          <p className="hint">需要先在上面启用、设置参考音频，并配置好 AI（用来译成日语）。已有且内容没变的句子不会重新合成。生成结果是一步操作，可以撤销；中途取消或连接失败时，没做完的句子保留原来的配音。每一遍合成都会检查有没有读漏字，疑似漏字会自动换个随机种子重来（最多 2 次）。</p>
+          <p className="hint">需要先在上面启用、设置参考音频，并配置好 AI（用来译成日语）。已有且内容没变的句子不会重新合成（句子的参考音频——按情绪或手动指定——变了也算变了，会重新合成）。每句用哪段参考音频：这一句在检查器里指定的，否则按它的情绪取上面「情绪参考音频」里设的，都没有就用默认参考。生成结果是一步操作，可以撤销；中途取消或连接失败时，没做完的句子保留原来的配音。每一遍合成都会检查有没有读漏字，疑似漏字会自动换个随机种子重来（最多 2 次）。</p>
           <div className="voice-line">
             <label className="chip check"><input type="checkbox" checked={retranslate} onChange={(e) => setRetranslate(e.target.checked)} />重新翻译（保留手改过的日语）</label>
             <label className="chip check"><input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} />全部重新合成</label>

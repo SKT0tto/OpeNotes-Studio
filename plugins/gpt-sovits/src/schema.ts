@@ -1,8 +1,13 @@
 import { z } from 'zod';
+import type { BeatVoice } from '../../../shared/schema/project';
 
 import { DEFAULT_SOVITS_ENDPOINT, hasVoice } from './profile';
 
 export { DEFAULT_SOVITS_ENDPOINT, hasVoice };
+
+/** A reference clip (path on the GPT-SoVITS machine, the words in it, their language). */
+export const RefClipSchema = z.object({ path: z.string(), text: z.string().default(''), lang: z.string().default('ja') });
+export type RefClip = z.infer<typeof RefClipSchema>;
 
 /** A character's voice (keyed by cast `characterKey`, shared by every project). A profile without `refAudioPath` = the character is not voiced. */
 export const VoiceProfileSchema = z.object({
@@ -13,6 +18,8 @@ export const VoiceProfileSchema = z.object({
   promptText: z.string().default(''),
   promptLang: z.string().default('ja'),
   speed: z.number().min(0.5).max(2).default(1),
+  /** Reference clip per emotion (keys from `EMOTIONS`); a line whose emotion has none uses the main reference. */
+  emotionRefs: z.record(z.string(), RefClipSchema).optional(),
 });
 export type VoiceProfile = z.infer<typeof VoiceProfileSchema>;
 
@@ -85,7 +92,7 @@ export interface VoiceJobItem {
 export interface VoiceBeatResult {
   sceneId: string;
   beatId: string;
-  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; seed?: number; suspect?: boolean; by: string };
+  voice: { src: string; spoken: string; spokenEdited?: boolean; file?: string; seconds?: number; hash?: string; seed?: number; suspect?: boolean; ref?: BeatVoice['ref']; refUsed?: string; by: string };
 }
 export interface VoiceJobView {
   id: string;
