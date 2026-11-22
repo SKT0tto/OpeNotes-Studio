@@ -13,7 +13,7 @@ import { wavSeconds } from '../../../shared/voice/wav';
 import type { VoiceJaLine } from './prompt';
 import { SovitsError, setWeights, tts } from './sovits';
 import type { VoiceSettingsStore } from './store';
-import { fixAddress, fixNames } from './names';
+import { fixAddress, fixNames, readingForTts } from './names';
 import { translateLines } from './translate';
 
 export class VoiceError extends Error {
@@ -254,7 +254,7 @@ export class VoiceService {
         if (signal.aborted) throw new Error('aborted');
         const text = ja.get(t.beat.id)!;
         try {
-          const take = await this.bestTake(job, name, text.ja, lineProfile(profile, t), settings, signal);
+          const take = await this.bestTake(job, name, text.ja, project.cast.map((c) => c.characterKey), lineProfile(profile, t), settings, signal);
           let seed = take.seed;
           while ((await this.existing(project.id, voiceFileName(t.beat.id, hash, seed))) !== null) seed = randomInt(0, 2 ** 31 - 1); // never over a take that is there
           const file = voiceFileName(t.beat.id, hash, seed);
@@ -282,16 +282,17 @@ export class VoiceService {
    * One line, up to MAX_TAKES takes with a fresh random seed each, stopping at the first complete one (the missing-word check, see check.ts).
    * When none passes, the take with the longest sound is kept and flagged. A take that cannot be judged (very short text) counts as complete.
    */
-  private async bestTake(job: Job, name: string, ja: string, profile: VoiceProfile & { refAudioPath: string }, settings: VoiceSettings, signal: AbortSignal): Promise<{ bytes: Uint8Array; secs: number; seed: number; verdict: Verdict; suspect: boolean; takes: number }> {
+  private async bestTake(job: Job, name: string, ja: string, castKeys: readonly string[], profile: VoiceProfile & { refAudioPath: string }, settings: VoiceSettings, signal: AbortSignal): Promise<{ bytes: Uint8Array; secs: number; seed: number; verdict: Verdict; suspect: boolean; takes: number }> {
+    const reading = readingForTts(ja, castKeys); // what the TTS reads; the stored line and the hash keep the kanji spelling
     let best: { bytes: Uint8Array; secs: number; seed: number; verdict: Verdict } | null = null;
     for (let take = 1; take <= MAX_TAKES; take++) {
       if (signal.aborted) throw new Error('aborted');
       job.message = `合成 ${name}：${job.done + 1}/${job.total}${take > 1 ? `（疑似漏字，重试第 ${take - 1} 次）` : ''}`;
       const seed = randomInt(0, 2 ** 31 - 1);
-      const bytes = await tts(settings.endpoint, { text: ja, textLang: settings.textLang, profile, seed }, signal);
+      const bytes = await tts(settings.endpoint, { text: reading, textLang: settings.textLang, profile, seed }, signal);
       const secs = wavSeconds(bytes);
       if (secs === null || secs <= 0) throw new SovitsError('GPT-SoVITS 返回的不是可读的 WAV 音频', 'rejected');
-      const verdict = judgeTake(bytes, ja, profile.speed);
+      const verdict = judgeTake(bytes, reading, profile.speed);
       if (!best || verdict.span > best.verdict.span) best = { bytes, secs, seed, verdict };
       if (verdict.ok !== false) return { ...best, suspect: false, takes: take };
       if (take < MAX_TAKES) job.retries++;

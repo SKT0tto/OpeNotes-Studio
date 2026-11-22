@@ -3,7 +3,7 @@
  * uses another kanji (燈). Only a spelling that differs from the Japanese one by kanji variants is touched, and only where it is used as a name.
  */
 import { addressAlternatives, addressForm, selfForm, selfForms } from '../../../shared/catalog/addressing';
-import { JA_NAMES, KANJI_TO_SIMPLIFIED, NAME_PARTS } from '../../../shared/catalog/romaji';
+import { JA_NAMES, JA_NAME_KANA, KANJI_TO_SIMPLIFIED, NAME_PARTS } from '../../../shared/catalog/romaji';
 
 const fold = (s: string) => [...s].map((c) => KANJI_TO_SIMPLIFIED[c] ?? c).join('');
 const isKanji = (c: string | undefined) => !!c && /[一-鿿]/.test(c);
@@ -117,4 +117,61 @@ function fixSelf(spoken: string, speakerKey: string): string {
 export function fixAddress(spoken: string, speakerKey: string | null | undefined, castKeys: readonly string[]): string {
   if (!speakerKey) return spoken;
   return fixSelf(fixCalls(spoken, speakerKey, castKeys), speakerKey);
+}
+
+const HONORIFIC_ONLY = /^(ちゃん|さん|くん|君|先輩|せんぱい|様|さま)/;
+/** Single-kanji parts that are also everyday words (要): only a name when an honorific follows. */
+const WORD_LIKE = new Set(['要']);
+const READING_AFTER = /^(ちゃん|さん|くん|君|先輩|せんぱい|様|さま|って|の|は|が|も|と|に|を|へ|や|よ|ね|で|か|だ|です|から|たち|、|。|！|？|!|\?|…|・|」|』|）|$)/;
+const hasKanji = (s: string) => /[一-鿿]/.test(s);
+
+/** Replaces `from` by `to` where it is really a name (not after a kanji; followed by an honorific, or — for word-like parts — only an honorific). */
+function readName(text: string, from: string, to: string): string {
+  if (!from || !hasKanji(from)) return text;
+  const strict = [...from].length === 1 && WORD_LIKE.has(from);
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    if (text.startsWith(from, i)) {
+      const rest = text.slice(i + from.length);
+      if (!isKanji(out.slice(-1) || undefined) && (strict ? HONORIFIC_ONLY : READING_AFTER).test(rest)) {
+        out += to;
+        i += from.length;
+        continue;
+      }
+    }
+    out += text[i];
+    i++;
+  }
+  return out;
+}
+
+/**
+ * Name parts that pyopenjtalk misreads (from g2p checks on 2026-11-22), as `<key>f` (family) / `<key>g` (given). Only these are rewritten, in
+ * katakana (hiragana names get mis-segmented: はま-, まは- read as particles); every other part stays in kanji, which it reads correctly.
+ */
+const MISREAD = new Set([
+  '001g', '002g', '003g', '003f', '005g', '006g', '007g', '008g', '010f', '010g', '013f', '013g', '014g',
+  '017f', '019f', '020g', '021f', '021g', '022f', '022g', '023g', '025g',
+]);
+const toKatakana = (s: string) => s.replace(/[ぁ-ゖ]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60));
+
+/**
+ * The text GPT-SoVITS gets: the misread kanji name parts of the cast rewritten into katakana readings (燈 -> トモリ, 豊川 -> トガワ).
+ * Full name first (also with a space or ・ between; each part on its own, 高松燈 -> 高松トモリ), then family, then given name. The stored
+ * `spoken` is never changed.
+ */
+export function readingForTts(ja: string, castKeys: readonly string[]): string {
+  let t = ja;
+  for (const key of new Set(castKeys)) {
+    const n = JA_NAMES[key];
+    const k = JA_NAME_KANA[key];
+    if (!n || !k) continue;
+    const fam = MISREAD.has(`${key}f`) ? toKatakana(k.family) : n.family;
+    const giv = MISREAD.has(`${key}g`) ? toKatakana(k.given) : n.given;
+    if (fam !== n.family || giv !== n.given) for (const sep of ['', ' ', '　', '・']) t = readName(t, n.family + sep + n.given, fam + sep + giv);
+    if (fam !== n.family) t = readName(t, n.family, fam);
+    if (giv !== n.given) t = readName(t, n.given, giv);
+  }
+  return t;
 }
