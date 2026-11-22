@@ -335,6 +335,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
   const actors: CompiledActor[] = works.map((w) => {
     const mine = (t: Track) => t.target.kind === 'actor' && t.target.castId === w.castId;
     const ruleKeys: RuleKey[] = [];
+    const muted = (channel: 'expression' | 'motion' | 'head', beatId: string) => !!scene.ruleMutes?.some((m) => m.castId === w.castId && m.channel === channel && m.beatId === beatId);
     const opacity = clipOverlaps(collect(scene, 'opacity', mine, abs).map(({ k, at }): NumKey => ({ at, duration: k.duration, ease: k.ease, value: k.value })));
 
     // on / off stage: fade out when leaving, fade in (and slide) when entering. The camera never sees a half-faded entrance as "empty".
@@ -362,7 +363,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
       list.forEach((b, i) => {
         const ps = st.styles[i]!.values.performance;
         const span = st.beats[i]!;
-        if (handAts.some((a) => a >= span.start - 1e-6 && a < span.end - 1e-6)) return;
+        if (handAts.some((a) => a >= span.start - 1e-6 && a < span.end - 1e-6) || muted('head', b.id)) return;
         if (!ps.ruleDirector || !TEXT_KINDS.includes(b.kind) || !b.speakerId || b.speakerId === w.castId || !works.some((o) => o.castId === b.speakerId)) return;
         const at = st.beats[i]!.start + ps.listenerTurnDelay;
         headKeys.push({ at, duration: 0.3, ease: 'inOutSine', value: yawFor(w, { mode: 'target', target: b.speakerId }, at) });
@@ -476,7 +477,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
         const ps = st.styles[i]!.values.performance;
         if (!ps.ruleDirector) continue;
         n++;
-        if (n % ps.gestureEvery !== 0 || motionKeys.some((m) => m.at >= bt.start - 1e-6 && m.at < bt.end)) continue;
+        if (n % ps.gestureEvery !== 0 || muted('motion', b.id) || motionKeys.some((m) => m.at >= bt.start - 1e-6 && m.at < bt.end)) continue;
         const have = new Set((ctx.models[modelAt(w, bt.start)]?.motions ?? []).map((m) => m.family));
         const cands = (EMOTION_GESTURE[b.emotion ?? 'neutral'] ?? EMOTION_GESTURE.neutral!).filter((f) => have.has(f) && f !== lastFamily);
         const fam = cands[(n >> 1) % Math.max(1, cands.length)];
@@ -502,7 +503,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
         if (!ps.ruleDirector || !ps.listenerReact || ps.listenerReactGap <= 0) return;
         if (EMPTY_KINDS.includes(b.kind) || b.speakerId === w.castId || b.coSpeakers.includes(w.castId)) return;
         if (!presentAt(w, bt.start) || bt.end - bt.start < 1) return;
-        if (motionKeys.some((m) => m.at >= bt.start - 1e-6 && m.at < bt.end)) return;
+        if (muted('motion', b.id) || motionKeys.some((m) => m.at >= bt.start - 1e-6 && m.at < bt.end)) return;
         const gap = ps.listenerReactGap;
         // a different moment for each bystander, so nobody reacts in unison
         const jitter = (hashStr(`${w.castId}:${i}`) % 5) * 0.25;
@@ -572,7 +573,7 @@ function compileScene(project: Project, scene: Scene, index: number, st: SceneTi
         const ps = st.styles[i]!.values.performance;
         if (!ps.ruleDirector || !ps.exprAtLineStart) continue;
         n++;
-        if (exprKeys.some((e) => e.at >= bt.start - 1e-6 && e.at < bt.end)) continue;
+        if (muted('expression', b.id) || exprKeys.some((e) => e.at >= bt.start - 1e-6 && e.at < bt.end)) continue;
         const have = ctx.models[modelAt(w, bt.start)]?.expressions ?? [];
         const cands = (EMOTION_EXPR[b.emotion ?? 'neutral'] ?? EMOTION_EXPR.neutral!).filter((e) => have.includes(e));
         const name = cands[n % Math.max(1, cands.length)];

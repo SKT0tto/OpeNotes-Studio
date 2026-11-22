@@ -1,5 +1,6 @@
 /** Editor view state that is not part of the project: panels, tools, overlays, key selection, mute / solo, clipboard. */
 import { create } from 'zustand';
+import type { RuleKey } from '@shared/timeline/types';
 import type { AnyKey, Channel, TrackTarget } from '@shared/project/mutate';
 
 export type InspectorTab = 'project' | 'scene' | 'beat' | 'actor' | 'shot' | 'key' | 'style';
@@ -26,6 +27,8 @@ interface UiState {
   inspectorTab: InspectorTab;
   /** Selected key ids of the scene on the timeline. */
   keySel: string[];
+  /** Rule-director ghost keys that were selected (id -> actor and the compiled keys), so the inspector can bake them. */
+  ghostKeys: Record<string, { castId: string; keys: RuleKey[] }>;
   /** Muted / soloed track ids (preview only; the project is untouched). */
   muted: string[];
   solo: string[];
@@ -55,6 +58,7 @@ export const useUi = create<UiState>((set) => ({
   ref: null,
   inspectorTab: 'beat',
   keySel: [],
+  ghostKeys: {},
   muted: [],
   solo: [],
   openGroups: {},

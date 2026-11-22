@@ -237,6 +237,8 @@ export const SceneSchema = z.object({
   brief: z.object({ moves: z.array(z.object({ paragraph: z.number().int(), backgroundId: Id, reason: z.string().default(''), transition: z.enum(['cut', 'dip_black', 'dip_white', 'crossfade']).default('cut') })).optional(), timeOfDay: z.string().default(''), mood: z.string().default(''), isPerformance: z.boolean().default(false), band: z.string().nullable().default(null), guestOf: z.string().nullable().optional() }).optional(),
   beats: z.array(BeatSchema),
   tracks: z.array(TrackSchema).default([]),
+  /** Rule-director keys the user switched off: no automatic key of this channel for this actor on this beat. Absent = none. */
+  ruleMutes: z.array(z.object({ castId: Id, channel: z.enum(['expression', 'motion', 'head']), beatId: Id })).optional(),
   /** Highest id number ever issued per prefix (beats, tracks, keys): ids of deleted units are never reused. */
   idSeq: z.record(z.string(), z.number().int()).optional(),
 });

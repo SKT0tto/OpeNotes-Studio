@@ -151,6 +151,8 @@ kbd { font-family: var(--font-mono); padding: 1px 6px; border: 1px solid var(--l
 .tl-key.sel { background: var(--accent); border-color: #fff; }
 .tl-key.locked { background: var(--key-locked); cursor: not-allowed; }
 .tl-key.ghost { background: transparent; border: 1px dashed var(--src-rule); cursor: pointer; }
+.tl-key.ghost.sel { background: var(--accent); border-style: solid; border-color: #fff; }
+.tl-key.muted { background: linear-gradient(135deg, transparent 44%, var(--text-2) 44%, var(--text-2) 56%, transparent 56%); border: 1px solid var(--text-2); opacity: 0.4; cursor: pointer; }
 .tl-lockmark { display: inline-flex; color: var(--text-1); margin-left: 2px; }
 .lock-icon { display: block; }
 .lock { display: inline-flex; align-items: center; color: var(--text-2); }
