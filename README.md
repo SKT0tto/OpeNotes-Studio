@@ -8,7 +8,7 @@ OpeNotes Studio 参考《BanG Dream! Our Notes》的剧情表现形式，支持�
 
 [项目主页](https://skt0tto.github.io/OpeNotes-Studio/) · [下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [使用教程](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/docs/GUIDE_ASSETS.md) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md) · [问题反馈](https://github.com/SKT0tto/OpeNotes-Studio/issues)
 
-> **v1.1.0** 已发布：新增插件系统，以及实验性的 AI 配音插件（GPT-SoVITS，单独下载），可以给对白自动配日语；此前的版本带来了自选倍速、新 logo、AI 助手与 AI 生成合二为一、长台词按语义拆分等，1.0.1 起可用 `Update-Windows.cmd` 自动更新。[下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md)
+> **v1.1.1** 已发布：删掉规则导演自动补的关键帧后不再冒出来；v1.1.0 新增插件系统，以及实验性的 AI 配音插件（GPT-SoVITS，单独下载），可以给对白自动配日语；此前的版本带来了自选倍速、新 logo、AI 助手与 AI 生成合二为一、长台词按语义拆分等，1.0.1 起可用 `Update-Windows.cmd` 自动更新。[下载](https://github.com/SKT0tto/OpeNotes-Studio/releases/latest) · [更新记录](https://github.com/SKT0tto/OpeNotes-Studio/blob/main/CHANGELOG.md)
 
 > 本项目为非官方同人项目。程序不附带游戏素材和 Live2D Cubism Core，使用前需要自行准备素材，并遵守相应的使用许可。
 
