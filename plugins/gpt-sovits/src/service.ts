@@ -14,6 +14,10 @@ import type { VoiceJaLine } from './prompt';
 import { SovitsError, setWeights, tts } from './sovits';
 import type { VoiceSettingsStore } from './store';
 import { fixAddress, fixNames, readingForTts } from './names';
+import { JA_NAME_KANA } from '../../../shared/catalog/romaji';
+
+/** Every character with a known reading: a line often names someone who is not in the scene's cast (祥子 in a MyGO story). */
+const NAME_KEYS = Object.keys(JA_NAME_KANA);
 import { translateLines } from './translate';
 
 export class VoiceError extends Error {
@@ -254,7 +258,7 @@ export class VoiceService {
         if (signal.aborted) throw new Error('aborted');
         const text = ja.get(t.beat.id)!;
         try {
-          const take = await this.bestTake(job, name, text.ja, project.cast.map((c) => c.characterKey), lineProfile(profile, t), settings, signal);
+          const take = await this.bestTake(job, name, text.ja, NAME_KEYS, lineProfile(profile, t), settings, signal);
           let seed = take.seed;
           while ((await this.existing(project.id, voiceFileName(t.beat.id, hash, seed))) !== null) seed = randomInt(0, 2 ** 31 - 1); // never over a take that is there
           const file = voiceFileName(t.beat.id, hash, seed);
