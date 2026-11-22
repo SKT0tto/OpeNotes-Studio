@@ -3,7 +3,7 @@
  * uses another kanji (燈). Only a spelling that differs from the Japanese one by kanji variants is touched, and only where it is used as a name.
  */
 import { addressAlternatives, addressForm, selfForm, selfForms } from '../../../shared/catalog/addressing';
-import { JA_NAMES, KANJI_TO_SIMPLIFIED, NAME_PARTS } from '../../../shared/catalog/romaji';
+import { JA_NAMES, JA_NAME_KANA, KANJI_TO_SIMPLIFIED, NAME_PARTS } from '../../../shared/catalog/romaji';
 
 const fold = (s: string) => [...s].map((c) => KANJI_TO_SIMPLIFIED[c] ?? c).join('');
 const isKanji = (c: string | undefined) => !!c && /[一-鿿]/.test(c);
@@ -117,4 +117,48 @@ function fixSelf(spoken: string, speakerKey: string): string {
 export function fixAddress(spoken: string, speakerKey: string | null | undefined, castKeys: readonly string[]): string {
   if (!speakerKey) return spoken;
   return fixSelf(fixCalls(spoken, speakerKey, castKeys), speakerKey);
+}
+
+const HONORIFIC_ONLY = /^(ちゃん|さん|くん|君|先輩|せんぱい|様|さま)/;
+/** Single-kanji parts that are also everyday words (要 / 藤 / 蛍 / 凪): only a name when an honorific follows. */
+const WORD_LIKE = new Set(['要', '藤', '蛍', '凪']);
+const READING_AFTER = /^(ちゃん|さん|くん|君|先輩|せんぱい|様|さま|って|の|は|が|も|と|に|を|へ|や|よ|ね|で|か|だ|です|から|たち|、|。|！|？|!|\?|…|・|」|』|）|$)/;
+const hasKanji = (s: string) => /[一-鿿]/.test(s);
+
+/** Replaces `from` by `to` where it is really a name (not after a kanji; followed by an honorific, or — for word-like parts — only an honorific). */
+function readName(text: string, from: string, to: string): string {
+  if (!from || !hasKanji(from)) return text;
+  const strict = [...from].length === 1 && WORD_LIKE.has(from);
+  let out = '';
+  let i = 0;
+  while (i < text.length) {
+    if (text.startsWith(from, i)) {
+      const rest = text.slice(i + from.length);
+      if (!isKanji(out.slice(-1) || undefined) && (strict ? HONORIFIC_ONLY : READING_AFTER).test(rest)) {
+        out += to;
+        i += from.length;
+        continue;
+      }
+    }
+    out += text[i];
+    i++;
+  }
+  return out;
+}
+
+/**
+ * The text GPT-SoVITS gets: kanji spellings of the cast's names rewritten into their official kana readings (pyopenjtalk misreads 燈, 楽奈, 立希 ...).
+ * Full name first (also with a space or ・ between), then family, then given name. Kana-only parts stay. The stored `spoken` is never changed.
+ */
+export function readingForTts(ja: string, castKeys: readonly string[]): string {
+  let t = ja;
+  for (const key of new Set(castKeys)) {
+    const n = JA_NAMES[key];
+    const k = JA_NAME_KANA[key];
+    if (!n || !k) continue;
+    for (const sep of ['', ' ', '　', '・']) t = readName(t, n.family + sep + n.given, k.family + sep + k.given);
+    t = readName(t, n.family, k.family);
+    t = readName(t, n.given, k.given);
+  }
+  return t;
 }
