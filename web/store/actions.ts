@@ -61,24 +61,65 @@ export function writeKey(sceneId: string, target: TrackTarget, channel: Channel,
   return 'ok';
 }
 
-/** Delete keys (locked ones stay and are reported). */
+export type RuleMute = { castId: string; channel: 'expression' | 'motion' | 'head'; beatId: string };
+
+/** Ghost (rule-director) key ids look like `ghost:<castId>:<channel>:<beatId>[:<offset>]`. */
+export function parseGhostId(id: string): RuleMute | null {
+  const [tag, castId, channel, beatId] = id.split(':');
+  if (tag !== 'ghost' || !castId || !beatId || (channel !== 'expression' && channel !== 'motion' && channel !== 'head')) return null;
+  return { castId, channel, beatId };
+}
+
+const addMute = (sc: Scene, m: RuleMute) => {
+  sc.ruleMutes ??= [];
+  if (!sc.ruleMutes.some((x) => x.castId === m.castId && x.channel === m.channel && x.beatId === m.beatId)) sc.ruleMutes.push({ ...m });
+};
+
+/** Switch off the rule director's automatic keys for these (actor, channel, beat) spots, one undo step. */
+export function muteRuleKeys(sceneId: string, mutes: RuleMute[]): number {
+  const p = proj();
+  const si = p ? sceneIndex(p, sceneId) : -1;
+  if (si < 0 || mutes.length === 0) return 0;
+  useProject.getState().applyEdit((d) => {
+    for (const m of mutes) addMute(d.scenes[si]!, m);
+  }, mutes.length === 1 ? '屏蔽规则导演关键帧' : `屏蔽 ${mutes.length} 个规则导演关键帧`);
+  return mutes.length;
+}
+
+/** Let the rule director act on a muted spot again. */
+export function unmuteRuleKey(sceneId: string, mute: RuleMute): void {
+  const p = proj();
+  const si = p ? sceneIndex(p, sceneId) : -1;
+  if (si < 0 || !p!.scenes[si]!.ruleMutes?.some((x) => x.castId === mute.castId && x.channel === mute.channel && x.beatId === mute.beatId)) return;
+  useProject.getState().applyEdit((d) => {
+    const sc = d.scenes[si]!;
+    sc.ruleMutes = (sc.ruleMutes ?? []).filter((x) => !(x.castId === mute.castId && x.channel === mute.channel && x.beatId === mute.beatId));
+    if (sc.ruleMutes.length === 0) delete sc.ruleMutes;
+  }, '恢复规则导演关键帧');
+}
+
+/** Delete keys (locked ones stay and are reported). Ghost (rule-director) keys in the list are muted instead, in the same undo step. */
 export function deleteKeys(sceneId: string, ids: string[]): number {
   const p = proj();
   if (!p || ids.length === 0) return 0;
   const si = sceneIndex(p, sceneId);
   const scene = p.scenes[si];
   if (!scene) return 0;
-  const free = ids.filter((id) => {
+  const mutes = ids.flatMap((id) => { const m = parseGhostId(id); return m ? [m] : []; });
+  const real = ids.filter((id) => !parseGhostId(id));
+  const free = real.filter((id) => {
     const hit = locateKey(scene, id);
     return hit && !keyLocked(hit.track, hit.key);
   });
-  if (free.length < ids.length) notify(free.length === 0 ? '所选关键帧已锁定，无法删除' : `${ids.length - free.length} 个锁定的关键帧被保留`);
-  if (free.length === 0) return 0;
+  if (free.length < real.length) notify(free.length === 0 && mutes.length === 0 ? '所选关键帧已锁定，无法删除' : `${real.length - free.length} 个锁定的关键帧被保留`);
+  if (free.length === 0 && mutes.length === 0) return 0;
   useProject.getState().applyEdit((d) => {
     for (const id of free) removeKey(d.scenes[si]!, id);
-  }, free.length === 1 ? '删除关键帧' : `删除 ${free.length} 个关键帧`);
-  useUi.getState().set({ keySel: useUi.getState().keySel.filter((k) => !free.includes(k)) });
-  return free.length;
+    for (const m of mutes) addMute(d.scenes[si]!, m);
+  }, free.length + mutes.length === 1 ? (mutes.length ? '屏蔽规则导演关键帧' : '删除关键帧') : `删除 ${free.length + mutes.length} 个关键帧`);
+  const gone = [...free, ...ids.filter((id) => parseGhostId(id))];
+  useUi.getState().set({ keySel: useUi.getState().keySel.filter((k) => !gone.includes(k)) });
+  return free.length + mutes.length;
 }
 
 /** Move keys to absolute times (each re-anchors to the beat it lands in). With `copy`, new keys are made instead. */

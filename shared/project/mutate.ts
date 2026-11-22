@@ -222,6 +222,10 @@ export function removeBeat(scene: Scene, beatId: string): boolean {
       else delete bl.exit;
     }
   }
+  if (scene.ruleMutes) {
+    scene.ruleMutes = scene.ruleMutes.filter((m) => m.beatId !== beatId);
+    if (scene.ruleMutes.length === 0) delete scene.ruleMutes;
+  }
   repairSplitGroups(scene);
   return true;
 }
@@ -300,6 +304,10 @@ export function setActorInScene(scene: Scene, castId: string, present: boolean, 
     delete scene.wardrobe[castId];
     delete scene.blocking[castId];
     scene.tracks = scene.tracks.filter((t) => !(t.target.kind === 'actor' && t.target.castId === castId));
+    if (scene.ruleMutes) {
+      scene.ruleMutes = scene.ruleMutes.filter((m) => m.castId !== castId);
+      if (scene.ruleMutes.length === 0) delete scene.ruleMutes;
+    }
     return;
   }
   scene.wardrobe[castId] ??= { modelId, meta: userMeta() };

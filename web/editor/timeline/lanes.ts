@@ -19,6 +19,8 @@ export interface LaneKey {
   locked: boolean;
   /** A rule-director key that is not backed by a track key yet (double-click bakes it). */
   ghost?: { castId: string; keys: RuleKey[] };
+  /** A spot where the user switched the rule director off (double-click restores it). */
+  muted?: { castId: string; channel: 'expression' | 'motion' | 'head'; beatId: string };
   title: string;
 }
 
@@ -114,11 +116,15 @@ export function buildGroups(project: Project, scene: Scene, sceneIndex: number, 
       if (ch === 'head') {
         return rks.length === 0 ? [] : rks.map((r) => ({ id: `ghost:${castId}:head:${r.beatId}`, at: r.at, duration: r.duration, label: '听者转头', locked: false, ghost: { castId, keys: rks }, title: `规则导演：听者转头（双击烘焙全部 ${rks.length} 个，转为人工关键帧）` }));
       }
-      return rks.map((r) => ({ id: `ghost:${castId}:${ch}:${r.beatId}:${r.offset}`, at: r.at, duration: 0, label: valueLabel(ch, r.value), locked: false, ghost: { castId, keys: [r] }, title: `规则导演：${CHANNEL_LABEL[ch]} ${valueLabel(ch, r.value)}（${(r.value as { name?: string }).name}，双击烘焙为关键帧）` }));
+      return rks.map((r) => ({ id: `ghost:${castId}:${ch}:${r.beatId}:${r.offset}`, at: r.at, duration: 0, label: valueLabel(ch, r.value), locked: false, ghost: { castId, keys: [r] }, title: `规则导演：${CHANNEL_LABEL[ch]} ${valueLabel(ch, r.value)}（${(r.value as { name?: string }).name}，点选后可屏蔽；双击烘焙为关键帧）` }));
     };
+    const mutedFor = (ch: 'expression' | 'motion' | 'head'): LaneKey[] => (scene.ruleMutes ?? []).filter((m) => m.castId === castId && m.channel === ch).flatMap((m) => {
+      const at = absTime(beats, { beatId: m.beatId, offset: 0 });
+      return at === null ? [] : [{ id: `mute:${castId}:${ch}:${m.beatId}`, at, duration: 0, label: '', locked: false, muted: m, title: '已屏蔽规则导演（双击恢复）' }];
+    });
     groups.push({
       id: `actor:${castId}`, label: cast?.displayName ?? castId, color: 'var(--track-actor)', castId,
-      lanes: ACTOR_CHANNELS.map((ch) => lane(`${castId}:${ch}`, CHANNEL_LABEL[ch], `actor:${castId}`, 'var(--track-actor)', { kind: 'actor', castId }, ch, ch === 'expression' || ch === 'motion' || ch === 'head' ? ghostFor(ch) : [])),
+      lanes: ACTOR_CHANNELS.map((ch) => lane(`${castId}:${ch}`, CHANNEL_LABEL[ch], `actor:${castId}`, 'var(--track-actor)', { kind: 'actor', castId }, ch, ch === 'expression' || ch === 'motion' || ch === 'head' ? [...ghostFor(ch), ...mutedFor(ch)] : [])),
     });
   }
   return groups;

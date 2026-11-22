@@ -4,7 +4,7 @@ import type { Project } from '../../shared/schema/project';
 import { buildStageMap } from '../../shared/staging/compactStage';
 import { compileProject } from '../../shared/timeline/compile';
 import {
-  addBeatAfter, bakeRuleKeys, clearManualCamera, copyKeys, deleteBeat, deleteKeys, editBeat, editShot, keyNear, lockKey, lockTrack, manualCameraKey, moveKeys, pasteKeys, patchKey,
+  addBeatAfter, bakeRuleKeys, muteRuleKeys, unmuteRuleKey, parseGhostId, clearManualCamera, copyKeys, deleteBeat, deleteKeys, editBeat, editShot, keyNear, lockKey, lockTrack, manualCameraKey, moveKeys, pasteKeys, patchKey,
   placeActorAt, reorderBeat, setManualCamera, setSlotDepth, writeKey,
 } from '../../web/store/actions';
 import { useProject } from '../../web/store/projectStore';
@@ -221,5 +221,75 @@ describe('rule director output is visible and bakeable', () => {
     expect(c.shiftY[0]!.value - base.shiftY[0]!.value).toBeCloseTo(-0.05 * H, 3);
     const b = compileProject(p, MINI_CTX).scenes[0]!.actors.find((x) => x.castId === 'b')!;
     expect(b.shiftX[0]!.value).toBe(compileProject(miniProject(), MINI_CTX).scenes[0]!.actors.find((x) => x.castId === 'b')!.shiftX[0]!.value);
+  });
+});
+
+describe('rule director mutes (delete an automatic key and it stays gone)', () => {
+  const style = { 'performance.ruleDirector': true, 'rhythm.enforceMinShot': false, 'performance.gestureEvery': 1 };
+  const actorOf = (p: Project, id: string) => compileProject(p, MINI_CTX).scenes[0]!.actors.find((x) => x.castId === id)!;
+  const keyStr = (p: Project) => JSON.stringify(compileProject(p, MINI_CTX));
+
+  it('a mute removes exactly that rule key; a project without the field compiles identically', () => {
+    const p = miniProject({ style });
+    p.scenes[0]!.beats[0]!.emotion = 'happy';
+    const base = keyStr(p);
+    p.scenes[0]!.ruleMutes = [];
+    expect(keyStr(p)).toBe(base);
+    const before = actorOf(p, 'a').ruleKeys;
+    const target = before.find((k) => k.channel === 'expression')!;
+    p.scenes[0]!.ruleMutes = [{ castId: 'a', channel: 'expression', beatId: target.beatId }];
+    const after = actorOf(p, 'a').ruleKeys;
+    expect(after.filter((k) => k.channel === 'expression' && k.beatId === target.beatId)).toHaveLength(0);
+    expect(after).toEqual(before.filter((k) => !(k.channel === 'expression' && k.beatId === target.beatId)));
+    // other actors untouched
+    const q = miniProject({ style });
+    q.scenes[0]!.beats[0]!.emotion = 'happy';
+    expect(actorOf(p, 'b').ruleKeys).toEqual(actorOf(q, 'b').ruleKeys);
+  });
+
+  it('a muted gesture does not shift the gesture counting of later lines', () => {
+    const p = miniProject({ style });
+    for (const b of p.scenes[0]!.beats) b.emotion = 'happy';
+    const motions = (q: Project) => actorOf(q, 'a').ruleKeys.filter((k) => k.channel === 'motion');
+    const all = motions(p);
+    expect(all.length).toBeGreaterThan(1);
+    const m = all[0]!;
+    p.scenes[0]!.ruleMutes = [{ castId: 'a', channel: 'motion', beatId: m.beatId }];
+    const rest = motions(p).filter((k) => k.at > m.at + 1e-6).map((k) => k.beatId);
+    expect(rest).toEqual(all.filter((k) => k.at > m.at + 1e-6).map((k) => k.beatId));
+    expect(motions(p).some((k) => k.beatId === m.beatId && Math.abs(k.at - m.at) < 1e-6)).toBe(false);
+  });
+
+  it('mute / unmute / delete-with-ghosts are single undo steps, and deleting a beat drops its mutes', () => {
+    const p = miniProject({ style });
+    p.scenes[0]!.beats[0]!.emotion = 'happy';
+    st().open(p, null);
+    const ghost = actorOf(proj(), 'a').ruleKeys.find((k) => k.channel === 'expression')!;
+    expect(parseGhostId(`ghost:a:expression:${ghost.beatId}:0`)).toEqual({ castId: 'a', channel: 'expression', beatId: ghost.beatId });
+    const m = { castId: 'a', channel: 'expression' as const, beatId: ghost.beatId };
+    muteRuleKeys('s1', [m]);
+    muteRuleKeys('s1', [m]);
+    expect(proj().scenes[0]!.ruleMutes).toHaveLength(1);
+    expect(actorOf(proj(), 'a').ruleKeys.some((k) => k.channel === 'expression' && k.beatId === ghost.beatId)).toBe(false);
+    unmuteRuleKey('s1', m);
+    expect(proj().scenes[0]!.ruleMutes).toBeUndefined();
+    st().undo();
+    expect(proj().scenes[0]!.ruleMutes).toHaveLength(1);
+    st().undo();
+    st().undo();
+    expect(proj().scenes[0]!.ruleMutes).toBeUndefined();
+    // manual key + ghost deleted together = one undo step
+    writeKey('s1', A, 'head', { mode: 'angle', yaw: 0.2 }, 1, { label: 'x' });
+    const realId = findTrack(proj().scenes[0]!, A, 'head')!.keys[0]!.id;
+    const n = deleteKeys('s1', [realId, `ghost:a:expression:${ghost.beatId}:0`]);
+    expect(n).toBe(2);
+    expect(findTrack(proj().scenes[0]!, A, 'head')!.keys).toHaveLength(0);
+    expect(proj().scenes[0]!.ruleMutes).toHaveLength(1);
+    st().undo();
+    expect(findTrack(proj().scenes[0]!, A, 'head')!.keys).toHaveLength(1);
+    expect(proj().scenes[0]!.ruleMutes).toBeUndefined();
+    muteRuleKeys('s1', [m]);
+    deleteBeat('s1', ghost.beatId);
+    expect(proj().scenes[0]!.ruleMutes).toBeUndefined();
   });
 });
